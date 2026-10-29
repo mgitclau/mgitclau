@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>架構選型 · 第一階段</title>
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#ffffff;--ink:#1d2330;--sub:#5b6474;--line:#e3e6eb;
+  --accent:#2f6fde;--accent-soft:#e8f0fd;
+  --ok:#1f8a4c;--ok-soft:#e5f5ec;--guess:#b26a00;--guess-soft:#fdf1df;--ask:#c2364a;--ask-soft:#fce8eb;
+  --code:#f0f2f5;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14171c;--panel:#1c2027;--ink:#e6e9ee;--sub:#9aa3b2;--line:#2c323c;
+  --accent:#6b9cff;--accent-soft:#1f2b44;
+  --ok:#4fc983;--ok-soft:#183126;--guess:#f0a640;--guess-soft:#3a2b14;--ask:#ff7b8c;--ask-soft:#3d1c23;
+  --code:#252a33;
+}}
+:root[data-theme="dark"]{
+  --bg:#14171c;--panel:#1c2027;--ink:#e6e9ee;--sub:#9aa3b2;--line:#2c323c;
+  --accent:#6b9cff;--accent-soft:#1f2b44;
+  --ok:#4fc983;--ok-soft:#183126;--guess:#f0a640;--guess-soft:#3a2b14;--ask:#ff7b8c;--ask-soft:#3d1c23;
+  --code:#252a33;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:.88em;font-family:ui-monospace,Menlo,Consolas,monospace}
+.layout{display:grid;grid-template-columns:240px 1fr;max-width:1240px;margin:0 auto}
+nav{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 18px;border-right:1px solid var(--line)}
+nav .brand{font-weight:700;font-size:15px;margin-bottom:4px}
+nav .meta{font-size:13px;color:var(--sub);margin-bottom:18px}
+nav a{display:block;padding:7px 10px;border-radius:8px;color:var(--sub);text-decoration:none;font-size:14.5px}
+nav a:hover{background:var(--accent-soft);color:var(--accent)}
+nav a.sub{padding-left:24px;font-size:13.5px}
+main{padding:32px 40px 80px;min-width:0}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:48px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:18px;margin:28px 0 10px}
+p{margin:8px 0}
+.lead{color:var(--sub);margin-bottom:20px}
+.note{background:var(--accent-soft);border-left:4px solid var(--accent);padding:12px 16px;border-radius:8px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:var(--code);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:600}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.files .card h3{margin-top:0}
+.tag{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 9px;border-radius:999px;white-space:nowrap}
+.t-ok{background:var(--ok-soft);color:var(--ok)}
+.t-guess{background:var(--guess-soft);color:var(--guess)}
+.t-ask{background:var(--ask-soft);color:var(--ask)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 4px;font-size:14px}
+.flow{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+.flow li{position:relative;padding:10px 14px 10px 52px;margin:8px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.flow li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
+.scheme{position:relative}
+.scheme.rec{border:2px solid var(--accent)}
+.scheme .badge{position:absolute;top:-12px;right:16px;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px}
+.scheme h3{margin-top:0}
+.stars{color:#e8a317;letter-spacing:2px;font-size:17px}
+.kv{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.kv span{font-size:13px;background:var(--code);padding:2px 10px;border-radius:6px}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.pc div{border-radius:8px;padding:8px 12px;font-size:14.5px}
+.pc .pro{background:var(--ok-soft)}
+.pc .con{background:var(--ask-soft)}
+.pc b{display:block;margin-bottom:2px}
+.pc ul{margin:0;padding-left:18px}
+.scheme ul{padding-left:20px;margin:4px 0}
+.why li{margin:8px 0}
+.qs{list-style:none;padding:0}
+.qs li{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.qs label{display:flex;gap:12px;padding:12px 16px;cursor:pointer}
+.qs input{width:18px;height:18px;margin-top:5px;flex:none;accent-color:var(--accent)}
+.qs li.done{opacity:.55}
+.qs .qt{font-weight:600}
+.qs .qd{color:var(--sub);font-size:14.5px}
+.progress{font-size:14px;color:var(--sub)}
+.themebtn{margin-top:18px;font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px}
+  nav .links{display:flex;flex-wrap:wrap;gap:4px}
+  nav a.sub{display:none}
+  main{padding:20px 16px 60px}
+  .grid3,.grid2,.pc{grid-template-columns:1fr}
+  h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="brand">AI 筆電選購助手</div>
+  <div class="meta">架構選型 · 第一階段<br>2026-10-29</div>
+  <div class="links">
+    <a href="#scope">分析範圍</a>
+    <a href="#inventory">一、Demo 盤點</a>
+    <a class="sub" href="#files">三個檔案</a>
+    <a class="sub" href="#modules">功能模組</a>
+    <a class="sub" href="#pages">頁面</a>
+    <a class="sub" href="#flow">對話流程與資料流</a>
+    <a class="sub" href="#state">狀態管理</a>
+    <a class="sub" href="#storage">介面、儲存、外部依賴</a>
+    <a href="#logic">二、業務邏輯與隱含需求</a>
+    <a href="#constraints">三、限制條件</a>
+    <a href="#schemes">四、候選方案</a>
+    <a class="sub" href="#compare">方案對照表</a>
+    <a href="#recommend">五、我的建議</a>
+    <a href="#questions">六、需要你確認的問題</a>
+  </div>
+  <button class="themebtn" id="themeBtn" type="button">切換深淺色</button>
+</nav>
+
+<main>
+<h1>架構選型與建議（第一階段）</h1>
+<p class="lead">讀完 Demo 後的整理：Demo 做了什麼、哪些是推測、有哪些方案可選、推薦哪一個，以及需要你確認的問題。</p>
+
+<div class="note" id="scope"><b>分析範圍：</b>只根據 <code>v10demo/</code> 裡的三個檔案（<code>index.html</code>、<code>admin.html</code>、<code>engine.js</code>），沒有參考 PRD 和 <code>system/</code> 資料夾。</div>
+
+<!-- ================= 一 ================= -->
+<h2 id="inventory">一、Demo 盤點</h2>
+
+<h3 id="files">1. 三個檔案各做什麼</h3>
+<div class="grid3 files">
+  <div class="card"><h3>engine.js</h3><p><b>共用決策引擎</b>，不操作畫面，約 1,450 行。</p><p>透過 <code>makeEngine()</code> 產生引擎物件，使用者頁和後台<b>載入同一份</b>。機型資料、規則、評分、對話流程、卡片文案都在這裡。</p></div>
+  <div class="card"><h3>index.html</h3><p><b>使用者端 V10</b></p><p>左側是對話歷史欄，中間是對話，右邊是結果區。另有詳情、對比、收藏、需求編輯等彈出面板。</p></div>
+  <div class="card"><h3>admin.html</h3><p><b>管理後台 V2</b></p><p>營運頁 9 個、工程頁 5 個。用模擬資料產生 60 天的對話紀錄。</p></div>
+</div>
+
+<h3 id="modules">2. 功能模組（以 engine.js 為主）</h3>
+<div class="tbl"><table>
+<tr><th>模組</th><th>Demo 裡的實作</th></tr>
+<tr><td>機型資料</td><td>32 台手寫的實測機型，加上按系列模板、用固定亂數種子產生的機型，合計約 400 台（<code>BASE</code>）。<br><code>PENDING</code>：有實測、待上架的機型。<br><code>WATCH</code>：庫裡沒有的機型，用來攔截詢問。</td></tr>
+<tr><td>輸入理解</td><td>用規則比對（正規表示式）從文字抽出預算、用途、軟體、品牌、偏好、否定句、替誰買。<br><b>沒有呼叫任何語言模型。</b></td></tr>
+<tr><td>評分</td><td>7 個維度：效能、螢幕、便攜、續航、散熱、安靜、擴充。<br>權重從基礎值開始，依用途和偏好調整。<br>硬門檻有寬容帶，結果分三種：達標 1、差一點 0.5、淘汰 0。另有風險扣分（−4）和性價比加分。</td></tr>
+<tr><td>動作決策</td><td><code>decideAction()</code> 決定下一步：追問、確認、放寬（衝突卡）或推薦。<br>追問最多 3 題；如果某題的任何答案都不會改變第一名就跳過（<code>matters()</code>）。</td></tr>
+<tr><td>推薦組合</td><td><code>picksFor()</code> 選出三台：最合適、較便宜、另一種強項。另有「兩台很接近」提示和「為什麼不是別台」。</td></tr>
+<tr><td>意圖</td><td>說需求、比較、為什麼沒推薦、某台適不適合、問到未收錄機型、重新開始。</td></tr>
+<tr><td>解釋</td><td><code>explain()</code> 提供後台「為什麼這樣回答」的資料：門檻、權重來源、分數拆解。</td></tr>
+<tr><td>設定</td><td><code>BASE_CFG</code>：門檻、權重、卡片開關、別名、價格覆寫、上下架、卡片文案覆寫。</td></tr>
+</table></div>
+
+<h3 id="pages">3. 頁面</h3>
+<div class="grid2">
+  <div class="card"><h3 style="margin-top:0">使用者端（index.html）</h3>
+    <ul>
+      <li><b>左側欄：</b>新對話、歷史對話、收藏、示範情境</li>
+      <li><b>對話區：</b>追問卡、確認卡、衝突卡、推薦泡泡、「我聽懂了」泡泡</li>
+      <li><b>結果區：</b>需求摘要、第一名、其他推薦、全部機型（卡片／清單、搜尋、排序）、淘汰機型分組原因</li>
+      <li><b>彈出面板：</b>機型詳情、對比（最多 3 台）、收藏、示範情境、需求編輯</li>
+    </ul></div>
+  <div class="card"><h3 style="margin-top:0">後台（admin.html）</h3>
+    <ul>
+      <li><b>營運頁（9）：</b>工作台、待處理、對話、需求洞察、卡片、同步檢查、機型庫、規則與詞庫、系統</li>
+      <li><b>工程頁（5）：</b>效能、執行鏈路、日誌、模型與提示詞、資料庫</li>
+      <li><b>角色：</b>管理員、唯讀（可在左下角切換）</li>
+    </ul></div>
+</div>
+
+<h3 id="flow">4. 一輪對話怎麼跑、資料怎麼流</h3>
+<p><b>使用者端的一輪對話：</b></p>
+<ol class="flow">
+  <li>使用者輸入文字，或點選卡片上的選項</li>
+  <li><code>send(inp)</code> 把這次輸入加進 <code>script</code>（輸入清單）</li>
+  <li>呼叫 <code>ENG.step(sess, inp, CFG)</code>，引擎算出這一輪的結果（<code>turn</code>）</li>
+  <li>重新繪製對話區和結果區</li>
+  <li>把對話存進 localStorage</li>
+</ol>
+<div class="card">
+  <p><b>重點：對話「只存輸入」。</b>存下來的只有輸入清單，重新打開時用 <code>runAll()</code> 把所有輸入重跑一次，就能還原出狀態。</p>
+  <p><b>後台：</b>讀同一個 localStorage 裡的真實對話，加上模擬對話，用目前規則或草稿規則重跑（<code>replay</code>、<code>impact</code>），算出改規則前後的差異。</p>
+  <p><b>設定同步：</b>後台改設定後寫進 <code>lpa9-cfg</code>；使用者頁透過瀏覽器的 <code>storage</code> 事件馬上套用。</p>
+</div>
+
+<h3 id="state">5. 狀態管理</h3>
+<div class="tbl"><table>
+<tr><th>位置</th><th>內容</th></tr>
+<tr><td>引擎內部</td><td>兩個模組層級變數：<code>S</code>（目前對話）、<code>CFG</code>（目前設定），每次呼叫前用 <code>use()</code> 切換</td></tr>
+<tr><td>對話狀態</td><td>需求檔案、問過的題、排除的機型、是否已確認、是否跳過追問等</td></tr>
+<tr><td>快取</td><td><code>rankCache</code>、<code>dataCache</code>，用設定的指紋當鍵</td></tr>
+<tr><td>使用者頁</td><td>畫面狀態放在一個 <code>S</code> 物件</td></tr>
+<tr><td>後台</td><td><code>ST</code>（存在 localStorage）、<code>UI</code>（只在記憶體）</td></tr>
+</table></div>
+
+<h3 id="storage">6. 介面呼叫、儲存、外部依賴</h3>
+<div class="tbl"><table>
+<tr><th>項目</th><th>Demo 現況</th></tr>
+<tr><td>HTTP API</td><td><b>沒有。</b>所有計算都在瀏覽器裡呼叫引擎函式。</td></tr>
+<tr><td>儲存</td><td>只有 localStorage：
+  <ul style="margin:4px 0;padding-left:20px">
+    <li><code>lpa9-cfg</code>：線上設定</li>
+    <li><code>lpa9-convs</code>：對話</li>
+    <li><code>lpa9-favs</code>：收藏</li>
+    <li><code>laptop-admin-demo-v6</code>：後台全部資料</li>
+    <li>另有版面等偏好</li>
+  </ul></td></tr>
+<tr><td>外部依賴</td><td>沒有找到任何外部網路請求，也沒有載入 CDN。</td></tr>
+<tr><td>後台「模擬」的目標架構</td><td>工程頁畫出一套<b>還不存在</b>的後端：
+  <ul style="margin:4px 0;padding-left:20px">
+    <li>一輪對話分 11 個階段；「需求理解」和「回覆生成」由語言模型負責，回覆後要核對裡面的數字</li>
+    <li>用 SSE 把結果推給前端</li>
+    <li>PostgreSQL 共 17 張表</li>
+    <li>模型供應商：DeepSeek、GLM、MiniMax、OpenAI，可設定主備和自動切換</li>
+    <li>告警通知：企業微信、飛書、郵件</li>
+    <li>以上數字全部是示例資料</li>
+  </ul></td></tr>
+</table></div>
+
+<!-- ================= 二 ================= -->
+<h2 id="logic">二、業務邏輯與隱含需求</h2>
+<div class="legend">
+  <span><span class="tag t-ok">已實作</span> Demo 裡確定有</span>
+  <span><span class="tag t-guess">推測</span> Demo 只畫了或模擬了</span>
+  <span><span class="tag t-ask">待確認</span> 需要你決定</span>
+</div>
+<div class="tbl"><table>
+<tr><th>#</th><th>項目</th><th>標記</th></tr>
+<tr><td>1</td><td>推薦結果<b>完全由程式決定</b>：門檻、評分、排序、動作都是可重現的計算</td><td><span class="tag t-ok">已實作</span></td></tr>
+<tr><td>2</td><td>使用者頁和後台必須用<b>同一份引擎、同一份設定</b>，後台才能保證「我看到的就是使用者拿到的」（有專門的「同步檢查」頁）</td><td><span class="tag t-ok">已實作</span></td></tr>
+<tr><td>3</td><td>對話只存輸入，狀態靠重跑還原，所以能用新規則重跑舊對話來評估影響</td><td><span class="tag t-ok">已實作</span></td></tr>
+<tr><td>4</td><td>規則有草稿和發布兩種狀態、有版本可回滾，發布前要跑回歸用例（指定輸入應該得到哪一台第一名）</td><td><span class="tag t-ok">已實作</span></td></tr>
+<tr><td>5</td><td>推薦理由只能引用實測數字，並附評測影片時間點（Demo 的時間點是用雜湊產生的假資料）</td><td><span class="tag t-ok">機制已實作</span> <span class="tag t-guess">資料是假的</span></td></tr>
+<tr><td>6</td><td>庫裡沒有實測的機型不推薦，並記錄下來給評測團隊</td><td><span class="tag t-ok">已實作</span></td></tr>
+<tr><td>7</td><td>正式版的需求理解和回覆文字改由語言模型處理，程式只負責決定結果，回覆裡的數字要核對</td><td><span class="tag t-guess">只在後台模擬頁</span></td></tr>
+<tr><td>8</td><td>用 SSE 串流推送結果</td><td><span class="tag t-guess">推測</span></td></tr>
+<tr><td>9</td><td>用 PostgreSQL 存 17 張表（機型、實測、價格歷史、對話、執行紀錄、模型呼叫、候選快照、卡片事件、詞庫、規則版本、回歸用例、回饋、稽核紀錄等）</td><td><span class="tag t-guess">推測</span></td></tr>
+<tr><td>10</td><td>每天自動同步價格；「價格過期」會告警</td><td><span class="tag t-guess">用假資料模擬</span></td></tr>
+<tr><td>11</td><td>後台有「管理員」和「唯讀」兩種角色，並有稽核紀錄</td><td><span class="tag t-ok">介面有</span> <span class="tag t-guess">實際權限未做</span></td></tr>
+<tr><td>12</td><td>使用者端不需要登入，收藏和歷史存在本機</td><td><span class="tag t-ok">Demo 如此</span> <span class="tag t-ask">要不要帳號？</span></td></tr>
+<tr><td>13</td><td>每項功能都要有開關（卡片開關、追問題目開關等），符合專案 CLAUDE.md 的要求</td><td><span class="tag t-ok">部分已有</span></td></tr>
+<tr><td>14</td><td>價格目前用「¥」（人民幣），機型清單偏中國大陸市場</td><td><span class="tag t-ask">要改新台幣、台灣機型？</span></td></tr>
+<tr><td>15</td><td>後台工程頁的資料（效能、成本、token）只是示意</td><td><span class="tag t-ok">確定是假資料</span></td></tr>
+</table></div>
+
+<!-- ================= 三 ================= -->
+<h2 id="constraints">三、限制條件</h2>
+<p>你在問題裡把限制條件留空了，以下是我的<b>暫定值</b>，請在第六節確認。</p>
+<div class="tbl"><table>
+<tr><th>條件</th><th>暫定值</th><th>依據</th></tr>
+<tr><td>技術棧</td><td><b>TypeScript</b>（前端、後端、引擎同一種語言）</td><td><span class="tag t-ok">你已確認 2026-10-29</span></td></tr>
+<tr><td>部署方式</td><td>雲端單一區域；正式機和測試機各一套</td><td>Demo 沒有寫</td></tr>
+<tr><td>用戶規模／並發</td><td>小型上線：每日數千人，峰值數十個請求／秒</td><td>Demo 沒有寫</td></tr>
+<tr><td>後端</td><td>需要</td><td><span class="tag t-guess">後台模擬頁已畫出</span></td></tr>
+<tr><td>資料庫</td><td>需要（PostgreSQL）</td><td><span class="tag t-guess">推測</span></td></tr>
+<tr><td>認證</td><td>後台需要；使用者端待確認</td><td>Demo 只有角色切換</td></tr>
+<tr><td>檔案儲存</td><td>只需要匯入 CSV；影片放在外部平台</td><td>Demo 有「匯入實測 CSV」</td></tr>
+<tr><td>即時通訊</td><td>只需要 SSE 單向推送，不需要 WebSocket</td><td><span class="tag t-guess">推測</span></td></tr>
+<tr><td>多端</td><td>響應式網頁（手機＋電腦），不做 App</td><td><span class="tag t-ask">待確認</span></td></tr>
+<tr><td>團隊規模</td><td>你一人加上 AI 協作，維護成本要低</td><td>專案 CLAUDE.md</td></tr>
+</table></div>
+
+<!-- ================= 四 ================= -->
+<h2 id="schemes">四、候選方案</h2>
+<div class="note">三個方案最大的差別：<b>引擎放在哪裡跑、要不要維護兩份引擎。</b></div>
+
+<div class="card scheme">
+  <h3>方案 A：靜態前端＋雲端函式＋託管資料庫（例如 Supabase）</h3>
+  <div class="kv"><span>複雜度：低</span><span>擴展性：低～中</span><span>推薦 <span class="stars">★★☆☆☆</span></span></div>
+  <p><b>適用：</b>快速上線、驗證市場、用戶少。</p>
+  <p><b>模組劃分：</b></p>
+  <ul>
+    <li>使用者頁和後台都是靜態網站，引擎照舊在瀏覽器裡跑</li>
+    <li>雲端函式只做兩件事：呼叫語言模型（隱藏 API 金鑰）、寫入紀錄</li>
+    <li>託管 PostgreSQL 存設定、對話、機型</li>
+  </ul>
+  <p><b>資料流：</b>瀏覽器向雲端函式取得語言模型理解的需求 → 引擎在本機算出推薦 → 把輸入和結果寫入資料庫。</p>
+  <div class="pc">
+    <div class="pro"><b>優點</b><ul><li>幾乎直接沿用 Demo</li><li>開發最快、成本最低</li></ul></div>
+    <div class="con"><b>缺點</b><ul><li>規則和整個機型庫暴露在前端</li><li>推薦在使用者瀏覽器算出，伺服器無法保證和紀錄一致</li><li>後台 60 天重跑在瀏覽器跑，資料多會很慢</li><li>很難做「數字核對」這種只能在伺服器做的步驟</li></ul></div>
+  </div>
+</div>
+
+<div class="card scheme rec">
+  <span class="badge">推薦</span>
+  <h3>方案 B：TypeScript 模組化單體＋共用引擎套件</h3>
+  <div class="kv"><span>複雜度：中</span><span>擴展性：中～高</span><span>推薦 <span class="stars">★★★★★</span></span></div>
+  <p><b>適用：</b>要正式上線，又要保留「使用者頁和後台用同一份引擎」這個核心設計。</p>
+  <p><b>模組劃分</b>（同一個程式碼庫，用 monorepo 管理）：</p>
+  <ul>
+    <li><code>engine</code>：把 <code>engine.js</code> 改寫成 TypeScript 純函式套件，<b>前後端共用</b></li>
+    <li><code>api</code>：Node 後端
+      <ul>
+        <li>對話總管：接收訊息、編號、同一對話同時只跑一輪</li>
+        <li>語言模型閘道：需求理解、回覆生成、供應商主備切換</li>
+        <li>數字核對</li>
+        <li>SSE 推送</li>
+        <li>後台 API</li>
+      </ul></li>
+    <li><code>worker</code>：背景工作——重跑影響評估、回歸用例、價格同步、資料品質檢查、告警</li>
+    <li><code>web-user</code>、<code>web-admin</code>：兩個前端；後台的試算和預覽直接在瀏覽器呼叫同一個引擎套件</li>
+    <li>PostgreSQL：沿用 Demo 那 17 張表的設計</li>
+  </ul>
+  <p><b>資料流：</b>使用者訊息 → api → 語言模型抽取需求 → 引擎決定推薦 → 語言模型寫回覆 → 核對數字 → SSE 推回前端 → 寫入執行紀錄。<br>
+  後台改規則 → 存成草稿 → worker 重跑歷史對話 → 看影響 → 發布新版本。</p>
+  <div class="pc">
+    <div class="pro"><b>優點</b><ul><li>引擎只有一份，結果可重現；後台預覽和線上保證一致</li><li>Demo 程式碼可以搬過去改寫，不必重寫邏輯</li><li>全部 TypeScript，一種語言，學習負擔最低</li></ul></div>
+    <div class="con"><b>缺點</b><ul><li>要把約 1,450 行壓縮過的程式碼整理成型別清楚的模組，並補測試</li><li>資料分析能力不如 Python 生態系</li></ul></div>
+  </div>
+</div>
+
+<div class="card scheme">
+  <h3>方案 C：Python 後端（例如 FastAPI）模組化單體＋React 前端</h3>
+  <div class="kv"><span>複雜度：中～高</span><span>擴展性：高</span><span>推薦 <span class="stars">★★★☆☆</span></span></div>
+  <p><b>適用：</b>團隊熟悉 Python，或之後要做大量資料分析、機器學習。</p>
+  <p><b>模組劃分：</b></p>
+  <ul>
+    <li>把引擎改寫成 Python，放在後端</li>
+    <li>前端只負責畫面；後台試算一律透過 API 呼叫後端</li>
+    <li>背景工作同樣用 Python</li>
+  </ul>
+  <div class="pc">
+    <div class="pro"><b>優點</b><ul><li>Python 的資料處理工具多（匯入 CSV、統計）</li><li>呼叫語言模型的套件很成熟</li></ul></div>
+    <div class="con"><b>缺點</b><ul><li>引擎要用另一種語言<b>重寫</b>，必須逐案比對結果和 Demo 一致，工作量和風險較高</li><li>前端想即時預覽（例如拖動權重馬上看到清單變化），就得維護兩份引擎，或每次等伺服器</li><li>前後端兩種語言，維護成本較高</li></ul></div>
+  </div>
+</div>
+
+<h3 id="compare">方案對照表</h3>
+<div class="tbl"><table>
+<tr><th></th><th>A 靜態＋雲端函式</th><th>B TS 單體＋共用引擎</th><th>C Python 單體</th></tr>
+<tr><td>沿用 Demo 引擎</td><td>直接用</td><td>改寫成 TS，邏輯不變</td><td>重寫成 Python</td></tr>
+<tr><td>結果可重現、可稽核</td><td>弱</td><td>強</td><td>強</td></tr>
+<tr><td>後台預覽和線上一致</td><td>一致</td><td>一致（同一套件）</td><td>要靠測試保證</td></tr>
+<tr><td>語言數量</td><td>1</td><td>1</td><td>2</td></tr>
+<tr><td>上線速度</td><td>最快</td><td>中</td><td>較慢</td></tr>
+<tr><td>維護成本</td><td>低，但隨規模變高</td><td>低～中</td><td>中～高</td></tr>
+<tr><td>推薦指數</td><td><span class="stars">★★☆☆☆</span></td><td><span class="stars">★★★★★</span></td><td><span class="stars">★★★☆☆</span></td></tr>
+</table></div>
+
+<!-- ================= 五 ================= -->
+<h2 id="recommend">五、我的建議：方案 B</h2>
+<div class="note">你已選定 TypeScript（2026-10-29）。方案 A 和 B 都用 TypeScript；方案 C 需要 Python 後端，已不符合這個決定。</div>
+<ol class="why">
+  <li><b>Demo 最核心的設計是「同一份引擎、同一份設定、對話只存輸入、可以重跑」。</b>方案 B 是唯一不必重寫引擎，又能把計算移到伺服器、保證結果可稽核的方案。</li>
+  <li><b>語言模型只負責「理解」和「表達」，程式決定推薦結果。</b>這和專案 CLAUDE.md 的「程式碼決定事實，模型只負責理解與表達」一致；方案 B 用一個語言模型閘道和一個核對步驟就能把兩者隔開。</li>
+  <li><b>一種語言、一個程式碼庫。</b>對新手、一人維護來說成本最低；所有功能開關都可以放在規則版本裡，由後台統一管理。</li>
+</ol>
+
+<!-- ================= 六 ================= -->
+<h2 id="questions">六、需要你確認的問題</h2>
+<p class="progress" id="qProgress"></p>
+<ul class="qs" id="qs">
+  <li class="done"><label><input type="checkbox" checked disabled><div><div class="qt">1. 技術棧 <span class="tag t-ok">已確認</span></div><div class="qd">使用 TypeScript（前端、後端、引擎同一種語言）。</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">2. 部署</div><div class="qd">要用哪一家雲端或主機？要不要部署在台灣或亞洲區域？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">3. 規模</div><div class="qd">預估每日使用人數和尖峰並發量大約多少？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">4. 使用者帳號</div><div class="qd">使用者端要不要登入？還是像 Demo 一樣不登入、資料存在本機就好？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">5. 語言模型</div><div class="qd">正式版的需求理解要改用語言模型嗎（Demo 現在是規則比對）？用後台列的四家供應商，還是另有指定？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">6. 市場</div><div class="qd">價格要不要改成新台幣、機型改成台灣在售的？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">7. 價格同步和評測影片</div><div class="qd">價格是人工匯入 CSV，還是串接電商 API？評測影片放在哪個平台？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">8. 後台權限與告警</div><div class="qd">是否需要多位管理員、唯讀角色、兩步驟驗證？告警要接企業微信、飛書，還是只用郵件？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">9. 後台工程頁</div><div class="qd">效能、執行鏈路、日誌、模型、資料庫這幾頁，第一版就要真的做出來，還是之後再做？</div></div></label></li>
+  <li><label><input type="checkbox"><div><div class="qt">10. 第二階段架構圖範圍</div><div class="qd">嚴格只畫 Demo 裡出現過的元件，還是可以加入方案 B 提到的 worker 和語言模型閘道（圖上標「待確認」）？</div></div></label></li>
+</ul>
+<p class="lead">你確認方案和以上問題後，我再做第二階段的 Mermaid 架構圖。</p>
+</main>
+</div>
+
+<script>
+(function(){
+  var KEY='arch-stage1-checks',root=document.documentElement,boxes=[].slice.call(document.querySelectorAll('#qs input'));
+  function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function write(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  var saved=[];try{saved=JSON.parse(read(KEY)||'[]')}catch(e){}
+  function update(){
+    var n=0;boxes.forEach(function(b){b.closest('li').classList.toggle('done',b.checked);if(b.checked)n++});
+    document.getElementById('qProgress').textContent='已想好答案：'+n+' / '+boxes.length+'（勾選只存在你這台電腦的瀏覽器）';
+  }
+  boxes.forEach(function(b,i){if(b.disabled)return;b.checked=saved.indexOf(i)>=0;b.addEventListener('change',function(){
+    write(KEY,JSON.stringify(boxes.map(function(x,j){return x.checked?j:-1}).filter(function(j){return j>=0})));update()})});
+  update();
+  var t=read('arch-theme');if(t)root.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var dark=root.getAttribute('data-theme')?root.getAttribute('data-theme')==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+    var next=dark?'light':'dark';root.setAttribute('data-theme',next);write('arch-theme',next)});
+})();
+</script>
+</body>
+</html>
