@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 B 架構詳解</title>
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#ffffff;--ink:#1d2330;--sub:#5b6474;--line:#e3e6eb;
+  --accent:#2f6fde;--accent-soft:#e8f0fd;
+  --ok:#1f8a4c;--ok-soft:#e5f5ec;--guess:#b26a00;--guess-soft:#fdf1df;--ask:#c2364a;--ask-soft:#fce8eb;
+  --code:#f0f2f5;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14171c;--panel:#1c2027;--ink:#e6e9ee;--sub:#9aa3b2;--line:#2c323c;
+  --accent:#6b9cff;--accent-soft:#1f2b44;
+  --ok:#4fc983;--ok-soft:#183126;--guess:#f0a640;--guess-soft:#3a2b14;--ask:#ff7b8c;--ask-soft:#3d1c23;
+  --code:#252a33;
+}}
+:root[data-theme="dark"]{
+  --bg:#14171c;--panel:#1c2027;--ink:#e6e9ee;--sub:#9aa3b2;--line:#2c323c;
+  --accent:#6b9cff;--accent-soft:#1f2b44;
+  --ok:#4fc983;--ok-soft:#183126;--guess:#f0a640;--guess-soft:#3a2b14;--ask:#ff7b8c;--ask-soft:#3d1c23;
+  --code:#252a33;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:.88em;font-family:ui-monospace,Menlo,Consolas,monospace}
+pre.tree{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;font:14px/1.6 ui-monospace,Menlo,Consolas,monospace}
+.layout{display:grid;grid-template-columns:250px 1fr;max-width:1280px;margin:0 auto}
+nav{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 18px;border-right:1px solid var(--line)}
+nav .brand{font-weight:700;font-size:15px;margin-bottom:4px}
+nav .meta{font-size:13px;color:var(--sub);margin-bottom:18px}
+nav a{display:block;padding:6px 10px;border-radius:8px;color:var(--sub);text-decoration:none;font-size:14.5px}
+nav a:hover{background:var(--accent-soft);color:var(--accent)}
+main{padding:32px 40px 80px;min-width:0}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:52px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:18px;margin:28px 0 10px}
+p{margin:8px 0}
+.lead{color:var(--sub);margin-bottom:20px}
+.note{background:var(--accent-soft);border-left:4px solid var(--accent);padding:12px 16px;border-radius:8px;margin:16px 0}
+.warn{background:var(--guess-soft);border-left:4px solid var(--guess);padding:12px 16px;border-radius:8px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+.card h3{margin-top:0}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:var(--code);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tag{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 9px;border-radius:999px;white-space:nowrap}
+.t-ok{background:var(--ok-soft);color:var(--ok)}
+.t-guess{background:var(--guess-soft);color:var(--guess)}
+.t-ask{background:var(--ask-soft);color:var(--ask)}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0;overflow-x:auto;text-align:center}
+.diagram .mermaid{min-width:560px}
+.cap{font-size:14px;color:var(--sub);margin-top:-4px}
+.flow{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+.flow li{position:relative;padding:10px 14px 10px 52px;margin:8px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.flow li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
+.big{font-size:26px;font-weight:700;color:var(--accent);line-height:1.2}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat small{display:block;color:var(--sub);font-size:13.5px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+ul{padding-left:22px}
+li{margin:3px 0}
+.themebtn{margin-top:18px;font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px}
+  nav .links{display:flex;flex-wrap:wrap;gap:4px}
+  main{padding:20px 16px 60px}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="brand">AI 筆電選購助手</div>
+  <div class="meta">方案 B 架構詳解<br>2026-10-29</div>
+  <div class="links">
+    <a href="#summary">0. 一頁看懂</a>
+    <a href="#principles">1. 設計原則</a>
+    <a href="#capacity">2. 容量估算</a>
+    <a href="#stack">3. 技術選型</a>
+    <a href="#layers">4. 整體分層</a>
+    <a href="#repo">5. 程式碼結構</a>
+    <a href="#engine">6. 決策引擎</a>
+    <a href="#turn">7. 一輪對話的完整流程</a>
+    <a href="#llm">8. 模型閘道</a>
+    <a href="#eval">9. 模型評測平台</a>
+    <a href="#versions">10. 版本與發布</a>
+    <a href="#flags">11. 功能開關與實驗</a>
+    <a href="#db">12. 資料庫設計</a>
+    <a href="#api">13. API 與即時推送</a>
+    <a href="#frontend">14. 前端</a>
+    <a href="#worker">15. 背景工作</a>
+    <a href="#deploy">16. 部署</a>
+    <a href="#observe">17. 監控與告警</a>
+    <a href="#security">18. 安全</a>
+    <a href="#testing">19. 測試策略</a>
+    <a href="#future">20. 未來擴充</a>
+    <a href="#roadmap">21. 建置順序</a>
+    <a href="#open">22. 待確認事項</a>
+    <a href="#glossary">附錄：名詞小辭典</a>
+  </div>
+  <button class="themebtn" id="themeBtn" type="button">切換深淺色</button>
+</nav>
+
+<main>
+<h1>方案 B 架構詳解</h1>
+<p class="lead">TypeScript 模組化單體＋共用決策引擎。前提：每天 10,000 人、每人 10 則訊息；要能接很多家語言模型，並找出「效果／成本」最好的模型；以最好的建法為目標，保留未來改進的空間。</p>
+
+<div class="note">
+  <b>標記說明：</b>
+  <span class="tag t-ok">建議</span> 我推薦的做法；
+  <span class="tag t-guess">假設</span> 我先用的數字或前提；
+  <span class="tag t-ask">待確認</span> 需要你決定。<br>
+  價格、市場、語言轉換依你的要求不在本文討論範圍。不懂的名詞可以先看最後的<a href="#glossary">名詞小辭典</a>。
+</div>
+
+<!-- ================= 0 ================= -->
+<h2 id="summary">0. 一頁看懂</h2>
+<div class="card">
+<p><b>一句話：</b>把 Demo 的 <code>engine.js</code> 整理成一個 TypeScript「決策引擎套件」，伺服器、使用者網頁、後台三處共用同一份；語言模型只負責「聽懂使用者」和「把結果說成人話」，推薦哪一台永遠由引擎決定。</p>
+<ul>
+  <li><b>4 個應用程式：</b>使用者網頁、後台網頁、API 伺服器、背景工作程式（worker）</li>
+  <li><b>3 個資料服務：</b>PostgreSQL（主資料庫）、Redis（排隊、限流、快取）、物件儲存（大檔與模型完整紀錄）</li>
+  <li><b>核心套件：</b>決策引擎、共享契約（資料格式）、模型閘道、評測工具、功能開關</li>
+  <li><b>每一輪對話都記下 6 個版本號</b>（引擎、規則、資料、提示詞、模型路由、功能開關），所以任何一輪都能完整重現</li>
+  <li><b>模型評測平台：</b>同一批測試題丟給多個模型，自動算出「準確度、速度、成本」，畫成排行榜；線上還能做影子測試和 A/B 分流</li>
+</ul>
+</div>
+<div class="diagram"><pre class="mermaid">
+flowchart LR
+  U["使用者網頁"] -->|"送訊息 / 收 SSE 串流"| API["API 伺服器"]
+  A["後台網頁"] -->|"後台 API"| API
+  API --> ENG["決策引擎套件<br/>（程式決定推薦）"]
+  API --> GW["模型閘道<br/>（多家語言模型）"]
+  GW --> LLM["語言模型供應商<br/>A / B / C ..."]
+  API --> PG[("PostgreSQL")]
+  API --> RD[("Redis")]
+  RD --> W["背景工作程式"]
+  W --> ENG
+  W --> GW
+  W --> PG
+  W --> S3[("物件儲存")]
+  U -.->|"同一份引擎做即時預覽"| ENG
+  A -.->|"同一份引擎做試算"| ENG
+</pre></div>
+<p class="cap">圖 0：整體鳥瞰。實線是網路呼叫，虛線表示「在瀏覽器裡直接執行同一份引擎程式碼」。</p>
+
+<!-- ================= 1 ================= -->
+<h2 id="principles">1. 設計原則（排序即優先順序）</h2>
+<div class="tbl"><table>
+<tr><th>#</th><th>原則</th><th>落實方式</th></tr>
+<tr><td>1</td><td>程式決定事實，模型只負責理解與表達</td><td>語言模型只輸出「需求變更 JSON」和「回覆文字」；推薦、排序、門檻全由引擎計算；回覆裡的數字要核對過才能送出</td></tr>
+<tr><td>2</td><td>一份引擎，到處共用</td><td>引擎是純函式套件，沒有網路、資料庫、時間、亂數的副作用；伺服器、使用者網頁、後台、worker 都 import 同一版</td></tr>
+<tr><td>3</td><td>每一輪都能重現</td><td>對話只存「輸入」；每輪記錄 6 個版本號；同樣的輸入和版本一定得到同樣的推薦</td></tr>
+<tr><td>4</td><td>模型可以隨時換、隨時比</td><td>所有模型走同一個閘道介面；路由設定放資料庫，後台改了就生效，不用改程式</td></tr>
+<tr><td>5</td><td>每個細節都有開關</td><td>統一的功能開關系統，支援依比例、依測試群組開啟，並記錄在每一輪</td></tr>
+<tr><td>6</td><td>先單體、留好拆分的縫</td><td>一個 API 程式、模組之間只透過介面溝通；未來流量大了，模型閘道或 worker 可以獨立拆出去</td></tr>
+<tr><td>7</td><td>模型壞了，系統不能壞</td><td>每個模型呼叫都有逾時、重試、備用模型，最後還有「規則版理解＋模板文案」保底</td></tr>
+</table></div>
+
+<!-- ================= 2 ================= -->
+<h2 id="capacity">2. 容量估算</h2>
+<div class="stats">
+  <div class="stat"><div class="big">100,000</div><small>每天對話輪數（10,000 人 × 10 則）</small></div>
+  <div class="stat"><div class="big">~10 輪/秒</div><small>瞬間尖峰（推算見下表）</small></div>
+  <div class="stat"><div class="big">~20 次/秒</div><small>尖峰時的語言模型呼叫</small></div>
+  <div class="stat"><div class="big">~60 條</div><small>同時進行中的串流連線</small></div>
+</div>
+<div class="tbl"><table>
+<tr><th>項目</th><th>推算</th><th>設計目標（× 2 安全係數）</th></tr>
+<tr><td>尖峰小時流量</td><td>假設尖峰 1 小時佔全天 12% → 12,000 輪／小時 ≈ 3.3 輪／秒 <span class="tag t-guess">假設</span></td><td>—</td></tr>
+<tr><td>瞬間尖峰</td><td>尖峰小時再 × 3 ≈ 10 輪／秒</td><td><b>20 輪／秒</b></td></tr>
+<tr><td>語言模型呼叫</td><td>每輪最多 2 次（理解＋回覆）→ 20 次／秒 ≈ 1,200 次／分鐘</td><td><b>2,400 次／分鐘</b></td></tr>
+<tr><td>Token 用量</td><td>每輪約 3,500（理解約 1,700、回覆約 1,800）<span class="tag t-guess">假設</span> → 每天約 3.5 億</td><td>尖峰每分鐘約 400 萬 token</td></tr>
+<tr><td>同時進行的一輪</td><td>10 輪／秒 × 每輪約 6 秒 ≈ 60</td><td>120</td></tr>
+<tr><td>引擎計算</td><td>約 400 台機型評分一次只要幾毫秒；「這題會不會改變第一名」要多算幾次，約 20–50 毫秒</td><td>單核心就夠，不是瓶頸</td></tr>
+<tr><td>資料庫寫入</td><td>每輪約 8 列（訊息×2、執行、模型呼叫×2、狀態、卡片事件…）→ 尖峰約 80 列／秒</td><td>一台中型 PostgreSQL 很輕鬆</td></tr>
+<tr><td>資料量</td><td>資料庫每輪約 3 KB → 每天約 0.3 GB；模型完整請求／回應每輪約 12 KB，壓縮後放物件儲存</td><td>資料庫每月約 10 GB，大表按月分區</td></tr>
+</table></div>
+<div class="warn"><b>真正的瓶頸是語言模型供應商的速率上限，不是你的伺服器。</b>每分鐘 2,400 次呼叫、400 萬 token，很多供應商的基本方案撐不住。對策：
+<ul>
+  <li>申請較高等級的額度；同一家準備多把金鑰</li>
+  <li>主備模型分屬不同供應商</li>
+  <li>「混合理解」：規則就能完全聽懂的訊息不呼叫模型（見第 7 節），預估可省下 30–60% 的理解呼叫 <span class="tag t-guess">假設，需實測</span></li>
+</ul></div>
+
+<!-- ================= 3 ================= -->
+<h2 id="stack">3. 技術選型</h2>
+<div class="tbl"><table>
+<tr><th>用途</th><th>建議</th><th>為什麼</th><th>備選</th></tr>
+<tr><td>語言與執行環境</td><td>TypeScript ＋ Node.js 22 LTS</td><td>你已確認；前後端同一語言</td><td>—</td></tr>
+<tr><td>Monorepo 管理</td><td>pnpm workspaces ＋ Turborepo</td><td>多個應用共用套件，只重建有改動的部分</td><td>Nx</td></tr>
+<tr><td>API 框架</td><td>Fastify</td><td>速度快、對 SSE 串流支援好、結構簡單</td><td>NestJS（結構更嚴謹但較重）、Hono</td></tr>
+<tr><td>資料格式驗證</td><td>Zod</td><td>一份定義同時產生型別、驗證輸入、驗證模型輸出的 JSON</td><td>TypeBox</td></tr>
+<tr><td>資料庫</td><td>PostgreSQL 16+</td><td>關聯資料＋JSONB 彈性欄位＋分區；生態成熟</td><td>—</td></tr>
+<tr><td>資料庫存取</td><td>Drizzle ORM ＋ drizzle-kit 遷移</td><td>寫法接近 SQL、型別安全、輕量</td><td>Prisma、Kysely</td></tr>
+<tr><td>快取／限流／佇列</td><td>Redis（或相容的 Valkey）＋ BullMQ</td><td>BullMQ 是 TypeScript 最成熟的工作佇列，支援重試、排程、優先順序</td><td>只用 PostgreSQL 的 pg-boss（少一個元件，但功能較少）</td></tr>
+<tr><td>物件儲存</td><td>S3 相容儲存</td><td>放模型完整紀錄、匯入檔、評測報告；便宜且容量無上限</td><td>Cloudflare R2、GCS</td></tr>
+<tr><td>模型呼叫</td><td>自建閘道介面，底層用 Vercel AI SDK</td><td>一套寫法接多家模型，內建結構化輸出和串流</td><td>直接用各家 SDK；評測時可另接 OpenRouter 一次試很多模型</td></tr>
+<tr><td>前端</td><td>React ＋ Vite ＋ TanStack Query ＋ Zustand</td><td>聊天工具型網站不需要伺服器端渲染；Vite 開發快</td><td>Next.js（若之後要做 SEO 落地頁）</td></tr>
+<tr><td>後台圖表與表格</td><td>ECharts、TanStack Table</td><td>Demo 後台有大量圖表和可篩選表格</td><td>Recharts</td></tr>
+<tr><td>追蹤與指標</td><td>OpenTelemetry → Grafana（Tempo／Prometheus／Loki）</td><td>開放標準，之後換供應商不用改程式</td><td>Datadog 等託管服務</td></tr>
+<tr><td>錯誤追蹤</td><td>Sentry</td><td>前後端錯誤集中看</td><td>—</td></tr>
+<tr><td>測試</td><td>Vitest、Playwright、k6、Testcontainers</td><td>分別負責單元、端到端、壓力、資料庫整合測試</td><td>—</td></tr>
+<tr><td>部署</td><td>Docker 容器＋託管雲服務</td><td>見第 16 節</td><td>—</td></tr>
+</table></div>
+
+<!-- ================= 4 ================= -->
+<h2 id="layers">4. 整體分層</h2>
+<div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph L1["表現層"]
+    WU["web-user<br/>使用者網頁"]
+    WA["web-admin<br/>後台網頁"]
+  end
+  subgraph L2["應用層（apps/api）"]
+    IN["對話總管<br/>收訊息・鎖・冪等・限流"]
+    OR["一輪對話編排器<br/>依序執行各階段"]
+    AD["後台服務<br/>規則・機型・開關・評測"]
+    ST["串流推送 SSE"]
+  end
+  subgraph L3["領域層（packages）"]
+    EN["engine<br/>決策引擎"]
+    NL["nlu<br/>需求理解"]
+    RP["reply<br/>回覆生成與數字核對"]
+    FL["flags<br/>功能開關"]
+    EV["eval<br/>評測"]
+  end
+  subgraph L4["基礎設施層"]
+    GW["llm-gateway<br/>模型閘道"]
+    DB["db<br/>資料存取"]
+    OB["observability<br/>追蹤・指標・日誌"]
+  end
+  subgraph L5["外部"]
+    P[("PostgreSQL")]
+    R[("Redis")]
+    S[("物件儲存")]
+    M["語言模型供應商"]
+  end
+  WU --> IN
+  WA --> AD
+  IN --> OR
+  OR --> NL & EN & RP & FL
+  OR --> ST
+  AD --> EN & EV & FL & DB
+  NL --> GW
+  RP --> GW
+  EV --> GW & EN
+  GW --> M
+  DB --> P
+  IN --> R
+  OB --> S
+  OR --> DB
+</pre></div>
+<p class="cap">圖 1：分層。上層可以呼叫下層，下層不知道上層存在；領域層（引擎、理解、回覆）不直接碰資料庫，方便測試和重用。</p>
+<div class="tbl"><table>
+<tr><th>層</th><th>放什麼</th><th>規矩</th></tr>
+<tr><td>表現層</td><td>兩個網頁</td><td>只顯示和收集輸入；推薦結果一律以伺服器為準，瀏覽器的引擎只做預覽</td></tr>
+<tr><td>應用層</td><td>API 路由、對話編排、後台服務</td><td>負責「按順序叫誰做事」，自己不寫業務規則</td></tr>
+<tr><td>領域層</td><td>引擎、理解、回覆、開關、評測</td><td>純邏輯；需要資料時由應用層傳進來</td></tr>
+<tr><td>基礎設施層</td><td>模型閘道、資料庫存取、監控</td><td>對外部服務的包裝；換供應商只改這一層</td></tr>
+</table></div>
+
+<!-- ================= 5 ================= -->
+<h2 id="repo">5. 程式碼結構（monorepo）</h2>
+<pre class="tree">laptop-assistant/
+├─ apps/
+│  ├─ web-user/          使用者網頁（React＋Vite）
+│  ├─ web-admin/         後台網頁（React＋Vite）
+│  ├─ api/               API 伺服器（Fastify）
+│  │   ├─ routes/        對話、機型、回饋、後台…
+│  │   ├─ turn/          一輪對話編排器與各階段
+│  │   └─ admin/         後台服務
+│  └─ worker/            背景工作（BullMQ）
+├─ packages/
+│  ├─ contracts/         共享資料格式：Zod schema、型別、SSE 事件、錯誤碼
+│  ├─ engine/            決策引擎（純函式，從 Demo 的 engine.js 移植）
+│  ├─ rule-parser/       規則版需求理解（從 Demo 移植，當保底和比較基準）
+│  ├─ nlu/               模型版需求理解：提示詞組裝、輸出驗證、合併
+│  ├─ reply/             回覆生成、數字核對、模板文案保底
+│  ├─ llm-gateway/       模型閘道：供應商轉接、路由、重試、備援、計費
+│  ├─ flags/             功能開關的評估邏輯
+│  ├─ eval/              評測：資料集、評分器、排行榜計算
+│  ├─ db/                Drizzle schema、遷移、查詢
+│  ├─ observability/     OpenTelemetry、日誌設定
+│  ├─ ui/                兩個網頁共用的元件（卡片、機型列…）
+│  └─ tsconfig/ eslint/  共用設定
+├─ tools/
+│  ├─ demo-parity/       用 Demo 的 engine.js 和新引擎跑同一批對話，比對結果
+│  └─ load-test/         k6 壓力測試腳本
+├─ fixtures/             測試用機型資料、固定對話情境
+└─ docs/                 架構文件、決策紀錄（ADR）</pre>
+
+<!-- ================= 6 ================= -->
+<h2 id="engine">6. 決策引擎（packages/engine）</h2>
+<div class="card">
+<p><b>它是整個系統的心臟。</b>輸入「需求檔案＋設定＋機型資料」，輸出「候選分組、分數、下一步動作、卡片資料、解釋」。</p>
+<div class="tbl"><table>
+<tr><th>從 Demo 移植的部分</th><th>改進</th></tr>
+<tr><td><code>evaluate</code>、<code>rank</code>、<code>weightsFor</code></td><td>拆成「門檻」「權重」「評分」三個檔案，每條門檻有固定的原因代碼（例如 <code>BUDGET_OVER</code>），方便統計和顯示</td></tr>
+<tr><td><code>decideAction</code>、<code>nextKey</code>、<code>matters</code></td><td>規則順序做成設定裡的清單，後台可調整；每次決策輸出「命中哪一條規則」</td></tr>
+<tr><td><code>picksFor</code>、<code>closeCall</code>、<code>relaxOptions</code></td><td>推薦組合和放寬選項各自獨立，方便做開關</td></tr>
+<tr><td><code>explain</code></td><td>直接產出後台「為什麼這樣回答」所需的完整結構</td></tr>
+<tr><td>模組層級的 <code>S</code>、<code>CFG</code></td><td><b>改成每次呼叫都把狀態和設定當參數傳進去</b>，不再有共享變數，伺服器同時處理很多人也不會互相干擾</td></tr>
+<tr><td>Demo 用亂數產生的機型和影片時間點</td><td>移除；資料一律從資料庫的機型快照傳入</td></tr>
+</table></div>
+<p><b>主要函式（示意）：</b></p>
+<ul>
+  <li><code>applyInput(state, input, ctx) → { state, turnResult }</code>：處理一次輸入（說話、點選項、排除機型、放寬…），等同 Demo 的 <code>step</code></li>
+  <li><code>rank(profile, ctx) → { ok, border, out, evals, weights }</code></li>
+  <li><code>decide(state, ctx) → action</code>：追問／確認／放寬／推薦</li>
+  <li><code>buildCards(state, action, ctx) → cards</code>：卡片資料，每個數字附上實測出處 ID</li>
+  <li><code>explain(state, ctx) → explanation</code></li>
+  <li><code>replay(inputs[], ctx) → turns[]</code>：用輸入清單重跑整段對話</li>
+</ul>
+<p><code>ctx</code>（情境）＝規則設定＋機型資料快照＋開關值＋引擎版本。<b>同樣的 <code>ctx</code> 和輸入，一定得到同樣的結果。</b></p>
+</div>
+<div class="note"><b>機型資料怎麼給引擎：</b>機型只有幾百台，整份資料不到 1 MB。API 啟動時把「目前發布的資料版本」整份載入記憶體；後台發布新版本時，各台 API 透過 Redis 收到通知，重新載入。引擎評分不需要每次查資料庫，所以很快。</div>
+
+<!-- ================= 7 ================= -->
+<h2 id="turn">7. 一輪對話的完整流程</h2>
+<div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant B as 使用者瀏覽器
+  participant API as API 對話總管
+  participant N as 需求理解 nlu
+  participant G as 模型閘道
+  participant E as 決策引擎
+  participant R as 回覆生成 reply
+  participant DB as PostgreSQL
+  B->>API: POST 訊息（附 client_request_id）
+  API->>API: 驗證身分・限流・冪等檢查・取對話鎖
+  API->>DB: 讀對話狀態與版本
+  API-->>B: SSE run_started
+  API->>N: 理解這句話
+  N->>N: 先用規則解析
+  alt 規則已完全聽懂
+    N-->>API: 需求變更（不呼叫模型）
+  else 有聽不懂的部分
+    N->>G: 結構化輸出請求
+    G-->>N: 需求變更 JSON
+    N->>N: 驗證格式與原文依據
+    N-->>API: 需求變更
+  end
+  API-->>B: SSE state_updated（需求檔案）
+  API->>E: 套用變更並評分、決定動作
+  E-->>API: 候選、分數、動作、卡片資料
+  API-->>B: SSE cards_updated（先給結果）
+  API->>R: 生成回覆（只給卡片裡的事實）
+  R->>G: 串流請求
+  loop 每完成一句
+    G-->>R: 文字片段
+    R->>R: 數字核對
+    R-->>API: 通過的句子
+    API-->>B: SSE assistant_delta
+  end
+  API->>DB: 一次寫入訊息、狀態、執行紀錄、模型呼叫
+  API-->>B: SSE run_completed
+  API->>API: 釋放對話鎖
+</pre></div>
+<p class="cap">圖 2：一輪對話的時序。重點是「先送結果卡片、再串流文字」，使用者最快在 1–2 秒內看到推薦變化。</p>
+
+<h3>各階段說明與時間預算</h3>
+<div class="tbl"><table>
+<tr><th>階段</th><th>做什麼</th><th>預算</th><th>失敗時</th></tr>
+<tr><td>1 對話總管</td><td>驗證訪客或使用者身分；每人每分鐘限 10 輪；同一個 <code>client_request_id</code> 只處理一次；同一對話同時只跑一輪（第二個請求回 409）</td><td>50 ms</td><td>回明確錯誤碼</td></tr>
+<tr><td>2 需求理解</td><td>「混合模式」：先跑規則解析；規則有聽不懂的字詞才呼叫模型。模型只回 JSON，每個欄位要附「原文依據」，依據不在原文裡就丟掉</td><td>規則 10 ms／模型 2,500 ms</td><td>格式錯重試 1 次 → 換備用模型 → 只用規則結果，並請使用者補充</td></tr>
+<tr><td>3 詞庫與攔截</td><td>別名正規化、軟體門檻展開、未收錄機型攔截</td><td>20 ms</td><td>—</td></tr>
+<tr><td>4–6 引擎計算</td><td>門檻篩選、權重、評分排序</td><td>50 ms</td><td>這裡出錯＝程式錯誤，回錯誤，絕不亂推薦</td></tr>
+<tr><td>7 動作決策</td><td>追問、確認、放寬、推薦、比較、解釋</td><td>50 ms</td><td>—</td></tr>
+<tr><td>8 卡片資料</td><td>組出卡片內容，每個數字附實測 ID 和影片時間點</td><td>20 ms</td><td>—</td></tr>
+<tr><td>9 回覆生成</td><td>模型只拿到第 8 步的事實；逐句串流；每句的數字要能對上事實，對不上就刪掉該句</td><td>首字 1,500 ms</td><td>逾時或刪到不剩一句 → 用模板文案</td></tr>
+<tr><td>10 寫入紀錄</td><td>一個資料庫交易寫完；模型完整請求和回應壓縮後非同步送物件儲存</td><td>60 ms</td><td>寫入失敗要告警，但已送出的回覆不撤回</td></tr>
+</table></div>
+<div class="note"><b>延遲目標：</b>送出到看到結果卡片 P50 ≤ 1.5 秒（不用模型時 ≤ 0.3 秒）；送出到第一個字 P50 ≤ 3 秒、P95 ≤ 6 秒 <span class="tag t-guess">假設，依模型實測調整</span>。使用者直接改需求檔案或權重時完全不呼叫模型，P95 ≤ 0.5 秒。</div>
+
+<h3>斷線與重新整理</h3>
+<ul>
+  <li>SSE 斷線時，前端呼叫 <code>GET /conversations/{id}/state</code> 拿最新狀態，不補播動畫</li>
+  <li>若該輪還在跑，前端可用 <code>GET /runs/{runId}/events?after=序號</code> 接續收事件（事件暫存在 Redis 5 分鐘）</li>
+</ul>
+
+<!-- ================= 8 ================= -->
+<h2 id="llm">8. 模型閘道（packages/llm-gateway）</h2>
+<p>所有模型呼叫只能走這裡。它讓「換模型」變成改後台設定，而不是改程式。</p>
+<div class="diagram"><pre class="mermaid">
+flowchart LR
+  C["呼叫方<br/>nlu / reply / eval"] --> RT["路由器<br/>依角色選模型"]
+  RT --> POL["政策<br/>逾時・重試・熔斷"]
+  POL --> AD1["轉接器 A"]
+  POL --> AD2["轉接器 B"]
+  POL --> AD3["轉接器 C"]
+  AD1 --> PA["供應商 A"]
+  AD2 --> PB["供應商 B"]
+  AD3 --> PC["供應商 C"]
+  POL --> MET["計量<br/>token・耗時・成本"]
+  MET --> LOG[("llm_calls 表<br/>＋物件儲存")]
+  CFG[("model_routes 設定")] --> RT
+</pre></div>
+<p class="cap">圖 3：模型閘道內部。</p>
+<div class="grid2">
+  <div class="card"><h3>角色（role）</h3>
+    <ul>
+      <li><code>nlu</code>：需求理解，要結構化 JSON、低延遲</li>
+      <li><code>reply</code>：回覆文字，要串流、語氣自然</li>
+      <li><code>judge</code>：評測時的評審模型，固定一個高品質模型</li>
+      <li>未來可加：<code>summary</code>（對話摘要）、<code>classify</code>（意圖分類）</li>
+    </ul></div>
+  <div class="card"><h3>路由設定（存在資料庫）</h3>
+    <ul>
+      <li>每個角色：主模型、備用模型清單（依序）</li>
+      <li>分流比例：例如 <code>nlu</code> 90% 走 A、10% 走 B（A/B 測試）</li>
+      <li>影子模型：另外跑一份但不給使用者看，只記錄比較</li>
+      <li>參數：溫度、最大 token、逾時秒數</li>
+      <li>依對話 ID 雜湊分流，同一段對話固定用同一個模型</li>
+    </ul></div>
+</div>
+<div class="tbl"><table>
+<tr><th>機制</th><th>做法</th></tr>
+<tr><td>統一介面</td><td><code>generateObject(role, schema, messages)</code>、<code>streamText(role, messages)</code>；回傳統一格式（內容、token、耗時、供應商、模型、成本）</td></tr>
+<tr><td>結構化輸出</td><td>用 Zod schema 要求 JSON；支援原生 JSON 模式的模型就用原生，不支援的用提示詞＋驗證</td></tr>
+<tr><td>逾時與重試</td><td>依角色設定逾時；網路錯誤或 429 才重試，最多 1 次，帶隨機退避</td></tr>
+<tr><td>熔斷</td><td>某供應商 1 分鐘內失敗率超過門檻就暫停 30 秒，直接走備用</td></tr>
+<tr><td>多金鑰輪替</td><td>同一供應商可設多把金鑰，分攤速率上限</td></tr>
+<tr><td>計量</td><td>模型單價表存資料庫，每次呼叫算出成本；提示詞快取命中也要記</td></tr>
+<tr><td>紀錄</td><td>資料庫存摘要（模型、token、耗時、成本、是否合格）；完整請求和回應壓縮放物件儲存，保留 90 天 <span class="tag t-guess">假設</span></td></tr>
+<tr><td>新增模型</td><td>相容 OpenAI 格式的模型：後台填網址、模型名、金鑰即可；其他格式：寫一個轉接器（約 100 行）</td></tr>
+</table></div>
+
+<!-- ================= 9 ================= -->
+<h2 id="eval">9. 模型評測平台（packages/eval ＋ 後台頁面）</h2>
+<div class="note"><b>這是你最在意的部分：</b>找出「效果／成本」最好的模型。系統的優勢是：理解的輸出是結構化 JSON，引擎又是確定性的，所以<b>大部分指標可以自動算，不必靠人工打分</b>。</div>
+
+<div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph DS["評測資料集"]
+    D1["理解題<br/>一句話 → 標準答案 JSON"]
+    D2["整段對話題<br/>輸入清單 → 期望第一名與動作"]
+    D3["回覆題<br/>卡片事實 → 評分規準"]
+    D4["線上抽樣<br/>真實對話（去識別化）"]
+  end
+  DS --> RUN["評測執行<br/>worker 平行跑多個模型"]
+  RUN --> SC["自動評分器"]
+  SC --> M1["理解準確度<br/>欄位 F1・完全正確率"]
+  SC --> M2["結果一致率<br/>第一名・動作是否和標準相同"]
+  SC --> M3["回覆品質<br/>數字核對通過率・評審模型分數"]
+  SC --> M4["速度與成本<br/>P50・P95・每千輪成本"]
+  M1 & M2 & M3 & M4 --> LB["排行榜<br/>效果／成本散佈圖"]
+  LB --> DEC{"值得上線？"}
+  DEC -->|"是"| SH["影子模式<br/>線上並跑不顯示"]
+  SH --> AB["A/B 分流<br/>5% → 20% → 50%"]
+  AB --> PUB["改成主模型"]
+  DEC -->|"否"| DONE["記錄結論"]
+</pre></div>
+<p class="cap">圖 4：從離線評測到正式上線的完整路徑。</p>
+
+<h3>9.1 三種評測資料</h3>
+<div class="tbl"><table>
+<tr><th>資料集</th><th>內容</th><th>來源</th><th>建議數量</th></tr>
+<tr><td>理解題</td><td>使用者的一句話＋當時的需求檔案 → 標準答案（需求變更 JSON）</td><td>Demo 的示範情境、你寫的句子、線上「聽不懂」的訊息；用最強模型先標註，再由人確認</td><td>起步 200 題，逐步到 1,000 題</td></tr>
+<tr><td>整段對話題</td><td>一串輸入 → 期望的第一名機型和最後動作（等同 Demo 的回歸用例）</td><td>後台「設為回歸用例」</td><td>50–200 段</td></tr>
+<tr><td>回覆題</td><td>卡片事實 → 評分規準（正確、簡潔、有回應使用者、不亂編數字）</td><td>從線上紀錄抽樣</td><td>100 題</td></tr>
+</table></div>
+
+<h3>9.2 指標</h3>
+<div class="tbl"><table>
+<tr><th>指標</th><th>怎麼算</th><th>自動？</th></tr>
+<tr><td>格式合格率</td><td>輸出能通過 Zod 驗證的比例</td><td>✅</td></tr>
+<tr><td>欄位 F1</td><td>每個需求欄位（預算、用途、重量…）比對標準答案的精確率和召回率</td><td>✅</td></tr>
+<tr><td>完全正確率</td><td>整份需求變更和標準答案一模一樣的比例</td><td>✅</td></tr>
+<tr><td><b>結果一致率</b></td><td>把模型的理解丟進引擎，看「第一名」和「下一步動作」是否和標準答案得到的一樣。<b>這是最貼近使用者感受的指標</b>：欄位小錯但結果相同，對使用者沒差</td><td>✅</td></tr>
+<tr><td>數字核對通過率</td><td>回覆裡的數字全部對得上事實的比例</td><td>✅</td></tr>
+<tr><td>回覆品質分</td><td>固定的評審模型依規準打 1–5 分；每月抽 50 題人工複核，確認評審沒走偏</td><td>半自動</td></tr>
+<tr><td>延遲</td><td>P50、P95、首字時間</td><td>✅</td></tr>
+<tr><td>成本</td><td>每千輪成本（依實際 token 和單價表）</td><td>✅</td></tr>
+<tr><td>穩定度</td><td>同一題跑 3 次，結果一致的比例</td><td>✅</td></tr>
+</table></div>
+
+<h3>9.3 怎麼判斷「效果／成本」最好</h3>
+<ul>
+  <li><b>散佈圖：</b>橫軸是每千輪成本，縱軸是綜合效果分。最左上方那條邊界（帕累托前緣）上的模型才值得考慮，其他的都有「更便宜又更好」的替代品</li>
+  <li><b>綜合效果分</b>＝結果一致率 50%＋欄位 F1 20%＋回覆品質 20%＋格式合格率 10% <span class="tag t-guess">權重是假設，後台可調</span></li>
+  <li><b>硬門檻：</b>格式合格率 &lt; 98% 或 P95 &gt; 4 秒的模型直接不列入 <span class="tag t-guess">假設</span></li>
+  <li><b>理解和回覆分開選：</b>理解要準、要快；回覆要自然。兩者最佳模型常常不同</li>
+</ul>
+
+<h3>9.4 線上驗證</h3>
+<div class="tbl"><table>
+<tr><th>階段</th><th>做法</th><th>看什麼</th></tr>
+<tr><td>影子模式</td><td>新模型和現行模型同時跑理解，只有現行的結果給使用者</td><td>兩者推薦結果不同的比例；不同時，誰比較對（抽樣人工看）</td></tr>
+<tr><td>A/B 分流</td><td>依對話 ID 分組，5% → 20% → 50% 逐步放大</td><td>拿到建議的比例、對話中途離開率、按讚率、重問率、成本、延遲</td></tr>
+<tr><td>全量</td><td>改成主模型，舊模型降為備用</td><td>持續監控；異常時一鍵切回</td></tr>
+</table></div>
+
+<h3>9.5 長期省錢的路：蒸餾 <span class="tag t-guess">未來</span></h3>
+<p>線上累積的「大模型理解結果＋使用者後續行為」可以當訓練資料，微調一個小模型專門做理解。品質接近、成本和延遲都大幅下降。因為所有呼叫都有完整紀錄，這條路從第一天就鋪好了。</p>
+
+<!-- ================= 10 ================= -->
+<h2 id="versions">10. 版本與發布</h2>
+<div class="tbl"><table>
+<tr><th>版本號</th><th>管什麼</th><th>誰會改</th></tr>
+<tr><td><code>engine_version</code></td><td>引擎程式本身</td><td>部署新程式時</td></tr>
+<tr><td><code>rule_version</code></td><td>門檻、權重、追問順序、卡片設定、詞庫</td><td>後台「規則與詞庫」「卡片」</td></tr>
+<tr><td><code>data_version</code></td><td>機型、實測、價格、上下架</td><td>後台「機型庫」、價格匯入</td></tr>
+<tr><td><code>prompt_version</code></td><td>理解和回覆的提示詞</td><td>後台「模型與提示詞」</td></tr>
+<tr><td><code>route_version</code></td><td>哪個角色用哪個模型、分流比例</td><td>後台「模型與提示詞」</td></tr>
+<tr><td><code>flags_version</code></td><td>功能開關</td><td>後台「功能開關」</td></tr>
+</table></div>
+<div class="diagram"><pre class="mermaid">
+flowchart LR
+  E["後台編輯<br/>存成草稿"] --> V["格式與合理性檢查"]
+  V --> G["跑全部回歸用例"]
+  G -->|"有失敗"| E
+  G -->|"全過"| I["影響評估<br/>用新設定重跑近 30 天對話"]
+  I --> R["人工檢視差異"]
+  R -->|"不滿意"| E
+  R -->|"同意"| C["金絲雀<br/>先給 5% 對話"]
+  C --> P["全量發布"]
+  P -.->|"有問題一鍵回滾"| OLD["上一版"]
+</pre></div>
+<p class="cap">圖 5：設定發布流程（規則、資料、提示詞、模型路由都適用）。</p>
+<ul>
+  <li>所有版本都是<b>不可修改</b>的：發布後只能再發一版新的，不能改舊的，紀錄才可信</li>
+  <li>每輪對話開始時「釘住」當下的版本；對話途中發布新版本，下一輪才套用（或依開關決定整段對話都用舊版）</li>
+  <li>影響評估在 worker 跑：近 30 天約 300 萬輪，只需重跑引擎（不呼叫模型，因為理解結果已存下），幾分鐘就能完成</li>
+</ul>
+
+<!-- ================= 11 ================= -->
+<h2 id="flags">11. 功能開關與實驗</h2>
+<div class="note">專案要求「每個細節都有開關，方便找真實使用者測試」。開關分成兩種，<b>一定要分清楚</b>：</div>
+<div class="grid2">
+  <div class="card"><h3>引擎開關（會影響推薦）</h3>
+    <p>例如：確認卡要不要出現、追問上限、「兩台很接近」提示、放寬選項數量、某條門檻規則。</p>
+    <ul>
+      <li>屬於 <code>rule_version</code> 的一部分</li>
+      <li>改了要走回歸測試和影響評估</li>
+      <li>重跑舊對話時會用當時的值</li>
+    </ul></div>
+  <div class="card"><h3>介面開關（只影響畫面）</h3>
+    <p>例如：顯示效能數字、顯示影片時間點和連結、卡片樣式、動畫、版面配置。</p>
+    <ul>
+      <li>屬於 <code>flags_version</code></li>
+      <li>可以即時切換，不影響推薦結果</li>
+      <li>適合大量 A/B 測試</li>
+    </ul></div>
+</div>
+<div class="tbl"><table>
+<tr><th>功能</th><th>做法</th></tr>
+<tr><td>開關定義</td><td>每個開關有：代碼、說明、類型（開關／選項／數字）、預設值、屬於哪種</td></tr>
+<tr><td>目標設定</td><td>全部開、全部關、依比例（例如 30%）、指定測試群組（例如「訪談用戶 A 組」）、指定訪客 ID</td></tr>
+<tr><td>穩定分組</td><td>同一訪客永遠落在同一組（依 ID 雜湊），不會一下有一下沒有</td></tr>
+<tr><td>測試群組連結</td><td>後台產生專屬網址（例如 <code>?cohort=interview-a</code>），你發給受訪者，他們就會看到指定的開關組合</td></tr>
+<tr><td>記錄</td><td>每輪記下開關組合的指紋；後台所有統計都能按開關組合拆開比較</td></tr>
+<tr><td>實驗報表</td><td>選一個開關，自動比較各組的拿到建議率、離開率、按讚率、對話輪數，並標示差異是否顯著</td></tr>
+<tr><td>介面</td><td>程式裡透過 OpenFeature 標準介面讀開關；未來想改用 GrowthBook、Unleash 等專業工具時不用改業務程式</td></tr>
+</table></div>
+
+<!-- ================= 12 ================= -->
+<h2 id="db">12. 資料庫設計</h2>
+<p>以 Demo 後台列出的 17 張表為基礎，補上評測、開關、帳號相關的表。<b>粗體</b>是大表，按月分區。</p>
+<div class="tbl"><table>
+<tr><th>群組</th><th>表</th><th>重點欄位與說明</th></tr>
+<tr><td>機型資料</td><td>laptops、laptop_measurements、videos、price_history、data_versions</td><td>機型主表；一項實測一列，附影片 ID 和時間點；價格歷史；資料版本快照（發布時把整份機型資料存成一份 JSON，引擎直接載入）</td></tr>
+<tr><td>知識</td><td>lexicon_aliases、software_requirements</td><td>使用者說法 → 引擎詞彙；軟體 → 硬體門檻</td></tr>
+<tr><td>身分</td><td>guests、users、admin_users</td><td>訪客匿名代碼；選用帳號；後台帳號與角色</td></tr>
+<tr><td>對話</td><td>conversations、<b>messages</b>、conversation_states、favorites</td><td>對話（含釘住的版本）；每則輸入和回覆；最新狀態（可由輸入重算，存著只為了快）</td></tr>
+<tr><td>執行</td><td><b>runs</b>、<b>llm_calls</b>、candidate_summaries</td><td>每輪一列（動作、耗時、成本、6 個版本號、開關指紋）；模型呼叫摘要；候選摘要只存前 20 名和各組數量</td></tr>
+<tr><td>設定</td><td>rule_versions、card_templates、prompt_versions、providers、models、model_routes、feature_flags、cohorts</td><td>全部有版本、不可修改</td></tr>
+<tr><td>評測</td><td>eval_datasets、eval_cases、eval_runs、eval_results、human_ratings、golden_cases</td><td>資料集、題目、每次評測、每題結果、人工評分、回歸用例</td></tr>
+<tr><td>回饋</td><td><b>card_events</b>、feedback、unknown_phrases</td><td>卡片曝光和點擊；讚／踩；聽不懂的說法</td></tr>
+<tr><td>稽核</td><td>admin_audit_log</td><td>誰、何時、改了什麼、看了哪段對話</td></tr>
+</table></div>
+<div class="note"><b>和 Demo 的差異：</b>
+<ul>
+  <li><b>候選快照不存全部機型。</b>每輪都存 400 台的狀態，一天會多 4,000 萬列。因為引擎是確定性的，需要細節時用版本號重算就好，所以只存前 20 名和摘要</li>
+  <li><b>每個階段的耗時（run_spans）不放 PostgreSQL</b>，改送 OpenTelemetry 追蹤系統；後台「執行鏈路」頁從那裡讀</li>
+  <li><b>模型完整請求和回應</b>放物件儲存，資料庫只存摘要和檔案位置</li>
+</ul></div>
+<div class="diagram"><pre class="mermaid">
+erDiagram
+  conversations ||--o{ messages : "包含"
+  conversations ||--o{ runs : "每輪一次"
+  conversations ||--|| conversation_states : "最新狀態"
+  runs ||--o{ llm_calls : "呼叫模型"
+  runs ||--o| candidate_summaries : "候選摘要"
+  runs ||--o{ card_events : "卡片曝光與點擊"
+  runs }o--|| rule_versions : "釘住"
+  runs }o--|| data_versions : "釘住"
+  runs }o--|| prompt_versions : "釘住"
+  laptops ||--o{ laptop_measurements : "實測"
+  laptop_measurements }o--o| videos : "出處"
+  laptops ||--o{ price_history : "價格"
+  eval_runs ||--o{ eval_results : "每題結果"
+  eval_cases ||--o{ eval_results : "被評測"
+  models ||--o{ eval_runs : "被測模型"
+  models ||--o{ llm_calls : "使用"
+</pre></div>
+<p class="cap">圖 6：主要資料表關係（簡化）。</p>
+<div class="tbl"><table>
+<tr><th>資料保留</th><th>建議 <span class="tag t-guess">假設</span></th></tr>
+<tr><td>訊息、執行紀錄</td><td>180 天後去識別化，保留統計用欄位</td></tr>
+<tr><td>模型完整請求／回應</td><td>90 天；被選進評測資料集的永久保留</td></tr>
+<tr><td>追蹤（各階段耗時）</td><td>14 天</td></tr>
+<tr><td>訪客代碼</td><td>90 天沒用就清除</td></tr>
+</table></div>
+
+<!-- ================= 13 ================= -->
+<h2 id="api">13. API 與即時推送</h2>
+<div class="tbl"><table>
+<tr><th>方法與路徑</th><th>用途</th></tr>
+<tr><td>POST /api/session</td><td>建立或取回訪客身分，回傳介面開關值</td></tr>
+<tr><td>POST /api/conversations</td><td>開新對話</td></tr>
+<tr><td>POST /api/conversations/{id}/turns</td><td>送出一次輸入（說話、點選項、排除、放寬、改偏好…）；<b>回應本身就是 SSE 串流</b></td></tr>
+<tr><td>GET /api/conversations/{id}/state</td><td>最新狀態（斷線重連用）</td></tr>
+<tr><td>GET /api/runs/{runId}/events?after=n</td><td>接續收某輪的事件</td></tr>
+<tr><td>PATCH /api/conversations/{id}/profile</td><td>直接改需求檔案（不呼叫模型）</td></tr>
+<tr><td>GET /api/laptops、/api/laptops/{id}、/api/measurements/{id}</td><td>機型、詳情、實測出處</td></tr>
+<tr><td>POST /api/feedback、POST /api/events</td><td>讚／踩；看詳情、對比、收藏等行為</td></tr>
+<tr><td>/api/admin/…</td><td>後台：規則、機型、開關、模型、評測、對話查詢、統計</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>SSE 事件</th><th>內容</th></tr>
+<tr><td>run_started</td><td>runId、版本號</td></tr>
+<tr><td>state_updated</td><td>需求檔案變化、這輪聽懂了什麼</td></tr>
+<tr><td>cards_updated</td><td>候選數量、推薦卡、追問卡、確認卡或衝突卡的資料</td></tr>
+<tr><td>assistant_delta</td><td>一段已核對過的回覆文字</td></tr>
+<tr><td>run_completed／run_failed</td><td>結束；失敗時附錯誤碼和可否重試</td></tr>
+</table></div>
+<p>每個事件都有 <code>runId</code>、遞增的 <code>seq</code>、<code>type</code>、<code>payload</code>。事件格式定義在 <code>packages/contracts</code>，前後端共用同一份型別。</p>
+<div class="note"><b>為什麼「送訊息的回應直接就是串流」：</b>處理這一輪的伺服器就是推送的伺服器，不需要在多台伺服器之間轉發事件，架構最簡單。以每秒 20 輪、每輪 6 秒計算，同時只有約 120 條連線，Node.js 輕鬆應付。</div>
+
+<!-- ================= 14 ================= -->
+<h2 id="frontend">14. 前端</h2>
+<div class="grid2">
+  <div class="card"><h3>web-user 使用者網頁</h3>
+    <ul>
+      <li>沿用 Demo V10 的版面：左側對話歷史、中間對話、右邊結果</li>
+      <li>伺服器狀態用 TanStack Query 管；介面狀態（展開、版面）用 Zustand</li>
+      <li>收到 <code>cards_updated</code> 立刻更新結果區，文字再慢慢串流</li>
+      <li>使用者拖動權重、改需求時，<b>先用瀏覽器裡的引擎即時預覽</b>，同時送伺服器確認；兩者不一致時以伺服器為準，並回報錯誤（應該永遠不會發生）</li>
+      <li>收藏和歷史：訪客存本機，登入後同步到伺服器 <span class="tag t-ask">待確認是否要帳號</span></li>
+      <li>所有介面開關從 <code>/api/session</code> 取得</li>
+    </ul></div>
+  <div class="card"><h3>web-admin 後台網頁</h3>
+    <ul>
+      <li>沿用 Demo 後台的 14 個頁面，新增「模型評測」「功能開關與實驗」兩頁</li>
+      <li>「試算」和「為什麼這樣回答」在瀏覽器用同一份引擎即時算</li>
+      <li>大量計算（影響評估、評測）交給 worker，頁面顯示進度</li>
+      <li>依角色顯示：管理員、編輯者、唯讀</li>
+    </ul></div>
+</div>
+
+<!-- ================= 15 ================= -->
+<h2 id="worker">15. 背景工作（apps/worker）</h2>
+<div class="tbl"><table>
+<tr><th>工作</th><th>觸發</th><th>說明</th></tr>
+<tr><td>影響評估</td><td>後台要發布設定前</td><td>用新設定重跑近 30 天對話，算出第一名改變的比例和明細</td></tr>
+<tr><td>回歸測試</td><td>每次發布前、每晚</td><td>跑全部回歸用例</td></tr>
+<tr><td>模型評測</td><td>後台手動、每週排程</td><td>多個模型平行跑評測資料集；控制速率避免打爆供應商</td></tr>
+<tr><td>資料匯入</td><td>上傳 CSV</td><td>驗證、比對差異、產生新的資料版本草稿</td></tr>
+<tr><td>資料品質報告</td><td>每天</td><td>缺實測、異常值、價格過期</td></tr>
+<tr><td>統計彙總</td><td>每小時</td><td>預先算好後台圖表需要的數字，後台開啟才會快</td></tr>
+<tr><td>模型紀錄上傳</td><td>每輪結束</td><td>把完整請求和回應壓縮送物件儲存</td></tr>
+<tr><td>清理</td><td>每天</td><td>依保留政策刪除或去識別化</td></tr>
+<tr><td>告警檢查</td><td>每 5 分鐘</td><td>拿到建議率、錯誤率、成本、延遲是否超標</td></tr>
+</table></div>
+
+<!-- ================= 16 ================= -->
+<h2 id="deploy">16. 部署</h2>
+<div class="diagram"><pre class="mermaid">
+flowchart TB
+  USER["使用者"] --> CDN["CDN<br/>web-user・web-admin 靜態檔"]
+  USER --> LB["負載平衡器 HTTPS"]
+  ADMIN["管理員"] --> CDN
+  ADMIN --> LB
+  LB --> A1["api 容器 #1"]
+  LB --> A2["api 容器 #2"]
+  LB --> A3["api 容器 #3（自動擴充）"]
+  A1 & A2 & A3 --> PG[("託管 PostgreSQL<br/>主庫＋唯讀副本")]
+  A1 & A2 & A3 --> RD[("託管 Redis")]
+  RD --> W1["worker 容器 ×2"]
+  W1 --> PG
+  W1 --> S3[("物件儲存")]
+  A1 & A2 & A3 --> S3
+  A1 & A2 & A3 --> LLM["語言模型供應商"]
+  W1 --> LLM
+  A1 & A2 & A3 --> OBS["監控<br/>Grafana・Sentry"]
+  W1 --> OBS
+  SEC["密鑰管理<br/>API 金鑰"] -.-> A1 & A2 & A3 & W1
+</pre></div>
+<p class="cap">圖 7：正式環境部署。另有一套規格較小的測試環境，結構相同。</p>
+<div class="tbl"><table>
+<tr><th>元件</th><th>起始規格 <span class="tag t-guess">假設</span></th><th>說明</th></tr>
+<tr><td>api</td><td>3 個容器 × 1 vCPU／1 GB，CPU 超過 60% 自動加</td><td>沒有狀態，可隨時增減</td></tr>
+<tr><td>worker</td><td>2 個容器 × 2 vCPU／2 GB</td><td>評測和影響評估比較吃 CPU</td></tr>
+<tr><td>PostgreSQL</td><td>2 vCPU／8 GB、100 GB SSD、每日備份、時間點還原；後台查詢走唯讀副本</td><td>用託管服務，不自己維護</td></tr>
+<tr><td>Redis</td><td>1 GB，託管</td><td>佇列、限流、事件暫存</td></tr>
+<tr><td>CDN</td><td>託管</td><td>兩個網頁都是靜態檔</td></tr>
+</table></div>
+<p><b>雲端選擇</b> <span class="tag t-ask">待確認</span>：以上在 AWS（ECS Fargate＋RDS＋ElastiCache＋S3＋CloudFront）、Google Cloud（Cloud Run＋Cloud SQL＋Memorystore＋GCS）或較簡單的平台（Render、Fly.io＋Neon／Supabase＋Upstash）都能做。新手建議從 <b>Google Cloud Run</b> 或 <b>Render</b> 開始：不用管伺服器，SSE 支援良好，之後要搬也只是換容器的家。</p>
+<p><b>CI/CD（GitHub Actions）：</b>每次推送 → 型別檢查、單元測試、引擎與 Demo 一致性測試 → 建容器 → 自動部署到測試環境 → 跑端到端測試 → 手動按鈕部署正式環境。資料庫遷移在部署前自動執行，且只做「向後相容」的變更。</p>
+
+<!-- ================= 17 ================= -->
+<h2 id="observe">17. 監控與告警</h2>
+<div class="tbl"><table>
+<tr><th>類別</th><th>看什麼</th><th>工具</th></tr>
+<tr><td>追蹤</td><td>每輪對話的每個階段耗時（等同 Demo 的「執行鏈路」頁）</td><td>OpenTelemetry → Tempo</td></tr>
+<tr><td>系統指標</td><td>每秒輪數、錯誤率、P50／P95 延遲、同時連線數、佇列長度</td><td>Prometheus → Grafana</td></tr>
+<tr><td>模型指標</td><td>各模型的呼叫數、失敗率、延遲、token、成本、備援切換次數</td><td>同上＋後台頁面</td></tr>
+<tr><td>業務指標</td><td>拿到建議率、中途離開率、零結果率、按讚率、聽不懂率</td><td>後台（由 worker 彙總）</td></tr>
+<tr><td>日誌</td><td>結構化 JSON 日誌，每筆帶 runId</td><td>pino → Loki</td></tr>
+<tr><td>錯誤</td><td>前後端例外</td><td>Sentry</td></tr>
+</table></div>
+<p><b>告警（沿用 Demo 後台的設計）：</b>拿到建議率低於門檻、重試率過高、零結果過多、價格過期、成本超標、首字延遲 P95 超標、某供應商失敗率高。通知管道 <span class="tag t-ask">待確認</span>。</p>
+
+<!-- ================= 18 ================= -->
+<h2 id="security">18. 安全</h2>
+<ul>
+  <li><b>金鑰：</b>模型 API 金鑰只放雲端密鑰管理服務；後台只顯示末四碼，不能匯出</li>
+  <li><b>後台登入：</b>強制兩步驟驗證（或接公司 Google／Microsoft 帳號登入）；角色分管理員、編輯者、唯讀；所有修改寫稽核紀錄</li>
+  <li><b>使用者端：</b>訪客用匿名代碼（放 HttpOnly Cookie）；輸入最長 1,000 字；每人每分鐘最多 10 輪；同一 IP 另有上限</li>
+  <li><b>提示詞注入：</b>模型的輸出只能是通過驗證的 JSON 或經過數字核對的文字；模型沒有任何權限呼叫工具或查資料庫，所以就算被注入也改不了推薦結果</li>
+  <li><b>隱私：</b>送給模型的內容不含任何個人識別資料；依保留政策去識別化；提供刪除對話的入口</li>
+  <li><b>依賴套件：</b>自動掃描漏洞（GitHub Dependabot）</li>
+</ul>
+
+<!-- ================= 19 ================= -->
+<h2 id="testing">19. 測試策略</h2>
+<div class="tbl"><table>
+<tr><th>層級</th><th>測什麼</th><th>何時跑</th></tr>
+<tr><td><b>Demo 一致性測試</b></td><td>用 Demo 原本的 <code>engine.js</code> 和新引擎跑同一批（數千段）自動產生的對話，第一名、動作、分數必須一致。<b>這是移植引擎時最重要的安全網</b></td><td>每次推送</td></tr>
+<tr><td>引擎單元測試</td><td>每條門檻、權重、決策規則都有測試；用固定機型資料</td><td>每次推送</td></tr>
+<tr><td>回歸用例</td><td>整段對話 → 期望第一名與動作</td><td>每次推送、每次發布設定</td></tr>
+<tr><td>契約測試</td><td>API 輸入輸出、SSE 事件都符合 Zod 定義</td><td>每次推送</td></tr>
+<tr><td>整合測試</td><td>API ＋真的 PostgreSQL（Testcontainers）＋假的模型</td><td>每次推送</td></tr>
+<tr><td>端到端測試</td><td>Playwright 跑 Demo 的三個示範情境</td><td>部署到測試環境後</td></tr>
+<tr><td>模型評測（小）</td><td>50 題理解題，確保提示詞改動沒有退步</td><td>改提示詞時</td></tr>
+<tr><td>模型評測（完整）</td><td>全部資料集 × 所有候選模型</td><td>每週、手動</td></tr>
+<tr><td>壓力測試</td><td>k6 模擬每秒 20 輪（用假模型＋真模型各跑一次）</td><td>上線前、重大改版前</td></tr>
+<tr><td>故障演練</td><td>關掉主模型、讓資料庫變慢，確認備援和保底文案正常</td><td>上線前</td></tr>
+</table></div>
+
+<!-- ================= 20 ================= -->
+<h2 id="future">20. 未來擴充（已經留好的縫）</h2>
+<div class="tbl"><table>
+<tr><th>未來需求</th><th>怎麼接上</th></tr>
+<tr><td>流量變 10 倍</td><td>api 加容器；模型閘道拆成獨立服務；資料庫加唯讀副本；統計改用分析型資料庫</td></tr>
+<tr><td>理解換成自己訓練的小模型</td><td>新增一個模型轉接器，走評測平台比較後切換</td></tr>
+<tr><td>相同問題的快取</td><td>在模型閘道加快取層（相同提示詞＋相同模型 → 直接回結果）</td></tr>
+<tr><td>評測影片、評論的知識檢索</td><td>PostgreSQL 加 pgvector，新增「檢索」階段，只提供事實給回覆模型</td></tr>
+<tr><td>語音輸入、角色動畫</td><td>新增 SSE 事件和獨立的語音工作，不影響主流程</td></tr>
+<tr><td>手機 App</td><td>API 和契約已經獨立，App 直接用同一套 API</td></tr>
+<tr><td>其他商品類別（平板、手機）</td><td>引擎的維度、門檻、問題都放設定裡；新類別＝新的規則版本＋新的資料表</td></tr>
+<tr><td>資料科學分析</td><td>另寫 Python 分析工具連唯讀副本，不影響主系統</td></tr>
+<tr><td>專業開關／實驗平台</td><td>透過 OpenFeature 介面換成 GrowthBook 或 Unleash</td></tr>
+</table></div>
+
+<!-- ================= 21 ================= -->
+<h2 id="roadmap">21. 建置順序</h2>
+<p>每一步完成都是「可以跑、可以測」的狀態，不會到最後才一次接起來。</p>
+<div class="diagram"><pre class="mermaid">
+flowchart LR
+  S0["第 0 步<br/>骨架＋引擎移植"] --> S1["第 1 步<br/>不用模型也能用"]
+  S1 --> S2["第 2 步<br/>接上語言模型"]
+  S2 --> S3["第 3 步<br/>評測平台"]
+  S3 --> S4["第 4 步<br/>後台核心"]
+  S4 --> S5["第 5 步<br/>上線準備"]
+  S5 --> S6["第 6 步<br/>實驗與優化"]
+</pre></div>
+<ol class="flow">
+  <li><b>骨架＋引擎移植：</b>建 monorepo、<code>contracts</code>；把 <code>engine.js</code> 和規則解析移植成 TypeScript；完成 Demo 一致性測試。<br><i>完成標準：新引擎和 Demo 在數千段對話上結果完全一致。</i></li>
+  <li><b>不用模型也能用：</b>資料庫、API、SSE、使用者網頁；需求理解先用規則版、回覆先用模板文案。<br><i>完成標準：Demo 三個示範情境在新系統跑通。</i></li>
+  <li><b>接上語言模型：</b>模型閘道、混合理解、回覆生成、數字核對、備援。<br><i>完成標準：關掉主模型時系統仍正常回覆。</i></li>
+  <li><b>評測平台：</b>評測資料集、自動評分、排行榜、散佈圖。<br><i>完成標準：一次比較 5 個以上模型並產生報告。</i></li>
+  <li><b>後台核心：</b>規則版本與發布流程、機型庫、回歸用例、影響評估、對話查詢、功能開關。<br><i>完成標準：改一條規則能看到影響、發布、回滾。</i></li>
+  <li><b>上線準備：</b>監控告警、壓力測試、故障演練、部署正式環境。<br><i>完成標準：壓力測試達每秒 20 輪且延遲達標。</i></li>
+  <li><b>實驗與優化：</b>影子模式、A/B 分流、測試群組連結、實驗報表；開始找真實使用者測試。</li>
+</ol>
+
+<!-- ================= 22 ================= -->
+<h2 id="open">22. 待確認事項</h2>
+<div class="tbl"><table>
+<tr><th>#</th><th>問題</th><th>暫定</th></tr>
+<tr><td>1</td><td>要用哪個雲端平台？</td><td>Google Cloud Run 或 Render</td></tr>
+<tr><td>2</td><td>使用者端要不要帳號？</td><td>先只做訪客；帳號留介面，之後再做</td></tr>
+<tr><td>3</td><td>第一批要評測哪些模型？</td><td>Demo 後台列的四家，再加 2–3 家熱門模型</td></tr>
+<tr><td>4</td><td>需求理解要用「混合模式」（規則聽得懂就不呼叫模型）嗎？</td><td>要，並做成開關，用評測決定</td></tr>
+<tr><td>5</td><td>後台需要幾個管理員？要不要接公司帳號登入？</td><td>帳號密碼＋兩步驟驗證，角色三種</td></tr>
+<tr><td>6</td><td>告警要通知到哪裡？</td><td>郵件</td></tr>
+<tr><td>7</td><td>尖峰時段集中程度（影響容量估算）</td><td>尖峰小時佔全天 12%</td></tr>
+<tr><td>8</td><td>資料保留天數</td><td>見第 12 節</td></tr>
+</table></div>
+
+<!-- ================= glossary ================= -->
+<h2 id="glossary">附錄：名詞小辭典</h2>
+<div class="tbl"><table>
+<tr><th>名詞</th><th>白話解釋</th></tr>
+<tr><td>API</td><td>網頁和伺服器之間的「點餐窗口」，網頁照規定格式點餐，伺服器照規定格式出餐</td></tr>
+<tr><td>SSE（伺服器推送事件）</td><td>伺服器可以一段一段把結果推給網頁，像看文字慢慢打出來</td></tr>
+<tr><td>單體／模組化單體</td><td>整個後端是一個程式，但內部分成界線清楚的模組；比拆成很多小服務簡單</td></tr>
+<tr><td>Monorepo</td><td>多個程式放在同一個程式碼倉庫，方便共用套件</td></tr>
+<tr><td>純函式</td><td>同樣的輸入永遠得到同樣的輸出，不偷偷讀寫外部東西</td></tr>
+<tr><td>ORM</td><td>用程式語言的寫法操作資料庫，不用手寫每一句 SQL</td></tr>
+<tr><td>遷移（migration）</td><td>資料庫結構的變更紀錄，照順序執行就能把資料庫升級到最新</td></tr>
+<tr><td>佇列（queue）</td><td>待辦清單；耗時的工作先放進去，由 worker 慢慢做</td></tr>
+<tr><td>Redis</td><td>速度極快的記憶體資料庫，適合放暫存資料、計數器、佇列</td></tr>
+<tr><td>物件儲存</td><td>像雲端硬碟，放大量檔案，便宜但不適合查詢</td></tr>
+<tr><td>冪等</td><td>同一個請求送兩次，結果和送一次一樣（防止網路重送造成重複訊息）</td></tr>
+<tr><td>熔斷</td><td>某個服務一直失敗時先暫停呼叫它，避免拖垮整個系統</td></tr>
+<tr><td>結構化輸出</td><td>要求語言模型只回固定格式的 JSON，程式才能可靠地讀</td></tr>
+<tr><td>影子模式</td><td>新模型在背後偷偷一起跑，結果只記錄不給使用者看</td></tr>
+<tr><td>A/B 測試</td><td>使用者隨機分組，各組用不同版本，比較哪一版效果好</td></tr>
+<tr><td>金絲雀發布</td><td>新版本先給一小部分人用，沒問題再全面開放</td></tr>
+<tr><td>帕累托前緣</td><td>在「效果」和「成本」之間取捨時，那些「沒有別人比它更便宜又更好」的選項</td></tr>
+<tr><td>蒸餾</td><td>用大模型的答案訓練小模型，讓小模型學到接近的能力</td></tr>
+<tr><td>P50／P95</td><td>50%／95% 的請求在這個時間內完成；P95 代表「最慢的那 5% 有多慢」</td></tr>
+<tr><td>容器（Docker）</td><td>把程式和它需要的環境打包成一個盒子，到哪裡都能一樣地執行</td></tr>
+<tr><td>CDN</td><td>把網頁檔案放到世界各地的伺服器，使用者從最近的地方下載</td></tr>
+<tr><td>OpenTelemetry</td><td>記錄「一個請求經過哪些步驟、各花多久」的開放標準</td></tr>
+</table></div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script>
+(function(){
+  var root=document.documentElement;
+  function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function write(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  var t=read('planb-theme');if(t)root.setAttribute('data-theme',t);
+  function isDark(){var a=root.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
+  var src=[].map.call(document.querySelectorAll('.mermaid'),function(el){return el.textContent});
+  function draw(){
+    if(!window.mermaid)return;
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.innerHTML='';el.textContent=src[i]});
+    mermaid.initialize({startOnLoad:false,theme:isDark()?'dark':'default',securityLevel:'strict',flowchart:{htmlLabels:true}});
+    mermaid.run({querySelector:'.mermaid'}).catch(function(e){console.warn(e)});
+  }
+  draw();
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var next=isDark()?'light':'dark';root.setAttribute('data-theme',next);write('planb-theme',next);draw()});
+})();
+</script>
+</body>
+</html>
