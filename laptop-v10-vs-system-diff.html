@@ -115,7 +115,9 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   .stats{grid-template-columns:repeat(2,1fr)}
 }
 .tocbtn{display:none;width:100%;text-align:left;font:600 14px var(--f-body);background:none;border:0;color:var(--fg);padding:6px 0;cursor:pointer}
+.ch.core .chcode{background:var(--accent);color:var(--surface)}
 </style>
+
 
 
 
@@ -1056,7 +1058,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
 <header class="hero" id="top">
   <div class="eyebrow">互動設計分析報告 · 2026-10-29 · 10-30 更新：U3 新增卡片樣本館</div>
   <h1>v10demo 與 system 0.0.3：介面、功能與細節差異</h1>
-  <p class="lede">同一個產品「AI 筆電選購助手」目前有兩套實作。<b>v10demo</b> 是三個靜態檔案組成的設計示範（<code>index.html</code>、<code>engine.js</code>、<code>admin.html</code>）；<b>system</b> 是 React＋FastAPI＋PostgreSQL 的正式系統。本報告逐模組比較兩者在使用者端與管理後台的差異，指出各自的長處、system 中「看起來有、其實沒作用」的地方，並建議整合方向與可做成開關的項目。</p>
+  <p class="lede">同一個產品「AI 筆電選購助手」目前有兩套實作。<b>v10demo</b> 是三個靜態檔案組成的設計示範（<code>index.html</code>、<code>engine.js</code>、<code>admin.html</code>）；<b>system</b> 是 React＋FastAPI＋PostgreSQL 的正式系統。本報告逐模組比較兩者在使用者端與管理後台的差異，並依產品負責人 M 的方向（權重是核心、以 system 為主體）提出具體的建議做法。10-30 改版新增「核心」6 章，深入分析權重、分數計算、高級權重、軟體畫像與推薦理由。</p>
   <div class="meta">
     <span>分析方式：<b>10 個分析代理平行閱讀原始碼</b>，所有結論附 <code>檔案:行號</code></span>
     <span>範圍：<b>v10demo/</b> vs <b>system/</b>（不含繁簡字差異）</span>
@@ -1070,16 +1072,1863 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
 
 <section id="summary">
   <h2>一頁看懂：兩個版本的本質差異</h2>
+  <div class="verdict"><h4>10-30 改版：依 M 的產品方向重新評價</h4><ul>
+   <li><b>權重是系統的核心。</b>分析需求 → 算出這位使用者的權重 → 計算每台筆電的得分 → 推薦最適合的。system 的分數排序是對的方向；v10 那種「4K 匯出 7.5 分鐘以內」的硬門檻太武斷，不再當成優點。</li>
+   <li><b>對話與追問以 system 為主</b>：接上 LLM、每條規則都有開關，才能測出哪種做法真的有效。</li>
+   <li>v10 的模擬資料、權限、模型是 demo 的本質，不算缺點；system 還沒完成的開關、閾值、告警、token 統計，是<b>尚未完成</b>，不是「假功能」。</li>
+   <li>不做確認卡、不做深色模式、不移植 v10 的草稿／回歸／發佈流程（版本另外管理）；鏈路與日誌是基礎能力，排在後面；後台首頁等功能完成後再做。</li>
+   <li>新增「核心」6 章：<a href="#k0">總覽與施工順序</a>、<a href="#k1">權重系統</a>、<a href="#k2">分數計算</a>、<a href="#k3">高級權重</a>、<a href="#k4">軟體畫像（3ds Max）</a>、<a href="#k5">推薦理由與追問設計</a>。每章都有「我的建議做法」。</li>
+  </ul></div>
   <div class="thesis">
-    <div class="v"><span class="lbl">v10demo · 設計得很完整的示範</span><p>它是一套「懂行店員」：先複述你說的話，翻譯成實測門檻，例如「剪 4K → 匯出 7.5 分鐘以內」。只問會改變結論的問題，推薦前會確認一次，再用實測數字說明「這台為什麼適合你、你要接受什麼」。後台是營運工作台，有待辦、徽章，每個數字都能點進去看對話。改規則要先存草稿、預覽影響、跑回歸測試、寫明原因才能發佈，而且能回滾。<b>但是資料、權限、模型調用全部是模擬的。</b></p></div>
-    <div class="s"><span class="lbl">system 0.0.3 · 真的能跑的工程底座</span><p>它有真實的登入與角色、PostgreSQL、CSV 匯入與版本回滾、可以接上的 LLM 供應商、軟體畫像審核流程、變更紀錄，以及 GSAP 動畫事件佇列。但推薦是「分數排序表」，理由大多是模板字。追問沒有上限，也沒有確認步驟。後台偏向攤開資料表，而且有不少<b>「看起來有、其實沒作用」</b>的地方：規則開關、5 個閾值、告警、token 統計、分數一致性檢查。</p></div>
+    <div class="v"><span class="lbl">v10demo · 互動細節的參考樣本</span><p>它的價值在<b>表達</b>：先複述你說的話、追問會說還剩幾題、能跳過、推薦時說清楚「這台好在哪、你要接受什麼、為什麼不是別台」。這些表達方式值得借用，但它背後的「硬門檻＋規則」推薦邏輯不是我們要的方向。</p></div>
+    <div class="s"><span class="lbl">system 0.0.3 · 正式產品的底座</span><p>它有對的骨架：LLM 理解需求、<b>權重＋多維度評分</b>、軟體畫像、卡片題庫、真實資料庫與權限。現在最大的缺口是<b>「權重 → 分數 → 理由」這條鏈還沒接完整</b>：有些需求沒有影響權重（例如「常帶出門」「剪輯強度」），推薦理由是模板字，部分後台參數還沒被讀取。</p></div>
   </div>
-  <p><b>總結建議：</b>以 <b>system 的資料層與權限</b>為底座，把 <b>v10 的互動流程、推薦內容邏輯、後台工作流程</b>移植過去。動手移植之前，先修好 system 的「假功能」，因為它們違反了專案原則「程式碼決定事實」。</p>
+  <p><b>總結建議：</b>以 <b>system 為主體</b>往下做。第一優先是把核心鏈接完整：<b>需求 → 權重（含高級細項與軟體畫像）→ 分數 → 由程式算出的推薦理由</b>。v10 只借用它的表達方式和互動細節。</p>
   <h3>各模組建議保留哪一版</h3>
   <div class="tblwrap"><table id="matrix"><thead><tr><th>模組</th><th>主要採用</th><th>理由</th><th>從另一版補進來的</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <div id="chapters"></div>
+<!--deep-start-->
+<template id="tpl-k0"><section class="ch core" id="k0">
+ <div class="chhead"><span class="chcode">K0</span><h2>核心總覽：權重鏈斷在哪裡、先做什麼</h2></div>
+ <p class="scope">分析範圍：K1–K5 的整合與施工順序</p>
+<p>這一章把 K1–K5 的發現串成一條「核心鏈」：指出它目前斷在哪裡，並給出我建議的施工順序。核心鏈就是 M 說的系統核心：<b>使用者的話 → 需求 → 權重 → 分數 → 推薦與理由</b>。</p>
+
+<h3>核心鏈：現在斷在哪裡</h3>
+<pre class="flow">使用者的話
+  │  ① 辨識：軟體只認得 PS／AI／PR，3ds Max、Blender 等 3D 軟體都不認得；
+  │     match_software 用子字串比對，Final Cut Pro、「天選7 Pro Max」都會被誤判成 Premiere（K4）
+  ▼
+需求檔案（profile）
+  │  ② 需求 → 權重：「常帶出門」「剪輯強度」不會改變權重；
+  │     權重每輪在上一輪的結果上再疊一次，刪掉需求也不會退回（K1）
+  ▼
+權重（7 個大維度）
+  │  ③ 大維度 → 細項：性能的子權重是固定的（單核 20／多核 25／GPU 35／記憶體 10／儲存 10）；
+  │     sub_delta 寫了但沒人讀；581 欄只用了 49 欄，VRay、Blender、Office 實測都沒進評分（K3）
+  ▼
+分數
+  │  ④ 正規化用「距全庫第一名 %」，分數擠在高分區，名目權重和實際影響力對不上；
+  │     續航、重量的填補值反而加分；性價比每次對話都會變；前幾名常常只差不到 1 分（K2）
+  ▼
+推薦與理由
+     ⑤ 後端從來沒產生理由，前端顯示模板字；「性能和屏幕都排在前列」其實不一定是真的（K5）</pre>
+
+<h3>閱讀前要知道的三件事</h3>
+<div class="tblwrap"><table>
+<thead><tr><th>事項</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td>幣別</td><td>資料庫價格是人民幣（中位數約 ¥9,999），但示範句「預算 4 萬 5」是新台幣。各章的處理方式不同：K5 把 NT$45,000 換算成約 ¥10,200 上限；K1、K2 依系統現行解析結果（規則型路徑會把「4 萬 5」讀成 ¥32,000–48,000，等於沒有篩選）。<b>建議：</b>資料庫加一個幣別欄，使用者端一律用新台幣顯示與解析。</td></tr>
+<tr><td>資料是模擬的</td><td>CSV 標示為 simulated。細項之間相關係數接近 1.00、大量同值（重量 2.43 kg、續航 11 h）都可能是模擬造成的。換成真實資料後，K2、K3 的統計要重跑；但<b>設計上的問題</b>（填補值沒有標記、正規化方式、權重疊加）不會因為換資料而消失。</td></tr>
+<tr><td>示範數值</td><td>各章提出的加分表、強度係數、平手門檻、子權重向量都是<b>起始值</b>，需要 M 用真實使用者測試來校準。這也是為什麼每一項都建議放進後台、做成開關。LLM 的輸出是分析代理手動構造的，沒有真的呼叫模型。</td></tr>
+</tbody></table></div>
+
+<h3>我建議的施工順序</h3>
+<p>原則：<b>先讓權重算對，再讓分數有區分度，最後才講成人話。</b>理由產生器建立在權重帳本上；如果權重是疊加出來的，「因為你說了 X，所以 Y 調高」這句話本身就會是錯的。</p>
+<div class="tblwrap"><table>
+<thead><tr><th>階段</th><th>做什麼</th><th>為什麼排這裡</th><th>對應章節</th></tr></thead>
+<tbody>
+<tr><td>1. 權重帳本</td><td>每輪從 C6 基準權重<b>重新推導</b>，不在上一輪結果上疊加；每一分都記錄「哪句話、哪條規則、加了多少」；手動調整的維度鎖定</td><td>後面所有東西都依賴它；修好之後，刪掉需求才會正確退回</td><td><a href="#k1">K1</a></td></tr>
+<tr><td>2. 需求訊號表</td><td>「常帶出門」「剪 4K」「很在意安靜」這類需求訊號，用查表的方式換成權重點數；強度詞（很在意／偶爾）用係數換算。LLM 只判斷「屬於哪種訊號、有多強」</td><td>這是使用者感受到「系統有聽進去」的地方</td><td><a href="#k1">K1</a></td></tr>
+<tr><td>3. 資料品質標記</td><td>填補值加上標記，改用同類保守值計分；排除異常值當作正規化基準；修正 TB/GB、Octane 填在核顯機等錯誤</td><td>不先處理，便攜、續航的權重調得再準也沒用</td><td><a href="#k2">K2</a>、<a href="#k3">K3</a></td></tr>
+<tr><td>4. 正規化與性價比</td><td>正規化改用全庫百分位（隨資料版本固定）；性價比改成「比同價位平均高幾分」；分差小於平手門檻時，依使用者權重最高的維度決勝或反問</td><td>讓權重的名目比例和實際影響力一致</td><td><a href="#k2">K2</a></td></tr>
+<tr><td>5. 軟體畫像 2.0</td><td>畫像改成「工作類型 × 資源需求等級（0–3）」，由中央換算表轉成大維度權重和細項子權重；別名表加上消歧義追問；只有官方最低需求才當硬門檻</td><td>3ds Max 這類專業軟體是最能展現「系統懂我」的情境</td><td><a href="#k4">K4</a></td></tr>
+<tr><td>6. 細項子權重</td><td>性能拆成單核、多核、GPU、記憶體、NPU 五條獨立軸，由軟體畫像和需求混合出子權重；匯入 VRay、Blender、Office 等實測</td><td>需要階段 5 的畫像來驅動</td><td><a href="#k3">K3</a></td></tr>
+<tr><td>7. 理由產生器</td><td>程式算出每台的逐維貢獻（權重 × 分數差）、優勢、要接受的、和第 2 名的差別；LLM 只負責措辭，並由檢查器核對數字</td><td>建立在 1–6 之上，最後一步把分數講成人話</td><td><a href="#k5">K5</a></td></tr>
+<tr><td>8. 追問價值</td><td>發問前模擬每個答案會不會改變前 3 名；不會改變的題目不問；追問上限放進後台</td><td>需要權重和分數都算對，模擬才有意義</td><td><a href="#k5">K5</a></td></tr>
+</tbody></table></div>
+
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li>階段 1、2 先做，而且一起做。這兩步的改動集中在 <code>pipeline.py</code> 和 <code>domain.py</code>，風險低，效果卻最明顯。</li>
+<li>每個階段都先補自動化測試再改程式，例如「同一份需求檔案跑 10 輪，權重不變」「刪掉需求，權重退回基準」。這也符合專案「每個模組的驗收條件都要有自動化測試」的要求。</li>
+<li>每個新參數都放進後台，每個新行為都加開關。這樣 M 可以拿同一組使用者句子比較「舊算法對新算法」的前 3 名，用真實使用者測試來決定預設值。</li>
+<li>B1 回放頁加一個「權重快照」區：每輪的權重帳本、前 5 名的逐維貢獻。這是之後除錯核心鏈最需要的工具。</li>
+</ul></div>
+
+</section></template>
+<template id="tpl-k1"><section class="ch core" id="k1">
+ <div class="chhead"><span class="chcode">K1</span><h2>權重系統：使用者的話怎麼變成權重</h2></div>
+ <p class="scope">分析範圍：system/backend/app：domain.py、pipeline.py、scoring.py、seed.py；frontend 權重面板；C6</p>
+<p>這一節追蹤 system 0.0.3 的「權重系統」：使用者說的一句話，怎麼一步步變成 7 個維度的權重，最後拿去排序。結論先講：<b>目前真正會改權重的只有兩條路</b>，一條是 LLM 自由提出的 <code>weight_suggestion</code>，另一條是軟體畫像的 <code>weight_delta</code>。需求檔案裡的「常帶出門」「重度剪輯」「螢幕色彩好」這類標籤<b>本身不會改權重</b>。另外，權重是「每輪在上一輪的結果上再疊加」，所以會越疊越偏。後半段提出一套「由需求檔案重新推導權重」的做法，附規則表、算例和開關清單。</p>
+
+<h3>1. 權重的資料結構</h3>
+
+<h4>1.1 七個維度與預設值</h4>
+<div class="tblwrap"><table>
+<tr><th>key</th><th>中文</th><th>程式預設</th><th>這個維度由哪些子項組成（只列出，不分析）</th></tr>
+<tr><td><code>performance</code></td><td>性能</td><td>33</td><td>cpu_single / cpu_multi / gpu / memory / storage（scoring.py:33-39）＋軟體啟用的專項，例如 <code>procyon_pr</code></td></tr>
+<tr><td><code>display</code></td><td>螢幕</td><td>21</td><td>亮度、色域、色準、PPI…（scoring.py:42-51）</td></tr>
+<tr><td><code>portability</code></td><td>便攜</td><td>14</td><td>body / travel / adapter / thickness（scoring.py:54）</td></tr>
+<tr><td><code>battery</code></td><td>續航</td><td>12</td><td>單一 part</td></tr>
+<tr><td><code>thermal</code></td><td>散熱</td><td>10</td><td>hotspot / wasd / sustain（scoring.py:55）</td></tr>
+<tr><td><code>noise</code></td><td>噪音</td><td>6</td><td>dual / single（scoring.py:56）</td></tr>
+<tr><td><code>expandability</code></td><td>擴展性</td><td>4</td><td>io / wireless / upgrade（scoring.py:57）</td></tr>
+</table></div>
+<p>維度清單定義在 <code>scoring.py:9-18</code>（<code>DIMS</code>），預設值在 <code>scoring.py:20-28</code>（<code>DEFAULT_WEIGHTS</code>）。權重是<b>整數、合計 100、每個維度最少 1</b>。這個約束由 <code>rebalance</code>（scoring.py:184-208）維持，套用時也會檢查（api.py:792-793）。</p>
+
+<h4>1.2 預設值從哪來</h4>
+<pre class="flow">
+scoring.py:20  DEFAULT_WEIGHTS（寫死在程式）
+      │  首次 seed
+      ▼
+seed.py:268   AppMeta["formula"] = {version, weights: DEFAULT_WEIGHTS}
+      │  後台 C6「權重與公式」可改（AdminApp.tsx:782-812 → api.py:2224-2228，版本號自動 +1）
+      ▼
+api.py:425-428  _formula_weights()  ← 讀 AppMeta["formula"].weights
+      │  開新對話時複製一份
+      ▼
+api.py:704-709  Conversation.weights = 該份；system_weights = {weights, sources: 全部「系統默認」}
+</pre>
+<p>注意：如果 <code>conv.weights</code> 是空的，<code>run_turn</code> 會退回 <code>scoring.DEFAULT_WEIGHTS</code>（pipeline.py:235），不是後台 C6 的值。正常流程下新對話一定有值，所以影響不大。但 <code>Run.weights_before</code> 在第一輪也是退回程式預設（pipeline.py:452），後台改過 C6 後，第一輪 Run 記錄的「調整前」會是錯的。</p>
+
+<h4>1.3 存在哪裡</h4>
+<div class="tblwrap"><table>
+<tr><th>位置</th><th>內容</th><th>說明</th></tr>
+<tr><td><code>Conversation.weights</code>（models.py:88）</td><td>目前生效的 7 維權重</td><td>每個<b>對話</b>一份，跨輪保留，<b>每輪在它上面再疊加</b></td></tr>
+<tr><td><code>Conversation.system_weights</code>（models.py:89）</td><td><code>{weights, sources}</code></td><td><code>sources</code> 是每個維度「最後一次被誰改」的字串：系統默認／需求自動調高／軟件畫像／你手動調整。其中 <code>weights</code> 和上一列<b>永遠相同</b>（pipeline.py:344-345、api.py:798-799），所以並沒有另外存一份「系統建議」</td></tr>
+<tr><td><code>Run.weights_before / weights_after</code>（models.py:124-125）</td><td>每輪前後的權重</td><td>後台「權重前後」可以看到（AdminApp.tsx:1136），但沒有記錄「為什麼變」</td></tr>
+<tr><td>需求檔案 <code>Conversation.profile</code></td><td>標籤清單</td><td><b>和權重沒有連結</b>。標籤刪掉以後，它曾經帶來的權重變化不會退回</td></tr>
+</table></div>
+
+<h3>2. 權重怎麼被調整（現況完整路徑）</h3>
+
+<pre class="flow">
+使用者一句話
+   │
+   ▼
+nlu_parse（pipeline.py:161-173）── LLM 輸出 JSON：ops / software / missing / weight_suggestion
+   │  LLM 失敗或 ops 為空
+   ├──────────────► heuristic_ops（pipeline.py:514-550）只產生 ops，沒有 weight_suggestion
+   ▼
+每個 op：normalize_item → 校準 confidence（pipeline.py:54-61, 287-301）
+   │   ※ confidence 只用在「hard 要不要降成 soft」，和權重無關
+   ▼
+merge_profile → 需求檔案（pipeline.py:321）
+   │
+   ├─(A) LLM 路徑：weight_suggestion.confidence ≥ 0.75（寫死）
+   │        → apply_weight_deltas(…, "需求自動調高")      pipeline.py:332-338
+   │
+   ├─(B) 軟體畫像：檔案裡<b>每個</b>軟體 → usage.weight_delta
+   │        → apply_weight_deltas(…, "軟件畫像")          pipeline.py:339-342
+   │        ＋ activate → extra_subs（性能子項加 procyon_pr 14）pipeline.py:134-135
+   │
+   ▼
+conv.weights = 結果（pipeline.py:344-345） → snapshot 打分排序（pipeline.py:347）
+   │
+   ▼
+events：panel_open → weights_auto → panel_close（pipeline.py:573-575）
+   → 前端完整模式自動彈出權重面板（UserApp.tsx:361-380、animation.ts:138-143）
+</pre>
+
+<h4>2.1 apply_weight_deltas 實際怎麼算</h4>
+<p><code>apply_weight_deltas</code>（pipeline.py:112-120）把 deltas <b>一個維度一個維度依序</b>丟進 <code>rebalance</code>。<code>rebalance</code> 會把該維度設成新值，其餘維度按原比例縮放，湊回 100。這帶來兩個副作用（數字是用 venv 實際呼叫算出來的）：</p>
+<div class="tblwrap"><table>
+<tr><th>現象</th><th>實測</th></tr>
+<tr><td>後面的 delta 會吃掉前面加上去的分數</td><td>PR 畫像 <code>{performance:+4, display:+1, thermal:+1}</code> 套在預設上：性能 33→<b>35</b>（只淨加 2，不是 4）</td></tr>
+<tr><td>結果和 dict 順序有關</td><td><code>{performance:+6, portability:+4}</code> → 螢幕 18／便攜 17；順序對調 → 螢幕 19／便攜 16</td></tr>
+</table></div>
+
+<h4>2.2 審批：C6 的 weight_approve／weight_ask 有沒有被讀</h4>
+<div class="tblwrap"><table>
+<tr><th>設計（seed 規則）</th><th>現況</th><th>位置</th></tr>
+<tr><td>R014：confidence ≥ 0.75 自動調權</td><td>有做，但 <b>0.75 寫死</b>，沒有讀 <code>thresholds.weight_approve</code>，也沒有讀 Rule 表的 enabled</td><td>pipeline.py:336；seed.py:35, 273</td></tr>
+<tr><td>R015：0.5–0.75 轉成確認追問</td><td>尚未實作：低於 0.75 的建議直接丟掉，使用者看不到</td><td>seed.py:36, 274；pipeline.py:336</td></tr>
+<tr><td>R016：&lt; 0.5 只記日誌</td><td>只有「整份 nlu 存進 Run」這種間接紀錄</td><td>seed.py:37；pipeline.py:442</td></tr>
+<tr><td>R017：手動調過後再強調，封頂 +5</td><td>尚未實作：手動值會被下一輪的軟體 delta 直接改掉（見 4.4）</td><td>seed.py:38</td></tr>
+<tr><td>R029：軟體啟用二級測試項</td><td>有做（extra_subs）</td><td>pipeline.py:134-135</td></tr>
+</table></div>
+<p>在 backend 和 frontend 搜尋 <code>weight_approve</code>／<code>weight_ask</code>，只出現在 seed.py:273-274。後台 C6 頁可以改這兩個值（AdminApp.tsx:801-812），只是目前還沒有程式讀取它們。這是尚待補上的功能。</p>
+
+<h4>2.3 規則型（heuristic）路徑和 LLM 路徑的差別</h4>
+<div class="tblwrap"><table>
+<tr><th></th><th>LLM 路徑</th><th>heuristic 路徑</th></tr>
+<tr><td>何時走</td><td>預設</td><td>LLM 報錯（pipeline.py:263-268）或回傳空 ops（pipeline.py:271-274）</td></tr>
+<tr><td>能否改權重</td><td>可以：靠 <code>weight_suggestion</code>，數值由 LLM 自由決定。prompt 只給了一個範例（seed.py:142），沒有規定上下限、可用維度或怎麼換算</td><td><b>不行</b>：不產生 weight_suggestion，只能靠軟體畫像間接改</td></tr>
+<tr><td>「常帶出門」</td><td>看 LLM 心情</td><td>沒有命中。只認完全相同的「經常揹着走／偶爾帶出門／基本放桌上」（pipeline.py:522-525），「輕」「薄」之類的字也沒出現</td></tr>
+<tr><td>「剪 4K 影片」</td><td>可能對到 Premiere，但「影片」不在別名裡（seed.py:97）</td><td>沒有命中。只認 PR／premiere／剪映／「剪輯」（pipeline.py:546）</td></tr>
+<tr><td>一致性</td><td>同一句話每次可能得到不同 delta</td><td>穩定，但涵蓋範圍很窄</td></tr>
+</table></div>
+
+<h4>2.4 軟體畫像對權重的影響</h4>
+<p>種子資料：Photoshop <code>{performance:2, display:3}</code>（seed.py:65）、Illustrator <code>{display:2, performance:1}</code>（seed.py:85）、Premiere Pro <code>{performance:4, display:1, thermal:1}</code>，外加啟用 <code>procyon_pr</code> 子項，權重 14（seed.py:105-107）。另外每個 usage 都有 <code>sub_delta</code>（seed.py:66, 86, 106），但整個 backend 都沒有讀取它，屬於尚未接上的功能。</p>
+
+<h4>2.5 使用者手動調整（權重面板）</h4>
+<pre class="flow">
+拖動滑桿 ─► POST /weights/preview（api.py:810-812，純 rebalance）─► 只改前端草稿 draft
+   │  （UserApp.tsx:771-776）
+點「應用」─► POST /conversations/{cid}/weights/apply（api.py:786-801）
+   │  有改到的維度 sources 改成「你手動調整」；conv.weights = draft
+   ▼
+run_turn(db, c, "應用權重", skip_nlu=空)  ← 會整輪重跑
+   │  ops 為空 → 照樣跑 heuristic_ops("應用權重")（pipeline.py:271）
+   │  檔案裡有 Premiere → <b>再套一次 PR weight_delta</b>（pipeline.py:339-342）
+   ▼
+回傳的權重 ≠ 使用者剛剛按下應用的值
+</pre>
+<p>「恢復系統權重」用的是前端的 <code>lastSystemWeights</code>（UserApp.tsx:159-166、787）。但切換對話時，它取的是後端的 <code>system_weights.weights</code>（UserApp.tsx:160-162, 550），而這個值手動應用後就等於手動值（api.py:798-799）。所以重新打開對話後，「恢復系統權重」其實恢復不到系統原本的建議。</p>
+
+<h3>3. 實例：「我要剪 4K 影片，預算 4 萬 5，常帶出門」</h3>
+<p>下表的數字都是在 scratchpad 用 venv 實際呼叫 <code>heuristic_ops</code>、<code>apply_weight_deltas</code>、<code>rebalance</code> 算出來的。因為 <code>pipeline.py</code> 會連帶匯入資料庫模組，我用 AST 只抽出這兩個函式來執行，程式碼本身沒有改。LLM 那一欄的輸出是<b>我手動構造的合理假設</b>，已標明。</p>
+
+<h4>3.1 路徑 H：LLM 不可用，走 heuristic</h4>
+<div class="tblwrap"><table>
+<tr><th>輪次</th><th>發生什麼</th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
+<tr><td>預設</td><td>—</td><td>33</td><td>21</td><td>14</td><td>12</td><td>10</td><td>6</td><td>4</td></tr>
+<tr><td>T1 原句</td><td><code>heuristic_ops</code> 只抽到 budget <code>{min:32000,max:48000}</code>。「4 萬 5」被讀成 4 萬 ±20%，這是另一個解析問題。沒有軟體也沒有便攜 → <b>權重完全不變</b></td><td>33</td><td>21</td><td>14</td><td>12</td><td>10</td><td>6</td><td>4</td></tr>
+<tr><td>T2 點「剪輯」</td><td>軟體卡寫入 Premiere Pro（cards.py:52）→ 套 PR delta</td><td>35</td><td>21</td><td>13</td><td>11</td><td>10</td><td>6</td><td>4</td></tr>
+<tr><td>T3 點「重度剪輯」</td><td>edit_intensity 寫進檔案，但<b>不影響權重</b>（domain.py:230-231 直接 return，沒有規則讀它）。可是 PR delta 又被<b>重新套用一次</b></td><td>37</td><td>21</td><td>12</td><td>10</td><td>10</td><td>6</td><td>4</td></tr>
+<tr><td>T4 點「經常揹着走」</td><td>portability 標籤寫入（cards.py:141-152），<b>不影響權重</b>；PR delta 第三次套用</td><td>39</td><td>21</td><td>11</td><td>9</td><td>10</td><td>6</td><td>4</td></tr>
+<tr><td>連續 10 輪後</td><td>同上，每輪都疊</td><td>53</td><td>17</td><td><b>4</b></td><td>6</td><td>10</td><td>6</td><td>4</td></tr>
+</table></div>
+<p>使用者明確說了「常帶出門」，但便攜權重反而從 14 一路掉到 4。</p>
+
+<h4>3.2 路徑 L：LLM 正常（假設輸出）</h4>
+<p>假設 LLM 回傳：ops = budget hard／purpose「剪 4K 影片」／portability soft「常帶出門」；software = Premiere Pro；<code>weight_suggestion = {deltas:{performance:6, portability:4, thermal:2}, confidence:0.85, reason:"剪 4K 吃性能且常外帶"}</code>。</p>
+<div class="tblwrap"><table>
+<tr><th>步驟</th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th><th>sources 顯示</th></tr>
+<tr><td>預設</td><td>33</td><td>21</td><td>14</td><td>12</td><td>10</td><td>6</td><td>4</td><td>全部「系統默認」</td></tr>
+<tr><td>+LLM 建議（0.85 ≥ 0.75）</td><td>35</td><td>18</td><td>17</td><td>10</td><td>11</td><td>5</td><td>4</td><td>性能／便攜／散熱「需求自動調高」</td></tr>
+<tr><td>+PR 畫像（同一輪）</td><td><b>37</b></td><td>18</td><td><b>16</b></td><td>9</td><td>11</td><td>5</td><td>4</td><td>性能、螢幕、散熱被覆蓋成「軟件畫像」</td></tr>
+<tr><td>使用者手動把便攜拉到 25 並應用</td><td>33</td><td>16</td><td>25</td><td>8</td><td>10</td><td>4</td><td>4</td><td>（草稿）</td></tr>
+<tr><td>應用後 run_turn 重跑</td><td>35</td><td>15</td><td><b>24</b></td><td>8</td><td>10</td><td>4</td><td>4</td><td>便攜「你手動調整」，但數值已經被改動</td></tr>
+</table></div>
+<p>注意 LLM 建議「性能 +6」，實際只淨加 2。螢幕從 21 掉到 18，原因是被其他維度的 rebalance 壓下去，不是因為使用者說了什麼。sources 只記「最後一個改的人」，性能明明也被 LLM 調過，卻只顯示「軟件畫像」。</p>
+
+<h3>4. 現況的問題</h3>
+<div class="bug"><b>4.1 權重每輪疊加，軟體 delta 重複套用</b><br>run_turn 從 <code>conv.weights</code>（上一輪結果）出發（pipeline.py:235），再對檔案裡<b>所有</b>軟體重新套一次 <code>weight_delta</code>（pipeline.py:339-342）。改需求（api.py:783）和應用權重（api.py:801）也會觸發。實測 10 輪後性能 53、便攜 4。LLM 每輪若重提類似的 suggestion，也會同樣疊加。</div>
+<div class="bug"><b>4.2 「常帶出門」「經常揹着走」不會調高便攜</b><br>portability 標籤只是存進檔案，沒有任何程式把它轉成權重（cards.py:141-152、pipeline.py:522-525）。只有在 LLM 自己想到要給 weight_suggestion 時才會調整。scenario（出差／咖啡館／宿舍）也一樣。</div>
+<div class="bug"><b>4.3 edit_intensity 不影響權重</b><br>輕／中／重度剪輯只用來關掉追問（pipeline.py:148-149），normalize 直接略過（domain.py:230-231）。重度剪輯和輕度剪輯算出來的權重完全相同。</div>
+<div class="bug"><b>4.4 手動權重會被覆蓋</b><br>apply_weights 之後立刻 run_turn，PR delta 再套一次（api.py:801 → pipeline.py:339-342）。設計上的 R017「手動不是永久鎖死，封頂 +5」尚未實作。</div>
+<div class="bug"><b>4.5 審批閾值寫死，R015／R016 尚未接上</b><br><code>conf &gt;= 0.75</code> 寫死在 pipeline.py:336。C6 的 weight_approve／weight_ask（seed.py:273-274）沒有被讀取，Rule.enabled 也沒有被讀取。0.5–0.75 之間的建議被直接丟掉，沒有轉成追問或顯示。</div>
+<div class="bug"><b>4.6 權重來源無法追溯</b><br><code>sources</code> 每個維度只有一個字串，而且「最後寫入者勝出」（pipeline.py:119）。沒有記錄「哪句話、哪個標籤、加了多少」。負的 delta 也被標成「需求自動調高」。刪掉需求標籤後，權重不會退回。Run 只存前後兩份權重（pipeline.py:452-453），沒有原因明細。這直接卡住 M 要的「推薦理由 = 權重怎麼因需求而調整」。</div>
+<div class="bug"><b>4.7 delta 的語意不清楚</b><br>prompt 沒有規定 delta 的單位、範圍和可用維度（seed.py:142）。依序 rebalance 導致淨效果小於宣告值，而且和順序有關（pipeline.py:115-118）。LLM 也看不到目前的權重，nlu_parse 只餵了 profile（pipeline.py:166）。</div>
+<div class="bug"><b>4.8 權重面板在完整動畫模式每輪自動彈出</b><br>每輪必定送出 panel_open／weights_auto／panel_close（pipeline.py:573-575），就算權重沒變也一樣。anim_level=full 時一定打開，而且不能拖動（animation.ts:138-140、UserApp.tsx:361-380、763-764）。沒有獨立開關，只能跟著動畫等級一起調。</div>
+<div class="bug"><b>4.9 子項 sub_delta 尚未接上</b><br>畫像裡的 <code>sub_delta</code>（seed.py:66, 86, 106）沒有任何程式讀取。後台編輯了也沒有效果。</div>
+
+<h3>5. 我的建議：需求 → 權重機制</h3>
+
+<h4>5.1 核心原則</h4>
+<ul>
+<li><b>權重由需求檔案「重新推導」，不在上一輪結果上疊加。</b>每輪都從 C6 基準權重開始，把檔案裡每個仍然存在的標籤，換算成對各維度的貢獻，最後一次正規化。標籤刪掉，貢獻自然消失；同一個軟體出現 10 輪也只算一次。</li>
+<li><b>LLM 不出數字，只出「訊號＋強度」。</b>LLM 把話對應到固定的訊號目錄（例如 <code>carry</code>、<code>video_4k</code>），加上強度詞（很在意／一般／偶爾）和原文依據。點數由程式查表決定，符合「程式碼決定事實」。</li>
+<li><b>每一分都有帳。</b>產生一份「貢獻明細 ledger」：維度、訊號、來源標籤 id、原文、點數。權重面板、需求檔案和推薦理由都直接讀這份帳。</li>
+</ul>
+
+<h4>5.2 方案比較</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>優點</th><th>缺點</th></tr>
+<tr><td>D. 現況：增量 delta 疊加</td><td>每輪在上一輪權重上依序 rebalance</td><td>已經寫好</td><td>會漂移、無法撤銷、和順序有關、無法追溯（4.1、4.6、4.7）</td></tr>
+<tr><td><b>A. 檔案重算＋加法點數（推薦）</b></td><td><code>raw[d] = 基準[d] + Σ 點數×強度×信心係數</code>，再一次正規化成整數 100</td><td>可重現、可撤銷、可解釋（「+10 因為常帶出門」）；後台只需要調一張點數表；小維度（噪音 6）加 +8 就有感</td><td>使用者同時提很多需求時，每項被稀釋（這其實就是「平衡」，需要在介面上說清楚）</td></tr>
+<tr><td>B. 檔案重算＋乘數</td><td><code>raw[d] = 基準[d] × Π 乘數</code></td><td>「很在意 ×1.5」語意直覺；不會讓小維度突然暴衝</td><td>小維度很難被抬起來（噪音 6×1.5=9，「我要很安靜」幾乎沒有效果）；「+多少」不好向使用者說明</td></tr>
+<tr><td>C. LLM 直接輸出 7 維權重</td><td>每輪請 LLM 給完整權重</td><td>彈性最大、開發最少</td><td>每次結果不同；無法稽核；違反「模型只負責理解與表達」</td></tr>
+</table></div>
+<p><b>推薦 A。</b>它修掉了現況的漂移和不可撤銷，點數表也最容易讓 M 在後台調整、做 A/B 測試。B 可以當成 A 的一個開關選項（正規化模式：加法／乘法），方便做使用者測試比較。C 不建議。</p>
+
+<h4>5.3 流程圖（方案 A）</h4>
+<pre class="flow">
+使用者的話 / 點卡片 / 手動篩選
+   │
+   ▼
+LLM 或 heuristic ──► ops（標籤）＋ signals[{id, strength, confidence, evidence, tag_id}]
+   │                        （點卡片時直接查表得到 signal，confidence=1）
+   ▼
+需求檔案（每個標籤帶著自己的 signal_id／strength，顏色顯示「已計入／待確認」）
+   │
+   ▼
+derive_weights(profile, base=C6, table=C6 訊號表, locks=手動鎖定)   ← 純函式，好寫測試
+   │ 1. 對每個標籤：confidence ≥ weight_approve → 計入
+   │                weight_ask ≤ conf &lt; approve → 計入 0 分，標成「待確認」（黃色）
+   │                conf &lt; weight_ask → 不計，只記錄
+   │ 2. points = 表[signal][dim] × 強度係數 × (軟體強度係數)
+   │ 3. 同一維度、同一群組的訊號取最大值，不同群組才相加（避免重複計算）
+   │ 4. 每維度單項上限 cap_per_signal、總增減上限 cap_per_dim
+   │ 5. raw = base + Σ；下限 1
+   │ 6. 鎖定的維度固定，其餘維度按 raw 比例分配剩下的 100−Σ鎖定（最大餘數法取整）
+   │ 7. 單一維度占比上限 max_share（例如 50%）
+   ▼
+weights ＋ ledger[{dim, signal, tag_id, evidence, points}]
+   │
+   ├─► 打分排序（scoring，不變）
+   ├─► 權重面板：每個維度展開看「誰加了幾分」
+   ├─► 推薦理由：取 ledger 前幾名 × 該機在這些維度的相對優勢
+   └─► Run 存 ledger（後台可追溯）
+</pre>
+
+<h4>5.4 訊號 → 維度點數表（建議初始值，全部可在後台 C6 調整）</h4>
+<p>點數加在「原始重要度」上（基準總和 100），最後再一起正規化。</p>
+<div class="tblwrap"><table>
+<tr><th>訊號 id</th><th>觸發（標籤／卡片選項／常見說法）</th><th>群組</th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
+<tr><td><code>carry</code></td><td>經常揹着走、常帶出門、通勤</td><td>mobility</td><td></td><td></td><td>+10</td><td>+5</td><td></td><td></td><td></td></tr>
+<tr><td><code>sometimes</code></td><td>偶爾帶出門</td><td>mobility</td><td></td><td></td><td>+4</td><td>+2</td><td></td><td></td><td></td></tr>
+<tr><td><code>desk</code></td><td>基本放桌上</td><td>mobility</td><td></td><td></td><td>−8</td><td>−4</td><td></td><td></td><td>+2</td></tr>
+<tr><td><code>travel</code></td><td>經常出差</td><td>scenario</td><td></td><td></td><td>+6</td><td>+4</td><td></td><td></td><td>+1</td></tr>
+<tr><td><code>cafe</code></td><td>咖啡館移動辦公</td><td>scenario</td><td></td><td></td><td>+3</td><td>+5</td><td></td><td>+4</td><td></td></tr>
+<tr><td><code>dorm</code></td><td>宿舍</td><td>scenario</td><td></td><td></td><td></td><td></td><td></td><td>+4</td><td></td></tr>
+<tr><td><code>sw:Premiere/4K剪輯</code></td><td>軟體畫像（取代現在的 weight_delta）</td><td>workload</td><td>+15</td><td>+3</td><td></td><td></td><td>+5</td><td></td><td></td></tr>
+<tr><td><code>sw:Photoshop</code></td><td>軟體畫像</td><td>workload</td><td>+5</td><td>+8</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>purpose:game</code></td><td>遊戲</td><td>workload</td><td>+12</td><td>+4</td><td></td><td></td><td>+6</td><td></td><td></td></tr>
+<tr><td><code>purpose:office</code></td><td>辦公學習</td><td>workload</td><td>−8</td><td></td><td>+3</td><td>+5</td><td></td><td>+2</td><td></td></tr>
+<tr><td><code>pref:display_color</code></td><td>螢幕色彩好、色準</td><td>pref</td><td></td><td>+10</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>pref:quiet</code></td><td>要安靜</td><td>pref</td><td></td><td></td><td></td><td></td><td></td><td>+8</td><td></td></tr>
+<tr><td><code>pref:sustain</code></td><td>長時間穩定</td><td>pref</td><td></td><td></td><td></td><td></td><td>+6</td><td></td><td></td></tr>
+</table></div>
+<p>同一群組（例如 mobility）只取最強的一個，避免「常帶出門」和「偶爾帶出門」同時存在時互相疊加。不同群組才相加。硬條件（預算、尺寸、重量上限）維持篩選，不進權重。</p>
+
+<h4>5.5 強度詞換算</h4>
+<div class="tblwrap"><table>
+<tr><th>強度</th><th>常見說法</th><th>係數</th></tr>
+<tr><td>very</td><td>很在意、一定要、最重要、非常</td><td>×1.5</td></tr>
+<tr><td>normal（預設）</td><td>沒有修飾詞</td><td>×1.0</td></tr>
+<tr><td>light</td><td>偶爾、有的話更好、不太在意</td><td>×0.5</td></tr>
+<tr><td>edit_intensity</td><td>輕度／中度／重度剪輯（乘在 workload 訊號上）</td><td>×0.6／×1.0／×1.5；還沒回答時用 ×1.0，標成「待確認」</td></tr>
+</table></div>
+<p>LLM 只需要回 <code>strength: very|normal|light</code>，換算由程式完成。</p>
+
+<h4>5.6 用同一句話算一次（方案 A，venv 實算）</h4>
+<div class="tblwrap"><table>
+<tr><th>維度</th><th>預設</th><th>強度未知（×1）＋常帶</th><th>重度剪輯＋常帶</th><th>輕度剪輯＋常帶</th><th>重度＋常帶，手動鎖便攜 25</th><th>原因（ledger）</th></tr>
+<tr><td>性能</td><td>33</td><td>35</td><td><b>37</b></td><td>32</td><td>33</td><td>剪 4K：+15 × 強度</td></tr>
+<tr><td>螢幕</td><td>21</td><td>18</td><td>17</td><td>18</td><td>15</td><td>剪 4K：+3；其餘是讓出比重</td></tr>
+<tr><td>便攜</td><td>14</td><td><b>17</b></td><td>16</td><td><b>19</b></td><td>25（鎖定）</td><td>常帶出門：+10</td></tr>
+<tr><td>續航</td><td>12</td><td>12</td><td>11</td><td>13</td><td>10</td><td>常帶出門：+5</td></tr>
+<tr><td>散熱</td><td>10</td><td>11</td><td>12</td><td>10</td><td>11</td><td>剪 4K：+5 × 強度</td></tr>
+<tr><td>噪音</td><td>6</td><td>4</td><td>4</td><td>5</td><td>4</td><td>沒有訊號，讓出比重</td></tr>
+<tr><td>擴展</td><td>4</td><td>3</td><td>3</td><td>3</td><td>2</td><td>沒有訊號，讓出比重</td></tr>
+</table></div>
+<p>和現況相比：便攜真的上升了；重度和輕度剪輯會算出不同結果；同一個檔案不管重跑幾輪，結果都一樣；手動鎖定的值不會被改掉。給使用者看的說明可以直接從 ledger 生成，例如「你要剪 4K，所以性能和散熱占比提高；你常帶出門，便攜從 14% 提高到 17%；螢幕、噪音、擴展讓出了比重」。</p>
+
+<h4>5.7 衝突怎麼平衡</h4>
+<ul>
+<li><b>正規化本身就是平衡。</b>需求越多，每項的占比越被分攤。面板要把「被讓出的維度」標成灰色並寫原因，不要讓使用者以為系統偷改。</li>
+<li><b>真正的取捨衝突</b>（高性能＋常帶＋低預算）不靠權重硬解。觸發 R020「不可能三角」說明卡，並給兩個方向讓使用者選（「性能優先」或「便攜優先」），選完以後把那個訊號的強度設成 very。</li>
+<li><b>上限：</b>每個訊號單維最多 +20，單一維度最高占 50%，避免某個需求把其他維度壓到只剩 1%。</li>
+</ul>
+
+<h4>5.8 讓使用者看得懂</h4>
+<ul>
+<li>權重面板每一列可以展開成 ledger，例如「＋10 常帶出門（你說的）／＋15 剪 4K（軟體畫像）」，再點一下可以跳回需求檔案裡對應的標籤。</li>
+<li>需求檔案的標籤用顏色區分：已計入權重（藍）、待確認（黃，信心介於 ask 和 approve 之間）、只當篩選條件（灰）、手動鎖定（紫）。使用者發現錯了就直接刪掉或改強度，權重會跟著重算，不需要確認卡。</li>
+<li>面板只在<b>權重真的有變</b>時才自動打開，並用「預設 → 現在」的差值動畫呈現。</li>
+</ul>
+
+<h4>5.9 開關（每項都做成可切換，方便 M 做使用者測試）</h4>
+<ul class="toggles">
+<li><code>weight_mode</code>：derive（方案 A）／legacy_delta（現況），方便直接對照</li>
+<li><code>weight_normalize</code>：additive／multiplicative（A 或 B）</li>
+<li><code>weight_signal.&lt;id&gt;.enabled</code>：每個訊號單獨開關</li>
+<li><code>weight_strength_words</code>：是否採用強度詞係數</li>
+<li><code>weight_edit_intensity</code>：剪輯強度是否乘到 workload 訊號上</li>
+<li><code>weight_llm_free_delta</code>：是否仍允許 LLM 自由提 delta（預設關，開啟時也要經過 approve／ask 閾值並寫進 ledger）</li>
+<li><code>weight_pending_show</code>：介於 ask 和 approve 之間的訊號要顯示成「待確認」，還是直接忽略</li>
+<li><code>weight_manual_lock</code>：手動調整是鎖定，還是允許後續訊號再強化（R017，封頂可設定）</li>
+<li><code>weight_panel_auto_open</code>：自動彈出面板（不跟動畫等級綁在一起）；子選項「只在權重有變時」</li>
+<li><code>weight_panel_ledger</code>：面板是否顯示貢獻明細</li>
+<li><code>weight_conflict_card</code>：R020 衝突說明卡</li>
+<li><code>reason_from_ledger</code>：推薦理由是否引用權重調整原因</li>
+</ul>
+
+<h4>5.10 後台（C6）要能調的參數</h4>
+<div class="tblwrap"><table>
+<tr><th>參數</th><th>目前</th><th>建議</th></tr>
+<tr><td>基準權重 7 維</td><td>有（AdminApp.tsx:782-799）</td><td>保留</td></tr>
+<tr><td>weight_approve／weight_ask</td><td>可以編輯，但還沒有程式讀取</td><td>由 derive_weights 讀取</td></tr>
+<tr><td>訊號點數表（5.4）</td><td>沒有（只有軟體畫像的 weight_delta）</td><td>新增成表格編輯器；軟體畫像的 weight_delta 改成引用同一張表</td></tr>
+<tr><td>強度係數（5.5）</td><td>沒有</td><td>新增</td></tr>
+<tr><td>cap_per_signal、max_share、群組規則</td><td>沒有</td><td>新增</td></tr>
+<tr><td>同義詞 → 訊號對照（給 heuristic 和 LLM prompt 共用）</td><td>寫死在 pipeline.py:514-550</td><td>改成資料表，讓「常帶出門」「剪影片」都能被加進去</td></tr>
+</table></div>
+
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li>採用方案 A：新增純函式 <code>derive_weights(profile, base, table, locks) → (weights, ledger)</code>，取代 pipeline.py:332-342 的疊加邏輯。每輪都從 C6 基準重算，徹底解決漂移、重複套用和刪除標籤後無法退回的問題。</li>
+<li>LLM 的 NLU 輸出從 <code>weight_suggestion</code> 改成每個 op 附帶 <code>signal</code> 和 <code>strength</code>，數字一律查表。保留「LLM 自由 delta」當成開關，方便比較。</li>
+<li>讀取 C6 的 weight_approve／weight_ask：達標的計入權重，中間區間顯示成黃色「待確認」標籤，讓使用者自己確認，不另外彈確認卡。</li>
+<li>手動調整改成「鎖定」：鎖定值寫進 conversation，derive 時固定，不會被下一輪覆蓋。另外保存一份真正的「系統建議權重」，讓「恢復系統權重」有東西可以恢復。</li>
+<li>Run 增加 <code>weight_ledger</code> 欄位。推薦理由、權重面板和後台追溯都讀同一份資料。</li>
+<li>自動化測試：同一份檔案重跑 N 輪權重不變；刪除標籤後權重退回；重度剪輯的性能權重大於輕度剪輯；carry 讓便攜權重高於預設；鎖定值不變；合計 100、每項 ≥1、單項 ≤ max_share。</li>
+</ul></div>
+
+<details><summary>附：實算腳本與原始輸出</summary><div class="body">
+<p>現況模擬：<code>/private/tmp/claude-501/-Users-m-Desktop-Laptopbuyingassisstant/d9ccc0fd-b5e7-4a99-beb9-2b156faec6a5/scratchpad/w1/sim.py</code>（用 AST 從 pipeline.py 抽出 <code>heuristic_ops</code>、<code>apply_weight_deltas</code>，搭配真正的 <code>domain.normalize_item</code> 和 <code>scoring.rebalance</code>）。</p>
+<p>方案 A 試算：<code>/private/tmp/claude-501/-Users-m-Desktop-Laptopbuyingassisstant/d9ccc0fd-b5e7-4a99-beb9-2b156faec6a5/scratchpad/w1/prop.py</code>（點數表是本文 5.4 的建議值，屬於示意，不是系統現有資料）。</p>
+<p>預算解析副產物：<code>normalize_item</code> 把「預算 4 萬 5」解析成 <code>{min:32000,max:48000}</code>，把「4.5萬」解析成 <code>None</code>，可以交給負責解析的代理確認。</p>
+</div></details>
+
+</section></template>
+<template id="tpl-k2"><section class="ch core" id="k2">
+ <div class="chhead"><span class="chcode">K2</span><h2>分數計算：產品力分、性價比與七維分數</h2></div>
+ <p class="scope">分析範圍：scoring.py、domain.py snapshot、importer.py、tests/test_scoring.py</p>
+<p>這一章說明 system 0.0.3「每台筆電怎麼得分」。分數算法是整個「權重決定推薦」流程的地基。如果地基的刻度不準，使用者在權重上做的調整就不會如實反映到排名。下面先講清楚現行公式，再拿一台真實機型逐項算一遍。接著用全庫 371 台的實際分布找出問題，最後提出改法與方案比較。文中數字都是在 scratchpad 的 venv 裡，用 <code>importer.all_records()</code>、<code>domain.snapshot()</code> 實際算出來的，沒有連資料庫，也沒有啟動服務。</p>
+
+<h3>一、整體流程：分數在哪裡算、什麼時候算</h3>
+<pre class="flow">
+ ┌──────────────── 匯入時（只算一次，存進 Laptop.scores）───────────────┐
+ │ CSV 371 筆 × 581 欄                                                    │
+ │   │ importer.compute_population()  importer.py:112                     │
+ │   ▼  找出每個指標在「全庫」的第一名（最大或最小值）                     │
+ │ 每個原始指標 ── pct_of_first() ──► 子項分 0–100     scoring.py:68      │
+ │   │            （= 自己 ÷ 第一名，越低越好的就倒過來）                  │
+ │   ▼ importer.row_parts()  importer.py:148                              │
+ │ 子項分 parts（27 項）──► 存 scores.parts                               │
+ │   │ dim_scores_from_parts()  scoring.py:248                            │
+ │   ▼                                                                    │
+ │ 七維度分 dims ──► 存 scores.dims；用「程式內預設權重」算 default_power │
+ └────────────────────────────────────────────────────────────────────────┘
+                 │
+ ┌────────────── 每一輪對話（pipeline.run_turn → domain.snapshot）────────┐
+ │ classify()：硬篩選 → 正式(1) / 邊界(0.5) / 排除(0)   domain.py:511    │
+ │ score_laptop()：parts → dims（可加軟體帶入的效能子項）→ 產品力分       │
+ │                 用「這段對話的權重」 conv.weights     domain.py:708    │
+ │ value_among()：只在「正式＋邊界」裡換算性價比 0–100  domain.py:745    │
+ │ rank_key()：只替「正式」排序、給名次                 domain.py:748    │
+ └────────────────────────────────────────────────────────────────────────┘
+</pre>
+<p>重點有兩個：</p>
+<ul>
+<li>「子項分」在匯入時就固定了，用的是<b>全庫第一名</b>當基準。每輪對話只會重新加權。</li>
+<li>只有「性價比」是在每輪對話的<b>當次候選內</b>重新換算。</li>
+</ul>
+
+<h3>二、七個維度各自怎麼算</h3>
+<h4>2-1 共通的正規化方法：「距第一名百分比」</h4>
+<p>程式的方法既不是 min-max，也不是百分位。它的做法是：</p>
+<ul>
+<li>越高越好的指標：<code>子項分 = round(100 × 自己 ÷ 全庫最大值)</code>。</li>
+<li>越低越好的指標：<code>子項分 = round(100 × 全庫最小值 ÷ 自己)</code>。</li>
+<li>結果限制在 0–100 之間（<code>scoring.py:68-76</code>）。</li>
+</ul>
+<p>「第一名」由 <code>importer._first()</code> 從全庫取得（<code>importer.py:98-105</code>）。如果某指標的有效值少於 30 筆，就回傳 <code>None</code>，整欄不計分。</p>
+<p>這個方法有一個天生特性：最差的機型也不會接近 0。例如雙烤噪音的第一名是 37.6 dB，最吵的是 58 dB，最吵那台仍有 65 分。所以很多維度的分數都擠在高分區（見第五節）。</p>
+<p>另外有幾個子項不是用比例算，而是查表或用固定公式：</p>
+<ul>
+<li>查表：刷新率（<code>REFRESH_MAP</code>，<code>scoring.py:59</code>）、尺寸適配、面板、護眼、Wi-Fi、藍牙（<code>scoring.py:94-165</code>）。</li>
+<li>固定公式：介面數量與升級空間（<code>importer.py:221-228</code>）。</li>
+</ul>
+
+<h4>2-2 七維度一覽</h4>
+<div class="tblwrap"><table>
+<tr><th>維度（程式 key）</th><th>子項與內部權重</th><th>用到的 CSV 欄位</th><th>正規化</th><th>缺值處理</th></tr>
+<tr><td>性能 <code>performance</code></td><td>CPU 單核 20、多核 25、GPU 35、記憶體 10、儲存 10（<code>PERF_SUB</code>，<code>scoring.py:33-39</code>）；軟體可另外加子項，例如 <code>procyon_pr</code>，最多讓出 40（<code>scoring.py:249-260</code>）</td><td><code>r23_single_score</code>、<code>r23_multi_score</code>、<code>gpu_timespy_score</code>；記憶體 = read/write/copy/latency 依 35/30/20/15 合成（<code>importer.py:155-170</code>）；儲存 = 循序讀 55%＋寫 45%，<b>讀寫缺一就整項當缺值</b>（<code>importer.py:172-180</code>）</td><td>全庫距第一名%</td><td>子項缺值就跳過，其餘按權重重新分配。存在的權重少於總權重 60% 時，整個維度記為 None（<code>weighted_mean</code>，<code>scoring.py:168-181</code>）</td></tr>
+<tr><td>螢幕 <code>display</code></td><td>亮度 20、色域 25、色準 15、PPI 15、刷新率 10、尺寸適配 5、面板 5、護眼 5（<code>scoring.py:42-51</code>）</td><td><code>avg_brightness_nits</code>；色域 = P3 50＋sRGB 35＋AdobeRGB 15；色準 = sRGB ΔE 50＋P3 ΔE 35＋Adobe ΔE 15，ΔE 大於 10 當異常剔除（<code>importer.py:195-209</code>）；<code>ppi</code>；<code>refresh_rate_hz</code> 查表；<code>screen_size_inch</code> 查表；<code>panel_type</code>；<code>dc_dimming</code>/<code>pwm_frequency_hz</code></td><td>比例＋查表混用</td><td>同上（60% 規則）。PPI 有 14 筆缺值，但因為只佔 15%，維度分仍然會算出來</td></tr>
+<tr><td>便攜 <code>portability</code></td><td>本體重 50、出差總重 25、變壓器重 15、厚度 10（<code>scoring.py:54</code>）</td><td><code>body_weight_kg</code>、<code>travel_weight_kg</code>、<code>adapter_weight_kg</code>、<code>含腳墊最厚厚度（mm）</code></td><td>越輕／越薄越好，比例倒數</td><td>同上。<b>CSV 沒有缺值，但有大量填補值</b>（見 5-1）</td></tr>
+<tr><td>續航 <code>battery</code></td><td>只有一項</td><td><code>battery_life_hours</code></td><td>距第一名%（第一名 27.5h）</td><td>缺值時整個維度就是 None（<code>scoring.py:297</code>）</td></tr>
+<tr><td>散熱 <code>thermal</code></td><td>鍵盤熱點 50、WASD 區 20、持續性能 30（<code>scoring.py:55</code>）</td><td><code>keyboard_hotspot_temp_c</code>、<code>keyboard_wasd_avg_temp_c</code>；持續性能 = <code>雙烤總功耗(W)</code> ÷ <code>PL1/SPL</code>（<code>importer.py:212-219</code>）</td><td>溫度：越低越好的比例倒數；持續性能：比例</td><td>同上</td></tr>
+<tr><td>噪音 <code>noise</code></td><td>雙烤 70、CPU 單烤 30（<code>scoring.py:56</code>）</td><td><code>dual_load_noise_db</code>、<code>cpu_load_noise_db</code></td><td>越低越好的比例倒數</td><td>同上</td></tr>
+<tr><td>擴展性 <code>expandability</code></td><td>介面 50、無線 20、升級 30（<code>scoring.py:57</code>）</td><td>介面：<code>40 + 有雷電/USB4 ×20 + min(USB-C USB4 數,3)×10</code>（<code>importer.py:226-228</code>）；無線：Wi-Fi 70%＋藍牙 30%；升級：<code>min(100, 最大記憶體/64×50 + min(M.2 空槽,2)×25)</code>（<code>importer.py:221-224</code>）</td><td>固定公式，不看全庫</td><td><code>or 0</code>：缺值會被當成 0（<code>importer.py:221-227</code>）</td></tr>
+</table></div>
+
+<details><summary>查表值細節（刷新率、尺寸、面板、護眼、無線）</summary><div class="body">
+<div class="tblwrap"><table>
+<tr><th>項目</th><th>對照</th><th>程式位置</th></tr>
+<tr><td>刷新率</td><td>60→50、90→65、120→80、144→86、165→90、180→92、240→96、300→98、360→100，中間值用線性插值</td><td><code>scoring.py:59, 79-91</code></td></tr>
+<tr><td>尺寸適配</td><td>13 吋級 85、14 吋級 92、15–16.3 吋 95、16.4–17.3 吋 90、17.4–18.5 吋 85、其他 80</td><td><code>scoring.py:94-107</code></td></tr>
+<tr><td>面板</td><td>OLED／Mini LED 95、IPS 85、VA 75、TN 55</td><td><code>scoring.py:110-124</code></td></tr>
+<tr><td>護眼</td><td>有 DC 調光 95；PWM ≥3000Hz 90、≥1000Hz 80、&gt;0 60；PWM=0 且不是 OLED 85</td><td><code>scoring.py:127-140</code></td></tr>
+<tr><td>Wi-Fi／藍牙</td><td>Wi-Fi 7 100、6E 85、6 75；藍牙 5.3 90、5.4 96、6.0 100</td><td><code>scoring.py:143-165</code></td></tr>
+</table></div>
+</div></details>
+
+<h3>三、產品力分、性價比、排序、篩選</h3>
+<h4>3-1 公式</h4>
+<pre class="flow">
+ 子項分      s_j = clip(100 × x_j / x_j第一名)          （越低越好：100 × x_j第一名 / x_j）
+ 維度分      D_i = round( Σ_j v_ij × s_j  ÷  Σ_j(s_j 存在) v_ij )
+             └ 存在的 v_ij 合計 ÷ 全部 v_ij 合計 &lt; 0.6 時，D_i = None
+ 產品力分    P   = round( Σ_i w_i × D_i  ÷  Σ_i(D_i 存在) w_i , 1 )     scoring.py:211-222
+             └ w_i 是這段對話的權重（合計 100）；缺的維度會從分母拿掉
+ 性價比原值  R   = P ÷ 價格                                             scoring.py:225-228
+ 性價比      V   = round(100 × (R − R_min) ÷ (R_max − R_min))           scoring.py:231-245
+             └ R_min／R_max 只取「這一輪的正式＋邊界候選」             domain.py:744-747
+</pre>
+
+<h4>3-2 排序規則（<code>rank_key</code>，<code>scoring.py:327-335</code>）</h4>
+<div class="tblwrap"><table>
+<tr><th>sort_mode</th><th>第一鍵</th><th>第二鍵</th><th>第三鍵</th></tr>
+<tr><td><code>power</code>（預設）</td><td>產品力分高→低</td><td>價格低→高</td><td>機型 id 字母序</td></tr>
+<tr><td><code>price_asc</code></td><td>價格低→高</td><td>產品力分高→低</td><td>id</td></tr>
+<tr><td><code>price_desc</code></td><td>價格高→低</td><td>產品力分高→低</td><td>id</td></tr>
+</table></div>
+<p>補充兩點：</p>
+<ul>
+<li>只有正式候選會排序並給名次（<code>domain.py:748-750</code>）。<b>邊界候選保留資料庫原本的順序</b>，沒有名次。</li>
+<li>性價比<b>沒有參與排序</b>，只拿來顯示，例如詳情頁的「性價比 X（當前候選中）」（<code>UserApp.tsx:844</code>）。</li>
+</ul>
+
+<h4>3-3 硬篩選與邊界候選（<code>classify</code>，<code>domain.py:511-692</code>）</h4>
+<p>規則是：只要命中一個「排除」理由就算排除；沒有排除理由、但有邊界理由，就算邊界；兩者都沒有才是正式候選。</p>
+<div class="tblwrap"><table>
+<tr><th>條件</th><th>正式</th><th>邊界</th><th>排除</th><th>容差從哪裡讀</th></tr>
+<tr><td>預算上限 hi</td><td>價格 ≤ hi</td><td>hi &lt; 價格 ≤ hi + max(hi×8%, 500)</td><td>超過上述範圍</td><td>C6 <code>budget_tol_pct</code>／<code>budget_tol_abs</code>（<code>domain.py:64-65, 529-534</code>）</td></tr>
+<tr><td>預算下限 lo</td><td>價格 ≥ lo</td><td>差距在容差內</td><td>低於容差</td><td>同上（<code>domain.py:535-540</code>）</td></tr>
+<tr><td>尺寸（約略）</td><td>|差| ≤ 0.35</td><td>≤ size_tol（0.7）</td><td>超過</td><td>0.35 寫死（<code>domain.py:15</code>）；0.7 讀 C6 <code>size_tol</code></td></tr>
+<tr><td>重量上限</td><td>≤ 上限</td><td>≤ 上限 + 0.15kg</td><td>超過</td><td>C6 <code>weight_tol</code>（<code>domain.py:558-564</code>）</td></tr>
+<tr><td>軟體門檻（記憶體／顯存）</td><td>達標</td><td>—（沒有邊界）</td><td>不達標，或沒有獨顯卻要求顯存</td><td>軟體畫像 <code>hard</code>（<code>domain.py:676-686</code>）</td></tr>
+<tr><td>厚度、續航、刷新率、噪音、持續性能、介面、升級</td><td colspan="3">固定容差：厚度 +1.5mm、續航 −1.5h、刷新率 −30Hz、噪音子項 &lt;55 排除／&lt;70 邊界、持續性能 &lt;50／&lt;60、介面 &lt;60、升級 &lt;50</td><td>全部寫死在程式（<code>domain.py:595-674</code>）</td></tr>
+</table></div>
+
+<h4>3-4 C6「權重與公式」頁面上的參數，哪些真的被程式讀取</h4>
+<div class="tblwrap"><table>
+<tr><th>參數</th><th>預設值（seed.py:268-285）</th><th>是否被讀取</th><th>位置</th></tr>
+<tr><td>七維權重 <code>weights</code></td><td>33/21/14/12/10/6/4</td><td><span class="tag t-s">有</span>，但只用於<b>新開的對話</b>的初始權重</td><td><code>api.py:425-428, 704</code></td></tr>
+<tr><td><code>budget_tol_pct</code>、<code>budget_tol_abs</code>、<code>size_tol</code>、<code>weight_tol</code></td><td>0.08、500、0.7、0.15</td><td><span class="tag t-s">有</span></td><td><code>domain.py:64-67</code></td></tr>
+<tr><td><code>idle_end_minutes</code></td><td>30</td><td><span class="tag t-s">有</span>（對話閒置多久自動結束）</td><td><code>api.py:501</code></td></tr>
+<tr><td><code>travel_tol</code></td><td>0.25</td><td><span class="tag t-n">尚未接上</span>：放進了 <code>_th</code>，但 <code>classify</code> 沒有使用</td><td><code>domain.py:68</code></td></tr>
+<tr><td><code>weight_approve</code>、<code>weight_ask</code></td><td>0.75、0.5</td><td><span class="tag t-n">尚未接上</span>：程式寫死 <code>conf &gt;= 0.75</code></td><td><code>pipeline.py:336</code></td></tr>
+<tr><td><code>tier</code></td><td>[5,20,50]</td><td><span class="tag t-n">尚未接上</span>：寫死 5／20／50</td><td><code>domain.py:777-786</code></td></tr>
+<tr><td><code>hard_filter</code>、<code>compare_max</code></td><td>0.65、10</td><td><span class="tag t-n">尚未接上</span>：全專案找不到讀取處</td><td>—</td></tr>
+<tr><td>子項權重、查表、60% 覆蓋率、正規化方式</td><td>—</td><td><span class="tag t-n">後台沒有</span>：都是程式常數</td><td><code>scoring.py:33-59, 177</code></td></tr>
+</table></div>
+
+<h3>四、逐項計算示範：拯救者 Y7000X（SHDX0163，資料庫價格 9,999）</h3>
+<p>選這台的原因：它是有獨顯的 15.3 吋機，重量（2.23kg）與續航（6.67h）都不是填補值，適合當「正常樣本」。下表是 venv 實算結果，與 <code>importer.all_records()</code> 存下的分數一致。</p>
+<div class="tblwrap"><table>
+<tr><th>維度</th><th>子項：原始值 ÷ 全庫第一名 → 子項分</th><th>維度分計算</th><th>維度分</th></tr>
+<tr><td>性能</td><td>單核 2120/2372→89；多核 31014/40581→76；GPU 11211/23445→48；記憶體（讀 58、寫 62、複製 60、延遲 78.2/88.3→89）→64；儲存（讀 96×.55＋寫 85×.45）→91</td><td>(89×20+76×25+48×35+64×10+91×10)/100 = 69.1</td><td><b>69</b></td></tr>
+<tr><td>螢幕</td><td>亮度 599/807→74；色域 97；色準 85；PPI 197/257→77；165Hz→90；15.3 吋→95；OLED→95；PWM 3840Hz→90</td><td>(74×20+97×25+85×15+77×15+90×10+95×5+95×5+90×5)/100 = 86.35</td><td><b>86</b></td></tr>
+<tr><td>便攜</td><td>本體 0.99/2.23→44；出差 1.46/2.85→51；變壓器 0.22/0.62→35；厚度 12.9/26.2→49</td><td>(44×50+51×25+35×15+49×10)/100 = 44.9</td><td><b>45</b></td></tr>
+<tr><td>續航</td><td>6.67/27.5→24</td><td>—</td><td><b>24</b></td></tr>
+<tr><td>散熱</td><td>熱點 40.2/46.3→87；WASD 34.8/39.0→89；持續 (174/97)/(315/111)→63</td><td>(87×50+89×20+63×30)/100 = 80.2</td><td><b>80</b></td></tr>
+<tr><td>噪音</td><td>雙烤 37.6/53.5→70；單烤 34.6/49.5→70</td><td>70×.7+70×.3</td><td><b>70</b></td></tr>
+<tr><td>擴展性</td><td>介面 40+20(雷電)+0→60；無線 Wi-Fi 7 100×.7＋藍牙 5.4 96×.3→99；升級 128/64×50＋1×25→100（封頂）</td><td>(60×50+99×20+100×30)/100 = 79.8</td><td><b>80</b></td></tr>
+</table></div>
+<pre class="flow">
+ 預設權重  P = (69×33 + 86×21 + 45×14 + 24×12 + 80×10 + 70×6 + 80×4) / 100
+             = (2277 + 1806 + 630 + 288 + 800 + 420 + 320) / 100 = 65.41 → 65.4
+ 遊戲權重  w = 45/15/8/6/14/6/6（示範用） → P = 69.2
+ 性價比原值 R = 65.4 / 9999 = 0.0065407（固定不變）
+</pre>
+<p>同一台機器、同一個產品力分（65.4），在不同對話條件下的<b>性價比卻完全不同</b>：</p>
+<div class="tblwrap"><table>
+<tr><th>使用者條件</th><th>正式／邊界台數</th><th>名次</th><th>性價比 V</th></tr>
+<tr><td>無條件</td><td>371／0</td><td>161</td><td>19</td></tr>
+<tr><td>預算 8000–12000</td><td>107／41</td><td>48</td><td>44</td></tr>
+<tr><td>預算 9000–10500</td><td>52／30</td><td>25</td><td>41</td></tr>
+<tr><td>預算 ≤10000</td><td>199／17</td><td>42</td><td><b>3</b></td></tr>
+<tr><td>預算 5000–15000</td><td>279／13</td><td>104</td><td>31</td></tr>
+<tr><td>預算 8000–12000＋15.6 吋</td><td>5／110</td><td>1</td><td>38</td></tr>
+</table></div>
+
+<h3>五、現況的問題與風險（附實際數據）</h3>
+<h4>5-1 全庫各維度分布（371 台，預設權重）</h4>
+<div class="tblwrap"><table>
+<tr><th>維度</th><th>最小</th><th>最大</th><th>標準差</th><th>不同值個數</th><th>最多同分</th><th>名目權重 → 實際影響力（粗估）</th></tr>
+<tr><td>性能</td><td>33</td><td>94</td><td>13.8</td><td>59</td><td>69 分 × 20 台</td><td>33% → <b>46%</b></td></tr>
+<tr><td>螢幕</td><td>70</td><td>90</td><td>4.6</td><td>20</td><td>78 × 67</td><td>21% → <b>10%</b></td></tr>
+<tr><td>便攜</td><td>34</td><td>96</td><td>15.4</td><td>22</td><td>43 × <b>168</b></td><td>14% → 22%</td></tr>
+<tr><td>續航</td><td>24</td><td>100</td><td>7.6</td><td>9</td><td>40 × <b>233</b></td><td>12% → 9%</td></tr>
+<tr><td>散熱</td><td>71</td><td>91</td><td>3.8</td><td>19</td><td>81 × 63</td><td>10% → <b>4%</b></td></tr>
+<tr><td>噪音</td><td>65</td><td>100</td><td>11.5</td><td>26</td><td>70 × 42</td><td>6% → 7%</td></tr>
+<tr><td>擴展性</td><td>51</td><td>80</td><td>7.3</td><td>12</td><td>77 × 209</td><td>4% → 3%</td></tr>
+<tr><td><b>產品力分</b></td><td>55.3</td><td>80.1</td><td><b>3.7</b></td><td>136</td><td>325 台落在「跟別台同分」的組裡</td><td>—</td></tr>
+</table></div>
+<p>「實際影響力」的算法是 <code>w_i × 標準差_i ÷ Σ(w × 標準差)</code>。它沒有考慮維度之間的相關性，只能當方向參考。意思是：維度的分數散得越開，同樣的權重對排名的影響就越大。</p>
+
+<div class="bug"><b>問題 1：權重和實際影響力不一致，削弱了「權重是核心」</b><br>
+螢幕的權重是 21%，但它的分數全擠在 70–90（標準差 4.6），對排名的實際影響只有約 10%。散熱的權重是 10%，實際影響只有 4%。<br>
+這代表使用者把「螢幕」權重調高時，排名幾乎不動。原因在於「距第一名%」（<code>scoring.py:68-76</code>）對溫度、噪音、色域這類變化範圍窄的指標，算出來全是 70–100 分。<br>
+另外，子項的「天花板」也會壓縮差距：
+<ul>
+<li>升級空間有 290 台 = 100 分（最大記憶體 128GB 就已經滿分，<code>importer.py:224</code>）。</li>
+<li>介面分只有 40／50／60 三種值。</li>
+<li>護眼有 266 台 = 95 分。</li>
+<li>面板只有 85 與 95 兩種值。</li>
+</ul></div>
+
+<div class="bug"><b>問題 2：填補值污染便攜與續航，而且續航的填補值偏高</b><br>
+CSV 裡有多個欄位被同一個數值大量填滿：
+<ul>
+<li><code>body_weight_kg</code> = 2.43 有 196 筆。</li>
+<li><code>含腳墊最厚厚度</code> = 27.0 有 197 筆，與 2.43kg 的 196 筆完全重疊。</li>
+<li><code>adapter_weight_kg</code> = 0.62 有 223 筆。</li>
+<li><code>travel_weight_kg</code> = 3.05 有 169 筆。四項同時是填補值的有 168 台，這 168 台的便攜分全是 43。</li>
+<li><code>battery_life_hours</code> = 11.0 有 233 筆，其中 231 台是獨顯機。整欄只有 8 種值。</li>
+</ul>
+真正有實測值的獨顯機，續航中位數只有 <b>6.67h</b>，對應續航分 24。被填成 11h 的獨顯機卻拿到 <b>40</b> 分。也就是說，<b>沒有實測資料的機器反而比有實測的同類機高 16 分</b>。<br>
+重量也有同樣的問題。填補機的本體分固定是 41，但同類獨顯機的實測重量從 1.86 到 2.99kg 都有，換成子項分是 34–53。拿一台填補機做敏感度測試：本體分從 41 改成 35 或 52，預設權重下的產品力分會在 70.3 到 71.4 之間變動，差了 1.1 分。這已經超過預算 8000–12000 時第 1 名與第 5 名的差距（0.8 分）。<br>
+目前系統沒有任何欄位或旗標標記「這是填補值」（<code>importer.py:273-313</code>）。唯一相近的是 <code>resolution_estimated</code>，但計分沒有用到它。</div>
+
+<div class="bug"><b>問題 3：性價比依當次候選換算，同一台在不同對話分數不同</b><br>
+<code>value_among</code> 用當次候選做 min-max（<code>scoring.py:231-245</code>，<code>domain.py:745</code>）。所以同一台 SHDX0163 的性價比會在 3 到 44 之間跳動（見第四節）。另外有三個副作用：
+<ul>
+<li>候選裡最差的那台一定是 0 分。例如預算 8000–12000 時，SHDX0293（12,699、產品力分 60.4）的性價比就是 0 分，使用者看到會很困惑。</li>
+<li>只剩 1 台候選時，那台一定是 100 分。</li>
+<li>邊界候選也算進 min/max，所以邊界池的大小會影響正式候選的性價比。</li>
+</ul></div>
+
+<div class="bug"><b>問題 4：分數太接近，排名的差距小於資料誤差</b><br>
+以預算 8000–12000 為例：正式候選 107 台，相鄰名次的 106 個差距中，有 102 個小於 0.5 分，41 個是完全同分。第 1 名和第 5 名只差 0.8 分，和第 10 名差 1.7 分。<br>
+同分時依「價格低→id 字母序」決勝（<code>scoring.py:335</code>）。<b>依 id 字母序決勝沒有使用者意義</b>，但目前推薦卡顯示的前 5 名，實際上由它決定。</div>
+
+<div class="bug"><b>問題 5：缺值的處理會讓分數「因為缺資料而變高」</b><br>
+<code>product_power</code> 遇到 None 的維度時，會把它從分母拿掉（<code>scoring.py:214-222</code>）。實測：拿第 1 台機器，把續航設為 None，產品力分就從 70.4 變成 75.1，因為原本拖低分數的弱項被忽略了。<br>
+目前全庫七個維度都沒有 None，所以還沒發生。但下列情況一出現就會觸發：
+<ul>
+<li>匯入的新 CSV 有缺欄。</li>
+<li>維度的子項覆蓋率低於 60%（<code>scoring.py:177</code>）。</li>
+</ul>
+另外有兩種相反的錯誤：
+<ul>
+<li>把缺值當成 0：<code>ram</code>、<code>m2_free</code> 的 <code>or 0</code>（<code>importer.py:221-227</code>）、<code>dc_dimming</code> 的 <code>int(... or 0)</code>（<code>importer.py:255</code>）。</li>
+<li>把 0 當成實測值：Procyon PR 有 1 筆是 0（GJS0001），會被算成 0 分。</li>
+</ul></div>
+
+<div class="bug"><b>問題 6：持續性能的基準算錯</b><br>
+<code>first_ratio = 全庫最大雙烤功耗 ÷ 全庫最大 PL1 = 315/111 = 2.84</code>（<code>importer.py:217-219</code>），但全庫真正最大的比值是 4.85。結果有 4 台被截成 100 分，其他機器的分數也跟著偏高。</div>
+
+<div class="bug"><b>問題 7：分數一致性：同一台機器在不同畫面的「產品力分」來源不同</b><br>
+<ul>
+<li>匯入時存的 <code>default_power</code> 用的是<b>程式常數</b> <code>DEFAULT_WEIGHTS</code>（<code>importer.py:276</code>），不是 C6 的權重。</li>
+<li>公開機型列表（<code>api.py:668</code>）與後台資料頁（<code>api.py:1711, 1997</code>）顯示的就是這個值。</li>
+<li>對話裡顯示的則是 conv.weights 即時算出的分數。</li>
+</ul>
+所以只要在 C6 改了預設權重，或對話裡有軟體帶入的效能子項，三個畫面的「產品力分」就會不一樣。<br>
+版本號也有同樣的問題：C6 存檔時會把資料庫裡的版本號 +1（<code>api.py:2227-2228</code>），但 <code>score_laptop</code> 與列表回傳的仍是程式常數 <code>FORMULA_VERSION</code>（<code>scoring.py:323</code>、<code>api.py:689</code>）。<br>
+另外，正規化基準是依「每次匯入的整份 CSV」重新計算的（<code>importer.py:443-444</code>）。只要新資料的第一名換人，<b>全庫所有機型的分數都會跟著變</b>。如果某欄有效值少於 30 筆，該欄整欄都不計分（<code>importer.py:103</code>）。</div>
+
+<div class="bug"><b>問題 8：使用者偏好被混進「品質分」，影響可解釋性</b><br>
+<ul>
+<li>「尺寸適配」放在螢幕維度裡（<code>scoring.py:94-107</code>），等於系統預設 16 吋最好、13 吋只有 85 分。想要 13 吋的人會被系統扣分。</li>
+<li>推薦卡的 <code>top_metrics</code> 顯示的是「這位使用者權重最高的兩個維度」（<code>pipeline.py:365</code>），不是「這台相對其他候選的優勢維度」。因此推薦理由無法直接從分數產生。</li>
+</ul></div>
+
+<div class="bug"><b>問題 9：邊界候選沒有排序，自動化測試也不夠</b><br>
+邊界池依資料庫原始順序排列。例如預算 8000–12000 時，邊界第 1 台是 79.2 分，第 2 台卻是 63.6 分。<br>
+<code>tests/test_scoring.py</code> 只測了 <code>weighted_mean</code> 的 0.6 覆蓋率、七維預設權重、<code>rebalance</code> 三件事。<code>pct_of_first</code>、<code>row_parts</code>、<code>value_among</code>、<code>rank_key</code>、<code>snapshot</code> 的分數部分都沒有測試。</div>
+
+<h3>六、改法與方案比較</h3>
+<h4>6-1 正規化基準（最關鍵）</h4>
+<p>下表三個方案都是在 venv 裡實際套用到全庫算出來的。為了快速比較，是拿現有子項分做轉換的近似結果；正式實作時應該直接用原始值計算。</p>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>產品力分標準差</th><th>同分台數</th><th>名目權重 → 實際影響力（性能／螢幕／散熱）</th><th>優點</th><th>缺點</th></tr>
+<tr><td>A 維持「距第一名%」，只修問題</td><td>現行做法，加上修正持續性能、缺值等問題</td><td>3.7</td><td>325</td><td>33→46／21→10／10→4</td><td>改動最少；「是第一名的 85%」很直覺</td><td>窄範圍指標永遠擠在高分區，<b>權重失真</b>；分數受第一名的極端值影響</td></tr>
+<tr><td>B 全庫百分位</td><td>子項分 = 這台在全庫贏過多少 % 的機型</td><td>5.7</td><td>293</td><td>33→35／21→14／10→8</td><td>每個維度的散布接近一致，<b>權重最接近使用者看到的比例</b>；理由可以寫成「續航贏過庫中 72% 的機型」；不受極端值影響</td><td>失去「差多少」的資訊（差 1% 和差 30% 可能只差幾個百分位）；大量同值會擠在同一個百分位</td></tr>
+<tr><td>C 全庫穩健 min-max（p5–p95）</td><td>(x − 第 5 百分位) ÷ (第 95 − 第 5 百分位)，超出範圍就截掉</td><td>7.9</td><td>257</td><td>33→31／21→17／10→6</td><td>保留大小差距，區分度最好</td><td>最後 5% 的機型會出現 0 分，顯示出來比較刺眼；基準一變，所有分數都跟著動</td></tr>
+</table></div>
+<p><b>推薦方案 B（全庫百分位）作為預設，A 和 C 保留成後台可切換的選項。</b>理由如下：</p>
+<ul>
+<li>M 的核心是「權重決定推薦」。B 讓每個維度的實際影響力最接近名目權重。</li>
+<li>百分位本身就是一句可以說給使用者聽的話，推薦理由可以直接由程式產生，不需要模型自行編造。</li>
+</ul>
+<p>無論選哪個方案，基準（第一名、百分位表、p5/p95）都要<b>跟著資料版本一起存下來</b>。這樣同一版資料裡，同一台機器的子項分永遠相同；只有換資料版本時才會整體重算，後台也能看出差異。</p>
+
+<h4>6-2 性價比的定義</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>SHDX0163 的值</th><th>穩定性</th><th>可解釋性</th></tr>
+<tr><td>A 現行：當次候選內 min-max</td><td>3～44，依對話而變</td><td>差：受候選池影響</td><td>差：0 分和 100 分只是相對位置</td></tr>
+<tr><td>B 全庫 (P÷價格) 百分位</td><td>49（固定）</td><td>好：只隨使用者權重變動</td><td>中：「比 49% 的機型划算」</td></tr>
+<tr><td>C 同價位期望差：P − f(價格)</td><td>同價位期望 64.9，這台高 <b>+0.5</b> 分</td><td>好</td><td><b>最好</b>：「比同價位平均多 X 分」</td></tr>
+</table></div>
+<p>方案 C 的期望曲線是用全庫對價格的對數做迴歸：<code>P ≈ 4.21×ln(價格) + 26.14</code>，殘差標準差 2.97。</p>
+<p><b>推薦方案 C</b>，並用使用者當下的權重在全庫 371 台上重算這條曲線（計算量很小）。卡片顯示「比同價位平均高 +X 分」。方案 B 保留成開關。這樣性價比就不再受候選池大小與邊界候選影響，不會出現「最差那台 0 分」，也能直接寫進推薦理由。</p>
+
+<h4>6-3 填補值與缺值</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>評價</th></tr>
+<tr><td>A 照常使用（現況）</td><td>填補值當實測值</td><td>續航填 11h 會讓獨顯機多拿 16 分，不可接受</td></tr>
+<tr><td>B 視為缺值，維度從分母拿掉</td><td>沿用 <code>product_power</code> 的現行邏輯</td><td>會「因為缺資料而加分」（實測 +4.7），不可接受</td></tr>
+<tr><td>C 視為缺值，改用「同類保守值」並標記</td><td>同類（獨顯／核顯 × 尺寸級距）實測值的中位數，或更保守的 40 百分位；每個子項記錄 <code>quality: measured / filled / missing</code></td><td><b>推薦</b>：排名不會被高估，卡片和詳情頁可以顯示「重量為估計值」，讓使用者自己判斷</td></tr>
+</table></div>
+<p>匯入時要偵測填補值，有兩個來源：</p>
+<ul>
+<li>CSV 若提供明確的標記欄，就以標記欄為準。</li>
+<li>沒有標記欄時，用啟發式偵測：同一個值佔該欄超過 X%（例如 25%）就列為「疑似填補」，在 C3 讓管理員確認。</li>
+</ul>
+<p>同時建議修正：</p>
+<ul>
+<li>把 <code>or 0</code> 改成 None。</li>
+<li>Procyon 等跑分值為 0 時視為缺值。</li>
+<li><code>product_power</code> 的缺維度處理改成上面的保守值，不要再從分母拿掉。</li>
+</ul>
+
+<h4>6-4 分數多接近算「平手」</h4>
+<p>建議在後台設定平手門檻 δ。現行刻度下預設 1.0 分；換成方案 B 或 C 後，依新的分數標準差重新設定。這個值應該參考資料誤差：填補值造成的變動就有 1.1 分。分數差距在 δ 以內的機型視為「實力接近」：</p>
+<ul>
+<li>卡片顯示「這幾台分數接近，差在 X」，把兩台差距最大的維度列出來。</li>
+<li>決勝順序改為：使用者權重最高的維度分 → 價格 → 實測資料比例較高者。<b>不要再用 id 字母序</b>。</li>
+<li>以預算 8000–12000、δ=1.0 為例，有 6 台和第 1 名平手。這正好是推薦「讓使用者選」或補一個追問的好時機（追問設計由 W1 負責）。</li>
+</ul>
+
+<h4>6-5 讓分數可以解釋</h4>
+<pre class="flow">
+ score_laptop() 回傳不只總分，再加上 breakdown：
+   每個維度 i：D_i、w_i、貢獻 c_i = w_i × D_i / Σw   （Σ c_i = P，可以驗算）
+               相對優勢 a_i = D_i − 本輪正式候選的 D_i 中位數
+   每個子項 j：原始值、單位、百分位、quality（measured / filled / missing）
+       │
+       ▼
+ 推薦理由 = 權重調整的原因（W1） × 這台 a_i 最大的 1–2 個維度（程式選出，模型只負責改寫成文字）
+</pre>
+<p>另外把「尺寸適配」從螢幕維度移出（<code>scoring.py:48</code>），因為尺寸偏好已經由硬篩選處理。<code>top_metrics</code> 也要改成「這台 a_i 最大的維度」（<code>pipeline.py:365</code>）。</p>
+
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li><b>先修正會讓分數出錯的程式</b>：持續性能基準（<code>importer.py:217</code>）、<code>or 0</code> 與跑分 0 值、<code>product_power</code> 的缺維度處理、邊界候選依產品力分排序、<code>default_power</code> 與版本號改讀 C6，並在 C6 存檔後重算。</li>
+<li><b>正規化改用「全庫百分位」並跟著資料版本固定</b>，讓實際影響力接近名目權重（例如螢幕從 10% 回到 14%）。保留「距第一名%」與「p5–p95」兩種方式，放在後台下拉選單。</li>
+<li><b>性價比改成「比同價位平均高幾分」</b>，用使用者權重在全庫算期望曲線，不再依當次候選換算。</li>
+<li><b>填補值要標記</b>，並用同類保守值計分。卡片與詳情頁標示「估計值」。續航與重量是第一優先。</li>
+<li><b>設定平手門檻 δ</b>（後台可調），平手時依使用者最在意的維度決勝，並把「接近」說出來。</li>
+<li><b>每台機器輸出逐維貢獻與相對優勢</b>，推薦理由由程式選出要講的維度，模型只負責表達。</li>
+</ul></div>
+
+<h4>6-6 要放到後台（C6）的參數</h4>
+<div class="tblwrap"><table>
+<tr><th>參數</th><th>現在的位置</th></tr>
+<tr><td>正規化方式（A／B／C）、p5/p95 等錨點、基準的資料版本</td><td>沒有，程式寫死 <code>pct_of_first</code></td></tr>
+<tr><td>七個維度各自的子項權重（PERF／DISPLAY／PORT／THERMAL／NOISE／EXPAND）、記憶體 35/30/20/15、儲存 55/45、色域與色準的權重</td><td><code>scoring.py:33-57</code>、<code>importer.py:163-206</code></td></tr>
+<tr><td>查表：刷新率、面板、護眼、Wi-Fi、藍牙、介面與升級公式</td><td><code>scoring.py:59-165</code>、<code>importer.py:221-228</code></td></tr>
+<tr><td>維度覆蓋率門檻 0.6、全庫最少樣本數 30</td><td><code>scoring.py:177</code>、<code>importer.py:103</code></td></tr>
+<tr><td>性價比方式、平手門檻 δ、決勝順序</td><td>沒有</td></tr>
+<tr><td>填補值偵測比例、填補時的保守值百分位</td><td>沒有</td></tr>
+<tr><td>classify 的固定容差：尺寸 0.35、厚度 1.5、續航 1.5、刷新率 30、噪音 55/70、持續性能 50/60、介面 60、升級 50；並接上 <code>travel_tol</code></td><td><code>domain.py:15, 595-674</code></td></tr>
+</table></div>
+
+<h4>6-7 開關（給 M 做使用者測試）</h4>
+<ul class="toggles">
+<li>正規化方式：距第一名％／全庫百分位／p5–p95</li>
+<li>性價比：關閉／當次候選 min-max／全庫百分位／同價位期望差</li>
+<li>性價比是否參與排序（例如產品力分 × (1−α) ＋ 性價比 × α，α 可調）</li>
+<li>填補值處理：當實測值／同類保守值／當缺值</li>
+<li>卡片是否顯示「估計值」標記</li>
+<li>平手顯示：關閉／標示「分數接近」／平手時改顯示比較卡</li>
+<li>顯示產品力分的形式：整數／一位小數／只顯示等級（例如「前 10%」）</li>
+<li>是否顯示逐維貢獻條</li>
+<li>是否顯示「相對其他候選的優勢維度」</li>
+<li>「尺寸適配」是否計入螢幕維度</li>
+<li>邊界候選是否參與性價比計算與排序</li>
+</ul>
+
+<h4>6-8 要補的自動化測試</h4>
+<div class="tblwrap"><table>
+<tr><th>測試</th><th>驗收條件</th></tr>
+<tr><td><code>test_pct_of_first_*</code></td><td>越高越好、越低越好、值為 0、值為 None 的邊界情況</td></tr>
+<tr><td><code>test_row_parts_golden_SHDX0163</code></td><td>用第四節的數字當黃金樣本：七個維度 69/86/45/24/80/70/80，產品力分 65.4</td></tr>
+<tr><td><code>test_sustain_first_is_max_ratio</code></td><td>持續性能的第一名是「比值的最大值」，全庫最多只有 1 台是 100 分</td></tr>
+<tr><td><code>test_missing_never_increases_power</code></td><td>把任一維度設為缺值後，產品力分不會上升</td></tr>
+<tr><td><code>test_filled_flagged</code></td><td>出現 2.43kg 或 11h 這類高頻值時會被標記成 filled，且續航分不高於同類實測中位數</td></tr>
+<tr><td><code>test_value_stable_across_pools</code></td><td>同一台機器、同一組權重，在不同預算候選池裡的性價比相同</td></tr>
+<tr><td><code>test_rank_tie_break_not_by_id</code></td><td>同分時依權重最高的維度決勝；δ 內的機型會被標成平手</td></tr>
+<tr><td><code>test_edge_sorted</code></td><td>邊界候選依產品力分排序</td></tr>
+<tr><td><code>test_score_consistency</code></td><td>列表、後台、對話三處，在相同權重下的產品力分一致；版本號與 C6 一致</td></tr>
+<tr><td><code>test_breakdown_sums_to_power</code></td><td>逐維貢獻的總和等於產品力分（容許 ±0.1）</td></tr>
+<tr><td><code>test_effective_weight_share</code></td><td>在百分位方案下，各維度的實際影響力與名目權重相差不超過 ±8 個百分點（目前實測最大差 7 個百分點，是螢幕的 21%→14%）</td></tr>
+</table></div>
+
+</section></template>
+<template id="tpl-k3"><section class="ch core" id="k3">
+ <div class="chhead"><span class="chcode">K3</span><h2>高級權重：單核、多核、AI 算力、Office 等細項</h2></div>
+ <p class="scope">分析範圍：enriched_laptop_database_final_db.csv（581 欄）、importer.py、scoring.py、C6／C1</p>
+<p>這一節回答 M 的問題：「性能」這種大維度底下，能不能再細分成單核、多核、GPU、AI 算力、Office 分數、算圖、遊戲幀數等細項，並且依照每個人的用途調整細項的比重。我用 Python 實際統計了 <code>enriched_laptop_database_final_db.csv</code>（371 筆、581 欄），讀了 importer／scoring／pipeline／seed／domain／AdminApp 的程式，最後用真實資料算了一個例子。</p>
+<p><b>先講結論：</b>system 其實<b>已經有兩層權重的骨架</b>。性能分是由 5 個子項加權算出來的（<code>scoring.py:33-39</code>），軟體畫像也能加開專項（<code>procyon_pr</code>）。缺的是三件事：子權重<b>不會跟著需求變</b>、資料庫裡 <b>500 多欄實測只用了大約 45 欄</b>、後台和使用者端都<b>看不到子項</b>。建議做法是「工作負載畫像向量」：每個軟體用途定義一組完整的性能子權重，系統再依照使用者的軟體組合和使用強度混合出他自己的子權重。</p>
+
+<h3>一、資料盤點：581 欄裡有哪些能當細項</h3>
+<p>先說明這份資料的四個整體特徵，它們會直接影響設計：</p>
+<ul>
+<li><b>幾乎沒有空值。</b>581 欄中，數值欄的非空筆數幾乎都是 371/371。「沒有」大多用 <code>0</code> 表示，例如沒有 NPU 時 TOPS 填 0、沒有獨顯時顯存填 0。所以下表的「有效筆數」算的是 <b>&gt;0 的筆數</b>，不是非空筆數。</li>
+<li><b>近似值旗標全部是 0。</b>所有 <code>*_approximate_flag</code> 欄都是 0。總旗標 <code>approximate_flag</code> 只有 1 筆（機械革命翼龍15 Pro 2026）。</li>
+<li><b>異常標記非常少。</b><code>*_anomaly</code> 只有 Delta E 有 2／1 筆，<code>high_battery_outlier</code> 有 2 筆，其他全部是 0。</li>
+<li><b>英文欄只是中文欄的複本。</b>英文欄（例如 <code>r23_single_score</code>）和中文原欄（<code>Cinebench R23單核</code>）逐筆比對 100% 相同。<code>battery_life_hours</code> 就是 <code>procyon續航(h)</code>。所以「英文欄沒有的實測」其實只存在中文欄裡，例如 Office、算圖、遊戲幀數。</li>
+</ul>
+
+<h4>1-1 和性能／體驗相關的欄位（分組）</h4>
+<div class="tblwrap"><table>
+<tr><th>分組</th><th>欄位（中文原欄 → 英文欄）</th><th>單位</th><th>有效筆數（&gt;0）</th><th>近似旗標</th><th>score_norm 欄</th><th>異常標記</th><th>範圍（最小／中位／最大）與備註</th></tr>
+<tr><td rowspan="3">CPU 單核</td><td>Cinebench R23單核 → <code>r23_single_score</code></td><td>分</td><td>371</td><td>有（全 0）</td><td>有</td><td>有（全 0）</td><td>1534／2054／2372</td></tr>
+<tr><td>Cinebench R20單核、2024單核、2026單核</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td>2024：92／123／142</td></tr>
+<tr><td>Cinebench 2026單線程</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td><span class="tag t-d">異常</span> 最大值 1244，中位數只有 131，有 1 筆明顯打錯，而且沒有被標記</td></tr>
+<tr><td rowspan="2">CPU 多核</td><td>Cinebench R23多核 → <code>r23_multi_score</code></td><td>分</td><td>371</td><td>有</td><td>有</td><td>有</td><td>7266／27382／40581</td></tr>
+<tr><td>R20多核、2024多核、2026多核</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td><span class="tag t-d">異常</span> 2026多核 最大 22354，中位 1608，有 1 筆異常</td></tr>
+<tr><td>CPU 規格</td><td>核心數、執行緒數、基礎／最大頻率、PL1/SPL、PL2、TPP總功耗</td><td>個／GHz／W</td><td>371</td><td>無</td><td>無</td><td>無</td><td>規格不是實測；PL1 有被 <code>sustain</code> 拿來用</td></tr>
+<tr><td rowspan="3">GPU 3D</td><td>3DMark Time Spy → <code>gpu_timespy_score</code></td><td>分</td><td>371</td><td>有</td><td>有</td><td>有</td><td>1682／11313／23445</td></tr>
+<tr><td>TSE、Fire Strike（含 Extreme／Ultra）、Port Royal</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td>Port Royal 測光追</td></tr>
+<tr><td>獨顯TGP(W)、獨顯顯存(GB)</td><td>W／GB</td><td>274（有獨顯的機器）</td><td>無</td><td>無</td><td>無</td><td>顯存目前只拿來當軟體硬門檻</td></tr>
+<tr><td>GPU 通用運算</td><td>Cinebench 2026 GPU</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td>185／1792／3751</td></tr>
+<tr><td rowspan="2">AI 算力</td><td>NPU算力(TOPS)</td><td>TOPS</td><td>206（0 有 165 筆）</td><td>無</td><td>無</td><td>無</td><td><span class="tag t-d">需清理</span> 0 同時代表「沒有 NPU」和「沒填」。Ultra X7 358H 填 180（應該是整個平台的 TOPS，不是 NPU）。285H 填 11、275HX 填 13，標準不一致</td></tr>
+<tr><td colspan="7">資料庫<b>沒有</b>本地大模型推論的實測（例如 tokens/s），只能用顯存、統一記憶體、GPU 運算和記憶體頻寬推估</td></tr>
+<tr><td rowspan="2">Office 實測</td><td>UL Procyon Office Productivity（插電）Overall／Word／Excel／PowerPoint／Outlook</td><td>分</td><td>371</td><td>無</td><td>無</td><td>無</td><td>Overall 4364／5638／6621，<b>差距很小</b>（最低分也有第一名的 66%）</td></tr>
+<tr><td>同上（拔電）5 欄</td><td>分</td><td>370</td><td>無</td><td>無</td><td>無</td><td>拔電 ÷ 插電 = 「拔電後還剩多少性能」，目前沒有使用</td></tr>
+<tr><td>創作實測</td><td>UL Procyon Editing 2.8 Overall／PS／LRC／<b>PR</b></td><td>分</td><td>370</td><td>無</td><td>無</td><td>無</td><td>只有 PR 被用到（<code>procyon_pr</code>）。有 1 筆是 0，目前會被算成 0 分，而不是當作缺值</td></tr>
+<tr><td rowspan="3">算圖</td><td>Corona【CPU多核】、VRay【CPU】、Blender monster／junkshop／classroom【CPU多核】</td><td>分／樣本每分鐘</td><td>371</td><td>無</td><td>無</td><td>無</td><td>和 R23 多核的相關係數 0.99–1.00</td></tr>
+<tr><td>VRay【顯卡】、Blender ×3【顯卡】</td><td>分／樣本每分鐘</td><td>371</td><td>無</td><td>無</td><td>無</td><td>和 Time Spy 相關 0.93–0.98</td></tr>
+<tr><td>Octane【N卡】</td><td>分</td><td>370</td><td>無</td><td>無</td><td>無</td><td><span class="tag t-d">異常</span> 97 台沒有獨顯的機器中，有 96 台的 Octane 分數 &gt;0（Octane 需要 NVIDIA 顯卡）</td></tr>
+<tr><td rowspan="2">遊戲幀數</td><td>平均幀【1080P／2K／4K】× CS2、DOTA2、APEX、LOL、古墓麗影、2077、騎砍2、怪物獵人、刺客信條（27 欄）</td><td>FPS</td><td>371（2K 怪獵 370）</td><td>無</td><td>無</td><td>無</td><td>例：1080P 2077 中位數，有獨顯 72、只有內顯 40</td></tr>
+<tr><td>1%Low幀，同上 27 欄</td><td>FPS</td><td>371</td><td>無</td><td>無</td><td>無</td><td>可以用來衡量「穩不穩」，目前沒有使用</td></tr>
+<tr><td rowspan="2">記憶體</td><td>讀取／寫入／複製／延遲 → <code>memory_*</code></td><td>MB/s／ns</td><td>371</td><td>有</td><td>有</td><td>無</td><td>和 CPU 分數呈<b>負相關</b>（−0.2～−0.3）：輕薄機用 LPDDR5X 頻寬反而較高</td></tr>
+<tr><td>內存容量(GB)、最大支持容量、內存頻率</td><td>GB／MHz</td><td>371</td><td>無</td><td>無</td><td>無</td><td>容量只當硬門檻（<code>domain.py:678-681</code>）</td></tr>
+<tr><td>儲存</td><td>硬碟順序讀／寫 → <code>storage_seq_*</code>；硬盤容量(GB)</td><td>MB/s／GB</td><td>371／370</td><td>有</td><td>有</td><td>無</td><td><span class="tag t-d">異常</span> 容量有 14 筆 &gt;16384 GB（把 TB 當 GB 填）</td></tr>
+<tr><td rowspan="3">螢幕</td><td>sRGB／P3／AdobeRGB 覆蓋、容積、平均 Delta E（英文欄都有）</td><td>%／ΔE</td><td>371</td><td>有</td><td>覆蓋與 ΔE 有</td><td>有</td><td>ΔE 最大 99.8，已標記 2／1 筆，importer 只在 ΔE&gt;10 時排除</td></tr>
+<tr><td>最高／最低／平均亮度、9 區亮度、HDR10%／全屏亮度、響應時間、PWM、DC調光</td><td>nits／ms／Hz</td><td>371</td><td>部分</td><td>亮度有</td><td>無</td><td>最低亮度有 7 筆 &gt;300 nits（可疑）；9 區均勻度與 HDR 沒有使用</td></tr>
+<tr><td><code>ppi</code>、解析度</td><td>ppi</td><td>357</td><td>—</td><td>有</td><td>無</td><td>14 筆缺值，是唯一真的有空值的部分</td></tr>
+<tr><td>續航</td><td><code>battery_life_hours</code>（= procyon續航）、電池容量(Wh)、待機功耗(W)</td><td>h／Wh／W</td><td>371</td><td>有</td><td>有</td><td><code>high_battery_outlier</code> 2 筆</td><td><span class="tag t-d">異常</span> 6.67／11／27.5。被標為異常的 27.5h 就是全庫第一名，importer 沒有排除它（<code>importer.py:129</code>）</td></tr>
+<tr><td rowspan="2">散熱</td><td>鍵盤熱點、WASD 平均溫度 → <code>keyboard_*</code>；左右腕託最高溫度</td><td>℃</td><td>371</td><td>有</td><td>熱點有</td><td>有（全 0）</td><td>腕託溫度沒有使用</td></tr>
+<tr><td>單烤／雙烤 CPU、GPU 功耗與溫度、雙烤總功耗</td><td>W／℃</td><td>371</td><td>無</td><td>無</td><td>無</td><td>雙烤總功耗用在 <code>sustain</code></td></tr>
+<tr><td>噪音</td><td>單烤CPU噪音 → <code>cpu_load_noise_db</code>；單烤GPU噪音 → <code>gpu_load_noise_db</code>；雙烤噪音 → <code>dual_load_noise_db</code></td><td>dB</td><td>371</td><td>有</td><td>雙烤有</td><td>雙烤有</td><td><b>GPU 單烤噪音沒有使用</b></td></tr>
+<tr><td>便攜</td><td>本體／適配器／旅行重量、厚度</td><td>kg／mm</td><td>371</td><td>有</td><td>有</td><td>有</td><td>已全部使用</td></tr>
+</table></div>
+
+<details><summary>衍生分數欄（<code>*_score_norm</code>、<code>*_v1</code>、<code>*_value_*</code>）：system 沒有讀，也不建議直接讀</summary><div class="body">
+<p>CSV 第 509–576 欄是之前預先算好的分數，例如 <code>r23_single_score_score_norm</code>、<code>total_performance_score_v1</code>、<code>cpu_single_value_score_v1</code>。實測後有兩個問題：</p>
+<ul>
+<li><b>算法不同。</b>這些欄是 min-max 正規化（最低分 = 0），而且有 19 筆剛好是 0。system 用的是「距第一名百分比」（<code>scoring.py:68-76</code>）。兩套數字不能混在一起用。</li>
+<li><b>不會自動更新。</b>資料一更新，這些欄就過期了，必須重算。依照「程式碼決定事實」，建議細項分數一律在 importer 裡由原始實測現算。這些欄最多拿來在後台 C3 做對照檢查。</li>
+</ul></div></details>
+
+<h4>1-2 關鍵發現：細項很多，但真正互相獨立的「軸」很少</h4>
+<p>我用 Spearman 相關係數比對了 21 個實測欄（1.00 代表兩者排名完全一致）：</p>
+<div class="tblwrap"><table>
+<tr><th>細項</th><th>和 R23 單核</th><th>和 R23 多核</th><th>和 Time Spy</th><th>解讀</th></tr>
+<tr><td>Cinebench 2024 單核</td><td>1.00</td><td>0.88</td><td>0.56</td><td>和 R23 單核等價</td></tr>
+<tr><td>VRay CPU／Corona／Blender CPU</td><td>0.88</td><td><b>0.99–1.00</b></td><td>0.60</td><td>CPU 算圖 ≈ 多核</td></tr>
+<tr><td>Procyon Office Overall</td><td>0.93</td><td><b>0.96</b></td><td>0.59</td><td>Office 分數同時吃單核和多核</td></tr>
+<tr><td>VRay 顯卡／Blender 顯卡／Cinebench 2026 GPU</td><td>0.56</td><td>0.60</td><td><b>0.93–0.98</b></td><td>GPU 算圖 ≈ GPU 3D</td></tr>
+<tr><td>Procyon PR</td><td>0.72</td><td>0.81</td><td>0.88</td><td><b>CPU 和 GPU 都吃</b>，是少數真的「混合」的細項</td></tr>
+<tr><td>2077 1080P 平均幀</td><td>0.54</td><td>0.59</td><td>0.96</td><td>遊戲 ≈ GPU</td></tr>
+<tr><td>NPU TOPS</td><td>0.26</td><td>0.07</td><td>0.07</td><td><b>獨立的軸</b>，但資料品質差</td></tr>
+<tr><td>記憶體讀取</td><td>−0.20</td><td>−0.30</td><td>−0.14</td><td><b>獨立的軸</b>（輕薄機頻寬較高）</td></tr>
+</table></div>
+<p>也就是說，在這份資料裡，大約只有 <b>5 條互相獨立的軸</b>：CPU 單核、CPU 多核、GPU、記憶體（頻寬與容量）、AI／NPU。其餘細項大多是這幾條軸的組合。因此：</p>
+<ul>
+<li><b>細項的價值在說服力，不在區分度。</b>「這台 Office 實測 6621 分，是全庫最高」比「單核 88 分」更能讓使用者覺得系統懂他。</li>
+<li><b>真正會改變排名的，是 CPU 和 GPU 的比重。</b>第四節的例子會證明這一點。</li>
+<li>這份資料標示為 <code>data_source: "simulated"</code>（<code>importer.py:291</code>），相關係數接近 1.00 有可能是模擬造成的。換成真實資料後要重跑這張表（建議做成後台報表）。</li>
+</ul>
+
+<h3>二、程式現況：用了哪些欄位，子權重做到哪裡</h3>
+<pre class="flow">
+CSV（581 欄）
+  │ importer.COL 只對應 49 欄（importer.py:25-76）
+  ▼
+row_parts()：算出 27 個「子項分」0–100（importer.py:148-270）
+  │ 正規化方式：距第一名 %（scoring.py:68-76）；第一名 = 全庫最大值（importer.py:98-105）
+  ▼ 存進 DB laptops.scores.parts（匯入時就算好）
+  ▼
+每一輪對話 snapshot()（domain.py:698-716）
+  │ dim_scores_from_parts(parts, extra_perf_subs)（scoring.py:248-311）
+  │   性能 = PERF_SUB 加權  ← 固定 20/25/35/10/10
+  │        + extra_perf_subs（軟體畫像 activate，只有 procyon_pr）
+  │   其他 6 個維度 = 各自的固定子權重
+  ▼
+product_power = 7 個維度 × 使用者權重（scoring.py:211-222）
+</pre>
+
+<h4>2-1 目前的兩層結構（系統其實已經有子權重）</h4>
+<div class="tblwrap"><table>
+<tr><th>大維度</th><th>子項與固定子權重</th><th>使用的欄位</th><th>程式位置</th></tr>
+<tr><td>性能</td><td>單核 20、多核 25、GPU 35、記憶體 10、儲存 10</td><td>R23 單／多核、Time Spy、記憶體 4 欄（35/30/20/15）、硬碟讀寫（55/45）</td><td><code>scoring.py:33-39</code>、<code>importer.py:155-180</code></td></tr>
+<tr><td>螢幕</td><td>亮度 20、色域 25、準確度 15、PPI 15、刷新率 10、尺寸 5、面板 5、護眼 5</td><td>平均亮度、P3/sRGB/AdobeRGB 覆蓋（50/35/15）、三種 ΔE、ppi、Hz、面板、DC/PWM</td><td><code>scoring.py:42-51</code>、<code>importer.py:182-209</code></td></tr>
+<tr><td>便攜</td><td>本體 50、旅行 25、適配器 15、厚度 10</td><td>各重量、含腳墊厚度</td><td><code>scoring.py:54</code></td></tr>
+<tr><td>續航</td><td>（單一項）</td><td><code>battery_life_hours</code></td><td><code>scoring.py:297</code></td></tr>
+<tr><td>散熱</td><td>熱點 50、WASD 20、持續性能 30</td><td>鍵盤溫度、雙烤總功耗 ÷ PL1</td><td><code>scoring.py:55</code>、<code>importer.py:211-219</code></td></tr>
+<tr><td>噪音</td><td>雙烤 70、單烤 30</td><td>雙烤噪音、<b>只有 CPU 單烤噪音</b></td><td><code>scoring.py:56</code>、<code>importer.py:264-265</code></td></tr>
+<tr><td>擴展</td><td>接口 50、無線 20、升級 30</td><td>雷電數、USB-C 數、WiFi/BT、最大記憶體、M.2 空槽</td><td><code>scoring.py:57</code>、<code>importer.py:221-238</code></td></tr>
+</table></div>
+
+<h4>2-2 「細項」相關機制的現況</h4>
+<div class="tblwrap"><table>
+<tr><th>機制</th><th>現況</th><th>位置</th></tr>
+<tr><td>軟體畫像加開專項（<code>activate</code>）</td><td><span class="tag t-v">已接通</span> 只有 Premiere 會加開 <code>procyon_pr</code>，權重 14。加開時，原本 5 個子項會按比例讓出空間（專項合計上限 40）</td><td><code>seed.py:107</code>、<code>pipeline.py:133-135</code>、<code>scoring.py:250-260</code></td></tr>
+<tr><td>軟體畫像調整子權重（<code>sub_delta</code>）</td><td><span class="tag t-n">未接通</span> seed 已經寫好：PS 單核+4、多核+2；AI 單核+3；PR 多核+4、GPU+6。但整個 backend 沒有任何地方讀取 <code>sub_delta</code></td><td><code>seed.py:66,86,106</code>（grep 只找到這 3 處）</td></tr>
+<tr><td>軟體畫像調整大維度（<code>weight_delta</code>）</td><td><span class="tag t-v">已接通</span> 例如 PR 性能+4</td><td><code>pipeline.py:339-342</code></td></tr>
+<tr><td>軟體硬門檻</td><td>只用記憶體和顯存，沒有用到單核、多核或 GPU 分數</td><td><code>domain.py:676-686</code></td></tr>
+<tr><td>用子項分數當門檻</td><td>安靜需求：雙烤噪音分 &lt;55 就排除；持續性能需求：<code>sustain</code> &lt;50 就排除；3A／電競：沒有獨顯就排除</td><td><code>domain.py:648-663</code></td></tr>
+<tr><td>後台 C6 權重與公式</td><td>只能調 7 個大維度和閾值，<b>不能調子權重</b></td><td><code>AdminApp.tsx:782-813</code></td></tr>
+<tr><td>後台 C1 軟體畫像庫</td><td>列表只有名稱、別名、類別、狀態、版本，<b>看不到也改不了</b> usages、activate、sub_delta</td><td><code>AdminApp.tsx:555-581</code></td></tr>
+<tr><td>使用者端</td><td>詳情頁只顯示 7 個維度的分數條，沒有子項</td><td><code>UserApp.tsx:855-860</code></td></tr>
+<tr><td>R029「軟體規則激活二級測試項」</td><td>只是在有軟體卡片時被記錄為「已觸發」，沒有開關可以關掉 activate</td><td><code>seed.py:50</code>、<code>pipeline.py:603-604</code></td></tr>
+</table></div>
+
+<div class="bug"><b>名目子權重 ≠ 實際影響力</b><br>「距第一名 %」這種正規化，會讓每個子項的分數分散程度差很多：單核分數的標準差只有 7.1，GPU 卻有 22.3。實際影響力大約等於「子權重 × 標準差」。換算後，現行 <code>PERF_SUB</code> 的實際占比是：單核 20% → <b>約 8%</b>、多核 25% → 29%、GPU 35% → <b>約 46%</b>、記憶體 10% → 4%、儲存 10% → 13%。也就是說，現在的性能分有一半其實是 GPU 分。這不一定錯，但後台應該把「實際影響力」顯示出來，M 調權重時才看得出真實效果。</div>
+<div class="bug"><b>續航第一名用的是被標記為異常的值</b><br><code>compute_population</code> 只排除 ΔE 異常（<code>importer.py:139-140</code>），沒有排除 <code>high_battery_outlier</code>。結果 27.5 小時被當成第一名，中位數 11 小時的機器續航分只剩 40 分。之後新增的細項（例如 Cinebench 2026 單線程的打錯值）也會遇到同樣問題。</div>
+
+<h4>2-3 欄位 → 目前用途 → 建議用途</h4>
+<div class="tblwrap"><table>
+<tr><th>欄位</th><th>目前用途</th><th>建議用途</th></tr>
+<tr><td><code>r23_single_score</code></td><td>性能／單核 20%</td><td>保留，作為細項 <code>cpu_single</code> 的主要欄位；備援欄位用 Cinebench 2024單核</td></tr>
+<tr><td><code>r23_multi_score</code></td><td>性能／多核 25%</td><td>保留，作為 <code>cpu_multi</code>；備援用 2024多核、R20多核</td></tr>
+<tr><td><code>gpu_timespy_score</code></td><td>性能／GPU 35%</td><td>改名為 <code>gpu_3d</code>（遊戲／3D 視窗操作）；備援用 TSE、Fire Strike</td></tr>
+<tr><td>Cinebench 2026 GPU</td><td>未使用</td><td>新細項 <code>gpu_compute</code>（GPU 通用運算）；備援用 VRay 顯卡</td></tr>
+<tr><td>Procyon Office 插電 Overall</td><td>未使用</td><td>新細項 <code>office</code>（文書情境）；缺值時用「單核 0.6 + 多核 0.4」代替</td></tr>
+<tr><td>Procyon Office 拔電 ÷ 插電</td><td>未使用</td><td>新細項 <code>unplugged_keep</code>（拔電性能保持率），放在<b>續航</b>維度，適合常帶出門的人</td></tr>
+<tr><td>Procyon Editing PS／LRC</td><td>未使用</td><td>新細項 <code>photo</code>（修圖），給 Photoshop／Lightroom 畫像使用</td></tr>
+<tr><td>Procyon Editing PR</td><td>Premiere 專項（activate）</td><td>改名為 <code>video</code>，併入畫像向量；值為 0 時當缺值處理</td></tr>
+<tr><td>VRay CPU、Corona、Blender CPU ×3</td><td>未使用</td><td>新細項 <code>render_cpu</code>（取各欄距第一名 % 的平均）</td></tr>
+<tr><td>VRay 顯卡、Blender 顯卡 ×3、Octane</td><td>未使用</td><td>新細項 <code>render_gpu</code>；Octane 只在有 NVIDIA 獨顯時採用，其他情況當作「不支援」</td></tr>
+<tr><td>平均幀 27 欄、1%Low 27 欄</td><td>未使用（遊戲只看有沒有獨顯，<code>domain.py:648-650</code>）</td><td>新細項 <code>game_fps</code>：依使用者選的遊戲和解析度取幾何平均；開關可以改用 1%Low</td></tr>
+<tr><td>NPU算力(TOPS)</td><td>未使用</td><td>新細項 <code>ai_npu</code>（Copilot+ 等本機 AI 功能）；要先清理 0 和 180 的定義</td></tr>
+<tr><td>獨顯顯存、內存容量（統一記憶體）</td><td>只當硬門檻</td><td>新細項 <code>ai_local</code>（可載入的模型大小，規格推估）；並新增 <code>ram_capacity</code> 作為性能子項</td></tr>
+<tr><td><code>memory_*</code> 4 欄</td><td>性能／記憶體 10%</td><td>保留；在 AI 畫像中提高比重（頻寬會影響推論速度）</td></tr>
+<tr><td><code>storage_seq_*</code></td><td>性能／儲存 10%</td><td>保留；在 Office 畫像中調低（差異幾乎感受不到）</td></tr>
+<tr><td><code>gpu_load_noise_db</code></td><td>未使用</td><td>噪音維度新增 <code>noise_gpu</code>；遊戲畫像中改用它取代 CPU 單烤噪音</td></tr>
+<tr><td>左右腕託最高溫度</td><td>未使用</td><td>散熱維度新增 <code>palm</code>（打字時手會不會燙）；文書畫像中提高比重</td></tr>
+<tr><td>HDR10% 亮度、9 區亮度</td><td>未使用</td><td>螢幕維度新增 <code>hdr</code> 和 <code>uniformity</code>；影音、調色畫像使用</td></tr>
+<tr><td>響應時間(ms)</td><td>未使用</td><td>螢幕維度新增 <code>response</code>；電競畫像使用</td></tr>
+<tr><td>獨顯TGP、PL1</td><td>PL1 用在 <code>sustain</code></td><td>維持現狀；TGP 只在說明時顯示，不另外算分（已經反映在實測裡）</td></tr>
+<tr><td><code>*_score_norm</code>、<code>*_v1</code></td><td>未使用</td><td>不要拿來計分；只在 C3 用來對照</td></tr>
+</table></div>
+
+<h3>三、建議做法：兩層權重架構</h3>
+<pre class="flow">
+使用者說的話／點選卡片
+  │ NLU（模型只負責理解）→ 需求檔案：軟體 × 用途 × 強度
+  ▼
+【第一層】大維度權重（現有）
+  性能 33 / 螢幕 21 / 便攜 14 …  ← weight_delta、需求自動調整、使用者手動調整
+  │
+  ▼
+【第二層】每個大維度內的細項子權重（新增，由程式決定）
+  ┌──────────────────────────────────────────────┐
+  │ 畫像向量庫（C1，每個軟體用途一組）          │
+  │  Office 文書：單核35 多核10 Office40 記憶體5 儲存10 │
+  │  3ds Max CPU算圖：單核15 CPU算圖60 記憶體15 儲存10  │
+  │  …                                            │
+  └──────────────────────────────────────────────┘
+  │ 混合：Σ 占比ᵢ × 向量ᵢ  → 再依強度 α 和「通用」向量混合
+  ▼
+細項分（importer 預先算好，存在 parts，含備援鏈和「推估」標記）
+  │ weighted_mean（缺值時重新分配，覆蓋率 &lt;60% 就回傳 None）
+  ▼
+維度分 → product_power → 排序
+  ▼
+推薦理由 = 「你的子權重怎麼變了」+「這台在哪個細項相對領先」
+</pre>
+
+<h4>3-1 架構比較</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>優點</th><th>缺點</th></tr>
+<tr><td>A. 固定子權重 + 加減分（把現有做法補完）</td><td>維持 <code>PERF_SUB</code>，把 <code>sub_delta</code> 接上：PS +4 單核……，多個軟體的加減分直接疊加</td><td>改動最少，seed 資料已經有</td><td>多個軟體疊加後結果難預測，而且會受套用順序影響。「+4」很難解釋給使用者聽。Office 這種「GPU 應該接近 0」的情境，用加減分很難做到</td></tr>
+<tr><td><b>B. 工作負載畫像向量混合（推薦）</b></td><td>每個軟體用途存一組<b>完整的</b>子權重向量（合計 100）。使用者有多個軟體時，依占比加權平均；強度低時往「通用」向量靠攏</td><td>結果可預測，也能解釋（「因為你主要用 Excel，性能裡最看重 Office 實測」）。後台一列就看得懂。可以直接沿用現有的 <code>weighted_mean</code></td><td>每個畫像都要填一組向量（約 10 個畫像 × 5–8 個數字）。要定義占比和強度怎麼來</td></tr>
+<tr><td>C. 全部攤平</td><td>不再分大維度和細項，所有細項（約 25 項）直接成為頂層權重</td><td>最自由</td><td>使用者面對 25 條權重條會看不懂。LLM 的權重建議會變得很雜。「性能」這個概念會消失，推薦理由也不好寫</td></tr>
+</table></div>
+<p><b>我推薦 B。</b>理由有三個。第一，B 能讓 M 想要的推薦理由自然產生：子權重的變化本身就是理由。第二，數學上它只是 <code>PERF_SUB</code> 從固定 dict 變成「依需求算出來的 dict」，<code>dim_scores_from_parts</code> 幾乎不用改。第三，B 可以涵蓋 A：畫像只填加減分時，可以先轉成向量再混合。A 做一個開關保留下來，方便對照測試就好。</p>
+
+<h4>3-2 細項清單（以性能維度為主，其他維度的新增項附在最後）</h4>
+<div class="tblwrap"><table>
+<tr><th>細項 key</th><th>使用者看到的名稱</th><th>主要欄位 → 備援鏈</th><th>計算方式</th><th>類型</th></tr>
+<tr><td><code>cpu_single</code></td><td>單核（反應速度）</td><td>R23單核 → 2024單核 → 2026單核</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>cpu_multi</code></td><td>多核（重活速度）</td><td>R23多核 → 2024多核 → R20多核</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>gpu_3d</code></td><td>3D 圖形</td><td>Time Spy → TSE → Fire Strike</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>gpu_compute</code></td><td>GPU 運算</td><td>Cinebench 2026 GPU → VRay 顯卡</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>office</code></td><td>Office 實測</td><td>Procyon Office 插電 Overall → 代理（單核 0.6 + 多核 0.4）</td><td>距第一名 %</td><td><span class="tag t-v">實測</span>／<span class="tag t-s">代理</span></td></tr>
+<tr><td><code>photo</code></td><td>修圖實測</td><td>Procyon PS → LRC → 代理（單核 0.4 + GPU 運算 0.3 + 多核 0.3）</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>video</code></td><td>剪輯實測</td><td>Procyon PR → 代理（多核 0.5 + GPU 運算 0.5）</td><td>距第一名 %</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>render_cpu</code></td><td>CPU 算圖</td><td>VRay CPU、Corona、Blender CPU 的平均 → R23多核</td><td>各欄距第一名 % 取平均</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>render_gpu</code></td><td>GPU 算圖</td><td>VRay 顯卡、Blender 顯卡的平均（N 卡再加 Octane）→ Time Spy</td><td>同上</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>game_fps</code></td><td>遊戲幀數</td><td>使用者選的遊戲 × 解析度的平均幀（開關：1%Low）→ Time Spy</td><td>各遊戲距第一名 % 取幾何平均</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>ai_local</code></td><td>本機 AI 模型</td><td>可用模型記憶體：獨顯顯存；統一記憶體平台（Ryzen AI Max）用 RAM×0.75。× GPU 運算 × 記憶體頻寬</td><td>可用記憶體距第一名 % × 0.5 + GPU 運算 × 0.3 + 頻寬 × 0.2</td><td><span class="tag t-s">規格推估</span></td></tr>
+<tr><td><code>ai_npu</code></td><td>NPU（Windows AI 功能）</td><td>NPU算力(TOPS)</td><td>距第一名 %，上限用 P95（避免 180 這種異常值）；0 = 不支援</td><td><span class="tag t-s">規格</span></td></tr>
+<tr><td><code>memory</code></td><td>記憶體速度</td><td>現有 4 欄</td><td>現有方式</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td><code>ram_capacity</code></td><td>記憶體容量</td><td>內存容量(GB)</td><td>對數尺度：16→60、32→80、64→95、128+→100</td><td><span class="tag t-s">規格</span></td></tr>
+<tr><td><code>storage</code></td><td>硬碟速度</td><td>現有 2 欄</td><td>現有方式</td><td><span class="tag t-v">實測</span></td></tr>
+<tr><td colspan="5">其他維度新增：續航 <code>unplugged_keep</code>（拔電 Office ÷ 插電 Office）；噪音 <code>noise_gpu</code>；散熱 <code>palm</code>（腕託）；螢幕 <code>hdr</code>、<code>uniformity</code>、<code>response</code>。同一套「畫像向量」機制可以套用到所有維度，例如遊戲畫像的噪音維度改看 <code>noise_gpu</code>。</td></tr>
+</table></div>
+
+<h4>3-3 畫像向量：子權重怎麼由需求決定</h4>
+<p>下面是<b>起始值</b>。它們存在 C1 的軟體用途裡，M 可以隨時調整。每一列合計 100。</p>
+<div class="tblwrap"><table>
+<tr><th>畫像</th><th>單核</th><th>多核</th><th>GPU 3D</th><th>GPU 運算</th><th>情境實測</th><th>AI</th><th>記憶體</th><th>容量</th><th>儲存</th><th>為什麼</th></tr>
+<tr><td>通用（現行預設）</td><td>20</td><td>25</td><td>35</td><td>—</td><td>—</td><td>—</td><td>10</td><td>—</td><td>10</td><td>沒有軟體資訊時使用</td></tr>
+<tr><td>Office 文書</td><td>35</td><td>10</td><td>—</td><td>—</td><td>Office 40</td><td>—</td><td>5</td><td>—</td><td>10</td><td>文書操作吃單核反應，GPU 幾乎用不到</td></tr>
+<tr><td>Photoshop 修圖</td><td>25</td><td>15</td><td>—</td><td>10</td><td>修圖 35</td><td>—</td><td>5</td><td>10</td><td>—</td><td>濾鏡吃單核和 GPU，大檔吃容量</td></tr>
+<tr><td>Premiere 4K 剪輯</td><td>10</td><td>15</td><td>—</td><td>20</td><td>剪輯 35</td><td>—</td><td>5</td><td>5</td><td>10</td><td>時間軸吃 GPU，輸出吃多核和 GPU</td></tr>
+<tr><td>3ds Max 建模</td><td>45</td><td>—</td><td>30</td><td>—</td><td>—</td><td>—</td><td>5</td><td>10</td><td>10</td><td>建模是單執行緒，視窗操作吃 GPU</td></tr>
+<tr><td>3ds Max CPU 算圖（Corona／V-Ray CPU）</td><td>15</td><td>—</td><td>—</td><td>—</td><td>CPU 算圖 60</td><td>—</td><td>5</td><td>10</td><td>10</td><td>算圖時間由多核決定</td></tr>
+<tr><td>3ds Max GPU 算圖（V-Ray GPU）</td><td>15</td><td>—</td><td>10</td><td>—</td><td>GPU 算圖 55</td><td>—</td><td>—</td><td>10</td><td>10</td><td>算圖時間由 GPU 決定</td></tr>
+<tr><td>3A 遊戲</td><td>15</td><td>—</td><td>15</td><td>—</td><td>遊戲幀 60</td><td>—</td><td>5</td><td>—</td><td>5</td><td>直接看實測幀數</td></tr>
+<tr><td>本機 AI 推論（LLM／SD）</td><td>10</td><td>—</td><td>—</td><td>20</td><td>—</td><td>本機 55</td><td>15</td><td>—</td><td>—</td><td>模型放不放得下比速度更重要</td></tr>
+<tr><td>Windows AI 功能（Copilot+）</td><td>30</td><td>20</td><td>—</td><td>—</td><td>Office 20</td><td>NPU 30</td><td>—</td><td>—</td><td>—</td><td>NPU 決定功能能不能用</td></tr>
+</table></div>
+<p><b>混合規則</b>（由程式計算，模型只負責判斷用途和強度）：</p>
+<ol>
+<li>使用者有多個軟體時，依照主次決定占比。預設是主要用途 0.7、次要用途 0.3；如果有 3 個以上，次要用途平分 0.3。占比也可以設成全部平分（做成開關）。</li>
+<li>依強度 α 和「通用」向量混合：最終子權重 = α × 混合向量 + (1 − α) × 通用。輕度 α=0.4、中度 0.7、重度 1.0（可在 C6 調整）。</li>
+<li>3ds Max 這類「同一個軟體有不同負載」的情況，用追問卡片問「主要用 CPU 算圖還是 GPU 算圖？」。在使用者回答之前，先用兩者平均。現有的 <code>edit_intensity</code> 追問就是同樣的模式（<code>seed.py:108</code>）。</li>
+</ol>
+
+<h4>3-4 正規化方式</h4>
+<div class="tblwrap"><table>
+<tr><th>方式</th><th>做法</th><th>優點</th><th>缺點</th><th>本資料實測</th></tr>
+<tr><td><b>距第一名 %（現行，建議保留為預設）</b></td><td>分數 = 數值 ÷ 第一名</td><td>比例最真實：Office 6092 對 6621，就是 92 分，代表「感受差距很小」</td><td>各細項分散程度不同，名目權重不等於實際影響力；容易被單一異常值拉走</td><td>Office 分數範圍 66–100，標準差 7.5；GPU 範圍 7–100，標準差 22.3</td></tr>
+<tr><td>P5–P95 錨點</td><td>P5 = 0 分、P95 = 100 分，線性拉開</td><td>每個細項分散程度接近，權重比較「說話算話」；不受異常值影響</td><td><b>會放大感受不到的差距</b>：單核 2081 對 2243 會變成 57 對 90</td><td>單核標準差 7.1 → 31.5</td></tr>
+<tr><td>百分位排名</td><td>分數 = 贏過全庫多少 %</td><td>最穩定</td><td>完全失去「差多少」的資訊</td><td>—</td></tr>
+</table></div>
+<p><b>建議：</b>預設維持「距第一名 %」，因為它最符合「差距有多大就給多少分」的直覺。但要補兩件事：(1) 第一名改成用排除異常後的 P99，而不是最大值，避免出現像 27.5 小時續航或 2026 單線程 1244 分這種情況；(2) C6 顯示每個子項的「實際影響力」（權重 × 標準差 ÷ 總和）。P5–P95 錨點做成開關，讓 M 拿去做使用者測試比較。</p>
+
+<h4>3-5 缺值策略</h4>
+<div class="tblwrap"><table>
+<tr><th>情況</th><th>處理方式</th><th>呈現</th></tr>
+<tr><td>某一台缺主要欄位</td><td>沿著備援鏈找下一個欄位（每個欄位各自算距第一名 %，不用換算）</td><td>子項旁邊加上 <span class="tag t-s">以 R23 推估</span></td></tr>
+<tr><td>整條備援鏈都缺</td><td>情境實測細項改用「代理公式」（例如 Office = 單核 0.6 + 多核 0.4）</td><td><span class="tag t-s">代理</span></td></tr>
+<tr><td>連代理也算不出來</td><td>現行做法：<code>weighted_mean</code> 把權重重新分配給其他子項，覆蓋率 &lt;60% 就整個維度回傳 None（<code>scoring.py:168-181</code>）</td><td>顯示「資料不足」</td></tr>
+<tr><td>重新分配可能讓「缺資料的機器」占便宜</td><td>開關：缺的子項改用全庫 P25 補值（保守估計）</td><td>—</td></tr>
+<tr><td>某個欄位全庫覆蓋率太低（例如 &lt;60%，可在 C6 設定）</td><td>這個細項從所有畫像中自動停用，權重按比例分給同一畫像的其他項；C3 和 C6 顯示警告</td><td>使用者端不顯示這個細項</td></tr>
+<tr><td>0 的意義</td><td>每個欄位在設定裡標註「0 代表不支援」或「0 代表缺值」。NPU 和 Octane 屬於「不支援」，分數為 0；Procyon 的 0 屬於「缺值」</td><td>不支援時顯示「不支援」，不顯示 0 分</td></tr>
+</table></div>
+
+<h4>3-6 使用者端呈現</h4>
+<ul>
+<li><b>維度分數條可以展開。</b>例如「性能 86 ▸」展開後顯示「為你調整的性能組成：Office 實測 40%・單核 35%・儲存 10%・多核 10%・記憶體 5%」。每個子項旁邊用顏色標示來源：灰色是系統預設、藍色來自軟體畫像、橘色是使用者自己調的。和需求檔案的顏色系統一致。</li>
+<li><b>每個子項的細節。</b>顯示原始數值、「是第一名的 x%」、實測／推估標籤，以及（開關控制）評測影片時間點連結（<code>測試視頻鏈接</code> 欄，371 筆都有）。</li>
+<li><b>推薦理由從子權重的變化產生。</b>例如：「你主要用 Excel → 性能裡最看重 Office 實測（40%）→ 這台 Office 6621 分是全庫最高，而且只有 1.5 kg」。不使用模板字。</li>
+<li><b>使用者可以調子權重。</b>做成進階面板，預設收起來。調整後走和現有大維度相同的 rebalance 流程（<code>scoring.py:184-208</code>）。</li>
+</ul>
+
+<h4>3-7 後台</h4>
+<ul>
+<li><b>C1 軟體畫像。</b>每個用途新增「性能子權重向量」編輯器（合計 100），並且可以預覽「套用後前 10 名怎麼變」。<code>sub_delta</code> 和 <code>activate</code> 合併進這個向量。</li>
+<li><b>C6 權重與公式。</b>新增各維度的「通用」子權重、正規化方式、第一名分位（P99）、覆蓋率門檻、強度 α，以及「實際影響力」長條圖。</li>
+<li><b>C3 資料維護。</b>細項欄位對應（含備援鏈）、每個欄位的覆蓋率、0 的語意、異常值清單（例如前面找到的 Octane、2026 單線程、硬碟容量）。</li>
+</ul>
+<ul class="toggles">
+<li>兩層權重總開關（關閉 = 回到固定 <code>PERF_SUB</code>）</li>
+<li>每個細項各自的開關（<code>office</code>、<code>photo</code>、<code>video</code>、<code>render_cpu</code>、<code>render_gpu</code>、<code>game_fps</code>、<code>ai_local</code>、<code>ai_npu</code>、<code>ram_capacity</code>、<code>unplugged_keep</code>、<code>noise_gpu</code>、<code>palm</code>、<code>hdr</code>、<code>response</code>）</li>
+<li>畫像混合模式：向量混合（B）／加減分（A）</li>
+<li>多軟體占比：主次 0.7／0.3、平分</li>
+<li>強度混合開關，以及 α 數值</li>
+<li>正規化：距第一名／P5–P95 錨點／百分位</li>
+<li>第一名取值：最大值／P99（排除異常）</li>
+<li>缺值策略：重新分配／P25 補值</li>
+<li>代理公式開關（關閉 = 缺實測就停用這個細項）</li>
+<li>遊戲幀數：平均幀／1%Low</li>
+<li>CPU 或 GPU 算圖追問卡片開關</li>
+<li>使用者端：子項展開、來源顏色、原始數值、「第一名的 x%」、實測／推估標籤、影片時間連結、進階子權重面板，各自一個開關</li>
+<li>推薦理由是否引用子項</li>
+</ul>
+
+<h3>四、實算例子：同一台機器，換一組子權重</h3>
+<p>我選了兩台很不一樣的機器，用 system 現有的 <code>pct_of_first</code> 和 <code>weighted_mean</code>，加上第三節的畫像向量，對全庫 371 台實際計算。新細項的算法和 3-2 相同。程式在 scratchpad 的 <code>w3/s5.py</code> 和 <code>w3/s6.py</code>。</p>
+<div class="tblwrap"><table>
+<tr><th>原始實測</th><th>GJS0003 華碩 靈耀16 Air 2026（AI 9 H 465，內顯）6,999 元</th><th>SHDX0001 ROG 槍神9 超競版（RTX 5090）27,999 元</th></tr>
+<tr><td>R23 單核／多核</td><td>2081／28376</td><td>2243／32677</td></tr>
+<tr><td>Time Spy</td><td>4187</td><td>21626</td></tr>
+<tr><td>Procyon Office 插電</td><td><b>6621（全庫第一）</b></td><td>6092</td></tr>
+<tr><td>VRay CPU／VRay 顯卡</td><td>26106／2303</td><td>30063／24870</td></tr>
+<tr><td>重量／NPU</td><td>1.5 kg／50 TOPS</td><td>2.43 kg／13 TOPS</td></tr>
+<tr><td>子項分（距第一名 %）</td><td>單核 88、多核 70、GPU 18、記憶體 75、儲存 40、Office 100、CPU算圖 70、GPU算圖 14</td><td>單核 95、多核 81、GPU 92、記憶體 57、儲存 48、Office 92、CPU算圖 81、GPU算圖 92</td></tr>
+</table></div>
+<div class="tblwrap"><table>
+<tr><th>性能子權重</th><th>靈耀16 Air：性能分（全庫名次）</th><th>ROG 槍神9：性能分（名次）</th><th>產品力（大維度用預設權重，只替換性能分）</th></tr>
+<tr><td>現行預設 20/25/35/10/10</td><td>53（第 281 名）</td><td>82（第 38 名）</td><td>67.1 對 <b>70.7</b> → ROG 勝</td></tr>
+<tr><td>Office 文書</td><td><b>86（第 99 名）</b></td><td>86（第 99 名）</td><td><b>78.0</b> 對 72.0 → <b>靈耀勝</b></td></tr>
+<tr><td>3ds Max 渲染（CPU、GPU 各半）</td><td>52（第 276 名）</td><td><b>83（第 29 名）</b></td><td>66.8 對 <b>71.0</b> → ROG 勝</td></tr>
+<tr><td>3ds Max 只用 CPU 算圖</td><td>70（第 177 名）</td><td>76（第 119 名）</td><td>差距只剩 6 分</td></tr>
+<tr><td>3ds Max 只用 GPU 算圖</td><td>34（第 309 名）</td><td><b>85（第 20 名）</b></td><td>差距 51 分</td></tr>
+</table></div>
+<p>從這個例子可以看出四件事：</p>
+<ol>
+<li><b>Office 子權重讓兩台的性能打平（86 對 86）。</b>於是便攜、續航、價格自然成為決勝點，產品力因此逆轉。這正是 M 要的效果：不需要「文書用途排除獨顯機」這種硬門檻，權重本身就能表達「對你來說性能差異不重要」。整體來看，Office 畫像下的性能分標準差從 13.9 降到 8.6，代表性能維度自動變得不那麼關鍵。</li>
+<li><b>3ds Max（CPU、GPU 各半）的排名和現行預設幾乎一樣</b>（Spearman 0.99），原因是算圖細項和多核、GPU 高度共線。真正拉開差距的是「CPU 算圖還是 GPU 算圖」：兩台的差距會從 6 分變成 51 分。所以這題一定要問，而且要用子權重來表達答案。</li>
+<li><b>正規化方式會改變結論。</b>同樣是 Office 畫像，改用 P5–P95 錨點時，靈耀是 71、ROG 是 76，ROG 反而勝出，因為錨點把單核 2081 對 2243 的小差距放大了。這也是我建議預設用「距第一名 %」，錨點只做成開關的原因。</li>
+<li>名次並列（兩台都是第 99 名）表示 Office 畫像下有很多台機器性能分一樣。這是正確的結果，接下來應該由其他維度來決勝。</li>
+</ol>
+
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li><b>採用方案 B：工作負載畫像向量混合。</b>大維度權重維持現狀。每個大維度的子權重由「軟體用途向量 × 占比 × 強度」決定，數學上只是把 <code>PERF_SUB</code> 從固定值變成依需求算出來的值（<code>scoring.py:248-274</code>）。</li>
+<li><b>第一批細項（資料完整、說服力高）：</b><code>office</code>、<code>video</code>（由現有 <code>procyon_pr</code> 改名）、<code>photo</code>、<code>render_cpu</code>、<code>render_gpu</code>、<code>gpu_compute</code>、<code>game_fps</code>。都在 importer 的 <code>row_parts</code> 裡由原始中文欄現算，並附上備援鏈和「實測／推估」標記。</li>
+<li><b>第二批（需要先清理資料）：</b><code>ai_npu</code>（先統一 0 和 180 的定義）、<code>ai_local</code>（規格推估，要清楚標示）、<code>unplugged_keep</code>、<code>noise_gpu</code>、<code>palm</code>、<code>hdr</code>。</li>
+<li><b>先修兩個地基問題：</b>(1) <code>sub_delta</code> 已寫在 seed 但沒有接上，請併入畫像向量；(2) 第一名改用排除異常的 P99，並讓 <code>compute_population</code> 也排除 <code>high_battery_outlier</code> 等標記。</li>
+<li><b>追問設計：</b>3ds Max、Blender、C4D 這類軟體要追問「CPU 還是 GPU 算圖」；遊戲要追問「哪幾款、什麼解析度」，因為這些答案才會真正改變排名。</li>
+<li><b>後台：</b>C1 可以編輯向量並預覽排名變化；C6 顯示「實際影響力」，讓 M 看見名目權重和實際效果的差距。每個細項、正規化方式、缺值策略都做成開關。</li>
+<li><b>使用者端：</b>維度分數條可以展開成子項，並用顏色標示來源；推薦理由引用「子權重的變化」和「這台在哪個細項領先」。</li>
+</ul></div>
+
+<details><summary>不確定的地方</summary><div class="body">
+<ul>
+<li>資料標示為 <code>simulated</code>，算圖和 CPU 的相關係數接近 1.00 可能是模擬造成的。換成真實資料後，細項的區分度可能比我算的更高，需要重跑相關係數表。</li>
+<li>畫像向量的數字（例如 Office 40%）是依照負載特性定的起始值，還沒有經過使用者測試驗證。</li>
+<li><code>ai_local</code> 的公式（統一記憶體 ×0.75、比重 0.5／0.3／0.2）是推估，資料庫裡沒有 tokens/s 實測可以校正。</li>
+<li>NPU 欄 180 TOPS 我推測是平台總算力，沒有找到資料來源佐證。</li>
+<li>使用者調整權重時是否會重新算 <code>extra_subs</code>，我只追了 <code>pipeline.py</code> 的主流程，沒有逐一確認 api.py 中每個重新計算的入口。</li>
+</ul></div></details>
+
+</section></template>
+<template id="tpl-k4"><section class="ch core" id="k4">
+ <div class="chhead"><span class="chcode">K4</span><h2>軟體畫像：以 Autodesk 3ds Max 為例</h2></div>
+ <p class="scope">分析範圍：seed.py、models.py、domain.py、pipeline.py、C1 軟體畫像庫</p>
+<p>這一節用 <b>Autodesk 3ds Max</b> 當例子，追蹤 system 的「軟體畫像流程」：使用者說「max」「3DMax」「做 3D 建模／渲染」之後，系統能不能認出軟體、知道它吃什麼硬體、轉成權重與門檻，最後推薦對的筆電。結論先講：<b>目前這條路在 3ds Max 上第一步就斷了</b>。畫像庫只有 Photoshop、Illustrator、Premiere Pro 三套軟體。規則型後備完全認不出 3D 相關說法。認不出時，系統還會再問一次「你主要用哪些軟件」，而且選項裡沒有 3D。資料庫其實已經有 <code>VRay【CPU】</code>、<code>VRay【顯卡】</code>、Blender 等渲染實測欄位，卻完全沒被用到。下面依序說明現況、實跑結果、斷點，最後是完整的設計建議。</p>
+
+<h3>1. 現在的流程長什麼樣子</h3>
+<pre class="flow">
+使用者原話「我要用 3ds Max 做室內設計渲染，預算 4 萬」
+        │
+        ▼
+┌──────────────────────────── 辨識 ────────────────────────────┐
+│ (A) LLM：nlu_parse  pipeline.py:161                           │
+│     提示詞只放「已啟用」軟體的 name/aliases/usages             │
+│     → 目錄只有 PS / AI / PR → 依規則「對不上就當普通文字」    │
+│ (B) 規則後備：heuristic_ops  pipeline.py:514                  │
+│     只在 LLM 失敗或回空 ops 時才跑，只認 PS / PR / 剪映 / 剪輯 │
+└───────────────────────────────────────────────────────────────┘
+        │ nlu.software[]（raw / canonical）
+        ▼
+match_software  pipeline.py:44（子字串雙向比對）
+        ├─ 命中 → 寫進需求檔案 kind=software
+        └─ 沒命中 → unknown_software → SoftwareHint 表（只記次數）
+        │
+        ▼
+collect_software_rules  pipeline.py:123
+   把該軟體「所有」usages 一次全部套上：
+   hard → sw_rules  ─────────────► classify 篩掉  domain.py:676
+   activate → extra_subs ────────► 性能二級項加權  scoring.py:248
+   ask → missing ────────────────► 追問卡（目前只有 edit_intensity）
+   weight_delta → 卡片 ──────────► apply_weight_deltas  pipeline.py:342
+   sub_delta / risk / risk_text ─► <b>沒人讀</b>
+        │
+        ▼
+snapshot → 依產品力分排序 → 前 N 名
+</pre>
+
+<h3>2. 軟體畫像資料（C1 軟件畫像庫）現況</h3>
+<h4>2-1 資料表欄位</h4>
+<div class="tblwrap"><table>
+<tr><th>欄位</th><th>型別</th><th>用途</th><th>程式位置</th></tr>
+<tr><td><code>name</code></td><td>字串，唯一</td><td>正式名，例如 Premiere Pro</td><td>models.py:172</td></tr>
+<tr><td><code>aliases</code></td><td>JSON 陣列</td><td>別名，只是一串字，<b>沒有</b>「容易混淆」標記，也沒有上下文條件</td><td>models.py:173</td></tr>
+<tr><td><code>category</code></td><td>字串</td><td>設計／視頻……；流程裡沒有用到</td><td>models.py:174</td></tr>
+<tr><td><code>status</code></td><td>draft／reviewed／enabled／retired</td><td>只有 enabled 會進目錄</td><td>models.py:175、pipeline.py:41</td></tr>
+<tr><td><code>version</code></td><td>整數</td><td>按「啟用」時加 1</td><td>models.py:176、api.py:1253</td></tr>
+<tr><td><code>usages</code></td><td>JSON 陣列</td><td>每個用法寫 <code>hard</code>、<code>risk</code>、<code>weight_delta</code>、<code>sub_delta</code>、<code>activate</code>、<code>ask</code>、<code>risk_text</code>。<b>沒有</b>固定結構，也沒有「需求等級」的概念</td><td>models.py:177、seed.py:60-70</td></tr>
+<tr><td><code>sources</code></td><td>JSON 陣列</td><td>來源網址與日期</td><td>models.py:178</td></tr>
+<tr><td><code>maintainer</code>／<code>updated_at</code></td><td></td><td>維護人、更新時間</td><td>models.py:179-180</td></tr>
+<tr><td><code>SoftwareHint</code> 表</td><td>raw／count／example</td><td>認不出的軟體詞與出現次數</td><td>models.py:183-189</td></tr>
+</table></div>
+
+<h4>2-2 種子資料裡有沒有 3ds Max？</h4>
+<div class="tblwrap"><table>
+<tr><th>軟體</th><th>別名</th><th>hard（篩掉）</th><th>weight_delta</th><th>activate（二級項）</th><th>ask</th></tr>
+<tr><td>Photoshop</td><td>PS、photoshop、Ps</td><td>ram_gb 16</td><td>performance +2、display +3</td><td>無</td><td>無</td></tr>
+<tr><td>Illustrator</td><td>AI、AI 軟件、illustrator、Ai</td><td>無</td><td>display +2、performance +1</td><td>無</td><td>無</td></tr>
+<tr><td>Premiere Pro</td><td>PR、pr、premier pro、premiere、Premiere</td><td>ram_gb 16、vram_gb 6</td><td>performance +4、display +1、thermal +1</td><td>procyon_pr 14</td><td>edit_intensity</td></tr>
+<tr><td><b>3ds Max</b></td><td colspan="5"><span class="tag t-n">沒有</span> seed.py:54-114 只有上面三套。後台「搜尋預填」範本 <code>_PREFILL_TEMPLATES</code>（api.py:2656-2795）有 PS／AI／PR／Word／Excel／PowerPoint／Office／Blender，也<b>沒有</b> 3ds Max。</td></tr>
+</table></div>
+
+<h4>2-3 後台 C1 的審核流程</h4>
+<pre class="flow">
+使用者說了認不出的詞 → SoftwareHint（raw ×次數，例句）
+        │  C1「待錄入線索」→ 按「創建草稿」 api.py:1211
+        ▼
+Software(name=raw, usages=[], aliases=[], status=draft)
+        │  按「提交審覈」 api.py:1244 前 → status=reviewed（不檢查任何內容）
+        ▼
+按「啟用」 api.py:1244-1253
+   檢查：有 sources？有 maintainer？usages 非空？門檻不是純文字？
+        │
+        └─ usages 是空的 → 400「啟用必須有用法和結構化門檻」 api.py:1251
+           <b>但後台沒有任何地方能編輯 usages</b> → 流程卡死
+</pre>
+<div class="tblwrap"><table>
+<tr><th>功能</th><th>後端 API</th><th>前端 api.ts</th><th>C1 畫面（AdminApp.tsx）</th></tr>
+<tr><td>列表＋線索</td><td>GET /admin/software api.py:1180</td><td>有</td><td><span class="tag t-s">有</span> 555-581</td></tr>
+<tr><td>從線索建立</td><td>POST from-hint api.py:1211</td><td>有</td><td><span class="tag t-s">有</span> 563</td></tr>
+<tr><td>送審／啟用／廢棄</td><td>POST /{sid}/{action} api.py:1236</td><td>有</td><td><span class="tag t-s">有</span> 574-576</td></tr>
+<tr><td>新增完整畫像</td><td>POST /admin/software api.py:1202</td><td>有 api.ts:89</td><td><span class="tag t-n">沒有畫面</span></td></tr>
+<tr><td>搜尋預填</td><td>POST search-prefill api.py:2434</td><td>有 api.ts:165、183</td><td><span class="tag t-n">沒有畫面</span></td></tr>
+<tr><td>編輯已存在畫像（別名、用法、門檻、權重）</td><td><span class="tag t-n">沒有 PUT/PATCH</span></td><td>—</td><td><span class="tag t-n">沒有</span></td></tr>
+<tr><td>把線索合併成既有軟體的別名（例如「3DMax」併入 3ds Max）</td><td><span class="tag t-n">沒有</span></td><td>—</td><td><span class="tag t-n">沒有</span></td></tr>
+<tr><td>變更紀錄</td><td>只有 from-hint 會寫 _changelog（api.py:1232），送審／啟用／廢棄都沒寫</td><td>—</td><td>—</td></tr>
+</table></div>
+
+<h3>3. 辨識：使用者原話怎麼對到軟體</h3>
+<h4>3-1 兩條路</h4>
+<div class="tblwrap"><table>
+<tr><th>路徑</th><th>做法</th><th>對 3ds Max 的效果</th></tr>
+<tr><td>LLM（主路徑）</td><td><code>NLU_PROMPT</code>（seed.py:117-152）。軟體目錄只放已啟用軟體（pipeline.py:162-166），並明說「只能對到這裏的正式名；對不上就當普通用途文字」。範例只有 PS、PR、AI（seed.py:149）。</td><td>目錄裡沒有 3ds Max。照提示詞，LLM 不能輸出 canonical，最多回 <code>{"raw":"3ds Max","canonical":null}</code>，接著在 pipeline.py:304-307 被記成 SoftwareHint 後跳過。</td></tr>
+<tr><td>規則後備 <code>heuristic_ops</code></td><td>pipeline.py:514-550，只在 LLM 出錯或回空 ops 時才跑（pipeline.py:262-272）。軟體只認 PS／photoshop（544）和 PR／premiere／剪映／剪輯（546）。</td><td>完全認不出。另外「剪輯」一律當成 Premiere Pro，用達文西的人也會被套上 PR 規則。</td></tr>
+<tr><td>名稱比對 <code>match_software</code></td><td>pipeline.py:44-52，<b>雙向子字串</b>：<code>raw in 別名</code> 或 <code>別名 in raw</code> 就算命中</td><td>容易誤判，見 3-2 實測</td></tr>
+</table></div>
+
+<h4>3-2 實測：各種說法會發生什麼</h4>
+<p>實際呼叫 <code>pipeline.heuristic_ops</code> 與 <code>pipeline.match_software</code>。資料庫目錄用 seed.py 的三套軟體代替；在 scratchpad 中以 stub 隔開 DB、LLM 與 bcrypt，沒有連資料庫。</p>
+<div class="tblwrap"><table>
+<tr><th>輸入</th><th>heuristic_ops 結果</th><th>match_software 結果</th><th>判斷</th></tr>
+<tr><td>我要用 3ds Max 做室內設計渲染，預算 4 萬</td><td>只抽出 budget，而且是 <code>{min:32000, max:48000}</code></td><td>「3ds Max」→ None</td><td><span class="tag t-n">漏認</span>，預算也被當成「左右」（domain.py:184-189）</td></tr>
+<tr><td>max／我用 max／3DMax／3D max 渲染</td><td>[]</td><td>None</td><td><span class="tag t-n">漏認</span></td></tr>
+<tr><td>3D 建模／我想做 3D 建模和渲染</td><td>[]</td><td>—</td><td><span class="tag t-n">漏認</span>，連「性能」都沒加</td></tr>
+<tr><td>Maya 動畫</td><td>[]</td><td>None</td><td><span class="tag t-n">漏認</span></td></tr>
+<tr><td>Final Cut Pro</td><td>[]</td><td><b>Premiere Pro</b></td><td><span class="tag t-n">誤認</span>：「pr」是「pro」的子字串</td></tr>
+<tr><td>天選7 Pro Max（機型名）</td><td>—</td><td><b>Premiere Pro</b></td><td><span class="tag t-n">誤認</span>：同上</td></tr>
+<tr><td>prompt</td><td>—</td><td><b>Premiere Pro</b></td><td><span class="tag t-n">誤認</span></td></tr>
+<tr><td>Substance Painter／Paint／sai／AI 繪圖</td><td>—</td><td><b>Illustrator</b></td><td><span class="tag t-n">誤認</span>：別名「ai」是子字串</td></tr>
+<tr><td>空字串（LLM 沒給 raw 也沒給 canonical）</td><td>—</td><td>理論上會命中第一套（<code>"" in 任何字串</code> 恆為真）</td><td>依程式碼推論；pipeline.py:304 用 <code>or ""</code></td></tr>
+</table></div>
+
+<h4>3-3「max」會不會和 Max 晶片衝突？</h4>
+<p>資料庫沒有蘋果機（品牌統計中沒有蘋果）。但 CPU 欄有 <code>AMD Ryzen AI Max+ 395</code>、<code>Ryzen AI Max 390</code>，品名有 20 筆含「Max」，例如「天選7 Pro Max」「ROG 幻X Max+395」「泰坦18 Max」。我在 scratchpad 照現有 schema 加了一筆 3ds Max（別名含「3ds max」），再用 <code>match_software</code> 測：</p>
+<div class="tblwrap"><table>
+<tr><th>raw</th><th>結果</th><th>說明</th></tr>
+<tr><td>max、Max、3D max、3DMax</td><td>3ds Max</td><td>靠「raw 是別名的子字串」命中。單打一個「max」也直接當成 3ds Max，<b>沒有任何確認</b></td></tr>
+<tr><td>M4 Max</td><td>None</td><td>這次剛好沒撞上，因為別名裡沒有單獨的「max」</td></tr>
+<tr><td>天選7 Pro Max</td><td>Premiere Pro</td><td>先被「pr」截走</td></tr>
+</table></div>
+<p>結論：如果之後在別名加上「max」，子字串比對會把「Ryzen AI Max」「Pro Max」「M4 Max」通通當成 3ds Max。現在<b>沒有消歧義機制</b>：別名沒有「容易混淆」標記，也沒有確認卡。</p>
+
+<h4>3-4 認不出的軟體怎麼處理</h4>
+<div class="tblwrap"><table>
+<tr><th>步驟</th><th>現況</th><th>位置</th></tr>
+<tr><td>記錄</td><td>寫 SoftwareHint，次數＋1，存最新一句例句</td><td>pipeline.py:176-183</td></tr>
+<tr><td>這一輪使用者看到什麼</td><td>需求檔案裡沒有軟體，所以 <code>missing</code> 最前面放 <code>software</code>（pipeline.py:329-330），接著追問卡 <code>card_software</code> 問「你主要用哪些軟件工作？」，選項只有辦公學習／設計／剪輯／編程（cards.py:44-64）。<b>使用者明明說了 3ds Max，系統卻像沒聽到，而且選項裡沒有 3D。</b></td><td>實跑見第 5 節 S0、S1</td></tr>
+<tr><td>暫時性的需求推斷</td><td>沒有。只能靠 LLM 的 weight_suggestion 順手加 performance</td><td>pipeline.py:332-337</td></tr>
+<tr><td>後台補畫像</td><td>可以從線索建立，但 usages 沒辦法編輯，所以無法啟用</td><td>api.py:1211-1253</td></tr>
+</table></div>
+
+<h3>4. 套用：畫像 → sw_rules → 篩選／權重／追問</h3>
+<div class="tblwrap"><table>
+<tr><th>畫像欄位</th><th>實際被誰使用</th><th>效果</th><th>位置</th></tr>
+<tr><td><code>hard.ram_gb</code></td><td>classify</td><td>低於門檻就排除，理由「內存不滿足軟件門檻」</td><td>domain.py:676-681</td></tr>
+<tr><td><code>hard.vram_gb</code></td><td>classify</td><td>沒有獨顯，或顯存低於門檻，就排除。<b>不分</b>核顯共享大記憶體的機型（例如 Ryzen AI Max+ 395／128G）</td><td>domain.py:682-686</td></tr>
+<tr><td><code>weight_delta</code></td><td>apply_weight_deltas</td><td>每個軟體卡都加權，而且<b>每一輪都重新加在上一輪的權重上</b>（weights 取自 conv.weights，pipeline.py:234、339-342）</td><td>pipeline.py:113-120、339-342</td></tr>
+<tr><td><code>activate</code></td><td>extra_subs → dim_scores_from_parts</td><td>在性能維度內加二級項，例如 procyon_pr，合計上限 40</td><td>pipeline.py:134-135、scoring.py:248-272</td></tr>
+<tr><td><code>ask</code></td><td>missing → pick_followup</td><td>只有 <code>edit_intensity</code> 有對應卡；而且 pipeline.py:327-328 只要檔案裡沒有 Premiere，就把它刪掉</td><td>pipeline.py:136、327-328、cards.py:66-90</td></tr>
+<tr><td><code>edit_intensity</code> 的答案</td><td>只用來從 missing 移除</td><td>答輕度、中度或重度，對權重和門檻<b>完全沒影響</b>（只在 pipeline.py:148、328 被讀）</td><td>grep 結果</td></tr>
+<tr><td><code>sub_delta</code></td><td>無</td><td><span class="tag t-n">沒人讀</span>（只出現在 seed.py）</td><td>seed.py:65、85、105</td></tr>
+<tr><td><code>risk</code>／<code>risk_text</code></td><td>只放進卡片 payload</td><td>不影響排序或邊界，前端軟體卡也只顯示「名稱 · 用法」</td><td>pipeline.py:142、UserApp.tsx:1157</td></tr>
+<tr><td>多個 usages</td><td>全部一起套用</td><td>沒有「這位使用者是建模還是渲染」的選擇；如果 3ds Max 寫三種用法，門檻和權重會全部疊加</td><td>pipeline.py:132-146</td></tr>
+<tr><td>規則 R021～R023、R029 開關</td><td>無</td><td>pipeline 沒讀 Rule 表；<code>rules_hit</code> 只是事後貼標籤</td><td>pipeline.py:586-607</td></tr>
+</table></div>
+<p>另外，資料庫已經有和 3D 直接相關的實測：<code>VRay【CPU】</code>、<code>VRay【顯卡】</code>、<code>Blender(classroom/junkshop/monster)【CPU多核】／【顯卡】</code>、<code>Octane【N卡】</code>、<code>Cinebench 2024 單核／多核</code>、<code>3DMark Port Royal</code>，371 筆都有數值。但 importer 只把 <code>procyon_pr</code> 做成二級項（importer.py:75、240、269），其餘渲染實測都沒有進入評分。</p>
+
+<h3>5. 實跑：「我要用 3ds Max 做室內設計渲染，預算 4 萬」</h3>
+<p>環境：venv 中呼叫 <code>importer.all_records()</code>（371 筆）、<code>domain.snapshot</code>、<code>pipeline.heuristic_ops／merge_profile／collect_software_rules／apply_weight_deltas</code>、<code>domain.pick_followup</code>。LLM 的部分是我<b>手動構造</b>的合理 ops（下表有註明）。腳本：<code>/private/tmp/claude-501/-Users-m-Desktop-Laptopbuyingassisstant/d9ccc0fd-b5e7-4a99-beb9-2b156faec6a5/scratchpad/w4/sim.py</code>。</p>
+
+<div class="tblwrap"><table>
+<tr><th>情境</th><th>輸入怎麼來</th><th>權重（性能／屏幕／便攜／續航／散熱／噪音／擴展）</th><th>正式／邊界／排除</th><th>追問</th></tr>
+<tr><td>S0 規則後備（實際呼叫）</td><td>heuristic_ops 只得到 budget {32000–48000}</td><td>預設 33/21/14/12/10/6/4</td><td>12／4／355（全部是「低於預算下限」）</td><td>card_software「你主要用哪些軟件工作？」</td></tr>
+<tr><td>S1 LLM，現況（手動構造 ops）</td><td>budget {max:40000}、purpose「室內設計渲染」、performance soft；software raw=3ds Max、canonical=null → SoftwareHint；weight_suggestion performance+4</td><td>37/20/13/11/9/6/4</td><td>366／3／2</td><td>card_software（同上）</td></tr>
+<tr><td>S2 照現有 schema 補 3ds Max</td><td>S1 再加 3ds Max 畫像：hard ram16、vram6；weight_delta perf+5、thermal+2（PR 寫法）</td><td>40/18/12/10/10/6/4</td><td>269／3／99（97 台「顯存不滿足軟件門檻」）</td><td>無</td></tr>
+<tr><td>S3 實驗：顯存改權重</td><td>只留 RAM16 最低門檻；在 scratchpad 把 VRay CPU／GPU 做成二級項（20／15）</td><td>同 S2</td><td>366／3／2</td><td>—</td></tr>
+<tr><td>S4 建議版</td><td>S3 再把性能目標拉到約 50、散熱 14（依「渲染＝高強度、長時間」換算）</td><td>48/14/9/8/14/4/3</td><td>366／3／2</td><td>—</td></tr>
+</table></div>
+
+<details><summary>各情境前 5 名（點開）</summary><div class="body">
+<div class="tblwrap"><table>
+<tr><th>情境</th><th>#</th><th>機型</th><th>價格</th><th>GPU／顯存</th><th>RAM</th><th>產品力</th><th>性能維度</th></tr>
+<tr><td rowspan="5">S0</td><td>1</td><td>拯救者 Y9000P 至尊版 2026（290HX Plus）</td><td>39,792</td><td>RTX 5090 24G</td><td>64</td><td>74.5</td><td>93</td></tr>
+<tr><td>2</td><td>泰坦18 Ultra 2026</td><td>47,999</td><td>RTX 5090 24G</td><td>96</td><td>74.4</td><td>94</td></tr>
+<tr><td>3</td><td>拯救者 Y9000P 至尊版 2026</td><td>37,999</td><td>RTX 5090 24G</td><td>64</td><td>73.4</td><td>90</td></tr>
+<tr><td>4</td><td>拯救者 Y9000P 至尊版 2026</td><td>41,499</td><td>RTX 5090 24G</td><td>64</td><td>73.3</td><td>89</td></tr>
+<tr><td>5</td><td>泰坦18 Pro 銳龍版 2025（9955HX3D）</td><td>32,999</td><td>RTX 5090 24G</td><td>64</td><td>72.8</td><td>88</td></tr>
+<tr><td rowspan="5">S1</td><td>1</td><td><b>聯想 小新 Pro 16 GT AI 元啟版 2026 388H</b></td><td><b>2,999</b></td><td>Arc B390 核顯／0</td><td>32</td><td>79.9</td><td>76</td></tr>
+<tr><td>2</td><td>聯想小新Pro 16 GT AI元啟版</td><td>12,899</td><td>Arc B390 核顯／0</td><td>32</td><td>78.8</td><td>73</td></tr>
+<tr><td>3</td><td>拯救者 Y9000P 至尊版 2026</td><td>39,792</td><td>RTX 5090 24G</td><td>64</td><td>75.7</td><td>93</td></tr>
+<tr><td>4</td><td>拯救者 Y9000P 至尊版 2026</td><td>37,999</td><td>RTX 5090 24G</td><td>64</td><td>74.5</td><td>90</td></tr>
+<tr><td>5</td><td>耀世16 Ultra 2026</td><td>25,000</td><td>RTX 5090 24G</td><td>32</td><td>74.4</td><td>90</td></tr>
+<tr><td rowspan="5">S2</td><td>1</td><td>拯救者 Y9000P 至尊版 2026</td><td>39,792</td><td>RTX 5090 24G</td><td>64</td><td>76.8</td><td>93</td></tr>
+<tr><td>2</td><td>拯救者 Y9000P 至尊版 2026</td><td>37,999</td><td>RTX 5090 24G</td><td>64</td><td>75.5</td><td>90</td></tr>
+<tr><td>3</td><td>耀世16 Ultra 2026</td><td>25,000</td><td>RTX 5090 24G</td><td>32</td><td>75.4</td><td>90</td></tr>
+<tr><td>4</td><td>泰坦18 Pro 銳龍版 2025</td><td>32,999</td><td>RTX 5090 24G</td><td>64</td><td>74.8</td><td>88</td></tr>
+<tr><td>5</td><td>泰坦18 Max 2026</td><td>30,999</td><td>RTX 5080 16G</td><td>32</td><td>74.3</td><td>88</td></tr>
+<tr><td rowspan="5">S3</td><td>1</td><td>拯救者 Y9000P 至尊版 2026</td><td>39,792</td><td>RTX 5090 24G</td><td>64</td><td>77.6</td><td>95</td></tr>
+<tr><td>2</td><td><b>小新 Pro 16 GT 388H（核顯）</b></td><td>2,999</td><td>Arc B390／0</td><td>32</td><td>76.0</td><td>67</td></tr>
+<tr><td>3</td><td>拯救者 Y9000P 至尊版 2026</td><td>37,999</td><td>RTX 5090 24G</td><td>64</td><td>75.5</td><td>90</td></tr>
+<tr><td>4</td><td>耀世16 Ultra 2026</td><td>25,000</td><td>RTX 5090 24G</td><td>32</td><td>75.4</td><td>90</td></tr>
+<tr><td>5</td><td>小新Pro 16 GT AI元啟版（核顯）</td><td>12,899</td><td>Arc B390／0</td><td>32</td><td>75.2</td><td>65</td></tr>
+<tr><td rowspan="5">S4</td><td>1</td><td>拯救者 Y9000P 至尊版 2026</td><td>39,792</td><td>RTX 5090 24G</td><td>64</td><td>80.9</td><td>95</td></tr>
+<tr><td>2</td><td>蒼龍18 Pro 2026（9955HX）</td><td>15,000</td><td>RTX 5090 24G</td><td>64</td><td>78.8</td><td>94</td></tr>
+<tr><td>3</td><td>耀世16 Ultra 2026</td><td>25,000</td><td>RTX 5090 24G</td><td>32</td><td>78.4</td><td>90</td></tr>
+<tr><td>4</td><td>拯救者 Y9000P 至尊版 2026</td><td>37,999</td><td>RTX 5090 24G</td><td>64</td><td>78.4</td><td>90</td></tr>
+<tr><td>5</td><td>泰坦18 Pro 銳龍版 2025</td><td>32,999</td><td>RTX 5090 24G</td><td>64</td><td>78.2</td><td>89</td></tr>
+</table></div>
+<p>S4 中核顯的小新 Pro 16 GT 降到第 25 名；前 10 名都是 16～24 GB 顯存的機型。</p>
+</div></details>
+
+<h4>5-1 推薦合不合理</h4>
+<div class="tblwrap"><table>
+<tr><th>情境</th><th>判斷</th><th>原因</th></tr>
+<tr><td>S0</td><td><span class="tag t-d">結果碰巧可以，過程不對</span></td><td>前 5 名都是 RTX 5090，看起來合理。但原因只是預算被解讀成 3.2～4.8 萬，把 3.2 萬以下的 355 台全部排除，和 3ds Max 無關。之後還追問「你主要用哪些軟件」，使用者會覺得系統沒聽懂。</td></tr>
+<tr><td>S1</td><td><span class="tag t-n">不合理</span></td><td>第 1、2 名是核顯筆電，沒有獨顯。這是做室內渲染的人最不該買的類型。它們高分是因為屏幕和便攜分高；第 1 名標價 2,999 元還疑似資料異常（GJS0001）。</td></tr>
+<tr><td>S2</td><td><span class="tag t-d">大致合理，但門檻武斷</span></td><td>前 5 名合理，但「顯存 &lt; 6G 就排除」一次刷掉 97 台。其中包含 Ryzen AI Max+ 395／128G 這種大共享記憶體機型，它在視圖操作和 GPU 渲染上未必跑不動。這正是 M 不要的硬門檻。</td></tr>
+<tr><td>S3</td><td><span class="tag t-n">還不夠</span></td><td>只加 VRay 二級項、性能權重還在 40，核顯機仍排第 2。代表<b>需求強度必須同時拉高「性能維度權重」和「性能內的子項權重」</b>，只動其中一層不夠。</td></tr>
+<tr><td>S4</td><td><span class="tag t-s">合理</span></td><td>不需要顯存硬門檻，核顯機也自然沉到後面。以 1.5 萬的 RTX 5090 機型（蒼龍18 Pro）排第 2，可以凸顯「同樣能渲染、價格低很多」。推薦理由也能從「渲染＝高強度 → 性能權重 33→48、VRay 實測佔性能 35%」直接產生。</td></tr>
+</table></div>
+<h4>5-2「max」與「3D 建模」單獨輸入</h4>
+<div class="tblwrap"><table>
+<tr><th>輸入</th><th>規則後備</th><th>LLM（推論）</th><th>最後結果</th></tr>
+<tr><td>max</td><td>ops=[]</td><td>目錄沒有 3ds Max，照提示詞不能對；也可能被解讀成「要最高配」</td><td>需求檔案是空的，追問 card_software</td></tr>
+<tr><td>3D 建模</td><td>ops=[]</td><td>可能加 performance soft 或 weight_suggestion；沒有軟體</td><td>追問 card_software，選項沒有 3D，使用者只能挑「設計」，結果被套上 PS／AI 類規則</td></tr>
+</table></div>
+
+<h3>6. 斷點與不合理之處</h3>
+<div class="bug"><b>B1 畫像庫沒有 3ds Max，也沒有任何 3D 軟體</b><br>seed.py:54-114 只有三套。prefill 範本有 Blender，卻沒有 3ds Max、Maya、SketchUp、Rhino、Revit、D5、Lumion、Enscape、C4D（api.py:2656-2795）。</div>
+<div class="bug"><b>B2 規則後備完全沒有軟體別名表</b><br>只把 PS／PR 寫死在程式裡（pipeline.py:544-547）；而且「剪輯」一律等於 Premiere。</div>
+<div class="bug"><b>B3 match_software 用雙向子字串比對，會誤判</b><br>pipeline.py:49-50。實測 Final Cut Pro、天選7 Pro Max、prompt 都會變成 Premiere Pro；Substance Painter、Paint、AI 繪圖都會變成 Illustrator；空字串會命中第一套。如果別名加上「max」，Ryzen AI Max、Pro Max 也會被誤判。</div>
+<div class="bug"><b>B4 沒有消歧義追問</b><br>別名沒有「容易混淆」標記，也沒有「你說的 max 是 3ds Max 嗎？」這類卡片。R006 的低置信確認也沒有接到軟體（pipeline.py:59-60 只把 ops 中 kind=software 的置信度壓到 0.5；但 LLM 的 ops 本來就不帶 canonical，所以這類 op 一律被壓）。</div>
+<div class="bug"><b>B5 認不出軟體時，系統會再問一次軟體，而且選項沒有 3D</b><br>pipeline.py:329-330 加上 cards.py:48-53。對使用者來說，像是系統沒聽到。</div>
+<div class="bug"><b>B6 從線索建立的畫像無法啟用</b><br>sw_from_hint 建立時 usages=[]（api.py:1220-1229），啟用時又要求 usages 非空（api.py:1250-1251），但沒有任何編輯 API 或畫面。搜尋預填 API 已經寫好（api.py:2434），C1 畫面卻沒有用到。</div>
+<div class="bug"><b>B7 一套軟體的所有用法會全部疊加</b><br>pipeline.py:132-146 會一次套用所有用法。沒有「建模／渲染／動畫」的選擇，也沒有依需求強度分級。</div>
+<div class="bug"><b>B8 軟體權重每一輪都重複加上去</b><br>pipeline.py:234 從 conv.weights 讀出上一輪的結果，pipeline.py:339-342 又再加一次 weight_delta。用 PR 的 delta 推算：性能 33→35→37→39→41→43，每輪 +2，便攜和續航跟著被擠掉。這是依程式碼推論，scratchpad/w4/acc.py 只重現了 rebalance 的效果。</div>
+<div class="bug"><b>B9 需求強度的答案沒有作用</b><br>edit_intensity 答輕度、中度或重度，權重都一樣（只在 pipeline.py:148、328 被讀，用來移出 missing）。</div>
+<div class="bug"><b>B10 sub_delta、risk、risk_text 都是死欄位</b><br>畫像寫了，評分卻不讀：sub_delta 只出現在 seed.py；risk 只放進卡片 payload（pipeline.py:142）。</div>
+<div class="bug"><b>B11 顯存硬門檻與「權重是核心」衝突</b><br>domain.py:682-686 直接把沒有獨顯的機型全部排除。實跑 S2 刷掉 97 台，包含 128 GB 統一記憶體的 Ryzen AI Max+ 395。</div>
+<div class="bug"><b>B12 渲染實測沒被利用</b><br>VRay、Blender、Octane、Cinebench 2024、Port Royal 都在 CSV 裡，但 importer 只轉了 procyon_pr（importer.py:75、240）。性能裡的 memory 子項是記憶體頻寬，不是容量，所以「3D 要大記憶體」沒有地方可以加權。</div>
+<div class="bug"><b>B13 C2 規則開關沒有接到軟體流程</b><br>R021～R023、R029 的開關不會改變行為（pipeline.py 沒讀 Rule 表，586-607 只負責貼標籤）。</div>
+
+<h3>7. 軟體畫像流程設計</h3>
+<h4>7-1 三種方案比較</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>優點</th><th>缺點</th></tr>
+<tr><td>A 擴充現有 usages JSON</td><td>每個用法直接寫 weight_delta／sub_delta／hard 數字（就是現在的寫法）</td><td>改動最少</td><td>每套軟體都要人工抓「+5、+3」這類魔術數字；軟體之間很難一致；疊加和每輪重複加權的問題還在；審核的人看不懂數字代表什麼</td></tr>
+<tr><td><b>B 需求等級畫像＋中央換算表（推薦）</b></td><td>畫像只寫「這種工作對單核、多核、GPU、顯存、記憶體、持續性能的需求是 0～3 級」，加上官方最低配置和來源。由一張後台可調的<b>換算表</b>統一把等級轉成權重目標與二級項</td><td>審核的人只需要判斷「渲染吃多核嗎？吃很重」，不用填數字；所有軟體共用同一套換算，結果一致；推薦理由可以直接說「因為你做渲染（多核需求：高）→ 性能權重 33→48」；換算表可以開關、調整，方便 M 做使用者測試</td><td>要先做換算表和工作類型清單；第一次要整理 10～20 套軟體</td></tr>
+<tr><td>C LLM 即時推斷需求等級（不入庫）</td><td>使用者說出軟體後，讓 LLM 當場輸出各資源等級</td><td>新軟體不用等入庫</td><td>違反「程式碼決定事實」；每次結果可能不同；容易編造官方要求</td></tr>
+</table></div>
+<p><b>建議採用 B，C 只當作「認不出的軟體」的暫定後備，而且要有開關。</b>C 的結果要在需求檔案上標成「暫定（未審核）」，同時寫進線索，讓後台審核後轉成正式畫像。</p>
+
+<h4>7-2 建議的整體流程</h4>
+<pre class="flow">
+使用者原話
+   │
+   ▼
+① 別名正規化（程式）：小寫、去空白和連字號
+   「3DMax」「3D max」「3ds max」→ 3dsmax；整詞比對，不用子字串
+   │
+   ├─ 命中「明確別名」（3ds Max、3dsmax）────────────► 直接認定
+   ├─ 命中「模糊別名」（max）─► ② 上下文判斷
+   │        有 3D／建模／渲染／室內／效果圖 等詞 → 認定，置信 0.8
+   │        有 Pro Max／AI Max／M4 Max／Max+ 等詞 → 不是軟體（是晶片或機型）
+   │        都沒有 → ③ 消歧義卡「你說的 max 是 3ds Max 嗎？」
+   │                  [是，3ds Max] [不是，指處理器或機型 Max] [其他]
+   ├─ 只有工作類型（「3D 建模」「做渲染」）→ 寫入工作類型（未指定軟體），
+   │        追問「你用哪套 3D 軟體？」：3ds Max／SketchUp／Blender／不確定
+   └─ 都沒有 → LLM（目錄＋別名＋工作類型清單）
+            ├─ 對到目錄 → 認定
+            └─ 對不到 → 線索（SoftwareHint）＋〔開關〕暫定類別畫像
+   │
+   ▼
+④ 確定「工作類型＋強度」：同一套軟體可以有建模／渲染／動畫
+   需要時追問：「主要是建模還是出圖渲染？用哪個渲染器？」
+   （Corona＝純 CPU；V-Ray 可以用 CPU 或 GPU；D5／Lumion＝GPU）
+   │
+   ▼
+⑤ 需求向量：各資源取所有工作類型的最高等級
+   單核 2｜多核 3｜GPU 2｜顯存 2｜記憶體 3｜持續性能 3
+   │
+   ▼
+⑥ 中央換算表（後台可調）
+   ├─ 只有「跑不動」才做硬門檻：作業系統不符（3ds Max 只支援 Windows）、
+   │   記憶體低於官方最低
+   ├─ 維度權重：設定「目標值」，不是累加（每輪由需求檔案重算，不會重複加）
+   ├─ 性能子項：cpu_single／cpu_multi／gpu＋實測二級項 vray_cpu／vray_gpu／blender
+   └─ 風險標記：顯存低於建議值 → 卡片上用黃色標示，不排除
+   │
+   ▼
+⑦ snapshot 排序 → 推薦理由 =「需求造成的權重變化」＋「這台相對強的維度」
+</pre>
+
+<h4>7-3 畫像資料結構（建議）</h4>
+<div class="tblwrap"><table>
+<tr><th>欄位</th><th>內容</th><th>說明</th></tr>
+<tr><td><code>name</code>、<code>vendor</code>、<code>category</code></td><td>3ds Max、Autodesk、3D</td><td>category 可以讓「只說工作類型」時找出候選軟體</td></tr>
+<tr><td><code>aliases[]</code></td><td>每筆 <code>{text, kind: exact|ambiguous, context_any[], context_none[]}</code></td><td>ambiguous 的別名必須符合上下文，否則要追問</td></tr>
+<tr><td><code>platforms</code></td><td><code>["windows"]</code></td><td>唯一合理的硬門檻來源之一</td></tr>
+<tr><td><code>official</code></td><td><code>{min:{ram_gb,disk_gb,...}, recommended:{...}, url, checked_at}</code></td><td>min 才能做硬門檻；recommended 只用來產生風險提示和權重</td></tr>
+<tr><td><code>workloads[]</code></td><td><code>{id, label, demand:{cpu_single,cpu_multi,gpu,vram,ram,sustain,display_color}(0–3), benchmarks[], ask[], default}</code></td><td>例如建模、CPU 渲染、GPU 渲染、動畫模擬；default 表示使用者沒說清楚時用哪一個</td></tr>
+<tr><td><code>asks[]</code></td><td>追問卡 id，例如 <code>card_3d_workload</code>、<code>card_renderer</code></td><td>答案會改變工作類型或強度，<b>一定要影響需求向量</b></td></tr>
+<tr><td><code>sources[]</code></td><td><code>{url, title, date, note}</code></td><td>啟用前至少一個官方來源</td></tr>
+<tr><td><code>status</code>、<code>reviewer</code>、<code>maintainer</code></td><td>待審核／已啟用／停用</td><td>啟用者和填寫者最好不是同一人（可做開關）</td></tr>
+</table></div>
+
+<h4>7-4 等級怎麼換算成權重與門檻（中央換算表範例）</h4>
+<div class="tblwrap"><table>
+<tr><th>需求向量</th><th>等級 1</th><th>等級 2</th><th>等級 3</th><th>作用在哪裡</th></tr>
+<tr><td>max(單核, 多核, GPU)</td><td>性能目標 36</td><td>性能目標 42</td><td>性能目標 50</td><td>維度權重（設定目標值，其他維度依比例讓出）</td></tr>
+<tr><td>持續性能</td><td>散熱 10</td><td>散熱 12</td><td>散熱 14</td><td>維度權重</td></tr>
+<tr><td>單核</td><td colspan="3">cpu_single 子項 × (1 + 0.5 × 等級)</td><td>性能子項</td></tr>
+<tr><td>多核</td><td colspan="3">cpu_multi × (1 + 0.5 × 等級)；等級 ≥2 啟用 vray_cpu／blender_cpu</td><td>性能子項＋實測二級項</td></tr>
+<tr><td>GPU</td><td colspan="3">gpu × (1 + 0.5 × 等級)；等級 ≥2 啟用 vray_gpu／blender_gpu</td><td>性能子項＋實測二級項</td></tr>
+<tr><td>顯存</td><td colspan="3">新增 vram_capacity 子項（例如 8G=60、12G=75、16G=90、24G=100；核顯共享記憶體依可分配量折算），權重 = 5 × 等級</td><td>權重，<b>不排除</b>；低於建議值時顯示黃色風險</td></tr>
+<tr><td>記憶體</td><td colspan="3">新增 ram_capacity 子項（16G=50、32G=80、64G 以上=100），權重 = 5 × 等級；低於官方最低才排除</td><td>權重＋最低硬門檻</td></tr>
+</table></div>
+<p>所有數字都放在後台 C6 的「換算表」裡，可以調整。畫像本身不寫數字，所以 M 改一次換算表，所有軟體會一起改變，方便做 A/B 測試。</p>
+
+<h4>7-5 新軟體怎麼進庫、怎麼審核</h4>
+<pre class="flow">
+線索（SoftwareHint：raw、次數、例句、<b>所在對話連結</b>）
+   │  後台：選一個動作
+   ├─「合併成別名」→ 選既有軟體（例如 3DMax → 3ds Max），可標成模糊別名
+   ├─「忽略」（例如晶片名稱 M4 Max）→ 加進全域「非軟體詞」表
+   └─「建立畫像」→ 搜尋預填（範本／LLM 草擬，標「需核實」）
+            │ 填入工作類型等級、官方最低／建議配置、來源
+            ▼
+       預覽：顯示套用後的權重變化＋前 10 名（用真實資料庫跑 snapshot）
+            │
+            ▼
+       送審 → 審核者對照來源逐項勾選 → 啟用（寫入變更紀錄）
+</pre>
+
+<h4>7-6 後台 C1 要有的畫面</h4>
+<div class="tblwrap"><table>
+<tr><th>區塊</th><th>內容</th></tr>
+<tr><td>線索佇列</td><td>raw、次數、最近例句、對話連結；動作：合併別名、忽略、建立畫像</td></tr>
+<tr><td>軟體列表</td><td>狀態、別名數、工作類型數、近 30 天被提到的次數、來源檢查日期（太舊時顯示提醒）</td></tr>
+<tr><td>畫像編輯器</td><td>別名表（明確／模糊＋上下文詞）；工作類型 × 資源的等級表格（0～3 下拉選單）；官方最低／建議配置；來源</td></tr>
+<tr><td>即時預覽</td><td>「假設使用者說 ___」→ 顯示辨識結果、需求向量、權重前後對照、排除數、前 10 名</td></tr>
+<tr><td>辨識測試台</td><td>輸入一句話，看規則和 LLM 各認出什麼，例如「max」「M4 Max」「天選 Pro Max」</td></tr>
+<tr><td>換算表（可放在 C6）</td><td>等級 → 權重、子項、風險門檻的對照表</td></tr>
+</table></div>
+
+<h4>7-7 開關清單</h4>
+<ul class="toggles">
+<li>軟體別名：整詞比對（推薦）／子字串比對（舊行為）</li>
+<li>模糊別名：上下文自動判斷／一律追問確認／一律不認</li>
+<li>消歧義卡「你說的 max 是 3ds Max 嗎？」開／關</li>
+<li>只說工作類型時追問「你用哪套 3D 軟體？」開／關</li>
+<li>工作類型追問（建模或渲染）開／關</li>
+<li>渲染器追問（Corona／V-Ray／D5……）開／關</li>
+<li>認不出的軟體用 LLM 產生暫定類別畫像，開／關</li>
+<li>暫定畫像是否影響權重：只顯示／影響權重</li>
+<li>每個硬門檻各自的開關：作業系統、記憶體最低、顯存最低（預設關）</li>
+<li>每個實測二級項各自的開關：vray_cpu、vray_gpu、blender_cpu、blender_gpu、procyon_pr</li>
+<li>新子項 ram_capacity、vram_capacity 開／關</li>
+<li>需求檔案中軟體標籤是否顯示需求等級（例如「多核：高」）</li>
+<li>推薦理由是否引用軟體畫像（「因為 3ds Max 渲染吃多核」）</li>
+<li>軟體卡是否顯示官方最低／建議配置與來源連結</li>
+<li>顯存低於建議值時，黃色風險標示開／關</li>
+<li>權重套用方式：目標值（推薦）／累加（舊行為）</li>
+</ul>
+
+<details><summary>3ds Max 畫像範例資料（依一般知識撰寫，所有數值與官方需求都需要人工核實）</summary><div class="body">
+<pre class="flow">
+{
+  "name": "3ds Max",
+  "vendor": "Autodesk",
+  "category": "3D",
+  "platforms": ["windows"],                 // 官方只支援 64 位元 Windows，沒有 macOS 版【需核實】
+  "aliases": [
+    {"text": "3ds Max",  "kind": "exact"},
+    {"text": "3dsmax",   "kind": "exact"},
+    {"text": "3d max",   "kind": "exact"},
+    {"text": "3dmax",    "kind": "exact"},
+    {"text": "3DS",      "kind": "ambiguous",          // 也可能是任天堂 3DS
+     "context_any": ["建模","渲染","效果圖","室內","vray","corona"]},
+    {"text": "max",      "kind": "ambiguous",
+     "context_any": ["3d","建模","渲染","效果圖","室內設計","動畫","vray","corona"],
+     "context_none": ["pro max","ai max","max+","m1 max","m2 max","m3 max","m4 max","m5 max"]}
+  ],
+  "official": {                              // 2025／2026 版一般認知【需核實】
+    "min":         {"ram_gb": 8,  "disk_gb": 9},
+    "recommended": {"ram_gb": 16, "vram_gb": 4},
+    "url": "https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/System-requirements-for-Autodesk-3ds-Max-2026.html",
+    "checked_at": null
+  },
+  "workloads": [
+    {"id": "modeling", "label": "建模與場景操作",
+     "demand": {"cpu_single": 3, "cpu_multi": 1, "gpu": 2, "vram": 1, "ram": 2, "sustain": 1},
+     "benchmarks": ["cinebench2024_single", "timespy"],
+     "note": "視圖操作和修改器堆疊大多吃單核；大場景吃 GPU 與記憶體"},
+    {"id": "render_cpu", "label": "出圖渲染（CPU：Corona／V-Ray CPU／Arnold CPU）",
+     "demand": {"cpu_single": 1, "cpu_multi": 3, "gpu": 1, "vram": 0, "ram": 3, "sustain": 3},
+     "benchmarks": ["vray_cpu", "blender_cpu"], "default": true,
+     "note": "室內設計常用 Corona 或 V-Ray CPU，長時間滿載，散熱很重要"},
+    {"id": "render_gpu", "label": "出圖渲染（GPU：V-Ray GPU／Redshift／Arnold GPU）",
+     "demand": {"cpu_single": 1, "cpu_multi": 1, "gpu": 3, "vram": 3, "ram": 2, "sustain": 3},
+     "benchmarks": ["vray_gpu", "blender_gpu"],
+     "note": "多數 GPU 渲染器以 NVIDIA CUDA／OptiX 為主，場景放不進顯存會變慢或失敗"},
+    {"id": "animation", "label": "動畫與模擬",
+     "demand": {"cpu_single": 2, "cpu_multi": 2, "gpu": 2, "vram": 2, "ram": 3, "sustain": 2},
+     "benchmarks": ["cinebench2024_multi"]}
+  ],
+  "asks": ["card_3d_workload", "card_renderer"],
+  "sources": [{"url": "（Autodesk 官方系統需求頁）", "date": null, "note": "需人工核實版本與數值"}],
+  "status": "pending_review"
+}
+</pre>
+<p>套用示範：使用者說「室內設計渲染」，對到 render_cpu（預設）＋ modeling。需求向量取各項最高：單核 3、多核 3、GPU 2、顯存 1、記憶體 3、持續性能 3。換算後：性能目標 50、散熱 14；vray_cpu／blender_cpu 啟用；ram_capacity 權重 15。唯一的硬門檻是作業系統必須是 Windows，以及記憶體至少 8G（資料庫最低是 16G，所以實際不會排除任何機型）。</p>
+</div></details>
+
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li><b>採用方案 B：畫像只寫「工作類型 × 資源需求等級（0～3）」，再由後台可調的中央換算表統一轉成權重。</b>這符合「權重是核心」：硬門檻只留作業系統和官方最低記憶體這類「真的跑不動」的條件；顯存和多核不足一律轉成權重與黃色風險。實跑 S4 證明，這樣不用顯存門檻，核顯機也會自然排到後面（第 25 名）。</li>
+<li><b>先修三個會讓結果錯的地方：</b>(1) match_software 改成正規化後整詞比對（pipeline.py:49-50），避免 Pro→Premiere、Paint→Illustrator；(2) 軟體權重改成「每輪由需求檔案重算目標值」，不要累加（pipeline.py:339-342）；(3) 需求強度的答案要真的改變需求向量（現在 edit_intensity 沒有作用）。</li>
+<li><b>辨識採用「別名表優先、LLM 補充、模糊時追問」：</b>別名分成明確與模糊；「max」這類模糊詞看上下文，判斷不了就出消歧義卡。只說「3D 建模」時先記成工作類型，再問用哪套軟體；card_software 要加上「3D 建模／渲染」選項。</li>
+<li><b>把現有的渲染實測接進評分：</b>VRay CPU／GPU、Blender、Cinebench 2024 都在 CSV 裡，importer 加幾個二級項就能用；另外新增 ram_capacity、vram_capacity 子項，讓「大記憶體／大顯存」可以被加權。</li>
+<li><b>後台 C1 補齊畫面：</b>畫像編輯器（等級表格）、線索「合併成別名／忽略」、即時預覽前 10 名、辨識測試台；送審、啟用、廢棄都要寫變更紀錄。</li>
+<li><b>認不出的軟體：</b>記錄線索，並且<b>不要再問一次「用哪些軟體」</b>。改說「我還不熟 XXX，它主要用來做什麼？」；〔開關〕可以讓 LLM 產生暫定類別畫像，在需求檔案中以「暫定」顏色顯示。</li>
+<li><b>驗收條件（依 CLAUDE.md，每項要有自動化測試）：</b>「3DMax」「3d max」「3ds Max」→ 3ds Max；「M4 Max」「天選7 Pro Max」→ 不是軟體；只打「max」→ 出消歧義卡；「Final Cut Pro」不能對到 Premiere；同一份需求檔案連跑 3 輪，權重不變；選 Corona 和選 V-Ray GPU 時，前 5 名的 GPU 和 CPU 取向要不同。</li>
+</ul></div>
+
+</section></template>
+<template id="tpl-k5"><section class="ch core" id="k5">
+ <div class="chhead"><span class="chcode">K5</span><h2>推薦理由產生器、追問與需求檔案、首屏</h2></div>
+ <p class="scope">分析範圍：UserApp.tsx、pipeline.py public_laptop、cards.py、seed.py REPLY 提示詞</p>
+<p>這一章分兩部分。<b>A</b> 處理「推薦理由」：目前畫面上的優點、風險、推薦理由幾乎都是前端寫死的模板字，後端從來沒有送過這些欄位。我設計一個「理由產生器」：由程式算出事實（權重為什麼變、這台在哪個維度贏多少、輸在哪），模型只負責把事實說成人話。我用 venv 載入 371 台真實資料，實際算了一次「剪 4K、預算 4 萬 5、常帶出門」。<b>B</b> 處理「對話與追問」：追問次數沒有上限，題目的價值也沒有評估；需求檔案只有一排標籤。我設計了追問價值的計算方式和新的需求檔案樣式，並寫出首屏可以在後台調整的參數。</p>
+
+<h3>A1 現況：推薦理由、優點、風險從哪來</h3>
+<p>結論：<b>後端完全沒有產生理由。</b><code>public_laptop</code>（<code>backend/app/pipeline.py:185-205</code>）只輸出 <code>reason</code>（被排除或邊界的原因）、分數、<code>dims</code> 和 <code>top_metrics</code>，沒有 <code>pros</code>、<code>risk</code>、<code>sev</code>。前端的 <code>l.pros || …</code>、<code>l.risk || …</code> 因此永遠走後面的預設字。</p>
+<div class="tblwrap"><table>
+<tr><th>畫面位置</th><th>顯示的文字</th><th>程式位置</th><th>實際來源</th></tr>
+<tr><td>對比工作台「主要優點」</td><td>「{第一高權重維度}表現突出」，沒有時是「綜合表現突出」</td><td><code>frontend/src/UserApp.tsx:1008</code></td><td>模板字。每台都一樣，只看權重最高的維度名稱，不看這台的分數</td></tr>
+<tr><td>對比工作台「主要風險」</td><td><code>l.risk || l.reason ||</code>「需結合預算與便攜權衡」</td><td><code>UserApp.tsx:1009</code></td><td>正式候選的 <code>reason</code> 是空字串（<code>domain.py:692</code> classify 最後回傳 <code>STATUS_IN, ""</code>），所以全部顯示同一句模板字</td></tr>
+<tr><td>對比工作台「高權重指標」兩列</td><td>前兩個高權重維度的分數</td><td><code>UserApp.tsx:1005-1007</code></td><td>真實分數，但只標出「該列最高」（<code>:1050</code>「綠色格 = 該行最優」），沒有換算成對總分的影響</td></tr>
+<tr><td>卡片 detailed 密度 ✓ 行</td><td>同上「…表現突出」</td><td><code>UserApp.tsx:1111</code></td><td>模板字</td></tr>
+<tr><td>卡片 detailed 密度 ! 行</td><td>同上「需結合預算與便攜權衡」</td><td><code>UserApp.tsx:1113</code></td><td>模板字</td></tr>
+<tr><td>卡片 deep 密度「推薦理由」</td><td>「在當前權重下，{維度1}和{維度2}得分都排在候選前列。」</td><td><code>UserApp.tsx:1129</code></td><td>模板字。<b>就算這台在這兩個維度排很後面也照樣顯示</b>（見 A4：第 1 名的性能其實排第 33）</td></tr>
+<tr><td>卡片 deep 風險等級</td><td>「風險中等」</td><td><code>UserApp.tsx:1131</code></td><td><code>l.sev</code> 不存在，所以永遠顯示「風險中等」</td></tr>
+<tr><td>卡片 deep 證據行</td><td>「證據：實測數據庫 · {尺寸} · {CPU}」</td><td><code>UserApp.tsx:1133</code></td><td>模板字加規格</td></tr>
+<tr><td>邊界候選</td><td><code>l.reason ||</code>「尺寸接近，屬於邊界候選」</td><td><code>UserApp.tsx:1143</code></td><td>後端有真實原因時會用（例如 <code>domain.py</code> 的「噪音接近安靜要求…」）</td></tr>
+<tr><td>對話推薦卡</td><td>名次、名稱、價格、GPU、產品力分</td><td><code>UserApp.tsx:1169-1190</code></td><td>真實數字，但沒有任何「為什麼」</td></tr>
+<tr><td>對話文字</td><td>LLM 依 REPLY 提示詞產生</td><td><code>seed.py:153-161</code>、<code>pipeline.py:398-420</code></td><td>見下方</td></tr>
+<tr><td>LLM 失敗時的對話</td><td>「我記下了：…」「這一輪主要調了產品力權重…」「還差一個關鍵信息…」</td><td><code>pipeline.py:553-563</code></td><td>模板字（作為備援是合理的）</td></tr>
+</table></div>
+
+<h4>REPLY 提示詞拿到的事實不夠說明理由</h4>
+<p><code>pipeline.py:398-409</code> 組成的 <code>facts</code> 只有：action、候選數、新需求標籤、<b>整組權重</b>、<code>weight_reason</code>（NLU 回傳的「一句話」，<code>seed.py:141</code>）、軟體名稱、追問題目，以及前 3 名的 <code>name</code> 和 <code>power</code>。REPLY 提示詞（<code>seed.py:153-161</code>）禁止模型「編造機型、分數、名次、排除原因」。結果是模型<b>知道誰第一，但不知道為什麼第一</b>，又被禁止編造，只能說出「根據你的需求，目前 XX 排在前面」這類空話。這不是提示詞寫得不好，是程式沒有把事實算出來交給它。</p>
+
+<div class="bug"><b>權重每輪重複累加，刪掉需求也不會退回</b><br><code>run_turn</code> 每輪從 <code>conv.weights</code>（上一輪的結果）開始（<code>pipeline.py:235</code>），再依「整份需求檔案」重算 <code>sw_cards</code>（<code>:324</code>），然後對每張軟體卡套用 <code>weight_delta</code>（<code>:339-342</code>）。所以只要檔案裡有 Premiere，每講一句話性能就再加一次。我用 <code>scoring.rebalance</code> 照同樣邏輯跑 5 輪：性能 33→35→37→39→41→43，便攜 14→13→12→11→10→9。另外 display +1、thermal +1 因為依序 rebalance 被後面的調整吃掉，display 一直是 21。<code>patch_profile</code> 刪除需求後（<code>api.py:762-784</code>）也只重跑 <code>run_turn</code>，已加上的權重不會退回。<br>這和 A 部分直接相關：如果要說出「因為你說了 X，所以 Y 從 a% 調到 b%」，權重必須能從需求檔案<b>重新推導</b>，不能一輪一輪累加。解法見 A2「權重帳本」。</div>
+
+<div class="bug"><b>軟體的「風險線」有資料但沒有使用</b><br>Premiere 的 usage 有 <code>risk: {ram_gb: 32, vram_gb: 8}</code> 和 <code>risk_text</code>「內存 16G 可用但建議 32G」（<code>seed.py:103-109</code>）。<code>collect_software_rules</code> 有把 risk 帶進 rules（<code>pipeline.py:133</code>），但 <code>classify</code>（<code>domain.py:676-686</code>）只用了 <code>hard</code>，沒有任何地方讀 <code>risk</code>。這組現成的資料正好可以成為「你要接受的」風險句的來源。<code>sub_delta</code>（<code>seed.py:66</code>、<code>:105</code>）也同樣沒有被讀取。</div>
+
+<h3>A2 我的設計：理由產生器（Reason Engine）</h3>
+<pre class="flow">
+需求檔案（每條帶 id）
+   │
+   ▼
+① 權重帳本 weight_ledger ── 每條需求記錄自己加減了哪些維度
+   │   權重 = 正規化(系統預設 + Σ 每條需求的 delta)   ← 每輪重算，不累加
+   ▼
+② 打分（現有 scoring.score_laptop，不動）
+   │
+   ▼
+③ 理由產生器 reason_engine（純函式，可單元測試）
+   │   a. 權重變化句：哪條需求 → 哪個維度 a%→b%
+   │   b. 相對優勢：貢獻度 = 權重 × (這台分數 − 候選中位數)
+   │   c. 要接受的：高權重低分 / 軟體風險線 / 明顯偏弱
+   │   d. 和第 2 名比：逐維度貢獻差，贏在…輸在…
+   │   e. 分差太小 → 改成反問「你比較在乎哪個？」
+   ▼
+④ reasons JSON（數字、名次、證據全在這裡）
+   │
+   ├──► 前端卡片／對比工作台：直接用 JSON 排版（不經過模型）
+   │
+   └──► REPLY 模型：只能改寫 JSON 裡的句子 → ⑤ 檢查器比對數字
+                                              │ 不通過
+                                              ▼
+                                       改用程式模板句（備援）
+</pre>
+
+<h4>① 權重帳本：讓「權重為什麼變」有可追溯的來源</h4>
+<p>每條需求帶一個 <code>weight_effect</code>，權重一律從帳本重新算出來。刪除需求時，它的影響自動消失；修改需求時，影響跟著重算。</p>
+<pre class="flow">
+raw[d]   = DEFAULT_WEIGHTS[d] + Σ (每條需求 effect[d])        （每條需求的 effect 來源：軟體畫像 weight_delta／NLU weight_suggestion／卡片選項表）
+weight[d] = 最大餘數法正規化(raw, 合計 100, 單項最低 1)
+手動拖動權重 → 存成一條 source="manual" 的帳本項目，放在最後套用
+</pre>
+<p>NLU 的 <code>weight_suggestion</code>（<code>seed.py:141</code>）目前是一整句話的 deltas，不知道是哪條需求造成的。建議把 delta 搬到每個 op 裡：<code>{"op":"add","field":"software",...,"weight_effect":{"performance":6},"effect_reason":"4K 是重負載"}</code>。這樣帳本的每一列都能對到使用者的原話。</p>
+
+<h4>② 計算公式</h4>
+<div class="tblwrap"><table>
+<tr><th>量</th><th>公式</th><th>說明</th></tr>
+<tr><td>候選中位數 <code>med[d]</code></td><td>正式候選（<code>snap.formal</code>）在維度 d 的中位數</td><td>比「第一名」穩定，不會被單一極端值帶走</td></tr>
+<tr><td>並列感知名次 <code>rank[d]</code></td><td>1 + 分數嚴格高於它的台數；另外記錄 <code>tie</code>（同分台數）</td><td>本例 131 台中便攜有 103 台同為 43 分、續航有 107 台同為 40 分。若用一般排序，同分的會被說成「第 2 名」，這是錯的</td></tr>
+<tr><td>百分位 <code>pct[d]</code></td><td>rank / N</td><td>給文案用：「前 1%」「前 25%」</td></tr>
+<tr><td>貢獻度 <code>contrib[d]</code></td><td><code>w[d]/100 × (s[d] − med[d])</code></td><td>單位是「產品力分」。各維度貢獻加總 ≈ 這台的產品力分 − 中位機型的產品力分，所以可以直接說「這一項幫它多拿 1.6 分」</td></tr>
+<tr><td>兩台差 <code>pair[d]</code></td><td><code>w[d]/100 × (sA[d] − sB[d])</code></td><td>正值＝A 贏在這裡；加總 ≈ 兩台產品力分差</td></tr>
+<tr><td>分差 <code>gap</code></td><td>第 1 名產品力分 − 第 2 名</td><td>小於 <code>close_gap</code>（建議預設 1.5 分）就視為「實質打平」</td></tr>
+<tr><td>子項證據</td><td>軟體啟用的子項（例：<code>procyon_pr</code>，<code>seed.py:107</code>）同樣算名次與中位數</td><td>使用者說了 Premiere，就應該拿 Premiere 實測分當證據，比「性能 67」更有說服力</td></tr>
+</table></div>
+
+<h4>③ 選句規則（什麼時候說、說幾句、什麼時候不說）</h4>
+<div class="tblwrap"><table>
+<tr><th>句型</th><th>入選條件</th><th>數量</th><th>不說的情況</th></tr>
+<tr><td>權重變化 <code>weight_change</code></td><td>帳本中這輪新增或修改的項目，且 |b−a| ≥ <code>min_weight_change</code>（預設 3 個百分點）</td><td>每輪最多 2 句，按 |b−a| 排序</td><td>權重變動很小；連續兩輪同一條需求不重複說</td></tr>
+<tr><td>相對優勢 <code>strength</code></td><td><code>contrib ≥ min_contrib</code>（預設 0.5 分），而且 <code>pct ≤ 30%</code></td><td>取 contrib 最大的前 2 個（設定 <code>max_strengths</code>）</td><td>同分台數 ≥ 候選的 50%（這個維度大家都一樣，說了沒意義）；名次落在後 50%</td></tr>
+<tr><td>要接受的 <code>tradeoff</code></td><td>(a) <code>w ≥ 10</code> 而且 <code>s &lt; med</code>；(b) 軟體風險線沒過（RAM、VRAM）；(c) <code>contrib ≤ −1</code></td><td>最多 2 句，依序 (b) &gt; (a) &gt; (c)</td><td>沒有符合條件時<b>不硬湊</b>，改顯示「在你的權重下沒有明顯短板」</td></tr>
+<tr><td>和第 2 名比 <code>versus</code></td><td>只對第 1 名產生；贏的取 <code>pair ≥ 0.3</code> 的前 2 項，輸的取 <code>pair ≤ −0.3</code> 的前 2 項，另外附上價格差</td><td>贏 2、輸 2</td><td>第 2 名不存在；或兩台所有維度差都 &lt; 0.3</td></tr>
+<tr><td>反問 <code>ask_preference</code></td><td><code>gap &lt; close_gap</code>，而且 versus 裡有一項贏、一項輸</td><td>1 句，取代「推薦第 1 名」的語氣</td><td>分差夠大；或這一輪已經有追問卡（同一輪最多問一件事）</td></tr>
+</table></div>
+
+<h4>④ 後端輸出的 JSON（新增在 <code>public_laptop</code> 和 run 結果）</h4>
+<details><summary>欄位定義（點開）</summary><div class="body">
+<pre class="flow">
+run.reasons = {
+  "version": "reason_v1",
+  "pool": { "n": 131, "median": {"performance":63, ...} },
+  "weight_changes": [                    // 這輪的權重變化（來自權重帳本）
+    { "req_id": "r2", "quote": "剪 4K 影片", "dim": "performance",
+      "from": 33, "to": 38, "because": "4K 是重負載；Premiere 軟件畫像" }
+  ],
+  "laptops": {
+    "&lt;laptop_id&gt;": {
+      "strengths": [ { "dim":"display", "score":87, "median":78, "rank":1, "tie":2,
+                       "pct":0.01, "weight":18, "contrib":1.62,
+                       "evidence": [{"key":"gamut","value":86}] } ],
+      "tradeoffs": [ { "kind":"below_median|software_risk|weak",
+                       "dim":"performance", "score":72, "median":63, "weight":36,
+                       "text_key":"software_risk.ram", "value":16, "line":32 } ],
+      "severity": "low|mid|high",       // 由 tradeoffs 算：有 software_risk 或 高權重低於中位數 → high
+      "versus": { "against": "&lt;id&gt;", "gap": 0.9,
+                  "wins":  [ {"dim":"battery","delta":0.91,"a":47,"b":40} ],
+                  "loses": [ {"dim":"performance","delta":-1.8,"a":67,"b":72} ],
+                  "price_diff": -2450 },
+      "ask": { "question_key":"perf_vs_portable", "options":[...] } | null
+    }
+  }
+}
+public_laptop(...) 加上 reasons.laptops[id]（只給前 N 台，N = reason_top_n，預設 5）
+</pre>
+<p>所有數字都來自 <code>score_laptop</code> 的 <code>dims</code>（<code>scoring.py:314-324</code>）和 <code>snapshot</code> 的候選池（<code>domain.py:695-765</code>），不新增評分公式，只新增「比較」這一層。</p>
+</div></details>
+
+<h4>⑤ 給 LLM 的輸入與禁止事項</h4>
+<div class="tblwrap"><table>
+<tr><th>項目</th><th>內容</th></tr>
+<tr><td>輸入</td><td><code>facts</code> 改成：使用者原話列表＋<code>weight_changes</code>＋第 1 名的 <code>strengths/tradeoffs/versus/ask</code>＋第 2、3 名的名稱與 gap。每條事實帶 <code>fact_id</code>。</td></tr>
+<tr><td>任務</td><td>「把這些事實說給使用者聽，每句後面標上用到的 fact_id」。輸出 JSON：<code>{"sentences":[{"text":"…","facts":["f3","f5"]}]}</code></td></tr>
+<tr><td>禁止</td><td>不得出現 facts 裡沒有的數字、名次、機型名、維度名；不得把 <code>tie</code> 很多的維度說成「最好」；不得把 tradeoff 說成優點；不得說「最適合你」以外的保證語氣（例如「絕對不會卡」）；不提公式、權重百分比以外的內部術語。</td></tr>
+<tr><td>程式檢查器</td><td>從輸出抽出所有數字與機型名，必須能在被引用的 fact 裡找到；每個 tradeoff 至少被一句引用（防止模型只報喜）。不通過 → 用 ③ 的程式模板句。</td></tr>
+</table></div>
+
+<h4>⑥ 使用者端呈現</h4>
+<div class="tblwrap"><table>
+<tr><th>位置</th><th>改成</th></tr>
+<tr><td>對話推薦卡（<code>UserApp.tsx:1169</code>）</td><td>第 1 名下方：「為什麼是它」2 行（strengths）、「你要接受的」1–2 行（tradeoffs）、「和第 2 名比」一行（贏 / 輸）。分差小時改成兩個按鈕的反問。</td></tr>
+<tr><td>卡片 detailed（<code>:1111-1113</code>）</td><td>✓ 行 = strengths[0] 的短句；! 行 = tradeoffs[0] 的短句。沒有 tradeoff 時不顯示 ! 行。</td></tr>
+<tr><td>卡片 deep（<code>:1127-1133</code>）</td><td>每個維度的長條旁加「中位數刻度線」與貢獻值（+1.6 / −0.4），讓使用者看到「贏在哪」。風險等級用 <code>severity</code>。證據行列出實際引用的子項（例：Premiere 4K 實測 98）。</td></tr>
+<tr><td>對比工作台（<code>:1008-1009</code>）</td><td>「主要優點／主要風險」改成每台自己的 strengths / tradeoffs；新增一列「對總分的影響」，顯示每個維度的 <code>contrib</code>，用綠／紅色深淺表示大小。</td></tr>
+<tr><td>權重面板（<code>:760-786</code>）</td><td>「來源」從固定字串（<code>sources[k]</code>）改成帳本：「+5 來自『剪 4K 影片』」，點一下可以跳到需求檔案的那一條。</td></tr>
+</table></div>
+
+<h4>方案比較</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>做法</th><th>優點</th><th>缺點</th></tr>
+<tr><td>A. 純程式模板組句</td><td>③ 的事實套進固定句型，例如「{維度}分數 {s}，候選前 {pct}」</td><td>零幻覺、零成本、可完整單元測試、LLM 掛掉也能用</td><td>讀起來像報表；同一句型重複出現；很難接上使用者的原話</td></tr>
+<tr><td>B. 程式算事實＋LLM 措辭＋檢查器</td><td>③ 產生事實 JSON，LLM 只改寫並標註 fact_id，檢查器驗證，失敗時退回 A</td><td>符合「程式碼決定事實，模型只負責表達」；能把「你說常帶出門」和「它輕 0.43 kg」接成一句人話；可以做 A/B 測試</td><td>多一次檢查；需要寫檢查器；措辭品質依模型而定</td></tr>
+<tr><td>C. 把分數全丟給 LLM 自己找理由</td><td>把整個 dims 表給模型，叫它解釋</td><td>開發最快</td><td>模型會挑錯維度、把同分說成第一、算錯差距；違反「程式碼決定事實」。不建議</td></tr>
+</table></div>
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li><b>採用 B，並保留 A 作為備援和對照組。</b>事實全部由 <code>reason_engine</code>（新的純函式模組，放在 <code>scoring.py</code> 旁邊）計算；卡片和對比工作台直接用 JSON 排版，<b>不經過模型</b>；只有對話氣泡交給 LLM 措辭。</li>
+<li>先修「權重帳本」，否則「因為 X 所以 Y 從 a% 到 b%」這句話會是錯的（見上面的權重累加問題）。</li>
+<li>名次一律用「並列感知名次＋百分位」，同分台數 ≥ 50% 的維度不拿來當優點。</li>
+<li>Premiere 這類軟體啟用的子項（<code>procyon_pr</code>）要優先當證據；軟體 <code>risk</code> 線要優先當風險。</li>
+<li>分差 &lt; 1.5 分時不要假裝有贏家，改成反問。這也會讓使用者感覺「系統懂我在取捨什麼」。</li>
+</ul></div>
+
+<h3>A3 開關（理由產生器）</h3>
+<ul class="toggles">
+<li><code>reason.engine</code>：off / template（方案 A）/ llm（方案 B）</li>
+<li><code>reason.show_weight_change</code>：對話裡說出「因為你說了 X，所以 Y 從 a% 調到 b%」</li>
+<li><code>reason.show_strengths</code>、<code>reason.max_strengths</code>（預設 2）、<code>reason.min_contrib</code>（預設 0.5）</li>
+<li><code>reason.show_tradeoffs</code>、<code>reason.max_tradeoffs</code>（預設 2）、<code>reason.tradeoff_weight_floor</code>（預設 10%）</li>
+<li><code>reason.show_versus</code>：和第 2 名比</li>
+<li><code>reason.ask_when_close</code>、<code>reason.close_gap</code>（預設 1.5 分）</li>
+<li><code>reason.baseline</code>：median（中位數）/ mean / top10_mean，用來比較哪個基準最容易讓使用者理解</li>
+<li><code>reason.rank_style</code>：名次（第 3 名）/ 百分位（前 5%）/ 都不顯示</li>
+<li><code>reason.show_numbers</code>：句子裡是否出現分數</li>
+<li><code>reason.show_evidence_subitem</code>：是否引用子項實測（例：Premiere 4K 實測分）</li>
+<li><code>reason.show_contrib_bar</code>：deep 卡片和對比工作台顯示貢獻值</li>
+<li><code>reason.use_software_risk</code>：軟體 risk 線是否產生風險句</li>
+<li><code>reason.llm_validator</code>：檢查器開／關（關掉時方便觀察模型原始輸出）</li>
+<li><code>reason.top_n</code>：前幾名附上理由（預設 5）</li>
+</ul>
+
+<h3>A4 實算範例：「我要剪 4K 影片，預算 4 萬 5，常帶出門」</h3>
+<p>用 <code>importer.all_records()</code>（371 台）和 <code>domain.snapshot</code> 實際計算。計算腳本：<code>/private/tmp/claude-501/-Users-m-Desktop-Laptopbuyingassisstant/d9ccc0fd-b5e7-4a99-beb9-2b156faec6a5/scratchpad/w5/calc2.py</code>。</p>
+<p><b>假設</b>：資料庫價格看起來是人民幣（中位數 9,999，預算卡選項是 5000／8000／12000，<code>cards.py:98-103</code>），所以把新台幣 4 萬 5 換算成上限 10,200。需求檔案：預算上限 10,200（硬條件）、Premiere Pro（軟體，帶出硬條件 RAM ≥ 16、VRAM ≥ 6，以及子項 <code>procyon_pr</code> 權重 14，<code>seed.py:103-107</code>）、經常揹着走（偏好）。</p>
+
+<h4>權重帳本（權重是我設定的，帳本機制是提案）</h4>
+<div class="tblwrap"><table>
+<tr><th>步驟</th><th>來源（原話）</th><th>raw delta</th><th>正規化後的權重 性能/屏幕/便攜/續航/散熱/噪音/擴展</th></tr>
+<tr><td>0</td><td>系統預設（<code>scoring.py:20-28</code>）</td><td>—</td><td>33 / 21 / 14 / 12 / 10 / 6 / 4</td></tr>
+<tr><td>1</td><td>「剪 4K 影片」→ Premiere 軟件畫像（現有 seed）</td><td>性能 +4、屏幕 +1、散熱 +1</td><td>35 / 21 / 13 / 11 / 10 / 6 / 4</td></tr>
+<tr><td>2</td><td>「4K」→ 重負載（我設定，模擬 NLU weight_effect）</td><td>性能 +6、散熱 +1</td><td>38 / 19 / 12 / 11 / 11 / 5 / 4</td></tr>
+<tr><td>3</td><td>「常帶出門」（我設定）</td><td>便攜 +8、續航 +3、噪音 −3、擴展 −2</td><td><b>36 / 18 / 18 / 13 / 10 / 3 / 2</b></td></tr>
+</table></div>
+<p>篩選結果：正式候選 131 台、邊界 15 台、排除 225 台（超出預算 128、顯存不滿足軟件門檻 77、兩者都有 20）。</p>
+
+<h4>前 3 名與各維度事實</h4>
+<div class="tblwrap"><table>
+<tr><th></th><th>#1 機械革命翼龍15 Pro 2026</th><th>#2 ROG 魔霸9 G16 RTX5070</th><th>#3 戰神 T10 Pro 5070 Ti</th><th>中位數</th></tr>
+<tr><td>價格／產品力／性價比</td><td>6,549／67.1／65</td><td>8,999／66.2／24</td><td>7,899／65.4／37</td><td></td></tr>
+<tr><td>性能（36%）</td><td>67，名次 33（貢獻 +1.44）</td><td>72，名次 7（+3.24）</td><td>74，名次 2（+3.96）</td><td>63</td></tr>
+<tr><td>屏幕（18%）</td><td>87，名次 1（2 台同分）（+1.62）</td><td>86，名次 3（+1.44）</td><td>78（37 台同分）（0）</td><td>78</td></tr>
+<tr><td>便攜（18%）</td><td>48，名次 1（+0.90）</td><td>43（<b>103 台同分</b>）（0）</td><td>43（0）</td><td>43</td></tr>
+<tr><td>續航（13%）</td><td>47，名次 1（+0.91）</td><td>40（<b>107 台同分</b>）（0）</td><td>40（0）</td><td>40</td></tr>
+<tr><td>散熱（10%）</td><td>88，名次 25（+0.80）</td><td>82（+0.20）</td><td>82（+0.20）</td><td>80</td></tr>
+<tr><td>Premiere 4K 子項 <code>procyon_pr</code></td><td><b>98，名次 1</b></td><td>66，名次 2</td><td>65，名次 3</td><td>57</td></tr>
+<tr><td>原始規格</td><td>2.0 kg、13 h、RAM 32、VRAM 8</td><td>2.43 kg、11 h、RAM 16、VRAM 8</td><td>2.43 kg、11 h、RAM 32、VRAM 12</td><td></td></tr>
+</table></div>
+<p>第 1、2 名分差 <code>gap = 0.9</code>，小於 1.5 → 觸發反問。逐維度 <code>pair</code>（#1 − #2）：性能 −1.80、續航 +0.91、便攜 +0.90、散熱 +0.60、屏幕 +0.18。注意：如果照現在 <code>UserApp.tsx:1129</code> 的模板，第 1 名會被說成「性能和屏幕得分都排在候選前列」，但它的性能其實排第 33。</p>
+
+<details><summary>理由產生器輸出（JSON 節錄）</summary><div class="body">
+<pre class="flow">
+{
+ "weight_changes": [
+  {"req_id":"r2","quote":"剪 4K 影片","dim":"performance","from":33,"to":36,"because":"Premiere 軟件畫像＋4K 重負載"},
+  {"req_id":"r3","quote":"常帶出門","dim":"portability","from":12,"to":18,"because":"經常揹着走"}
+ ],
+ "laptops": {
+  "260129A": {
+   "strengths": [
+     {"dim":"display","score":87,"median":78,"rank":1,"tie":2,"weight":18,"contrib":1.62},
+     {"dim":"performance","score":67,"median":63,"rank":33,"pct":0.25,"weight":36,"contrib":1.44,
+      "evidence":[{"key":"procyon_pr","label":"Premiere Pro 4K 剪輯","value":98,"rank":1,"median":57}]}
+   ],
+   "tradeoffs": [],                       // 沒有高權重低於中位數；RAM 32 已過 Premiere 風險線
+   "severity": "low",
+   "versus": {"against":"SHDX0007","gap":0.9,
+     "wins":[{"dim":"battery","delta":0.91,"a":"13 h","b":"11 h"},{"dim":"portability","delta":0.90,"a":"2.0 kg","b":"2.43 kg"}],
+     "loses":[{"dim":"performance","delta":-1.80,"a":67,"b":72}],
+     "price_diff":-2450},
+   "ask": {"question_key":"perf_vs_portable",
+     "options":[{"id":"perf","label":"整體性能多一點（魔霸9）"},{"id":"light","label":"輕一點、續航久一點、便宜 2,450（翼龍15 Pro）"}]}
+  },
+  "SHDX0007": {
+   "tradeoffs":[{"kind":"software_risk","text_key":"software_risk.ram","value":16,"line":32}],  // seed.py:104 risk
+   "severity":"high"
+  }
+ }
+}
+</pre>
+<p>規則套用說明：第 1 名的「便攜 +0.90」和「續航 +0.91」雖然 pct 是第 1，但貢獻剛好排第 3、第 4，所以不進 strengths（max 2）；不過它們進了 versus.wins，在和第 2 名比較時才說出來。這就是「同一個事實，放在最有說服力的位置說」。</p>
+</div></details>
+
+<h4>同一組事實，三種說法</h4>
+<div class="tblwrap"><table>
+<tr><th>方案</th><th>對話氣泡的文字</th></tr>
+<tr><td>A 程式模板</td><td>因為你說「剪 4K 影片」，性能權重 33% → 36%；因為你說「常帶出門」，便攜權重 12% → 18%。目前第 1 名：機械革命翼龍15 Pro 2026。優勢：屏幕 87 分（候選第 1）；Premiere 4K 實測 98 分（候選第 1）。和第 2 名 ROG 魔霸9 比：贏在續航、便攜；輸在性能（67 vs 72）。兩台只差 0.9 分。</td></tr>
+<tr><td>B 程式事實＋LLM 措辭</td><td>你要剪 4K，我把性能的比重拉到最高；你又常帶出門，所以便攜也從 12% 提到 18%。目前兩台幾乎打平（只差 0.9 分）：<b>翼龍15 Pro</b> 的 Premiere 4K 實測是 131 台候選裡最高，機身 2.0 kg、續航 13 小時，還便宜 2,450；<b>ROG 魔霸9</b> 整體性能分比較高（72 對 67），但重 0.43 kg，記憶體只有 16 GB，剪 4K 建議 32 GB。你比較在乎哪一個？</td></tr>
+<tr><td>C 現況</td><td>（卡片）「在當前權重下，性能和屏幕得分都排在候選前列。」「需結合預算與便攜權衡」「風險中等」——每台都一樣。</td></tr>
+</table></div>
+
+<h3>B1 現況：追問怎麼選、問幾次、怎麼改</h3>
+<pre class="flow">
+使用者一句話
+  │
+  ▼
+NLU → ops → 需求檔案 ──► collect_software_rules（pipeline.py:123-150）產出 missing（例：edit_intensity）
+  │
+  ▼
+snapshot → formal_count ──► action_for_count（domain.py:777-786）
+  │                           0 → relax ｜ ≤5 → compare ｜ ≤20 → recommend（但有 missing 就 probe）
+  │                           ≤50 → leading ｜ &gt;50 → probe
+  ▼
+action 是 probe / leading？ ──否──► 不追問
+  │是
+  ▼
+card_selector_strategy（cards.py:764-770，AppMeta "card_selector"）
+  ├─ rules：enabled ＋ when 全符合 ＋ writes_field 還沒填 → 取 priority 最高的 1 張（cards.py:718-734）
+  └─ model：stub，記 warning 後退回 rules（cards.py:737-754）
+  ▼
+一輪最多 1 張追問卡；沒有輪數上限
+</pre>
+<div class="tblwrap"><table>
+<tr><th>題目（卡片 id）</th><th>priority</th><th>when 條件</th><th>回答對權重／篩選的影響</th></tr>
+<tr><td>常用軟件 card_software</td><td>520</td><td>檔案沒有軟體（<code>cards.py:57</code>）</td><td>有：硬條件＋weight_delta＋子項</td></tr>
+<tr><td>剪輯強度 card_edit_intensity</td><td>450</td><td>已有 Premiere 類且還沒回答（<code>:78-84</code>）</td><td><b>沒有</b>：<code>normalize_item</code> 直接回傳（<code>domain.py:230-231</code>），<code>classify</code> 與權重都不讀 edit_intensity</td></tr>
+<tr><td>預算 card_budget</td><td>400</td><td>沒有預算（<code>:106</code>）</td><td>硬篩</td></tr>
+<tr><td>主要用途 card_purpose</td><td>380</td><td>沒有用途且候選 &gt; 50（<code>:128</code>）</td><td>目前只寫入檔案，沒有對應的 weight_delta</td></tr>
+<tr><td>便攜 card_portability</td><td>360</td><td>沒有便攜（<code>:149</code>）</td><td>目前沒有對應的權重表</td></tr>
+<tr><td>系統 card_os</td><td>355</td><td>沒有 os</td><td>硬篩</td></tr>
+<tr><td>遊戲類型、學生、場景、尺寸、記憶體、重量、屏幕、材質、獨顯、厚度、刷新率、散熱、續航、噪音、擴展、品牌、遊戲 / 創作</td><td>348 → 160</td><td>多數帶 <code>label_re</code>，只在相關語境出現（<code>cards.py:158-547</code>）</td><td>多數是硬篩或邊界判斷（<code>domain.py:640-674</code>）</td></tr>
+</table></div>
+<ul>
+<li><b>追問上限：沒有。</b>只要 action 是 probe／leading 就繼續選卡（<code>pipeline.py:354-363</code>），直到所有符合 when 的卡都填完。</li>
+<li><b>跳過：</b>追問卡沒有「跳過」或「無所謂」的統一按鈕。部分卡的選項有 <code>value=any</code>（<code>cards.py:798-800</code> 會把它轉成 soft），使用者也可以直接打字不理會；但被忽略的卡下一輪仍會因為 when 符合而再出現。</li>
+<li><b>題目價值：</b>只有固定的 <code>priority</code> 和 <code>value</code>（例：0.52，<code>cards.py:62</code>），和當下的候選池無關。</li>
+<li><b>需求檔案（<code>UserApp.tsx:695-709</code>）：</b>一排標籤，class 是 <code>tag hard/soft/software</code>，低信心的加上 <code>pending</code>。點 pending 標籤＝確認（<code>:699-703</code>，打 <code>confirm:true</code>）；點一般標籤＝跳出瀏覽器的 <code>prompt()</code> 只能改文字（<code>:704-705</code>）；✕ 刪除。看不到原話、信心度、影響了哪個權重，也看不到是哪一輪加的。</li>
+</ul>
+
+<h3>B2 追問上限與追問價值</h3>
+<h4>追問價值：先模擬每個答案，看前幾名會不會變</h4>
+<p>每張候選卡的每個選項，程式都先「假設使用者選了它」，用權重帳本算出新權重並重新打分（371 台 × 3–4 個選項，純計算，毫秒級）。前幾名幾乎不變的題目就不值得問。</p>
+<pre class="flow">
+候選卡 c（when 已符合）
+  │
+  ├─ 選項 a1 → 權重 W1 → 前 K 名 R1
+  ├─ 選項 a2 → 權重 W2 → 前 K 名 R2
+  └─ 選項 a3 → 權重 W3 → 前 K 名 R3
+  │
+  ▼
+value(c) = Σ p(a) × d(R_now, R_a)            p(a)：預設平均；之後可用卡片點擊統計（cards.py:1049 summarize_card_stats）
+d = 0.6 × [第 1 名換人] + 0.4 × (前 K 名集合變動比例)     （K 預設 5）
+另外加上縮小比例：硬篩題用「候選數會從 n 變成多少」的期望值
+  │
+  ▼
+value(c) &lt; min_question_value → 不問；全部都不值得 → 直接推薦
+</pre>
+<div class="tblwrap"><table>
+<tr><th>題目（同一個情境：已知預算、Premiere，還不知道便攜）</th><th>各答案下的第 1 名</th><th>value</th></tr>
+<tr><td>便攜：經常揹着走 / 偶爾帶出門 / 基本放桌上</td><td>翼龍15 Pro（67.1）／翼龍15 Pro（68.8）／<b>ROG 魔霸9（72.7 vs 72.6）</b></td><td>1/3 的答案讓第 1 名換人 → 約 0.2，<b>值得問</b></td></tr>
+<tr><td>剪輯強度：輕度 / 中度 / 重度</td><td>三個答案都是翼龍15 Pro（69.4），前 3 名完全相同</td><td><b>0 → 不該問</b>（目前 priority 450，是第 2 優先的題目）</td></tr>
+</table></div>
+<p>剪輯強度的根本問題是「答了沒有影響」。可以選擇讓它影響權重（例如重度 → 性能 +4、散熱 +3、<code>procyon_pr</code> 子項加重），或者直接關掉這張卡。我建議：<b>每張卡的每個選項都必須在後台設定 <code>weight_effect</code> 或 <code>hard</code>，兩者都空的選項在後台顯示紅字「這個答案不影響結果」</b>，再由價值計算自動把它擋掉。</p>
+
+<h4>追問上限</h4>
+<div class="tblwrap"><table>
+<tr><th>參數（後台）</th><th>預設</th><th>說明</th></tr>
+<tr><td><code>followup.max_total</code></td><td>3</td><td>整段對話最多主動追問幾次（使用者點的首屏卡不算）</td></tr>
+<tr><td><code>followup.max_consecutive</code></td><td>2</td><td>連續幾輪都在追問後，下一輪一定要給推薦（leading 或 recommend）</td></tr>
+<tr><td><code>followup.min_value</code></td><td>0.1</td><td>上面的 value 低於這個值就不問</td></tr>
+<tr><td><code>followup.ignored_cooldown</code></td><td>2 輪</td><td>使用者沒點、直接打別的內容 → 這張卡冷卻幾輪</td></tr>
+<tr><td><code>followup.skip_button</code></td><td>開</td><td>每張追問卡加上「先不回答」，點了寫一條 <code>value=any</code>、信心 1.0 的需求，不再追問</td></tr>
+</table></div>
+
+<h3>B3 需求檔案：不用確認卡，讓使用者自己看出錯誤</h3>
+<p>每一條需求都是一張小卡。顏色代表「類型」，邊框代表「信心」，背景閃一下代表「剛變動」。點一下就展開成編輯面板。</p>
+<pre class="flow">
+需求檔案                                                   本輪 +2 條 · 1 條待你看一下
+┌──────────────────────────────────────────────────────────────┐
+│ ■ 硬條件  預算 ≤ 10,200                           ✎  ✕        │  ← 實線紅框＝硬條件；新增時黃色背景淡出 3 秒
+│   「預算 4 萬 5」· 第 1 輪 · 信心 100%                         │
+│   → 拿掉這條會多 128 台                                      │
+├──────────────────────────────────────────────────────────────┤
+│ ◆ 軟體   Premiere Pro（4K 剪輯）                  ✎  ✕        │  ← 藍框＝軟體
+│   「剪 4K 影片」· 第 1 輪 · 信心 90%                           │
+│   → 性能 33→36%　啟用「Premiere 4K 實測」子項                 │
+│   → 帶出硬條件：RAM ≥ 16、VRAM ≥ 6（拿掉會多 77 台）           │
+├──────────────────────────────────────────────────────────────┤
+│ ● 偏好   經常揹着走                         ⚠ 我猜的  ✎  ✕    │  ← 虛線框＋⚠＝低信心（&lt; 0.8）
+│   「常帶出門」· 第 1 輪 · 信心 72%（示意值）                   │
+│   → 便攜 12→18%　續航 11→13%                                 │
+│   你是說「經常揹着走」，還是「偶爾帶出門」？[經常] [偶爾] [放桌上]  │  ← 低信心時直接附上替代選項
+└──────────────────────────────────────────────────────────────┘
+</pre>
+<div class="tblwrap"><table>
+<tr><th>元素</th><th>資料來源</th><th>呈現</th></tr>
+<tr><td>原話</td><td>op 的 <code>evidence</code>（<code>pipeline.py:105</code> 已經存了）</td><td>引號＋灰字；點一下捲到對話裡那一句</td></tr>
+<tr><td>第幾輪加的</td><td>新增欄位 <code>turn</code>（run_turn 寫入）</td><td>小字</td></tr>
+<tr><td>信心度</td><td><code>confidence</code>（<code>_calibrate_conf</code>，<code>pipeline.py:54-61</code>）</td><td>≥ 0.8 實線；0.5–0.8 虛線＋「⚠ 我猜的」；&lt; 0.5 目前會被降成 soft＋pending（<code>:294-301</code>），呈現為灰底＋「沒算進分數」</td></tr>
+<tr><td>硬條件或偏好</td><td><code>kind</code></td><td>硬條件：紅色方塊＋「拿掉會多 N 台」；偏好：綠色圓點＋「影響權重」；軟體：藍色菱形</td></tr>
+<tr><td>影響了哪個權重</td><td>A2 的權重帳本 <code>weight_effect</code></td><td>「性能 33→36%」；點擊打開權重面板並高亮該維度</td></tr>
+<tr><td>排除了幾台</td><td>對每條硬條件單獨跑一次「拿掉它」的 snapshot（<code>relax_options</code> 已有同樣作法，<code>pipeline.py:610-619</code>）</td><td>「→ 拿掉這條會多 128 台」（本例：預算 128 台、Premiere 顯存門檻 77 台；另有 20 台兩者都不符合，所以單獨拿掉任一條都不會回來）</td></tr>
+<tr><td>剛新增／剛修改</td><td>和 <code>profile_before</code> 比對（<code>pipeline.py:367</code> 已經有 <code>new_tags</code>）</td><td>黃色背景淡出；修改的顯示「預算 8,000 → 10,200」刪除線</td></tr>
+<tr><td>修改</td><td>取代 <code>prompt()</code></td><td>展開面板：數值欄位用滑桿／輸入框；選項型欄位直接列出該卡片的選項；「改成偏好／改成硬條件」切換；儲存後走 <code>patch_profile</code></td></tr>
+</table></div>
+<div class="verdict"><h4>我的建議做法</h4><ul>
+<li>拿掉「點 pending 標籤＝確認」這個隱藏操作（<code>UserApp.tsx:699-703</code>）。低信心直接用虛線框＋替代選項呈現，<b>使用者不改就代表接受</b>，改了就重算。</li>
+<li>每條需求都顯示「它造成了什麼」（排除幾台、權重變多少）。使用者看到「常帶出門 → 便攜 18%」覺得不對，自然會去改，這就是不用確認卡也能抓錯的原因。</li>
+<li>對話裡的「識別到的需求」卡（<code>UserApp.tsx:1155</code>）改成一行摘要＋「在右邊看詳情」，避免兩個地方都要看。</li>
+<li>這個設計需要 A2 的權重帳本（才有「影響了哪個權重」），兩件事一起做。</li>
+</ul></div>
+
+<h3>B4 首屏</h3>
+<p>現況：左側歡迎區有 4 句常見問題（<code>seed.py:210-218</code>，前端預設 <code>UserApp.tsx:582</code>，<code>mode: "send"</code> 點了直接送出），以及 3 張基礎需求卡：預算／用途／便攜（<code>UserApp.tsx:589-614</code>，資料來自 <code>card_budget</code>、<code>card_purpose</code>、<code>card_portability</code>，surface 是 <code>both</code> 的卡，<code>api.py:642</code>）。文案可以在後台的 <code>COPY_KEYS</code> 修改（<code>api.py:2152</code>）。右側是一般的格子（<code>UserApp.tsx:737-740</code>），依產品力排序，<b>目前沒有依價位分組</b>。</p>
+<div class="tblwrap"><table>
+<tr><th>區塊</th><th>細節建議</th><th>後台參數</th></tr>
+<tr><td>左：範例句</td><td>把 4 句「常見問題」改成 3 句<b>生活化的第一人稱需求句</b>，每句至少含 2 個欄位，讓 NLU 第一輪就能抽出 2–3 條需求。例如「我要剪 4K 影片，預算 4 萬 5，常帶出門」「大學生，主要寫報告跟上網課，希望輕一點」「下班想玩 3A 遊戲，放在家裡用」。點了直接送出。</td><td><code>welcome.examples[]</code>（文字、是否直接送出、排序、啟用）；<code>welcome.examples_count</code>（預設 3）；<code>welcome.examples_shuffle</code></td></tr>
+<tr><td>左：基礎需求卡</td><td>保留 3 張。選過的按鈕維持選取狀態（現有 <code>baseSel</code>），同一張卡再點另一個選項＝修改，不是新增。每個選項下方用小字顯示「選這個後候選剩 N 台」（就是 B2 的模擬結果）。</td><td><code>welcome.base_cards[]</code>（哪幾張卡、順序）；<code>welcome.show_option_count</code></td></tr>
+<tr><td>右：4 個價位分組</td><td>371 台依預算卡的 4 個區間分組，每組一個小標題「5000 以下 · 19 台」「5000–8000 · 114 台」「8000–12000 · 102 台」「12000 以上 · 136 台」（實算）。組內依<b>預設權重</b>的產品力排序。點組標題＝等同點預算卡的那個選項。</td><td><code>welcome.grid_group_by</code>：price / none；<code>welcome.price_bands</code>（區間邊界，預設跟 <code>card_budget</code> 的選項同步）；<code>welcome.per_band_limit</code>（每組先顯示幾台，其他折疊）；<code>welcome.band_sort</code></td></tr>
+<tr><td>右：開始對話後</td><td>分組自動解除，改回目前的「正式／邊界／排除」三段（<code>UserApp.tsx:737-757</code>）。</td><td><code>pool.keep_band_after_chat</code></td></tr>
+</table></div>
+
+<h3>B5 開關（對話與追問）</h3>
+<ul class="toggles">
+<li><code>followup.enabled</code>：整體追問開關</li>
+<li><code>followup.max_total</code>、<code>followup.max_consecutive</code>、<code>followup.ignored_cooldown</code></li>
+<li><code>followup.value_gate</code>：開＝用模擬價值擋掉沒影響的題目；關＝只看 priority（現況）</li>
+<li><code>followup.min_value</code>、<code>followup.value_top_k</code>（預設 5）</li>
+<li><code>followup.value_prior</code>：uniform / click_stats（選項機率用平均或用點擊統計）</li>
+<li><code>followup.skip_button</code>：「先不回答」按鈕</li>
+<li><code>followup.ask_when_close</code>：分差太小時，用 A 的反問取代一般追問</li>
+<li><code>card_selector</code>：rules / model（現有，<code>cards.py:764</code>）</li>
+<li>每張卡：<code>enabled</code>（現有）、<code>priority</code>（現有）、每個選項的 <code>weight_effect</code>／<code>hard</code></li>
+<li><code>profile.show_quote</code>：顯示原話</li>
+<li><code>profile.show_confidence</code>：顯示信心百分比；<code>profile.low_conf_threshold</code>（預設 0.8）</li>
+<li><code>profile.show_alternatives</code>：低信心時附替代選項</li>
+<li><code>profile.show_weight_effect</code>：顯示「影響了哪個權重」</li>
+<li><code>profile.show_excluded_count</code>：硬條件顯示「拿掉會多 N 台」</li>
+<li><code>profile.highlight_new</code>、<code>profile.highlight_seconds</code>（預設 3）</li>
+<li><code>profile.inline_edit</code>：展開編輯面板／舊的 prompt()</li>
+<li><code>chat.requirements_card</code>：對話裡的「識別到的需求」卡：完整／一行摘要／不顯示</li>
+<li><code>welcome.*</code>：見 B4</li>
+</ul>
+
+</section></template>
+<!--deep-end-->
 <template id="u3lab-tpl"><div id="u3lab">
 <h3>卡片樣本館：每一種卡片的實際樣子（v10 36 種 · system 32 種）</h3>
 <div class="lab-intro">
@@ -1087,8 +2936,8 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
 <p>主要情境：使用者說「<b>我要剪 4K 影片，預算 4 萬 5，常帶出門</b>」。有些卡片需要別的情境才會出現，每張卡的「樣本說明」都有註明。樣本保留產品原本的淺色外觀；hover 效果可以直接試，JS 動畫（抽屜滑入、GSAP 飛入等）沒有還原，改寫在「互動與回饋」裡。</p>
 </div>
 <h3>先看總表：功能相近的卡片怎麼對應</h3>
-<p class="scope">把功能相近的卡片分成 20 組：v10 較好 8 組、system 較好 4 組、各有長處 5 組。點卡片名稱會跳到樣本。分組依功能判斷，不代表兩張卡片完全等價。</p>
-<div class="tblwrap"><table class="lab-map"><thead><tr><th>階段</th><th>v10demo</th><th>system</th><th>比較</th><th>一句話評語</th></tr></thead><tbody><tr><td>其他</td><td><a href="#lab-v-welcome">歡迎頁＋範例句</a></td><td><a href="#lab-s-welcome">歡迎區（標題＋說明＋常見問題）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 給可以直接點的範例句；system 給常見問題，兩者都在降低第一句話的門檻</td></tr><tr><td>理解</td><td><a href="#lab-v-browse-tier">未說需求時的價位瀏覽</a></td><td><a href="#lab-s-prompt-cards">歡迎頁基礎需求卡（預算／主要用途／便攜性）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 讓還沒想清楚的人先依價位逛；system 用基礎需求卡引導填條件</td></tr><tr><td>理解</td><td><a href="#lab-v-thinking">思考中動畫</a></td><td><a href="#lab-s-progress">處理中進度提示</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>system 顯示處理到哪一步，比 v10 的三個點更讓人安心</td></tr><tr><td>理解</td><td><a href="#lab-v-ack-bubble">「記下了」理解回執</a><br><a href="#lab-v-ack-note">回執附註（更正／偏好／無法判斷）</a></td><td><a href="#lab-s-requirements">識別到的需求卡</a><br><a href="#lab-s-software">軟件畫像卡</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 用一句話複述並說「可以改」；system 只列標籤，聽錯也看不出來</td></tr><tr><td>理解</td><td>—</td><td><a href="#lab-s-count">候選池變化卡</a><br><a href="#lab-s-count-unchanged">候選池變化卡（數量未變的情況）</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>只有 system 會告訴你範圍縮小了多少台，但沒說為什麼</td></tr><tr><td>理解</td><td>—</td><td><a href="#lab-s-weight-panel">產品力權重面板（自動調整中）</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>只有 system 攤開權重；但會自動彈出鎖住畫面，建議預設關</td></tr><tr><td>追問</td><td><a href="#lab-v-ask-card">追問卡</a><br><a href="#lab-v-ask-done">已回答的追問（縮成一行）</a><br><a href="#lab-v-skip-note">跳過問題的說明</a></td><td><a href="#lab-s-followup">追問卡（還想確認一個問題）</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 會說還剩幾題、能跳過、有「不確定」；system 題目和使用者原話對不上，答了也不影響結果</td></tr><tr><td>確認</td><td><a href="#lab-v-confirm-card">需求確認卡</a><br><a href="#lab-v-needs-card">需求摘要卡（你要的是）</a><br><a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a><br><a href="#lab-v-need-sheet">這一項需求彈窗</a></td><td><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a><br><a href="#lab-s-profile-empty">需求檔案空狀態</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</td></tr><tr><td>推薦</td><td><a href="#lab-v-rec-bubble">推薦文字泡泡</a><br><a href="#lab-v-hero">主推大卡（最適合你）</a></td><td><a href="#lab-s-recommend">推薦卡</a><br><a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a><br><a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</td></tr><tr><td>推薦</td><td><a href="#lab-v-alt-card">也可以考慮（卡片檢視）</a><br><a href="#lab-v-alt-row">也可以考慮（清單檢視）</a><br><a href="#lab-v-model-card">其他也符合的（機型卡）</a><br><a href="#lab-v-list-row">機型清單列</a><br><a href="#lab-v-more-btn">再看更多按鈕</a></td><td><a href="#lab-s-lc-compact">候選卡・緊湊密度（&gt;50 臺）</a><br><a href="#lab-s-lc-medium">候選卡・中等密度（21–50 臺）</a><br><a href="#lab-s-lc-detailed">候選卡・詳細密度（6–20 臺）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 的替代機型有角色（想省錢、想更輕）和代價句；system 有縮圖和 4 級密度自動切換</td></tr><tr><td>推薦</td><td><a href="#lab-v-near-fold">差一點（可收合）</a></td><td><a href="#lab-s-edge-group">邊界候選分組</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 說「差在哪裡、差多少」；system 只標成邊界候選</td></tr><tr><td>推薦</td><td><a href="#lab-v-out-fold">不符合（按原因分組）</a><br><a href="#lab-v-whynot-card">常被問到但沒進建議</a></td><td><a href="#lab-s-excluded-group">已排除分組</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 依原因分組並附數字，還主動回答「那 XX 呢」；system 有排除清單但「撤銷」對規則排除無效</td></tr><tr><td>推薦</td><td><a href="#lab-v-conflict-card">需求衝突／放寬卡</a><br><a href="#lab-v-empty-nopick">沒有一台完全符合</a></td><td><a href="#lab-s-relax">放寬方向卡</a><br><a href="#lab-s-relax-empty">放寬方向卡（沒有任何選項）</a><br><a href="#lab-s-empty-pool">正式候選為 0（空結果）</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 說出是哪些條件互相衝突、只放寬剛好夠；system 只會試尺寸和預算，重量造成的 0 台會走到死路</td></tr><tr><td>推薦</td><td><a href="#lab-v-rec-feedback">推薦回饋（已送出狀態）</a></td><td><a href="#lab-s-chat-bubbles">對話泡泡（使用者訊息＋AI 回覆＋整則 👍👎）</a><br><a href="#lab-s-msg-down-reasons">整則回覆 👎 原因選擇</a><br><a href="#lab-s-recommend-down">推薦單台 👎 原因追問</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>system 每一台都能回饋並追問原因，資料對後台更有用</td></tr><tr><td>查詢</td><td><a href="#lab-v-check-card">指名查詢卡</a></td><td>—</td><td class="t"><span class="tag t-v">v10 較好</span></td><td>只有 v10 能指名問某一台，並回答它在符合的機型中排第幾</td></tr><tr><td>查詢</td><td><a href="#lab-v-no-match">搜尋無結果</a></td><td><a href="#lab-s-search-empty">搜尋無結果</a></td><td class="t"><span class="tag t-e">差不多</span></td><td>兩版都有搜尋無結果的空狀態</td></tr><tr><td>詳情</td><td><a href="#lab-v-detail-sheet">機型詳情抽屜</a></td><td><a href="#lab-s-detail">機型詳情抽屜</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 寫出「我怎麼判斷」和 11 項實測；system 有七維分數和購買連結，但沒說為什麼推薦或排除</td></tr><tr><td>對比</td><td><a href="#lab-v-compare-intent">對話中的對比結論</a><br><a href="#lab-v-compare-tray">對比列</a><br><a href="#lab-v-compare-sheet">對比彈窗</a></td><td><a href="#lab-s-compare-chat">對話內對比卡</a><br><a href="#lab-s-cmp-entry">對比入口（右下浮動）</a><br><a href="#lab-s-compare-ws">對比工作臺</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 先給文字結論；system 的工作台逐列標最優，但優缺點兩欄是同一句模板字</td></tr><tr><td>其他</td><td><a href="#lab-v-favs-sheet">收藏彈窗</a></td><td><a href="#lab-s-fav-group">我的收藏</a></td><td class="t"><span class="tag t-e">差不多</span></td><td>兩版都有收藏</td></tr><tr><td>其他</td><td><a href="#lab-v-text-bubble">一般文字泡泡／使用者泡泡</a><br><a href="#lab-v-toast">底部提示（toast）</a><br><a href="#lab-v-rail-demo">側欄示範入口</a><br><a href="#lab-v-demo-sheet">示範清單彈窗（demo-card）</a></td><td><a href="#lab-s-unsupported">不支援的卡片（兜底）</a></td><td class="t"><span class="tag t-n">輔助</span></td><td>輔助元件；v10 的 demo-sheet 沒有入口能打開，是殘留程式</td></tr></tbody></table></div>
+<p class="scope">把功能相近的卡片分成 20 組：v10 較好 6 組、system 較好 4 組、各有長處 7 組。點卡片名稱會跳到樣本。分組依功能判斷，不代表兩張卡片完全等價。</p>
+<div class="tblwrap"><table class="lab-map"><thead><tr><th>階段</th><th>v10demo</th><th>system</th><th>比較</th><th>一句話評語</th></tr></thead><tbody><tr><td>其他</td><td><a href="#lab-v-welcome">歡迎頁＋範例句</a></td><td><a href="#lab-s-welcome">歡迎區（標題＋說明＋常見問題）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 給可以直接點的範例句；system 給常見問題，兩者都在降低第一句話的門檻</td></tr><tr><td>理解</td><td><a href="#lab-v-browse-tier">未說需求時的價位瀏覽</a></td><td><a href="#lab-s-prompt-cards">歡迎頁基礎需求卡（預算／主要用途／便攜性）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 讓還沒想清楚的人先依價位逛；system 用基礎需求卡引導填條件</td></tr><tr><td>理解</td><td><a href="#lab-v-thinking">思考中動畫</a></td><td><a href="#lab-s-progress">處理中進度提示</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>system 顯示處理到哪一步，比 v10 的三個點更讓人安心</td></tr><tr><td>理解</td><td><a href="#lab-v-ack-bubble">「記下了」理解回執</a><br><a href="#lab-v-ack-note">回執附註（更正／偏好／無法判斷）</a></td><td><a href="#lab-s-requirements">識別到的需求卡</a><br><a href="#lab-s-software">軟件畫像卡</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 用一句話複述並說「可以改」；system 只列標籤，聽錯也看不出來</td></tr><tr><td>理解</td><td>—</td><td><a href="#lab-s-count">候選池變化卡</a><br><a href="#lab-s-count-unchanged">候選池變化卡（數量未變的情況）</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>只有 system 會告訴你範圍縮小了多少台，但沒說為什麼</td></tr><tr><td>理解</td><td>—</td><td><a href="#lab-s-weight-panel">產品力權重面板（自動調整中）</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>只有 system 攤開權重；但會自動彈出鎖住畫面，建議預設關</td></tr><tr><td>追問</td><td><a href="#lab-v-ask-card">追問卡</a><br><a href="#lab-v-ask-done">已回答的追問（縮成一行）</a><br><a href="#lab-v-skip-note">跳過問題的說明</a></td><td><a href="#lab-s-followup">追問卡（還想確認一個問題）</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 會說還剩幾題、能跳過、有「不確定」；system 題目和使用者原話對不上，答了也不影響結果</td></tr><tr><td>確認</td><td><a href="#lab-v-confirm-card">需求確認卡</a><br><a href="#lab-v-needs-card">需求摘要卡（你要的是）</a><br><a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a><br><a href="#lab-v-need-sheet">這一項需求彈窗</a></td><td><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a><br><a href="#lab-s-profile-empty">需求檔案空狀態</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</td></tr><tr><td>推薦</td><td><a href="#lab-v-rec-bubble">推薦文字泡泡</a><br><a href="#lab-v-hero">主推大卡（最適合你）</a></td><td><a href="#lab-s-recommend">推薦卡</a><br><a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a><br><a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</td></tr><tr><td>推薦</td><td><a href="#lab-v-alt-card">也可以考慮（卡片檢視）</a><br><a href="#lab-v-alt-row">也可以考慮（清單檢視）</a><br><a href="#lab-v-model-card">其他也符合的（機型卡）</a><br><a href="#lab-v-list-row">機型清單列</a><br><a href="#lab-v-more-btn">再看更多按鈕</a></td><td><a href="#lab-s-lc-compact">候選卡・緊湊密度（&gt;50 臺）</a><br><a href="#lab-s-lc-medium">候選卡・中等密度（21–50 臺）</a><br><a href="#lab-s-lc-detailed">候選卡・詳細密度（6–20 臺）</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 的替代機型有角色（想省錢、想更輕）和代價句；system 有縮圖和 4 級密度自動切換</td></tr><tr><td>推薦</td><td><a href="#lab-v-near-fold">差一點（可收合）</a></td><td><a href="#lab-s-edge-group">邊界候選分組</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 說「差在哪裡、差多少」；system 只標成邊界候選</td></tr><tr><td>推薦</td><td><a href="#lab-v-out-fold">不符合（按原因分組）</a><br><a href="#lab-v-whynot-card">常被問到但沒進建議</a></td><td><a href="#lab-s-excluded-group">已排除分組</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 依原因分組並附數字，還主動回答「那 XX 呢」；system 有排除清單但「撤銷」對規則排除無效</td></tr><tr><td>推薦</td><td><a href="#lab-v-conflict-card">需求衝突／放寬卡</a><br><a href="#lab-v-empty-nopick">沒有一台完全符合</a></td><td><a href="#lab-s-relax">放寬方向卡</a><br><a href="#lab-s-relax-empty">放寬方向卡（沒有任何選項）</a><br><a href="#lab-s-empty-pool">正式候選為 0（空結果）</a></td><td class="t"><span class="tag t-v">v10 較好</span></td><td>v10 說出是哪些條件互相衝突、只放寬剛好夠；system 只會試尺寸和預算，重量造成的 0 台會走到死路</td></tr><tr><td>推薦</td><td><a href="#lab-v-rec-feedback">推薦回饋（已送出狀態）</a></td><td><a href="#lab-s-chat-bubbles">對話泡泡（使用者訊息＋AI 回覆＋整則 👍👎）</a><br><a href="#lab-s-msg-down-reasons">整則回覆 👎 原因選擇</a><br><a href="#lab-s-recommend-down">推薦單台 👎 原因追問</a></td><td class="t"><span class="tag t-s">system 較好</span></td><td>system 每一台都能回饋並追問原因，資料對後台更有用</td></tr><tr><td>查詢</td><td><a href="#lab-v-check-card">指名查詢卡</a></td><td>—</td><td class="t"><span class="tag t-v">v10 較好</span></td><td>只有 v10 能指名問某一台，並回答它在符合的機型中排第幾</td></tr><tr><td>查詢</td><td><a href="#lab-v-no-match">搜尋無結果</a></td><td><a href="#lab-s-search-empty">搜尋無結果</a></td><td class="t"><span class="tag t-e">差不多</span></td><td>兩版都有搜尋無結果的空狀態</td></tr><tr><td>詳情</td><td><a href="#lab-v-detail-sheet">機型詳情抽屜</a></td><td><a href="#lab-s-detail">機型詳情抽屜</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 寫出「我怎麼判斷」和 11 項實測；system 有七維分數和購買連結，但沒說為什麼推薦或排除</td></tr><tr><td>對比</td><td><a href="#lab-v-compare-intent">對話中的對比結論</a><br><a href="#lab-v-compare-tray">對比列</a><br><a href="#lab-v-compare-sheet">對比彈窗</a></td><td><a href="#lab-s-compare-chat">對話內對比卡</a><br><a href="#lab-s-cmp-entry">對比入口（右下浮動）</a><br><a href="#lab-s-compare-ws">對比工作臺</a></td><td class="t"><span class="tag t-d">各有長處</span></td><td>v10 先給文字結論；system 的工作台逐列標最優，但優缺點兩欄是同一句模板字</td></tr><tr><td>其他</td><td><a href="#lab-v-favs-sheet">收藏彈窗</a></td><td><a href="#lab-s-fav-group">我的收藏</a></td><td class="t"><span class="tag t-e">差不多</span></td><td>兩版都有收藏</td></tr><tr><td>其他</td><td><a href="#lab-v-text-bubble">一般文字泡泡／使用者泡泡</a><br><a href="#lab-v-toast">底部提示（toast）</a><br><a href="#lab-v-rail-demo">側欄示範入口</a><br><a href="#lab-v-demo-sheet">示範清單彈窗（demo-card）</a></td><td><a href="#lab-s-unsupported">不支援的卡片（兜底）</a></td><td class="t"><span class="tag t-n">輔助</span></td><td>輔助元件；v10 的 demo-sheet 沒有入口能打開，是殘留程式</td></tr></tbody></table></div>
 <h3>逐張看樣本</h3>
 <div class="filters" id="labf" role="group" aria-label="依流程階段篩選">流程階段（v10／system）：<button aria-pressed="true" data-st="all">全部</button><button aria-pressed="false" data-st="理解">理解 3／6</button><button aria-pressed="false" data-st="追問">追問 3／2</button><button aria-pressed="false" data-st="確認">確認 4／0</button><button aria-pressed="false" data-st="推薦">推薦 13／13</button><button aria-pressed="false" data-st="查詢">查詢 1／1</button><button aria-pressed="false" data-st="對比">對比 3／3</button><button aria-pressed="false" data-st="詳情">詳情 1／1</button><button aria-pressed="false" data-st="其他">其他 8／6</button></div>
 <div class="lab-stage" data-stage="理解"><h4 class="lab-st">理解<span>v10 3 種 · system 6 種</span></h4>
@@ -1208,7 +3057,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>前端：常駐。數量取 snapshot.formal_count；out_count&gt;0 時加「（已排除 N 臺）」；edge_count&gt;0 時顯示橘色 chip。</p>
   <p><b>顯示哪些資訊：</b>「候選池筆記本：273 臺（已排除 97 臺）」、邊界候選 chip、搜尋框、手動篩選／權重鈕、需求檔案標籤（可編輯 ed、可刪 ✕；pending 項為虛線框）、排序與密度說明列。</p>
   <p><b>互動與回饋：</b>點標籤文字：pending 項直接確認，否則跳瀏覽器 prompt「修改這條需求」→ patchProfile → 重跑整輪與動畫；✕ 刪除並重算；搜尋只過濾正式候選。GSAP：count_roll 滾數字、邊界 chip 彈出、需求標籤淡入 stagger。</p>
-  <p><b>對應另一版：</b><a href="#lab-v-confirm-card">需求確認卡</a>、<a href="#lab-v-needs-card">需求摘要卡（你要的是）</a>、<a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a>、<a href="#lab-v-need-sheet">這一項需求彈窗</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-v-confirm-card">需求確認卡</a>、<a href="#lab-v-needs-card">需求摘要卡（你要的是）</a>、<a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a>、<a href="#lab-v-need-sheet">這一項需求彈窗</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   <p class="lc-note"><b>樣本說明：</b>示範情境假設：NLU（LLM）把「預算 4 萬 5」解析成 budget={max:45000}、「常帶出門」→ soft portability、「剪 4K 影片」→ 軟體 Premiere Pro；系統以 ¥ 計價、沒有新台幣換算。資料由 scratchpad 內以 system 的 importer.all_records()＋domain.snapshot() 實算（未啟動系統）。</p>
   <ul class="toggles"><li>需求檔案可編輯</li><li>顯示 pending 確認</li><li>顯示排序與密度說明</li><li>顯示已排除數</li></ul>
  </div></details>
@@ -1315,7 +3164,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>需求齊了、要推薦前（action.type=confirm；CFG.confirmOn），aiParts index.html:949。</p>
   <p><b>顯示哪些資訊：</b>標題「我這樣理解你，對嗎？」、一句話需求摘要（挑一台能剪 4K 影片的筆電，每天背得動，¥45,000 以內。）、編號清單：每項原話＋白話意義（例如「匯出要快，不然每支片都要多等好幾分鐘」）；假設的項目會加黃色「假設」標籤；未定的項目以黃字提示（例如「預算：還沒定」）。</p>
   <p><b>互動與回饋：</b>「對，幫我挑」＝確認並推薦；「有地方不對」＝聚焦輸入框並跳提示「直接說哪裡不對…」。卡片有綠色外框光暈。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   <p class="lc-note"><b>樣本說明：</b>真實引擎輸出（固定情境）。</p>
   <ul class="toggles"><li>confirmOn（已存在）</li><li>確認卡是否顯示白話意義</li><li>確認前是否隱藏右側推薦</li></ul>
  </div></details>
@@ -1330,7 +3179,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>右側機型區頂端，只要有任何需求（v.has）就一直顯示；需求變動時閃一下（flash 動畫）。</p>
   <p><b>顯示哪些資訊：</b>「你要的是」標籤、一句話摘要、需求籤（必要條件有編號 1/2/3，排序參考為灰籤，假設為黃色虛線＋「假設」）、篩選漏斗：實測機型 290 › 剪 4K 影片 155 › 預算 45000 以內 155 › 幾乎每天帶著走 34（最後一步綠底）。</p>
   <p><b>互動與回饋：</b>點需求籤或漏斗步驟＝開「這一項需求」彈窗（可改答案或拿掉）；「收起／展開」切換精簡模式（記住在本機）。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   <p class="lc-note"><b>樣本說明：</b>真實引擎輸出；flash 動畫只在需求變更時出現，樣本有帶 flash class 所以載入時會閃一次。</p>
   <ul class="toggles"><li>是否顯示漏斗</li><li>是否顯示排序參考籤</li><li>預設收起或展開</li></ul>
  </div></details>
@@ -1345,7 +3194,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>使用者點「收起」後。</p>
   <p><b>顯示哪些資訊：</b>只剩標籤和一行（超長以 … 截斷）的需求摘要。</p>
   <p><b>互動與回饋：</b>「展開」恢復完整版。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   <p class="lc-note"><b>樣本說明：</b>真實輸出。</p>
   <ul class="toggles"><li>預設收起或展開</li></ul>
  </div></details>
@@ -1360,7 +3209,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>點需求籤或漏斗步驟。</p>
   <p><b>顯示哪些資訊：</b>類型（一定要／排序參考，假設會註明）、需求原話、白話意義、「我怎麼判斷：4K 匯出實測 7.5 分鐘以內」、「做得到的機型：實測過的 290 台裡 155 台」、示範資料提醒、「改答案」「拿掉這一項」。</p>
   <p><b>互動與回饋：</b>改答案＝回到對話重新問這題；拿掉＝刪除需求並重新推薦。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-s-pool-head">候選池標題列＋需求檔案</a>、<a href="#lab-s-profile-empty">需求檔案空狀態</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   <p class="lc-note"><b>樣本說明：</b>真實輸出（剪 4K 影片）。</p>
   <ul class="toggles"><li>是否允許拿掉必要條件</li><li>是否顯示通過台數</li></ul>
  </div></details>
@@ -1391,7 +3240,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>action.type=recommend 且有 decision（aiParts index.html:951）。</p>
   <p><b>顯示哪些資訊：</b>一段話：我選 MacBook Pro 14 M4 Pro（¥15,999）。你的 3 項必要條件它都達標。若第二名很接近，說明兩台各自贏在哪（續航多 4 小時 vs 4K 匯出快 0.8 分鐘），並問「你更在乎哪一個？」＋兩個選項按鈕；「看詳情 →」、「為什麼不是別台？」；最新一輪底部有「這個建議有幫助嗎？」讚／倒讚。</p>
   <p><b>互動與回饋：</b>點偏好按鈕＝送出 prefer 重新排序；「看詳情」＝切到右側並把首選卡置中、外框高亮 1.8 秒；「為什麼不是別台」＝出現落選說明卡；讚／倒讚後換成「謝謝，已收到」。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-recommend">推薦卡</a>、<a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a>、<a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a>。v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</p>
+  <p><b>對應另一版：</b><a href="#lab-s-recommend">推薦卡</a>、<a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a>、<a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a>。排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</p>
   <p class="lc-note"><b>樣本說明：</b>真實引擎輸出（確認後）。</p>
   <ul class="toggles"><li>closeCall／closeGap（接近時是否問取捨，已存在）</li><li>是否顯示「為什麼不是別台」</li><li>是否顯示回饋讚／倒讚</li></ul>
  </div></details>
@@ -1436,7 +3285,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>有需求且至少一台 pick（P.length&gt;0，index.html:1055）。</p>
   <p><b>顯示哪些資訊：</b>角色標籤「最適合你」、價格 ¥15,999、機型名 MacBook Pro 14 M4 Pro、規格行（M4 Pro 14 核心 · 24GB · 14.2 吋 Mini-LED · 1.6 kg）、逐項 ✓ 對照（剪 4K 影片：4K 匯出 3.7 分鐘；預算：¥15,999；每天帶著走：1.6 kg）、「要接受的」或「照你的用法沒有明顯短處」、＋對比、看全部實測 →。</p>
   <p><b>互動與回饋：</b>整張可點開詳情抽屜；＋對比加入對比列；hover 加陰影；從對話「看詳情」跳過來時外框高亮。</p>
-  <p><b>對應另一版：</b><a href="#lab-s-recommend">推薦卡</a>、<a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a>、<a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a>。v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</p>
+  <p><b>對應另一版：</b><a href="#lab-s-recommend">推薦卡</a>、<a href="#lab-s-leading">暫時靠前卡（不是最終推薦）</a>、<a href="#lab-s-lc-deep">候選卡・深度密度（1–5 臺）</a>。排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</p>
   <p class="lc-note"><b>樣本說明：</b>真實輸出（固定情境）。</p>
   <ul class="toggles"><li>主推卡最多顯示幾項對照（目前 6）</li><li>是否顯示「要接受的」</li><li>是否顯示實測來源連結</li></ul>
  </div></details>
@@ -1586,7 +3435,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>後端：正式候選 6–20 臺、需求檔案 ≥2 項、且沒有 missing 時 action=recommend，送前 5 名（public_laptop）。</p>
   <p><b>顯示哪些資訊：</b>每列「序號. 機名 · 價格 · 顯卡 · 產品力分」＋單台 👍👎。沒有縮圖、沒有理由。</p>
   <p><b>互動與回饋：</b>👍 直接送 feedback(laptop_id, up)，無視覺狀態；👎 展開該列原因（recommend-down）。列本身不能點開詳情、不能加入對比。無專屬 GSAP（右側卡片有 top3 高亮）。</p>
-  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</p>
+  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</p>
   <p class="lc-note"><b>樣本說明：</b>需其他情境：在示範情境之後再加「14 英寸」（且已答中度剪輯）→ 正式候選 17 臺 → recommend。</p>
   <ul class="toggles"><li>推薦張數 3／5</li><li>顯示價格／顯卡</li><li>顯示推薦理由</li><li>同款不同 SKU 合併</li><li>單台 👍👎</li></ul>
  </div></details>
@@ -1616,7 +3465,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>後端：正式候選 21–50 臺 → action=leading，送前 3 名；同一輪通常還會附一張追問卡（本例為 card_os「系統要用 Windows 還是 macOS？」）。</p>
   <p><b>顯示哪些資訊：</b>同推薦卡格式，標題改為「暫時靠前（不是最終推薦）」。</p>
   <p><b>互動與回饋：</b>同推薦卡（單台 👍👎）。</p>
-  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</p>
+  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</p>
   <p class="lc-note"><b>樣本說明：</b>需其他情境：示範情境＋「2.2 公斤以內」→ 正式 22 臺 → leading。</p>
   <ul class="toggles"><li>顯示暫時靠前卡</li><li>暫時靠前張數</li><li>與追問卡的排列順序</li></ul>
  </div></details>
@@ -1706,7 +3555,7 @@ pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px soli
   <p><b>什麼時候出現：</b>前端：formal_count≤5，單欄大卡。</p>
   <p><b>顯示哪些資訊：</b>超寬縮圖、名次、價格、7 個維度橫條（含當前權重%）、推薦理由、風險等級、證據行、主色「加入對比」。</p>
   <p><b>互動與回饋：</b>操作鈕常駐；☆ 收藏（樣本為 ★ 已收藏）、⊘ 排除、加入對比。</p>
-  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。v10 只推一台，用實測數字逐條對照需求並寫出要接受的缺點；system 列 5 名分數，理由和風險是模板字</p>
+  <p><b>對應另一版：</b><a href="#lab-v-rec-bubble">推薦文字泡泡</a>、<a href="#lab-v-hero">主推大卡（最適合你）</a>。排序邏輯 system 較好（依個人權重算分）；說明方式 v10 較好（逐條對照需求、寫出要接受的）。做法：用 v10 的表達形式，內容改由 system 的權重分數算出（見 K5）</p>
   <p class="lc-note"><b>樣本說明：</b>需其他情境：示範情境＋不超過 2.0kg → 正式 2 臺；樣本為第 1 名機械革命翼龍15 Pro 2026。</p>
   <ul class="toggles"><li>顯示 7 維度橫條</li><li>顯示推薦理由</li><li>顯示風險等級</li><li>顯示證據／影片連結</li></ul>
  </div></details>
@@ -2101,7 +3950,7 @@ MacBook Pro 14 M4 和它比：便宜 ¥4,000，滿載安靜 3 分貝、輕 0.1 k
   <p><b>什麼時候出現：</b>前端：profile.length===0。</p>
   <p><b>顯示哪些資訊：</b>「還沒有需求，說一句話或點上面的基礎需求卡就會出現在這裏」。</p>
   <p><b>互動與回饋：</b>無。</p>
-  <p><b>對應另一版：</b><a href="#lab-v-confirm-card">需求確認卡</a>、<a href="#lab-v-needs-card">需求摘要卡（你要的是）</a>、<a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a>、<a href="#lab-v-need-sheet">這一項需求彈窗</a>。只有 v10 在推薦前讓你確認「我理解的對嗎」；system 的需求檔案在側欄，要自己去看</p>
+  <p><b>對應另一版：</b><a href="#lab-v-confirm-card">需求確認卡</a>、<a href="#lab-v-needs-card">需求摘要卡（你要的是）</a>、<a href="#lab-v-needs-card-closed">需求摘要卡（收起）</a>、<a href="#lab-v-need-sheet">這一項需求彈窗</a>。M 決定不做確認卡。system 的需求檔案是對的方向，但要借用 v10 需求摘要卡的一句話摘要和「為什麼重要」，並用顏色標出硬條件、低信心、剛新增的需求</p>
   
   <ul class="toggles"><li>空狀態文案</li></ul>
  </div></details>
@@ -2124,8 +3973,8 @@ MacBook Pro 14 M4 和它比：便宜 ¥4,000，滿載安靜 3 分貝、輕 0.1 k
 </div></template>
 
 <section class="ch" id="bugs">
-  <div class="chhead"><span class="chcode">附錄 A</span><h2>system 中「看起來有、其實沒作用」的地方</h2></div>
-  <p class="scope">這些問題會讓管理員或使用者誤以為功能正常。比起「沒有這個功能」，這種情況更危險。建議在整合前先處理。</p>
+  <div class="chhead"><span class="chcode">附錄 A</span><h2>system 尚未完成的功能與缺陷</h2></div>
+  <p class="scope">其中不少是「之後會補完」的功能。建議在補完之前，介面上先標示「尚未生效」，避免測試時誤以為已經在運作；影響核心鏈（需求 → 權重 → 分數 → 理由）的項目優先處理。</p>
   <div id="buglist"></div>
 </section>
 
@@ -2143,18 +3992,21 @@ MacBook Pro 14 M4 和它比：便宜 ¥4,000，滿載安靜 3 分貝、輕 0.1 k
 const T={v:['t-v','只有 v10'],s:['t-s','只有 system'],d:['t-d','做法不同'],e:['t-e','相同'],n:['t-n','兩邊都沒有／缺陷']};
 
 const MATRIX=[
- ['版面與視覺','v10','有手機版、深色模式、無障礙設計，字體適合繁中；system 只有桌機版','system 的動畫分級、候選數量自動切換卡片密度'],
- ['對話與追問','v10','會回顯理解、追問有上限、可以跳過、會確認、放寬只放剛好夠，最能讓使用者覺得「被理解」','system 的 LLM 理解層、卡片 when/priority 題庫、軟體畫像'],
- ['推薦卡片','v10（內容）＋ system（外殼）','v10 用實測數字對照需求；system 是分數加模板字','system 的縮圖、購買連結、單台回饋、對比工作台'],
- ['後台架構與首頁','v10（互動）＋ system（權限）','v10 有待辦首頁、hash 路由、即時搜尋、數字能點進去看對話','system 的真實角色權限、A2 用戶頁、C7 管理員管理'],
+ ['權重與評分（核心）','system','需求 → 權重 → 多維度分數是產品核心；要補上需求訊號對權重的影響、高級細項、可解釋性','v10 的「用途改變性能怎麼算」概念，改用子權重實現（見 K3）'],
+ ['軟體畫像','system','C1 畫像庫與審核流程是對的方向；要補別名辨識、工作類型、對細項權重的影響','—'],
+ ['版面與視覺','system ＋ v10 細節','以 system 為底；補手機版、注音輸入檢查、focus 樣式。深色模式目前不需要','v10 的斷點與底部抽屜、IME 檢查'],
+ ['首屏','system（目標設計）','左側：3 句可直接送出的範例句＋3 張基礎需求卡；右側：371 台依 4 個價位分組。全部可在後台調整','v10 的範例句寫法、價位分組'],
+ ['對話與追問','system','LLM 理解＋卡片題庫＋每條規則開關，方便測試；追問上限後台可設；不做確認卡，改用需求檔案呈現','v10 的回顯句、「還剩幾題」、跳過、不問沒影響的題'],
+ ['推薦卡片','system（外殼與排序）＋新的理由產生器','分數排序保留；模板字改成由權重與維度優勢算出的理由（見 K5）','v10 的「要接受的」「和第一名比」「為什麼不是別台」表達方式'],
+ ['後台首頁','之後再做','等其他功能完成再設計最終首頁','—'],
  ['對話紀錄','v10 清單＋單輪說明','system 清單沒有篩選，最多只顯示 200 筆','system 的 ProfileDiff、原句高亮、run_id 雙向跳轉'],
  ['待處理','v10','system 沒有這個功能','—'],
  ['需求洞察','v10','v10 有交叉熱力圖、供需缺口、價格敏感度','system 的「系統怎麼回應」「數據暴露什麼」面板'],
- ['規則／詞庫／權重','v10 流程＋ system 資料庫','v10 有草稿、影響預覽、回歸測試、版本回滾；system 的開關大多沒有作用','system 的 C1 軟體畫像與審核流程'],
- ['卡片管理','system 為底','system 有真實統計、能追到單一輪','v10 的流程分頁、文案編輯、改動前先看影響'],
- ['鏈路／性能／日誌','v10 互動＋ system 資料','system 的耗時大多是估算的','system 的 Span 樹、通知順序檢查'],
- ['模型與提示詞','system 為底','system 能真的接上模型、測試連線','v10 的逐次調用明細、成本試算、備用模型、提示詞草稿'],
- ['資料庫與機型','system 管線＋ v10 介面','system 有 CSV 匯入與版本回滾','v10 的篩選、改價、hold 狀態、影片出處'],
+ ['規則／詞庫／權重後台','system','把 C2 開關、C6 閾值真的接上流程；權重參數集中可調','不移植 v10 的草稿／回歸／發佈流程'],
+ ['卡片管理','system','真實統計、能追到單一輪','v10 的文案編輯、用真實元件預覽'],
+ ['鏈路／性能／日誌','system（基礎能力，優先度低）','先把 token、告警、耗時記錄做對','v10 的 P50/P95、日誌篩選'],
+ ['模型與提示詞','system','能真的接上模型、測試連線','v10 的逐次調用明細、成本試算、備用模型'],
+ ['資料庫與機型','system','CSV 匯入與版本回滾；先處理重量填補值、購買連結、影片欄位','v10 的篩選、改價、影片出處'],
 ];
 
 const CH=[
@@ -2166,11 +4018,11 @@ const CH=[
  ['整體骨架','CSS Grid 三欄（228px 側欄＋對話 35fr＋機型 65fr），外框是 16px 圓角卡片','Flex 三欄（240px＋35%＋其餘），滿版貼齊視窗','d'],
  ['側欄收合','收成 64px mini 模式，計數變成角標，狀態存在 localStorage','收成 64px，滑過會浮出提示，狀態存在帳號設定','d'],
  ['手機與窄螢幕','1380、1180、760 三個斷點；≤760 時切成「對話／機型」兩個分頁，彈窗改成底部抽屜','<code>min-width:1200px</code>，viewport 寫死成 <code>width=1440</code>，手機看到的是縮小的桌機版','v'],
- ['深色模式','有完整的深色色彩變數，也能用 data-theme 強制切換','沒有，很多地方寫死 #fff','v'],
+ ['深色模式','有完整的深色色彩變數，也能用 data-theme 強制切換','沒有（M：目前不需要）','v'],
  ['字體','PingFang TC、JhengHei 優先，數字用 DIN 並開等寬','Inter、Microsoft YaHei、PingFang SC 優先，繁中會用簡體字形顯示','d'],
  ['圓角與密度','卡片 12–16px，留白寬','統一 8px，留白緊','d'],
- ['首屏（左側）','3 句生活化的範例句，點了直接送出','4 個常見問題＋3 張基礎需求卡（預算、用途、便攜）','d'],
- ['首屏（右側）','依 4 個價位帶分組瀏覽，每組先顯示 8 台','直接把 371 台排成格子','d'],
+ ['首屏（左側）','3 句生活化的範例句，點了直接送出','4 個常見問題＋3 張基礎需求卡（預算、用途、便攜）。<b>目標設計：</b>3 句範例句（點了直接送出）＋3 張基礎需求卡，內容都能在後台調整','d'],
+ ['首屏（右側）','依 4 個價位帶分組瀏覽，每組先顯示 8 台','直接把 371 台排成格子。<b>目標設計：</b>371 台依 4 個價位分組排成格子，分組界線可在後台調整','d'],
  ['輸入區','自動長高；Enter 送出前檢查 <code>isComposing</code>（注音選字不會誤送）；有 focus 光圈','2 行固定；可以拖機型卡片進來 @ 引用；沒有 IME 檢查，也沒有 focus 樣式','d'],
  ['思考中','三個跳動圓點','脈衝圓點加輪播文字（整理需求→篩選機型→重算分數），但文字是固定劇本','d'],
  ['需求進入檔案','需求卡整塊閃一下底色（1.2s）','req_fly 飛入動畫：目前抓不到起點元素，永遠退回淡入','d'],
@@ -2195,13 +4047,13 @@ const CH=[
  ['輸入法誤送','<ul><li>v10 在 <code>index.html:1272</code> 判斷 <code>!e.isComposing</code>。</li><li>system 在 <code>UserApp.tsx:667</code> 只判斷 Enter 和 Shift。在 Safari 上，注音選字按的 Enter 可能直接把訊息送出。</li><li>這是台灣使用者的硬需求。</li></ul>'],
  ['動畫鎖定的代價','<ul><li><code>UserApp.tsx:147</code> 的 <code>locked = busy || animLock</code> 讓動畫越長、使用者等越久。</li><li>「跳過動畫」的點擊事件在 <code>animation.ts:123-128</code> 和 <code>UserApp.tsx:201-206</code> 註冊了兩次。</li></ul>'],
  ],
- verdict:['版面、色彩、字體、深色模式、手機版、無障礙：<b>採用 v10</b>','「系統正在理解你」的動畫演出：<b>採用 system 的 GSAP 事件佇列</b>，但要先修好飛入動畫的起點選取，並把重新排序改成真的 FLIP','動畫分級和速度：<b>採用 system</b>，正好拿來當使用者測試的變因','輸入區：v10 的 IME 檢查和 focus 樣式，加上 system 的拖曳 @ 引用'],
- toggles:['動畫等級（4 級）','動畫速度','需求飛入：飛入／閃光／無','數量變化：滾動／彈跳／靜態','重排：FLIP／淡入／瞬間','權重面板自動彈出','動畫時鎖住輸入','思考中：三點／輪播文字','卡片密度：自動／手動／固定','卡片操作鈕常駐','首屏引導（例句／FAQ／需求卡）','右側首屏：價位帶／全部格狀','深色模式','對比上限與入口形式']},
+ verdict:['<b>以 system 的版面為底</b>，補三件事：手機版（≤760px 切成「對話／機型」分頁、彈窗改底部抽屜）、注音輸入時 Enter 不送出（判斷 <code>isComposing</code>）、鍵盤 focus 樣式。深色模式目前不做','<b>首屏照 M 的目標設計</b>：左側 3 句範例句＋3 張基礎需求卡（預算、用途、便攜）；右側 371 台依 4 個價位分組。範例句、卡片、價位界線、每組先顯示幾台，都放進後台「介面文案／首屏設定」','「系統正在理解你」的動畫<b>採用 system 的 GSAP 事件佇列</b>：先修好需求飛入的起點選取（改成從需求卡的標籤飛出），重排改成真的 FLIP','動畫分級和速度保留，正好當使用者測試的變因；動畫鎖住輸入的時間要有上限（建議 1.5 秒），超過就允許輸入','登入閘門改成「先讓使用者打字、送出時再登入」，不要在聚焦輸入框時就跳出'],
+ toggles:['動畫等級（4 級）','動畫速度','需求飛入：飛入／閃光／無','數量變化：滾動／彈跳／靜態','重排：FLIP／淡入／瞬間','權重面板自動彈出','動畫時鎖住輸入','思考中：三點／輪播文字','卡片密度：自動／手動／固定','卡片操作鈕常駐','首屏範例句（內容與句數）','首屏基礎需求卡（內容與張數）','右側首屏：價位分組界線與每組台數','對比上限與入口形式']},
 
 {id:'u2',code:'U2',grp:'使用者端',title:'對話流程與追問方式',
  scope:'v10demo/engine.js（needsFlow、decideAction）↔ system/backend/app/pipeline.py（run_turn）、domain.py、cards.py',
  v:'由程式主導的訪談：每輪先說「記下了：A → 我會怎麼篩」，再按固定順序問，最多 3 題。答案不影響推薦的題目就跳過不問；每題都能說「不確定」或跳過；推薦前會先確認一次。',
- s:'由候選台數驅動的卡片式篩選器：LLM 把使用者的話拆成標籤，程式依「剩下幾台」決定下一步，每輪出一張追問卡。沒有確認步驟，不能跳過，題數沒有上限，也不處理「只問某台機型」。',
+ s:'LLM 理解＋卡片題庫的對話架構：LLM 把使用者的話拆成增量修改，程式依「剩下幾台」和卡片的 when／priority 決定下一步。每條規則都可以做成開關，適合用來測試不同做法。<b>這是後續開發的主體。</b>目前缺：追問上限、跳過、指名查詢，以及部分答案沒有影響權重。',
  flowV:`使用者輸入 ─► detectIntent（engine.js:861）
    ├ 查單台／比較／為什麼不是它／沒實測的機型 ─► 直接回答，不動需求
    └ 說需求 ─► parseNeeds（規則）─► 「記下了：X → 只留…」
@@ -2240,13 +4092,13 @@ const CH=[
  ['低信心需求','「不確定」的需求會標成「假設」','信心 &lt;0.5 的硬條件降為參考，要使用者點一下確認','d'],
  ['什麼時候追問','看缺哪項資訊，再模擬「答案會不會改變第一名」','看候選台數，加上卡片的 when 條件','d'],
  ['第一題','「主要拿它做什麼？」','「你主要用哪些軟件工作？」（priority 520）','d'],
- ['題數上限','最多 3 題（askMax）','沒有上限','v'],
+ ['題數上限','最多 3 題（askMax）','沒有上限（應做成後台參數）','v'],
  ['進度提示','「還剩 n 題」／「最後一題」','沒有','v'],
  ['跳過','每張卡都有「跳過，直接看建議」','沒有','v'],
  ['「不確定」選項','每題都有「不確定，幫我判斷」','只有部分卡有「都行」','d'],
  ['不問沒影響的題目','不管怎麼答第一名都一樣，就不問，並說明原因','沒有','v'],
  ['模糊詞','「不要太重」會先問「多重算太重？」','直接記成「輕薄便攜」參考標籤','v'],
- ['推薦前確認','「我這樣理解你，對嗎？」，分成必要條件和排序參考','沒有','v'],
+ ['推薦前確認','「我這樣理解你，對嗎？」，分成必要條件和排序參考','沒有。<b>M 決定不做確認卡</b>，改在需求檔案用顏色和細節呈現，讓使用者自己發現錯誤並修改','d'],
  ['零結果','衝突卡：每次只放寬一項、只放到剛好夠，並顯示放寬後會是哪一台','只有「放寬尺寸／預算」，整項拿掉','d'],
  ['改主意','支援「不是 A 而是 B」、「再便宜一點」，並能「還是要保留」復原','完全靠 LLM，沒有復原','d'],
  ['只問某台機型','單台判斷、點名對比、為什麼不是它、沒有實測的機型','可以拖卡片 @ 引用，但後端沒用到 refs','v'],
@@ -2261,13 +4113,13 @@ const CH=[
  ['@ 機型只有入口','<ul><li><code>run_turn</code> 有 <code>refs</code> 參數（<code>pipeline.py:220</code>），但函式裡沒有用到。</li><li>觸發比較意圖時，比的是候選池前 5 名（<code>:393-394</code>），不是使用者點名的機型。</li></ul>'],
  ['system 候選 6–20 台且還缺資訊時會繼續問','<code>pipeline.py:361-363</code> 把 recommend 改成 probe。再加上題數沒有上限，容易變成連續問卷。'],
  ],
- verdict:['對話骨架<b>採用 v10</b>：回顯、問題順序加 matters、題數上限、跳過與假設、推薦前確認、只放寬一項、意圖分流','從 system 保留三樣：<b>LLM 作為理解層</b>（輸出收斂到 v10 的需求檔案結構）、<b>卡片 when/priority 題庫</b>、<b>軟體畫像</b>','system 的「依候選數決定動作」可以保留成一種策略，用開關切換'],
- toggles:['開場形式','開始前要登入','每輪回顯「你說的 → 我會怎麼篩」','需求摘要句','追問決策策略','第一題：用途或軟體','題數上限 askMax','不問沒影響的題目','跳過按鈕','「不確定」選項','進度提示','顯示「為什麼問」','模糊詞插問','推薦前確認','低信心需求要點確認','放寬方式','兩台接近時反問','意圖分流（4 種各自開關）','回覆文字：模板或 LLM','每輪候選數卡']},
+ verdict:['<b>對話骨架採用 system</b>：LLM 理解層＋卡片 when／priority 題庫＋軟體畫像＋依候選數決定動作。每個策略、每張卡都有開關，用使用者測試找出最好的組合','<b>追問上限做成後台參數</b>（建議預設 3），並在卡片上顯示「還剩 n 題」和「跳過，直接看建議」','<b>追問要問「會改變結果」的題目</b>：發問前先模擬每個選項會讓權重和前 3 名怎麼變，答案不影響排序的題（例如目前的剪輯強度）就不問。細節見 <a href="#k5">K5</a>','<b>不做確認卡</b>：右側需求檔案用顏色區分硬條件／偏好、標出原話和信心度、剛新增的高亮、低信心的加提示，每條都能直接點開修改（見 <a href="#k5">K5</a>）','從 v10 借用表達方式：每輪一句回顯「記下了：剪 4K → 性能權重調高」、模糊詞先問清楚、指名查詢單台','修好兩個斷點：放寬按鈕要帶 card_id，不依賴 LLM；@ 引用的機型（refs）要真的被用來比較'],
+ toggles:['開場形式','開始前要登入','每輪回顯「你說的 → 我會怎麼篩」','需求摘要句','追問決策策略','第一題：用途或軟體','題數上限 askMax','不問沒影響的題目','跳過按鈕','「不確定」選項','進度提示','顯示「為什麼問」','模糊詞插問','需求檔案：顯示原話／信心度／影響的權重','低信心需求提示','放寬方式','兩台接近時反問','意圖分流（4 種各自開關）','回覆文字：模板或 LLM','每輪候選數卡']},
 
 {id:'u3',code:'U3',grp:'使用者端',title:'推薦卡片與推薦結果',
  scope:'v10demo/index.html、engine.js ↔ UserApp.tsx、thumbs.tsx、backend/app/cards.py、scoring.py',
  v:'以「需求對照」為主：先挑一台最適合你的，再用實測數字逐條說明它過了你哪些條件、你要接受什麼，以及為什麼不是別台。',
- s:'以「分數排序」為主：每張卡都用產品力分、性價比、七維分數說話。推薦理由和風險多是固定模板，沒有把實測數字和使用者說過的需求連起來。',
+ s:'以「權重分數排序」為主：依使用者的權重算出每台的產品力分，再排序。<b>這是正確的核心方向</b>。缺口在「說明」：推薦理由和風險多是固定模板，沒有說出「因為你在意什麼，所以這台在哪些維度贏」。',
  rows:[
  ['對話中的推薦','一段推薦文字（我選 X、達標幾項、和第二名比贏在哪），加「看詳情」「為什麼不是別台」','推薦卡列 1–5 台：名次、名稱、價格、GPU、產品力分','d'],
  ['推薦數量','主推 1 台，加最多 2 台替代','推薦 5 台／暫時靠前 3 台／對比 5 台','d'],
@@ -2298,10 +4150,10 @@ const CH=[
  ['v10 的卡片類型','<ul><li>推薦文字：<code>index.html:909-915</code>，文字由 <code>engine.js:1235-1245</code> 的 <code>recText</code> 產生</li><li>主推大卡：<code>index.html:1055-1061</code>，需求對照 <code>marksHTML</code> 在 <code>:883-887</code></li><li>也可以考慮（代價句 <code>dealText</code>）：<code>engine.js:1058-1062</code></li><li>單台判斷卡 checkCard：<code>index.html:916-920</code></li><li>為什麼不是別台：<code>index.html:933-936</code></li><li>詳情抽屜（11 項實測）：<code>index.html:1114-1126</code></li><li>對比結論：<code>engine.js:1155-1167</code></li></ul>'],
  ['system 的卡片類型','<ul><li>需求標籤、候選數、軟體、追問、推薦、暫時靠前、對比、放寬：<code>UserApp.tsx:1154-1209</code></li><li>組裝的地方：<code>pipeline.py:366-396</code></li><li>候選卡 LaptopCard（4 級密度）：<code>UserApp.tsx:1068-1152</code></li></ul>'],
  ['模板字會讓使用者誤會','<ul><li><code>public_laptop</code>（<code>pipeline.py:185-204</code>）沒有輸出 pros、risk、sev。</li><li>所以優點永遠是「X 表現突出」，風險永遠是「風險中等」，「證據：實測數據庫」也只列尺寸和 CPU。</li><li>使用者可能以為這些真的經過評估。</li></ul>'],
- ['推薦邏輯：使用者感受得到的差別','<ul><li><b>v10</b>（<code>engine.js:571-619</code>）：先用實測門檻分成符合、差一點、不符合。用途會改變「性能」怎麼算（剪片看匯出時間，遊戲看幀數）。有風險扣分，最後用 <code>picksFor</code> 挑出不同角色。</li><li><b>system</b>（<code>scoring.py</code>）：產品力分是七維加權平均，依分數排序。性價比是在當次候選內換算，所以同一台機器在不同對話裡的性價比不一樣。</li><li>使用者的感受：v10 像一個懂行的店員，說「剪 4K 只要 6 分鐘，但比較重」；system 像一張評分表，只說「第 1 名 82.3 分」。</li></ul>'],
+ ['推薦邏輯：使用者感受得到的差別','<ul><li><b>v10</b>（<code>engine.js:571-619</code>）：先用實測門檻分成符合、差一點、不符合。用途會改變「性能」怎麼算（剪片看匯出時間，遊戲看幀數）。有風險扣分，最後用 <code>picksFor</code> 挑出不同角色。</li><li><b>system</b>（<code>scoring.py</code>）：產品力分是七維加權平均，依分數排序。性價比是在當次候選內換算，所以同一台機器在不同對話裡的性價比不一樣。</li><li><b>評價（依 M 的方向）：</b>v10 的硬門檻（例如匯出 7.5 分鐘以內）很武斷，門檻附近的機型會被一刀切掉；system 的權重分數能反映「每個人在意的不同、每台強項不同」，方向正確。system 缺的是把分數<b>講成人話</b>：理由要從「權重怎麼因需求調整」和「這台在哪些高權重維度領先」算出來，見 <a href="#k5">K5</a>。</li></ul>'],
  ],
- verdict:['推薦的<b>內容與邏輯採用 v10</b>：角色挑選、需求對照、要接受的、代價句、為什麼不是別台、兩台接近時反問。這些要<b>搬到後端計算</b>，維持「程式碼決定事實」','推薦的<b>外殼採用 system</b>：縮圖、購買連結、單台回饋、密度切換、對比工作台','<b>刪除前端的模板字</b>：沒有資料就不顯示，不要顯示假的預設字','重新檢討「候選 ≤5 台就只對比、不推薦」這條規則'],
- toggles:['顯示產品力分（建議關）','顯示性價比（建議關）','七維長條只在詳情顯示','顯示實測原始數字','需求對照 ✓△✕','「要接受的」與條數','影片時間點（建議關，等有真資料）','影片連結（跳到該秒或只開影片）','推薦數量 1／3／5','角色標籤','代價句','和第一名比','為什麼不是別台','兩台接近時反問與門檻','縮圖：示意圖、真機照片或不顯示','購買連結','單台或整則回饋','排除原因附數字','對比上限','推薦時機規則']},
+ verdict:['<b>排序邏輯採用 system 的權重評分</b>，不採用 v10 的硬門檻。只有「真的跑不動」的最低需求（例如軟體官方最低顯存）才用硬篩選，其他都交給權重','<b>新增後端「理由產生器」取代模板字</b>：程式算出每台在各維度的貢獻度（權重 × 分數差），挑出前 2–3 個優勢、1–2 個要接受的弱項，以及和第 2 名的差別；LLM 只負責措辭。詳細設計見 <a href="#k5">K5</a>','借用 v10 的表達形式：主推 1 台＋替代角色（想省錢、想更輕）、「要接受的」、「和第一名比」、「為什麼不是別台」——但內容全部由權重分數算出','<b>沒有資料就不顯示</b>：刪除「風險中等」「需結合預算與便攜權衡」這類預設字','分數差距小於門檻（建議 3 分）時，不硬排名次，改問使用者更在乎哪個維度','重新檢討「候選 ≤5 台就只對比、不推薦」：權重分數已經能排出第一名，仍應給出明確推薦'],
+ toggles:['顯示產品力分','顯示性價比','顯示權重調整原因','理由條數（優勢／要接受的）','七維長條只在詳情顯示','顯示實測原始數字','需求對照 ✓△✕','「要接受的」與條數','影片時間點（建議關，等有真資料）','影片連結（跳到該秒或只開影片）','推薦數量 1／3／5','角色標籤','代價句','和第一名比','為什麼不是別台','兩台接近時反問與門檻','縮圖：示意圖、真機照片或不顯示','購買連結','單台或整則回饋','排除原因附數字','對比上限','推薦時機規則']},
 
 {id:'a0',code:'A0',grp:'管理後台',title:'頁面對應圖：14 頁對 14 頁',
  scope:'v10demo/admin.html:1407 PAGES ↔ system/frontend/src/AdminApp.tsx:7 NAV',
@@ -2361,7 +4213,7 @@ const CH=[
  ['v10 首頁的各個區塊','<ul><li>待辦：<code>admin.html:1665-1671</code></li><li>KPI 迷你圖與環比：<code>:1672-1678</code>，環比算法在 <code>:1649-1657</code></li><li>漏斗「停在這一步的原因」：<code>:1684-1688</code></li><li>新手導覽：<code>:1693</code></li></ul>'],
  ['system 首頁的小問題','「最近對話」「最近告警」不受天數篩選影響（<code>api.py:901-902</code>），和頁首的「近 N 天」說法不一致。'],
  ],
- verdict:['資訊架構與互動<b>採用 v10</b>：hash 路由、徽章、待辦首頁、能點進去的 KPI、即時搜尋、全站共用篩選','權限與帳號<b>採用 system</b>：後端角色、<code>deny_observer</code>、C7 的保護規則、A2 用戶頁、查看記錄寫入資料庫','補上：登出、首次改密碼、移除預填密碼'],
+ verdict:['<b>後台首頁之後再做</b>：等核心功能（權重、評分、軟體畫像、理由）完成，再依實際要看的指標設計最終首頁。現階段保留 system 的 A1','權限與帳號<b>採用 system</b>：後端角色、<code>deny_observer</code>、C7 的保護規則、A2 用戶頁','現在就該補的只有安全性：登出、首次登入強制改密碼、移除登入框預填','之後設計首頁時可參考 v10：待辦清單在最上面、每個數字都能點進去看背後的對話、網址可加書籤'],
  toggles:['首頁待辦列（逐項）','新手導覽卡','KPI 迷你圖、環比','KPI 組合（6、8 或自選）','數字能不能點進去','側欄徽章（3 種）','搜尋模式','全站共用篩選','唯讀：停用或隱藏','首次登入強制改密碼','預填帳密（只限開發環境）','個資遮罩程度','查看記錄顯示人名或 ID']},
 
 {id:'a2',code:'A2',grp:'管理後台',title:'對話紀錄',
@@ -2399,7 +4251,7 @@ const CH=[
  ['system 找不到某一類對話','<ul><li>清單頁（<code>AdminApp.tsx:435-444</code>）沒有任何篩選元件。</li><li>後端有 <code>limit(400)</code>（<code>api.py:1018</code>），最多回傳 200 筆（<code>:1039</code>），超過的對話在後台看不到。</li><li>全域搜尋只比對 <code>c_</code> 前綴（<code>api.py:1655</code>）。</li></ul>'],
  ['v10 本身的小缺口','結果篩選（<code>admin.html:1869</code>）少了「沒聽懂」，這一類列得出來卻篩不出來。'],
  ],
- verdict:['<b>清單採用 v10</b>：篩選列、結果徽章、全文搜尋、分頁。後端要補時間、結果、搜尋參數和 offset','<b>詳情採用 v10 的單輪說明</b>加白話／工程切換，並吸收 system 的 ProfileDiff、原句高亮、照原樣保存的卡片','保留 system 的 run_id 雙向跳轉、C8 定位、後端標籤紀錄和歷史保護'],
+ verdict:['<b>照原建議實作</b>：清單加上篩選列（時間、結果、有無差評、是否 0 結果）、全文搜尋、分頁；後端 API 補上 offset、時間範圍與搜尋參數，取消 200 筆上限','詳情頁的每一輪分成兩層：上層是白話說明（「使用者說了剪 4K → 性能權重 25%→35% → 候選 371→155 台 → 第一名換成 X」），下層才是原始 JSON','<b>新增「權重變化」欄</b>：每輪顯示哪個需求讓哪個權重變了多少，這是檢查核心邏輯最直接的地方','保留 system 的 ProfileDiff、原句高亮、run_id 雙向跳轉、C8 定位'],
  toggles:['結果分類徽章','第一推薦欄、回饋圖示','詳情預設：白話／工程／並列','只看選定那一輪或全部展開','原句高亮','ProfileDiff','標出使用者點了哪個選項','原始 JSON 區塊','耗時與成本','用新規則重跑','設為回歸用例','標籤清單可自訂','對話備註','記錄誰看過','匯出']},
 
 {id:'a3',code:'A3',grp:'管理後台',title:'待處理、需求洞察與同步檢查',
@@ -2434,7 +4286,7 @@ const CH=[
  ['沒認出的詞不受時間篩選影響','<code>api.py:1784</code> 直接取前 20 筆，沒有套用 since，所以切換 1／7／30 天時內容不變。'],
  ['同步檢查值得保留的那一半','v10 的「用現行設定重跑真實對話」（<code>admin.html:2892-2909</code>）其實就是回歸核對。建議移植到 system，改名為「改動影響檢查」，放在 C2／C6 儲存的前後。'],
  ],
- verdict:['<b>待處理整頁採用 v10</b>：差評、聽不懂、沒結果，正好都是「系統不了解使用者」的時刻，最貼近專案的唯一標準','<b>洞察以 v10 為主</b>，保留 system 的「系統怎麼回應」「數據暴露什麼」面板','同步檢查的指紋比對不需要；重跑比對要移植'],
+ verdict:['<b>照原建議實作待處理頁</b>：自動收集 4 類——👎 差評、聽不懂的詞（LLM 回報 unknown 或沒對應到任何軟體／需求）、0 結果、使用者一直改需求。每條附原話和診斷，處理完自動移到「已處理」','<b>聽不懂的軟體名稱直接連到 C1</b>：一鍵建立軟體畫像草稿（例如使用者說「max」沒被辨識，就在這裡補別名），與 <a href="#k4">K4</a> 的流程接起來','<b>需求洞察以 v10 為主</b>：交叉熱力圖（用途 × 預算）、供需缺口（某價位符合的機型太少）、價格敏感度；再加一張<b>「權重分布」</b>圖，看使用者最常把哪個維度調高','同步檢查的指紋比對不需要；「用目前設定重跑過去的對話，看第一名變了多少」值得保留，放在 C2／C6 調參旁邊'],
  toggles:['待處理頁與徽章','4 個分類各自開關','修好後自動移到已處理','低頻條目是否收起與門檻','診斷文字','加詞即時預覽','熱力圖「缺」標記與門檻','只差價格的比例','價格敏感度：圖表或表格','數字能不能點進去','洞察計算：現行規則或歷史快照','系統面板對非工程角色顯示','儲存規則時自動回歸核對']},
 
 {id:'a4',code:'A4',grp:'管理後台',title:'規則、詞庫與權重',
@@ -2469,7 +4321,7 @@ const CH=[
  ['C1 新建的軟體永遠無法啟用','從線索建立的草稿 <code>usages=[]</code>（<code>api.py:1211-1233</code>），但啟用時要求必須有用法（<code>api.py:1251</code>）。畫面上也沒有編輯門檻的表單。'],
  ['v10 的發佈流程','<ul><li>改值就建立草稿，改回原值會自動清掉草稿（<code>admin.html:2382-2387</code>）。</li><li>影響預覽：<code>SIM.impact</code>（<code>:1026-1036</code>）</li><li>合理性檢查：<code>rulesProblems</code>（<code>:1370-1377</code>）</li><li>回歸用例：<code>:1395-1401</code></li><li>發佈時必填原因：<code>:2399-2411</code></li><li>版本回滾：<code>:2490-2502</code></li></ul>'],
  ],
- verdict:['<b>互動流程採用 v10</b>：草稿 → 影響預覽 → 回歸用例 → 必填原因 → 發佈 → 版本與回滾，搬到 system 的資料庫上（v10 已示範 <code>rule_versions</code>、<code>golden_cases</code> 兩張表）','<b>保留 system 的 C1 軟體畫像和審核流程</b>，並補上門檻編輯表單','C2 先處理：做不到真正開關的規則，改成唯讀說明，不要假裝可以開關'],
+ verdict:['<b>以 system 為主</b>，不移植 v10 的草稿／回歸用例／發佈／回滾流程，版本另外管理','先把參數真的接上流程：C2 的規則開關要被 <code>pipeline.py</code> 讀取；C6 的 weight_approve、weight_ask、hard_filter、tier、compare_max 五個閾值接上對應邏輯。接上之前，介面標示「尚未生效」','C6 擴充成「權重中心」：大維度預設權重、需求訊號 → 權重調整表、高級細項子權重、正規化方式，全部可在後台調（設計見 <a href="#k1">K1</a>–<a href="#k3">K3</a>）','C1 軟體畫像補上別名表、工作類型（建模／渲染／剪輯…）、每種工作對單核／多核／GPU／顯存的需求等級，以及審核流程（見 <a href="#k4">K4</a>）','保留一個輕量的「改動影響預覽」：改參數後，用最近 N 輪對話重算，顯示有幾輪的第一名改變'],
  toggles:['每條規則啟停（要真的被流程讀取）','每條風險扣分與扣分值','軟體 risk 是否參與排序','用途權重加減、偏好加成','權重合成方式','LLM 權重建議與採用門檻','發佈前強制過回歸用例','影響預覽重跑天數','修改原因必填','詞庫自訂目標詞與比對方式','候選分段 tier 可調']},
 
 {id:'a5',code:'A5',grp:'管理後台',title:'卡片管理與介面文案',
@@ -2503,7 +4355,7 @@ const CH=[
  ['模型選卡只是佔位寫法','<code>cards.py:737-754</code> 最後仍退回規則選卡。<code>card_selector</code> 設定（<code>:764-770</code>）沒有放到介面上。'],
  ],
  verdict:['<b>以 system 為底</b>：保留真實權限、統計、對話高亮和回放','移植 v10：依流程分頁（補上確認、衝突、推薦、需求區）、開放編輯文案並加上版本、改動前先看影響、用使用者端真實元件預覽','C5 和卡片文案合併成「文案中心」：草稿 → 預覽 → 發佈 → 回滾'],
- toggles:['每張卡和單一選項的啟用','確認卡，以及說清楚時跳過確認','跳過按鈕','兩台接近時反問與門檻','推薦台數、放寬選項數','選卡策略：規則或模型','推薦理由顯示實測數據','顯示影片時間點','顯示影片連結','為什麼不是別台、對比、回饋','假設標籤顯示','常見問題發送方式','先看影響再套用']},
+ toggles:['每張卡和單一選項的啟用','跳過按鈕','兩台接近時反問與門檻','推薦台數、放寬選項數','選卡策略：規則或模型','推薦理由顯示實測數據','顯示影片時間點','顯示影片連結','為什麼不是別台、對比、回饋','假設標籤顯示','常見問題發送方式','先看影響再套用']},
 
 {id:'a6',code:'A6',grp:'管理後台',title:'執行鏈路、性能與日誌',
  scope:'admin.html：trace、perf、logs（838–925、3455–3610）↔ AdminApp.tsx：B1（B1View、MiniWf）、B2；trace.ts；pipeline.py',
@@ -2539,7 +4391,7 @@ const CH=[
  ['三個資料錯誤','<ul><li>token：<code>AdminApp.tsx:1202</code> 讀 <code>tokens_in</code>，後端存的是 <code>prompt_tokens</code>（<code>llm.py:134-135</code>）。</li><li>分數一致：<code>_run_pub</code>（<code>api.py:2633-2652</code>）沒有回傳 scoring_mismatch。</li><li>告警：backend 沒有任何地方建立 <code>Alert(</code>。</li></ul>'],
  ['trace.ts 不是使用者端的程式','只有 <code>AdminApp.tsx:5</code> 引用它；使用者端只在 <code>UserApp.tsx:408</code> 存了 run_id。'],
  ],
- verdict:['<b>資料層採用 system</b>（真實資料），<b>互動和資訊架構採用 v10</b>','後端在每一步實際記錄 t_start、ms、status、attempt、tokens、cost，取代比例估算','移植預算、P50/P95/P99、SLO、日誌篩選、告警規則；保留 system 的 Span 樹和通知順序檢查','先修三個資料錯誤：token 欄位、scoring_mismatch、告警寫入'],
+ verdict:['<b>屬於基礎能力，排在核心功能之後</b>','先把資料做對，比介面重要：後端在每一步實際記錄開始時間、耗時、狀態、token、成本，取代 <code>trace.ts</code> 的比例估算；修好 token 欄位、分數一致性檢查、告警寫入','B1 回放裡加上「權重快照」：每輪的權重、前 5 名分數與各維度貢獻，這對除錯核心邏輯最有用','介面之後再參考 v10：P50/P95、日誌篩選、告警規則'],
  toggles:['瀑布圖展開或收合','時間軸含瀏覽器時間','預算與超預算標記','token 與成本','提示詞全文與版本快照','SQL（限工程角色）','實作進度標記（開發期）','通知順序檢查','分數一致性檢查','數字核對後重新生成','超時秒數與備用模型','告警規則與通知渠道','未讀錯誤徽章','SLO 目標秒數','自動選中出錯的步驟']},
 
 {id:'a7',code:'A7',grp:'管理後台',title:'模型、提示詞、資料庫與機型庫',
@@ -2595,7 +4447,7 @@ const BUGS=[
  ['改提示詞可能讓整輪對話壞掉','format 錯誤沒有被攔下，而且存檔立刻上線。'],
  ['登入框預填預設密碼、沒有登出、沒接首次改密碼','<code>AdminApp.tsx:137-138</code>、<code>:291-296</code>。'],
  ['手機無法正常使用','viewport 寫死成 1440，min-width 1200px。'],
- ['注音輸入時按 Enter 可能誤送','<code>UserApp.tsx:667</code> 沒有判斷 isComposing。'],,
+ ['注音輸入時按 Enter 可能誤送','<code>UserApp.tsx:667</code> 沒有判斷 isComposing。'],
  ['追問「剪輯強度」答了也沒用','<code>domain.py:230</code> 遇到 <code>edit_intensity</code> 直接原樣回傳，<code>scoring.py</code> 也完全沒讀這個欄位，所以它只用來判斷「還缺不缺資料」。使用者認真回答之後，評分和篩選都不會改變。'],
  ['放寬只會試尺寸和預算','<code>pipeline.py:610-619</code> 的 <code>relax_options</code> 只嘗試拿掉 <code>size_inch</code> 和 <code>budget</code>。如果是重量條件造成 0 台，放寬卡就沒有任何選項，使用者會走到死路。'],
  ['規則排除也顯示「撤銷」','<code>UserApp.tsx:1072</code> 的 <code>showUndo = isEx &amp;&amp; onUndo</code> 沒有區分「手動排除」和「規則排除」，規則排除的機型也顯示撤銷，但按了不會恢復。'],
@@ -2608,7 +4460,7 @@ const $=s=>document.querySelector(s);
 const tag=k=>`<span class="tag ${T[k][0]}">${T[k][1]}</span>`;
 let counts={v:0,s:0,d:0,e:0,n:0},rowsTotal=0;
 CH.forEach(c=>c.rows.forEach(r=>{counts[r[3]]++;rowsTotal++}));
-$('#stats').innerHTML=[[rowsTotal,'比對項目'],[counts.v,'只有 v10 有'],[counts.s,'只有 system 有'],[BUGS.length,'system 中的「假功能」與缺陷']].map(([n,l])=>`<div><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+$('#stats').innerHTML=[[rowsTotal,'比對項目'],[counts.v,'只有 v10 有'],[counts.s,'只有 system 有'],[BUGS.length,'system 尚未完成的功能與缺陷']].map(([n,l])=>`<div><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 $('#matrix tbody').innerHTML=MATRIX.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
 
 $('#chapters').innerHTML=CH.map(c=>`
@@ -2625,7 +4477,7 @@ $('#chapters').innerHTML=CH.map(c=>`
  ${c.rows.map(r=>`<tr data-k="${r[3]}"><td>${r[0]}</td><td class="c">${r[1]}</td><td class="c">${r[2]}</td><td class="t">${tag(r[3])}</td></tr>`).join('')}
  </tbody></table></div>
  ${c.details.length?`<h3>重點細節（附程式位置）</h3>`+c.details.map((d,i)=>`<details${i===0?' open':''}><summary>${d[0]}</summary><div class="body">${d[1].startsWith('<')?d[1]:'<p>'+d[1]+'</p>'}</div></details>`).join(''):''}
- <div class="verdict"><h4>建議</h4><ul>${c.verdict.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+ <div class="verdict"><h4>我的建議做法</h4><ul>${c.verdict.map(x=>`<li>${x}</li>`).join('')}</ul></div>
  <h3>可做成開關</h3><ul class="toggles">${c.toggles.map(x=>`<li>${x}</li>`).join('')}</ul>
 </section>`).join('');
 
@@ -2633,6 +4485,7 @@ $('#buglist').innerHTML=BUGS.map((b,i)=>`<div class="bug"><b>${i+1}. ${b[0]}</b>
 
 const tg=[];CH.forEach(c=>c.toggles.forEach(t=>{const m=t.match(/（(建議[^）]*)）/);tg.push([c.code+' '+c.title,t.replace(/（建議[^）]*）/,''),m?m[1].replace('建議',''):'—',c.code])}));
 $('#toggletbl tbody').innerHTML=tg.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><a href="#${r[3].toLowerCase()}">${r[3]}</a></td></tr>`).join('');
+
 
 
 
@@ -2645,8 +4498,12 @@ document.querySelectorAll('#labf button').forEach(b=>b.addEventListener('click',
  document.querySelectorAll('#u3lab .lab-stage').forEach(s=>s.hidden=b.dataset.st!=='all'&&s.dataset.stage!==b.dataset.st)}));
 document.querySelectorAll('#u3lab .screen a').forEach(a=>a.addEventListener('click',ev=>ev.preventDefault()));
 })();
+/* 核心章節：插在 U1 之前 */
+const DEEP=[["k0", "K0", "核心總覽：權重鏈斷在哪裡、先做什麼"], ["k1", "K1", "權重系統：使用者的話怎麼變成權重"], ["k2", "K2", "分數計算：產品力分、性價比與七維分數"], ["k3", "K3", "高級權重：單核、多核、AI 算力、Office 等細項"], ["k4", "K4", "軟體畫像：以 Autodesk 3ds Max 為例"], ["k5", "K5", "推薦理由產生器、追問與需求檔案、首屏"]];
+(()=>{const u1=document.getElementById('u1');DEEP.forEach(([id])=>{const t=document.getElementById('tpl-'+id);if(t&&u1)u1.before(t.content.cloneNode(true))})})();
+/* deep-js-end */
 /* toc */
-const items=[['summary','','一頁看懂','總覽'],...CH.map(c=>[c.id,c.code,c.title,c.grp]),['bugs','附錄 A','system 的假功能','附錄'],['toggles','附錄 B','開關總表','附錄']];
+const items=[['summary','','一頁看懂','總覽'],...DEEP.map(([id,code,t])=>[id,code,t.split('：')[0],'核心：權重與評分']),...CH.map(c=>[c.id,c.code,c.title,c.grp]),['bugs','附錄 A','尚未完成與缺陷','附錄'],['toggles','附錄 B','開關總表','附錄']];
 let g='';$('#toclist').innerHTML=items.map(([id,code,t,grp])=>{let h='';if(grp!==g){g=grp;h=`<div class="grp">${grp}</div>`}return h+`<a href="#${id}" data-id="${id}">${code?`<span class="code">${code}</span>`:''}${t}</a>`}).join('');
 $('#tocbtn').addEventListener('click',()=>{const o=$('#toc').classList.toggle('open');$('#tocbtn').setAttribute('aria-expanded',o)});
 const links=[...document.querySelectorAll('#toclist a')];
