@@ -168,6 +168,51 @@
     .intro h1 { font-size: 22px; }
     .notes { padding: 4px 16px; }
   }
+
+  /* 第 4 章 */
+  .hint { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; margin: 12px 0 16px; }
+  .howto { margin-top: 14px; font-size: 14px; color: var(--muted); background: var(--surface-2); border: 1px dashed var(--border); border-radius: 12px; padding: 12px 16px; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; color: #1d2420; white-space: nowrap; }
+  .badge.llm { background: #f6d98f; } .badge.code { background: #d5dbd7; } .badge.dbr { background: #b9d8ec; }
+  .badge.dbw { background: #b5e3d3; } .badge.ui { background: #e3d3ee; }
+  .case-tabs { display: flex; gap: 8px; margin: 22px 0 0; overflow-x: auto; padding-bottom: 4px; }
+  .case-tab { flex: 1 0 auto; min-width: 118px; text-align: left; padding: 10px 14px; border-radius: 12px; font-weight: 700; display: flex; flex-direction: column; }
+  .case-tab small { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .case-tab.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .case-panel { margin-top: 12px; }
+  .scene { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; box-shadow: var(--shadow); }
+  .scene-say { font-size: 20px; font-weight: 700; }
+  .scene p { margin: 6px 0; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chips span, .events span { font-size: 12px; font-family: ui-monospace, Menlo, monospace; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; }
+  .events { display: flex; flex-wrap: wrap; gap: 6px; counter-reset: ev; }
+  .events span::before { counter-increment: ev; content: counter(ev) ". "; color: var(--muted); }
+  ol.steps { list-style: none; padding: 0; margin: 14px 0 0; position: relative; }
+  ol.steps::before { content: ""; position: absolute; left: 17px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+  ol.steps > li { position: relative; margin: 0 0 12px; padding: 12px 16px 6px 50px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+  .step-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sn { position: absolute; left: 4px; top: 10px; min-width: 28px; height: 28px; padding: 0 4px; border-radius: 14px; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  ol.steps p { margin: 8px 0; }
+  pre.data { position: relative; background: var(--code-bg); border-radius: 10px; padding: 10px 14px; overflow-x: auto; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .tag-demo { float: right; font-family: inherit; font-size: 11px; font-weight: 700; color: var(--tbc-text); background: var(--tbc-bg); border: 1px solid var(--tbc-border); border-radius: 6px; padding: 0 6px; margin-left: 8px; }
+  .small { font-size: 13px; color: var(--muted); }
+  .warn { background: var(--tbc-bg); border: 1px solid var(--tbc-border); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .funnel { margin: 10px 0; display: grid; gap: 6px; }
+  .f-row { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .bar { width: max(var(--w), 34px); background: var(--border); color: var(--text); border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 13px; }
+  .bar.ok { background: #4cc3a1; color: #10241d; } .bar.edge { background: #f0cf7e; color: #3a2f14; } .bar.out { background: #e8a3a3; color: #3a1414; }
+  .followup { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-weight: 600; }
+  .followup div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-weight: 400; }
+  .followup div span { border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 1px 12px; font-size: 14px; }
+  .followup small { display: block; margin-top: 6px; color: var(--muted); font-weight: 400; font-family: ui-monospace, Menlo, monospace; }
+  table.weights td, table.weights th { text-align: center; } table.weights td:first-child { text-align: left; white-space: nowrap; }
+  td.up { color: #1f9d55; font-weight: 700; } td.up::after { content: " ▲"; font-size: .8em; }
+  td.down { color: #c0504d; } td.down::after { content: " ▼"; font-size: .8em; }
+  table.matrix td:not(:first-child), table.matrix th:not(:first-child) { text-align: center; color: var(--accent); white-space: nowrap; }
+  .notes.inner { box-shadow: none; margin: 12px 0 0; }
+  details.advanced summary { cursor: pointer; font-weight: 700; padding: 12px 0; }
+  details.advanced .diagram-bar { border-radius: 8px; }
+  @media (max-width: 640px) { ol.steps > li { padding-left: 44px; } .scene-say { font-size: 17px; } }
 </style>
 </head>
 <body>
@@ -179,7 +224,7 @@
       <a href="#c1">1 系統脈絡</a>
       <a href="#c2">2 容器 / 部署</a>
       <a href="#c3">3 核心元件</a>
-      <a href="#c4">4 關鍵資料流</a>
+      <a href="#c4">4 資料流（5 個案例）</a>
       <a href="#tbc">待確認清單</a>
     </nav>
     <button id="themeBtn" type="button" title="切換淺色 / 深色">🌓 主題</button>
@@ -280,24 +325,338 @@
   <section class="chapter" id="c4">
     <div class="chapter-head">
       <span class="num">4</span>
-      <h2>關鍵資料流：使用者送出一句話</h2>
-      <span class="sub">入口 <code>POST /api/conversations/{cid}/messages</code> → <code>pipeline.run_turn()</code>；圓圈編號對應 <code>trace.ts</code> 的 11 步</span>
+      <h2>關鍵資料流：用 5 個案例走完整個系統</h2>
+      <span class="sub">每個案例都是「使用者做了一件事 → 系統一步一步怎麼處理」，5 個合起來會用到系統裡的每一個模組</span>
     </div>
-    <div class="diagram-card">
+
+    <div class="notes">
+      <h3>先看鳥瞰：一輪對話分成 5 個階段</h3>
+      <div class="diagram" id="d6"></div>
+      <div class="legend">
+        <span><span class="badge llm">LLM</span> 呼叫外部模型</span>
+        <span><span class="badge code">程式</span> 確定性程式碼</span>
+        <span><span class="badge dbr">讀 DB</span> 讀資料庫</span>
+        <span><span class="badge dbw">寫 DB</span> 寫資料庫</span>
+        <span><span class="badge ui">瀏覽器</span> 前端畫面</span>
+      </div>
+      <p class="hint">💡 記住一句話：<b>LLM 只負責「聽懂」和「說出來」</b>（階段 ① 和 ⑤），中間「篩哪幾台、排第幾名、下一步問什麼」全部由程式碼決定。</p>
+    </div>
+
+    <div class="howto">
+      <b>這些數字是怎麼來的？</b>我用系統真正的函式（<code>importer</code>、<code>domain</code>、<code>scoring</code>、<code>cards</code>、<code>pipeline</code>）加上內附的 371 台模擬 CSV 實際跑了一遍，所以台數、排名、權重都是程式算出來的，不是編的。
+      只有兩個地方是<b>示意</b>：案例 1 的「模型輸出」（真實模型每次回答可能略有不同）和「模型寫的回覆」。另外，資料庫改用種子預設值代替，價格單位是人民幣。
+    </div>
+
+    <div class="case-tabs" role="tablist">
+      <button type="button" class="case-tab active" data-case="k1">案例 1<small>第一句話</small></button>
+      <button type="button" class="case-tab" data-case="k2">案例 2<small>點追問卡</small></button>
+      <button type="button" class="case-tab" data-case="k3">案例 3<small>條件太嚴＋模型掛了</small></button>
+      <button type="button" class="case-tab" data-case="k4">案例 4<small>手動調權重</small></button>
+      <button type="button" class="case-tab" data-case="k5">案例 5<small>啟動＋管理員</small></button>
+    </div>
+
+    <!-- 案例 1 -->
+    <div class="case-panel active" id="k1">
+      <div class="scene">
+        <div class="scene-say">🧑 「預算 8000 以內，要剪 PR」</div>
+        <p>新使用者在空白對話裡打的第一句話。這個案例會走過完整的 11 步，是最主要的一條路徑。</p>
+        <div class="chips"><span>UserApp</span><span>api.ts</span><span>api.py</span><span>security</span><span>pipeline</span><span>llm</span><span>domain</span><span>scoring</span><span>cards</span><span>animation</span><span>PostgreSQL</span></div>
+      </div>
+      <ol class="steps">
+        <li>
+          <div class="step-head"><span class="sn">1</span><span class="badge code">程式</span><b>收訊息、驗身分</b></div>
+          <p>前端 <code>api.ts</code> 送出 <code>POST /api/conversations/{cid}/messages</code>。後端 <code>require_user</code> 從 Cookie <code>lg_session</code> 解出 JWT，確認是誰、對話是不是他的。<code>expire_idle</code> 順便把閒置超過 30 分鐘的對話標成結束。</p>
+          <pre class="data">{ "text": "預算 8000 以內，要剪 PR" }</pre>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">2</span><span class="badge llm">LLM</span><b>需求理解：把一句話變成結構化需求</b></div>
+          <p><code>pipeline.nlu_parse</code> 把「nlu 提示詞 v1 + 目前需求檔案（空的）+ 軟體目錄」組成一段 prompt，透過 <code>llm.complete("nlu")</code> 送給模型（溫度 0.1）。模型照提示詞規定只回 JSON：</p>
+          <pre class="data"><span class="tag-demo">示意</span>{
+  "ops": [{ "kind": "hard", "field": "budget", "label": "預算 8000 以內" }],
+  "software": [{ "raw": "PR", "canonical": "Premiere Pro" }],
+  "missing": ["edit_intensity"],
+  "weight_suggestion": { "deltas": { "performance": 3 }, "confidence": 0.8 }
+}</pre>
+          <p>接著程式做校正：<code>normalize_item</code> 把「預算 8000 以內」解析成 <code>{"max": 8000}</code>。預算屬於明確條件，所以強制設成 <b>hard（硬條件）</b>，信心值設為 1.0。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">3</span><span class="badge dbr">讀 DB</span><b>軟體畫像：查 Premiere Pro 的門檻</b></div>
+          <p><code>match_software</code> 依別名（PR、premiere…）找到「Premiere Pro」，<code>collect_software_rules</code> 取出它的「4K 剪輯」用途設定：</p>
+          <div class="table-wrap"><table>
+            <tr><th>硬門檻（不夠就淘汰）</th><td>記憶體 ≥ 16 GB、顯存 ≥ 6 GB</td></tr>
+            <tr><th>建議值</th><td>記憶體 32 GB、顯存 8 GB</td></tr>
+            <tr><th>權重修正</th><td>性能 +4、螢幕 +1、散熱 +1</td></tr>
+            <tr><th>額外子分</th><td>啟用「Premiere Pro 4K 剪輯」跑分（權重 14）</td></tr>
+            <tr><th>還要問</th><td><code>edit_intensity</code>（剪輯強度）</td></tr>
+          </table></div>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">4</span><span class="badge code">程式</span><b>候選篩選：371 台逐台判定</b></div>
+          <p><code>domain.snapshot</code> 對每一台跑 <code>classify</code>，分成三種：<b>正式候選</b>、<b>邊界候選</b>（差一點，保留但標註）、<b>淘汰</b>。</p>
+          <p>預算規則：容差是 max(8000×8%, 500) = 640。價格超過 8640 淘汰，8000～8640 算邊界。</p>
+          <div class="funnel">
+            <div class="f-row"><span>全部</span><div class="bar" style="--w:100%">371</div></div>
+            <div class="f-row"><span>正式</span><div class="bar ok" style="--w:20.2%">75</div></div>
+            <div class="f-row"><span>邊界</span><div class="bar edge" style="--w:3.2%">12</div></div>
+            <div class="f-row"><span>淘汰</span><div class="bar out" style="--w:76.5%">284</div></div>
+          </div>
+          <p class="small">淘汰原因：超出預算 187 台、顯存不滿足軟體門檻 64 台、兩者都有 33 台。<br>邊界範例：ROG 魔霸新銳 2025（¥8499，「預算接近，屬於邊界候選」）。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">5</span><span class="badge code">程式</span><b>審批模型的權重建議</b></div>
+          <p>模型建議「性能 +3」，信心值 0.8 ≥ 門檻 0.75，所以<b>採用</b>（命中規則 R014）。如果低於 0.75，這個建議會直接被忽略。模型只能「建議」，最後採不採用由程式決定。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">6</span><span class="badge code">程式</span><b>合成權重、算分、排序</b></div>
+          <p>模型建議和軟體畫像的修正，都透過 <code>scoring.rebalance</code> 疊加，總和固定是 100。每台的產品力分 = Σ(維度分 × 權重) ÷ Σ權重，再依產品力由高到低排序。</p>
+          <div class="table-wrap"><table class="weights">
+            <tr><th></th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
+            <tr><td>系統預設</td><td>33</td><td>21</td><td>14</td><td>12</td><td>10</td><td>6</td><td>4</td></tr>
+            <tr><td>本輪結果</td><td class="up">38</td><td class="down">20</td><td class="down">12</td><td class="down">10</td><td>10</td><td>6</td><td>4</td></tr>
+          </table></div>
+          <div class="table-wrap"><table>
+            <tr><th>名次</th><th>機型</th><th>價格</th><th>產品力</th><th>記憶體 / 顯存</th></tr>
+            <tr><td>1</td><td>機械革命翼龍15 Pro 2026</td><td>¥6549</td><td>69.7</td><td>32G / 8G</td></tr>
+            <tr><td>2</td><td>戰神 T10 Pro (2025) i7-14700HX / RTX 5070 Ti</td><td>¥7899</td><td>68.2</td><td>32G / 12G</td></tr>
+            <tr><td>3</td><td>暗影精靈 11 (2025) i9-14900HX / RTX 5070</td><td>¥7999</td><td>67.6</td><td>32G / 8G</td></tr>
+            <tr><td>4</td><td>OMEN 暗影精靈11 標準版 (2025)</td><td>¥7999.2</td><td>67.5</td><td>32G / 8G</td></tr>
+            <tr><td>5</td><td>蛟龍16 Pro 2025款 R9 9955HX / RTX 5060</td><td>¥6799</td><td>66.7</td><td>16G / 8G</td></tr>
+          </table></div>
+          <p class="small">程式裡其實是先合成權重，再一次完成第 4、6 步（<code>snapshot</code> 同時篩選和評分）。這裡照後台鏈路追蹤的編號分開寫，比較好讀。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">7</span><span class="badge code">程式</span><b>決定動作、挑追問卡</b></div>
+          <p>正式候選 75 台 &gt; 50，<code>action_for_count</code> 決定動作是 <b>probe（追問）</b>。<code>pick_followup</code> 用 rules 策略，從卡片目錄挑出條件符合、優先度最高的一張：</p>
+          <div class="followup">🗨️ 你偶爾剪 4K 視頻時，屬於下面哪種情況呢？<div><span>輕度剪輯</span><span>中度剪輯</span><span>重度剪輯</span></div><small>card_edit_intensity · 優先度 450</small></div>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">8</span><span class="badge code">程式</span><b>準備卡片資料</b></div>
+          <p>這輪回傳 4 張卡片：<code>requirements</code>（新增 2 條需求）、<code>software</code>（Premiere Pro 門檻）、<code>count</code>（371 → 75，淘汰 284、邊界 12）、<code>followup</code>（上面那張追問卡）。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">9</span><span class="badge llm">LLM</span><b>回覆生成：把算好的事實說成人話</b></div>
+          <p>只把 <code>facts</code>（動作、台數、新需求、前三名、追問問題）交給 <code>complete("reply")</code>。提示詞明確禁止模型編造機型、分數或名次。</p>
+          <pre class="data"><span class="tag-demo">示意</span>好的，我記下了預算 8000 以內和 Premiere Pro。為了讓 PR 剪輯順暢，顯存不到 6G 的機型先排除了，目前有 75 台符合……想再確認一下你的剪輯強度。</pre>
+          <p class="small">模型失敗時會改用 <code>fallback_reply</code>，實際輸出：「我記下了：預算 8000 以內、Premiere Pro。候選從上一輪收到 75 臺正式候選，另有邊界 12 臺。還差一個關鍵信息，想先確認一下。」</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">10</span><span class="badge ui">瀏覽器</span><b>播放動畫、更新畫面</b></div>
+          <p>後端用 <code>build_events</code> 排好 13 個事件，前端 <code>animation.playEvents</code> 用 GSAP 依序播放：</p>
+          <div class="events"><span>facts_ready</span><span>req_appear</span><span>req_fly</span><span>software_hit</span><span>panel_open</span><span>weights_auto</span><span>panel_close</span><span>count_roll</span><span>cards_dim</span><span>score_change</span><span>reorder</span><span>top3</span><span>followup</span></div>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">11</span><span class="badge dbw">寫 DB</span><b>寫完整記錄</b></div>
+          <p>寫入 <code>runs</code>（每一步、模型呼叫的 tokens 與金鑰末 4 碼、前後權重、命中規則 <code>R012 R003 R013 R014 R021 R022 R029 R011</code>）和 <code>messages</code> × 2（使用者＋助手）。另外更新 <code>conversations</code> 的需求檔案、權重、正式台數 75，標題取前 24 個字。歷史記錄只能讀，任何修改請求都會被擋下（回 403）。</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 案例 2 -->
+    <div class="case-panel" id="k2" hidden>
+      <div class="scene">
+        <div class="scene-say">🖱️ 點了追問卡的「中度剪輯」</div>
+        <p>接續案例 1。使用者沒有打字，直接點按鈕。重點：<b>點卡片寫入的需求，優先權高於模型理解</b>。</p>
+        <div class="chips"><span>UserApp</span><span>cards（ops_from_card_click）</span><span>pipeline（heuristic_ops）</span><span>domain</span><span>scoring</span><span>event_logs</span></div>
+      </div>
+      <ol class="steps">
+        <li>
+          <div class="step-head"><span class="sn">1</span><span class="badge code">程式</span><b>送出時會附上卡片資訊</b></div>
+          <pre class="data">{ "text": "中度剪輯", "card_id": "card_edit_intensity",
+  "option_id": "mid", "source_run_id": "上一輪的 run 編號" }</pre>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">2</span><span class="badge llm">LLM</span><b>模型照樣會被呼叫，但卡片優先</b></div>
+          <p>假設模型對這種短句回傳空的 ops，程式會補跑 <code>heuristic_ops</code> 關鍵字規則（抽出「中度剪輯」，也因為句子裡有「剪輯」，又抽出一次 Premiere Pro）。</p>
+          <p>接著 <code>cards.ops_from_card_click</code> 直接產生 <code>edit_intensity = mid</code>，信心值 1.0，來源標成 card。<b>同一個欄位以卡片為準</b>。重複的 Premiere Pro 會被 <code>merge_profile</code> 去掉。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">3–6</span><span class="badge code">程式</span><b>篩選結果不變，權重又動了</b></div>
+          <p>剪輯強度不是硬條件，所以仍是 <b>正式 75、邊界 12、淘汰 284</b>。<code>missing</code> 裡的 edit_intensity 被拿掉了。</p>
+          <p>但軟體畫像的權重修正<b>又疊加了一次</b>：性能 38 → <b>40</b>、便攜 12 → 11、續航 10 → 9。第 5 名因此從「蛟龍16 Pro」換成「獵刃16（i9-14900HX / RTX 4070，¥6000）」。</p>
+          <p class="warn">⚠️ 發現：軟體畫像的權重修正會在<b>每一輪</b>重新疊加，不是只加一次。這是不是預期的設計 → <mark class="tbc">待確認</mark></p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">7</span><span class="badge code">程式</span><b>還是 &gt; 50 台，換下一張卡</b></div>
+          <div class="followup">🗨️ 這臺電腦主要用來做什麼？<div><span>辦公學習</span><span>設計剪輯</span><span>遊戲</span><span>編程</span></div><small>card_purpose</small></div>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">11</span><span class="badge dbw">寫 DB</span><b>額外寫一筆點擊記錄</b></div>
+          <p>除了 runs 和 messages，還會寫一筆 <code>event_logs(kind="card_click")</code>，記下卡片、選項、來源 run 和新 run。後台的「卡片曝光／點擊統計」（<code>cards.summarize_card_stats</code>）就是靠這筆資料算的。</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 案例 3 -->
+    <div class="case-panel" id="k3" hidden>
+      <div class="scene">
+        <div class="scene-say">🧑 「預算 4000 以內、需要獨立顯卡、1kg 以下」</div>
+        <p>新對話，而且<b>沒有設定模型金鑰</b>。這個案例同時示範兩條特殊路徑：<b>模型失敗時的降級</b>，以及<b>條件太嚴、一台都沒有</b>的情況。</p>
+        <div class="chips"><span>llm（ModelError）</span><span>pipeline（heuristic_ops / relax_options / fallback_reply）</span><span>domain.classify</span></div>
+      </div>
+      <div class="notes inner"><h3>降級路徑</h3><div class="diagram" id="d7"></div></div>
+      <ol class="steps">
+        <li>
+          <div class="step-head"><span class="sn">2</span><span class="badge llm">LLM</span><b>模型呼叫失敗 → 改用關鍵字規則</b></div>
+          <p><code>llm.complete</code> 發現沒有金鑰，丟出 <code>ModelError("未配置模型密鑰")</code>。這一步在 runs 裡記成 error，然後改用 <code>heuristic_ops</code>，實際抽出 3 條硬條件：</p>
+          <pre class="data">只要獨顯              (gpu = 獨顯, hard)
+預算 4000 以內         (budget = {"max": 4000}, hard)
+1kg 以下              (weight_kg = 1, hard)</pre>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">4</span><span class="badge code">程式</span><b>371 台全部淘汰</b></div>
+          <div class="funnel">
+            <div class="f-row"><span>全部</span><div class="bar" style="--w:100%">371</div></div>
+            <div class="f-row"><span>正式</span><div class="bar ok" style="--w:0%">0</div></div>
+            <div class="f-row"><span>淘汰</span><div class="bar out" style="--w:100%">371</div></div>
+          </div>
+          <p class="small">淘汰原因：超預算＋太重 272、超預算＋太重＋沒獨顯 83、太重＋沒獨顯 13、只是太重 2、超預算＋沒獨顯 1。重量容差是 +0.15 kg，所以超過 1.15 kg 就淘汰。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">7</span><span class="badge code">程式</span><b>0 台 → 動作 relax（建議放寬）</b></div>
+          <p><code>relax_options</code> 會試兩種放寬：拿掉尺寸、拿掉預算，看能多出幾台。這個案例沒有尺寸條件，而拿掉預算後重量條件還是會擋掉所有機型，所以<b>得到的放寬選項是空的</b>。</p>
+          <p class="warn">⚠️ 發現：放寬建議只會試「尺寸」和「預算」，不會試「重量」或「獨顯」。這種情況下 relax 卡片會沒有任何選項 → <mark class="tbc">待確認</mark></p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">9</span><span class="badge llm">LLM</span><b>回覆也失敗 → 用固定句型</b></div>
+          <pre class="data">我記下了：只要獨顯、預算 4000 以內、需要獨立顯卡、1kg 以下、預算 4000 以內、需要獨立顯卡、1kg 以下。候選從上一輪收到 0 臺正式候選，另有邊界 0 臺。</pre>
+          <p class="warn">⚠️ 發現：關鍵字規則會把「整句話」當成預算和重量的標籤，固定句型回覆因此出現重複文字 → <mark class="tbc">待確認</mark>（只有在模型失敗時才會發生）</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 案例 4 -->
+    <div class="case-panel" id="k4" hidden>
+      <div class="scene">
+        <div class="scene-say">🎚️ 在權重面板把「便攜」拉到 35，按「套用」</div>
+        <p>接續案例 2。使用者不打字，直接告訴系統「我比較在意輕便」。重點：<b>這條路完全不呼叫需求理解模型</b>。</p>
+        <div class="chips"><span>UserApp 權重面板</span><span>scoring.rebalance</span><span>api.py（/weights/preview、/weights/apply）</span><span>pipeline（skip_nlu）</span></div>
+      </div>
+      <ol class="steps">
+        <li>
+          <div class="step-head"><span class="sn">A</span><span class="badge code">程式</span><b>拖動時即時預覽</b></div>
+          <p>每拖一下就呼叫 <code>POST /api/weights/preview</code>（不用登入、不讀寫資料庫），<code>rebalance</code> 把其他維度按比例縮小，讓總和維持 100：</p>
+          <div class="table-wrap"><table class="weights">
+            <tr><th></th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
+            <tr><td>拖動前</td><td>40</td><td>20</td><td>11</td><td>9</td><td>10</td><td>6</td><td>4</td></tr>
+            <tr><td>預覽</td><td class="down">29</td><td class="down">15</td><td class="up">35</td><td class="down">7</td><td class="down">7</td><td class="down">4</td><td class="down">3</td></tr>
+          </table></div>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">B</span><span class="badge code">程式</span><b>按套用 → 驗證 → 重跑管線（跳過 NLU）</b></div>
+          <p><code>/weights/apply</code> 檢查每一項都是 ≥ 1 的整數、總和 = 100，並把有變動的維度來源標成「你手動調整」。接著呼叫 <code>run_turn(skip_nlu=…)</code>：<b>不呼叫 nlu 模型</b>，只重新篩選、評分、排序，最後還是會呼叫 reply 模型寫回覆。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">C</span><span class="badge code">程式</span><b>結果</b></div>
+          <div class="table-wrap"><table class="weights">
+            <tr><th></th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
+            <tr><td>最後實際</td><td>31</td><td>14</td><td class="up">33</td><td>7</td><td>8</td><td>4</td><td>3</td></tr>
+          </table></div>
+          <p>候選數量不變（權重只影響排名，不影響篩選）。翼龍15 Pro 仍是第 1 名，但產品力從 70.1 降到 64.4，第 5 名從「獵刃16」換回「蛟龍16 Pro」。</p>
+          <p class="warn">⚠️ 發現：使用者手動設成 35，但軟體畫像的權重修正又疊加一次，便攜最後變成 <b>33</b>。手動調整被系統改掉，使用者可能會覺得系統沒照他設定的走 → <mark class="tbc">待確認</mark>（和案例 2 是同一個原因）</p>
+          <p class="small">同一條「跳過 NLU」的路徑也用在 <code>/profile</code>（修改、刪除或確認某條需求）。<code>/exclude</code>、<code>/favorites</code>、<code>/compare</code> 則只改資料，不重跑管線。</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 案例 5 -->
+    <div class="case-panel" id="k5" hidden>
+      <div class="scene">
+        <div class="scene-say">🛠️ 第一次啟動系統，管理員登入後台、查看鏈路、發佈新資料</div>
+        <p>這個案例涵蓋前 4 個案例沒用到的部分：<b>啟動腳本、種子資料、匯入器、登入驗證、後台</b>。</p>
+        <div class="chips"><span>一鍵啟動系統.bat</span><span>start_local / pg_bootstrap / serve</span><span>main.boot_db</span><span>seed</span><span>importer</span><span>security</span><span>AdminApp</span><span>ModelPage</span><span>trace.ts</span></div>
+      </div>
+      <ol class="steps">
+        <li>
+          <div class="step-head"><span class="sn">1</span><span class="badge code">程式</span><b>一鍵啟動</b></div>
+          <p><code>一鍵啟動系統.bat</code> → 安裝 uv → <code>uv sync</code> → <code>start_local.py</code>（<code>.env</code> 沒有金鑰就提示輸入）→ <code>pg_bootstrap.py</code>（第一次啟動會下載 PostgreSQL 並 initdb，埠號 5433）→ <code>serve.py</code>（從 8000 開始找空閒埠，開啟瀏覽器）→ uvicorn 載入 <code>app.main</code>。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">2</span><span class="badge dbw">寫 DB</span><b>建表、種子資料、匯入機型</b></div>
+          <p><code>boot_db</code> 依序做三件事：</p>
+          <p>① <code>create_all</code> 建立所有資料表。</p>
+          <p>② <code>seed_all</code> 寫入初始資料：管理員 <code>admin@local</code>（首次登入必須改密碼）、nlu／reply 提示詞 v1、模型設定（從 <code>.env</code> 帶入 DeepSeek）、軟體畫像（例如 Premiere Pro）、規則、閾值、追問卡。</p>
+          <p>③ <code>laptops</code> 表是空的時候，用 <code>importer.all_records()</code> 從 CSV 匯入 <b>371 台</b>（同時算好各維度分數）。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">3</span><span class="badge code">程式</span><b>管理員登入</b></div>
+          <p><code>/api/auth/login</code> 用 bcrypt 比對密碼，成功後發 JWT（HS256，有效 14 天），寫進 HttpOnly Cookie <code>lg_session</code>。如果 <code>must_change_password</code> 為真，就必須先改密碼。後台 API 都要通過 <code>require_admin</code>，<code>observer</code> 角色呼叫寫入功能會被 <code>forbid_observer</code> 擋下（回 403）。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">4</span><span class="badge dbr">讀 DB</span><b>查看某一輪的鏈路</b></div>
+          <p>AdminApp 呼叫 <code>/api/admin/runs/{rid}</code>，讀出案例 1 寫進 <code>runs</code> 的記錄，再用 <code>trace.ts</code> 的 11 步定義畫成鏈路追蹤圖：每一步的耗時、模型呼叫、命中規則、需求檔案的前後差異。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">5</span><span class="badge llm">LLM</span><b>模型設定頁測試連線</b></div>
+          <p><code>ModelPage.tsx</code> → <code>/api/admin/models/{id}/test</code> → <code>llm.test_connection</code>，送出「只回復：pong」確認金鑰和網址可用。也可以把 nlu 和 reply 兩個槽位指派給不同的模型（<code>/models/assign</code>）。</p>
+        </li>
+        <li>
+          <div class="step-head"><span class="sn">6</span><span class="badge dbw">寫 DB</span><b>上傳新 CSV 並發佈</b></div>
+          <div class="diagram" id="d5"></div>
+          <p class="small">發佈時會先<b>清空 laptops 再重建</b>，並在 <code>change_logs</code> 寫一筆「發佈數據 vX」（記下前後台數）。</p>
+        </li>
+      </ol>
+    </div>
+
+    <div class="notes">
+      <h3>模組覆蓋表：5 個案例合起來用到了哪些模組</h3>
+      <div class="table-wrap">
+        <table class="matrix">
+          <thead><tr><th>模組</th><th>案例 1</th><th>案例 2</th><th>案例 3</th><th>案例 4</th><th>案例 5</th></tr></thead>
+          <tbody>
+            <tr><td>啟動腳本（bat / start_local / pg_bootstrap / serve）</td><td></td><td></td><td></td><td></td><td>●</td></tr>
+            <tr><td><code>main.py</code>（boot_db、SPA 託管）</td><td></td><td></td><td></td><td></td><td>●</td></tr>
+            <tr><td><code>seed.py</code></td><td></td><td></td><td></td><td></td><td>●</td></tr>
+            <tr><td><code>importer.py</code></td><td></td><td></td><td></td><td></td><td>●</td></tr>
+            <tr><td><code>core/security.py</code>（JWT、bcrypt）</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td></tr>
+            <tr><td><code>core/config.py</code>、<code>core/db.py</code></td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td></tr>
+            <tr><td><code>api.py</code> 前台 router</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td></tr>
+            <tr><td><code>api.py</code> admin router</td><td></td><td></td><td></td><td></td><td>●</td></tr>
+            <tr><td><code>pipeline.run_turn</code></td><td>●</td><td>●</td><td>●</td><td>●（跳過 NLU）</td><td></td></tr>
+            <tr><td><code>pipeline</code> 降級（heuristic_ops / fallback_reply）</td><td></td><td>●</td><td>●</td><td></td><td></td></tr>
+            <tr><td><code>llm.py</code></td><td>●</td><td>●</td><td>●（失敗）</td><td>●（只用 reply）</td><td>●（test）</td></tr>
+            <tr><td><code>domain.py</code>（classify / snapshot / action）</td><td>●</td><td>●</td><td>●（relax）</td><td>●</td><td></td></tr>
+            <tr><td><code>scoring.py</code></td><td>●</td><td>●</td><td>●</td><td>●（rebalance）</td><td>●（匯入時）</td></tr>
+            <tr><td><code>cards.py</code> / <code>prompt_cards.py</code></td><td>●</td><td>●（點擊）</td><td></td><td>●</td><td></td></tr>
+            <tr><td><code>models.py</code> / PostgreSQL</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td></tr>
+            <tr><td><code>UserApp.tsx</code> / <code>api.ts</code></td><td>●</td><td>●</td><td>●</td><td>●</td><td></td></tr>
+            <tr><td><code>animation.ts</code></td><td>●</td><td>●</td><td>●</td><td>●</td><td></td></tr>
+            <tr><td><code>AdminApp.tsx</code> / <code>ModelPage.tsx</code> / <code>trace.ts</code></td><td></td><td></td><td></td><td></td><td>●</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>規則速查</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>正式候選台數</th><th>動作</th><th>畫面上會出現</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td><code>relax</code></td><td>放寬建議卡</td></tr>
+          <tr><td>1～5</td><td><code>compare</code></td><td>對比卡（最多 5 台）</td></tr>
+          <tr><td>6～20</td><td><code>recommend</code>（需求 ≥ 2 條且沒有缺項）<br>否則 <code>probe</code></td><td>推薦卡（前 5）或追問卡</td></tr>
+          <tr><td>21～50</td><td><code>leading</code></td><td>領先機型（前 3）＋追問卡</td></tr>
+          <tr><td>&gt; 50</td><td><code>probe</code></td><td>追問卡（沒有可問的卡時改成 <code>update</code>）</td></tr>
+        </tbody>
+      </table></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>條件</th><th>邊界（保留但標註）</th><th>淘汰</th></tr></thead>
+        <tbody>
+          <tr><td>預算上限 X</td><td>X ～ X + max(8%×X, 500)</td><td>超過 X + max(8%×X, 500)</td></tr>
+          <tr><td>重量上限 W</td><td>W ～ W + 0.15 kg</td><td>超過 W + 0.15 kg</td></tr>
+          <tr><td>尺寸</td><td>差距在容差 0.7 吋內</td><td>差距更大</td></tr>
+          <tr><td>軟體硬門檻</td><td>—</td><td>記憶體或顯存不足；需要顯存但沒有獨顯</td></tr>
+          <tr><td>資料缺測</td><td colspan="2">不淘汰，保留在候選裡（避免資料不全把整批機型丟掉）</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small">其他門檻：模型權重建議信心值 ≥ 0.75 才套用；非明確的硬條件信心值 &lt; 0.5 時降成軟條件並標記 <code>pending</code>（請使用者確認）；對話閒置 30 分鐘自動結束。</p>
+    </div>
+
+    <details class="notes advanced">
+      <summary>進階：完整時序圖（案例 1 的全部呼叫）</summary>
       <div class="diagram-bar"><span>sequenceDiagram</span><button type="button" data-zoom="d4">🔍 放大檢視</button></div>
       <div class="diagram" id="d4"></div>
-    </div>
-    <div class="notes">
-      <h3>重點說明</h3>
-      <ul>
-        <li>同一條 <code>run_turn</code> 管線還有兩個入口：<code>/profile</code>（修改或刪除需求）和 <code>/weights/apply</code>（手動調權重）。這兩個都用 <code>skip_nlu</code> <b>跳過 LLM</b>，只重新篩選和評分，然後照樣生成回覆。</li>
-        <li>兩個降級點：NLU 失敗改用 <code>heuristic_ops</code>，回覆生成失敗改用 <code>fallback_reply</code>。所以沒有金鑰也能跑完整流程，只是理解能力比較弱。</li>
-        <li><code>trace.ts</code> 定義了「SSE 推送」這個類型，但後端<b>沒有</b> SSE 或串流端點，目前是一次回傳整包 JSON。SSE 是規劃中還是已經放棄 → <mark class="tbc">待確認</mark>。</li>
-        <li>步驟 ①「鎖發送」應該是在前端實作，我沒有追進 <code>UserApp.tsx</code> 的細節 → <mark class="tbc">待確認</mark>。</li>
-      </ul>
-      <h3>附：後台資料發佈流程</h3>
-      <div class="diagram" id="d5"></div>
-    </div>
+      <p class="small"><code>trace.ts</code> 定義了「SSE 推送」這個類型，但後端沒有 SSE 或串流端點，目前是一次回傳整包 JSON → <mark class="tbc">待確認</mark>。步驟 ①「鎖發送」應該是在前端實作，細節 <mark class="tbc">待確認</mark>。</p>
+    </details>
   </section>
 
   <!-- 待確認 -->
@@ -316,12 +675,15 @@
         <li><code>model_configs.api_key_enc</code> 目前是明文儲存，是否需要加密？</li>
         <li>SSE 推送是規劃中還是已經放棄？（<code>trace.ts</code> 有定義，後端沒有端點）</li>
         <li>步驟 ①「鎖發送」在前端的實作細節。</li>
+        <li><b>【案例 2、4 發現】</b>軟體畫像的權重修正每一輪都會重新疊加（性能 38 → 40），而且會改掉使用者手動設定的權重（便攜 35 → 33）。這是預期設計嗎？</li>
+        <li><b>【案例 3 發現】</b><code>relax_options</code> 只試「拿掉尺寸」和「拿掉預算」，重量或獨顯太嚴時放寬卡片沒有任何選項。</li>
+        <li><b>【案例 3 發現】</b>模型失敗時，<code>heuristic_ops</code> 會把整句話當成預算和重量的標籤，固定句型回覆出現重複文字。</li>
       </ol>
     </div>
   </section>
 </main>
 
-<footer>依 system/ v0.0.3 原始碼整理 · 2026-10-29</footer>
+<footer>依 system/ v0.0.3 原始碼整理 · 2026-10-29（第 4 章案例數據由實際程式計算）</footer>
 
 <div class="overlay" id="overlay" role="dialog" aria-modal="true">
   <div class="overlay-bar">
@@ -440,6 +802,24 @@ d3: `flowchart LR
     R & AD & PL & SD --> MD --> DB --> PGD
     CFG --> DB & SEC & LL`,
 
+d6: `flowchart LR
+    S1["① 聽懂<br/>需求理解"]:::llm --> S2["② 整理需求<br/>需求檔案 + 軟體門檻"]:::dbr
+    S2 --> S3["③ 篩選與評分<br/>371 台 → 正式 / 邊界 / 淘汰"]:::code
+    S3 --> S4["④ 決定怎麼回<br/>動作 + 追問卡 + 卡片"]:::code
+    S4 --> S5["⑤ 說出來並記錄<br/>寫回覆 → 寫日誌 → 播動畫"]:::llm
+    classDef llm fill:#f6d98f,stroke:#c58a11,color:#1d2420
+    classDef code fill:#d5dbd7,stroke:#8b958f,color:#1d2420
+    classDef dbr fill:#b9d8ec,stroke:#286f9c,color:#1d2420`,
+
+d7: `flowchart TD
+    A["呼叫 nlu 模型"] -->|"成功且有 ops"| B["用模型的 ops"]
+    A -->|"失敗 / 沒金鑰 / ops 為空"| C["heuristic_ops<br/>關鍵字規則"]
+    B --> D["篩選、評分、決策<br/>（純程式，一定會跑）"]
+    C --> D
+    D --> E["呼叫 reply 模型"]
+    E -->|"成功"| F["模型寫的回覆"]
+    E -->|"失敗"| G["fallback_reply<br/>固定句型"]`,
+
 d4: `sequenceDiagram
     autonumber
     actor U as 消費者
@@ -496,7 +876,7 @@ d5: `flowchart LR
     DRAFT -.->|"放棄"| AB["/admin/data/abandon"]`
 };
 
-const TITLES = { d1: "1 系統脈絡圖", d2: "2 容器 / 部署架構圖", d3: "3 核心元件圖", d4: "4 關鍵資料流", d5: "後台資料發佈流程" };
+const TITLES = { d1: "1 系統脈絡圖", d2: "2 容器 / 部署架構圖", d3: "3 核心元件圖", d4: "4 完整時序圖", d6: "一輪對話 5 階段", d7: "降級路徑", d5: "後台資料發佈流程" };
 
 function isDark() {
   const t = document.documentElement.getAttribute("data-theme");
@@ -602,6 +982,17 @@ const io = new IntersectionObserver(entries => {
   });
 }, { rootMargin: "-40% 0px -55% 0px" });
 document.querySelectorAll("section.chapter").forEach(s => io.observe(s));
+
+// 案例分頁
+const tabs = [...document.querySelectorAll(".case-tab")];
+tabs.forEach(t => t.addEventListener("click", () => {
+  tabs.forEach(x => x.classList.toggle("active", x === t));
+  document.querySelectorAll(".case-panel").forEach(p => {
+    const on = p.id === t.dataset.case;
+    p.hidden = !on;
+    p.classList.toggle("active", on);
+  });
+}));
 
 renderAll();
 </script>
