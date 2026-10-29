@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>v10demo 對 system 差異分析</title>
+<meta name="description" content="AI 筆電選購助手兩個版本（v10demo 靜態示範 vs system 0.0.3 正式系統）在使用者端與管理後台的介面、功能、細節差異，互動設計師分析報告。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 版面：左側固定目錄＋右側長文；每章＝摘要→差異表→細節→建議→開關。顏色取自兩版共用的品牌綠 #197c64 */
+:root{
+  --bg:#f6f8f7; --surface:#ffffff; --surface2:#eef3f1; --line:#d9e2de;
+  --fg:#17211d; --muted:#5b6a64; --accent:#197c64; --accent-soft:#e1f1ec;
+  --v10:#197c64; --v10-bg:#dcf0e9; --sys:#3e55b8; --sys-bg:#e3e8fa;
+  --diff:#9a6200; --diff-bg:#fbefd6; --same:#5b6a64; --same-bg:#eaeeec;
+  --bad:#b4332b; --bad-bg:#fbe3e0;
+  --f-display:"Noto Sans TC","IBM Plex Sans","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#161e1b; --surface2:#1d2723; --line:#2b3833;
+  --fg:#e3ebe7; --muted:#97a8a0; --accent:#4cc3a0; --accent-soft:#173a31;
+  --v10:#5bd0ac; --v10-bg:#163a30; --sys:#9aaaf5; --sys-bg:#232b4d;
+  --diff:#e8b54f; --diff-bg:#3b2e12; --same:#a3b1ab; --same-bg:#25302c;
+  --bad:#f08a80; --bad-bg:#3d1d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#161e1b; --surface2:#1d2723; --line:#2b3833;
+  --fg:#e3ebe7; --muted:#97a8a0; --accent:#4cc3a0; --accent-soft:#173a31;
+  --v10:#5bd0ac; --v10-bg:#163a30; --sys:#9aaaf5; --sys-bg:#232b4d;
+  --diff:#e8b54f; --diff-bg:#3b2e12; --same:#a3b1ab; --same-bg:#25302c;
+  --bad:#f08a80; --bad-bg:#3d1d1a; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;max-width:1320px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 80px}
+nav.toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:13.5px;padding-right:6px}
+nav.toc .grp{font:600 11px/1 var(--f-body);letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:18px 0 6px}
+nav.toc a{display:block;color:var(--fg);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface2)}
+nav.toc a.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:500}
+nav.toc .code{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin-right:6px}
+main{min-width:0}
+header.hero{padding:8px 0 28px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--accent)}
+h1{font:900 clamp(28px,4.2vw,44px)/1.2 var(--f-display);margin:12px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font:700 26px/1.3 var(--f-display);margin:0 0 6px;text-wrap:balance}
+h3{font:700 17px/1.4 var(--f-display);margin:28px 0 10px}
+p{margin:0 0 12px;max-width:72ch}
+.lede{font-size:16.5px;color:var(--muted);max-width:68ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--muted);margin-top:14px}
+.meta b{color:var(--fg);font-weight:500}
+code,.ref{font:12.5px/1.4 var(--f-mono);background:var(--surface2);padding:1px 5px;border-radius:4px;word-break:break-all}
+section.ch{padding-top:36px;margin-top:36px;border-top:1px solid var(--line)}
+.chhead{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.chcode{font:500 13px var(--f-mono);color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:5px}
+.scope{font-size:13px;color:var(--muted);margin:4px 0 16px}
+.thesis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 8px}
+.thesis div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.thesis .lbl{font:600 12px var(--f-mono);margin-bottom:6px;display:block}
+.thesis .v .lbl{color:var(--v10)} .thesis .s .lbl{color:var(--sys)}
+.thesis div p{margin:0;font-size:14.5px}
+.tblwrap{overflow-x:auto;margin:10px 0 6px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.6}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font-weight:600;font-size:12.5px;color:var(--muted);background:var(--surface2);position:sticky;top:0}
+td:first-child{font-weight:500;min-width:110px}
+td.c{min-width:180px} td.t{white-space:nowrap;width:1%}
+.tag{display:inline-block;font:600 11.5px/1 var(--f-body);padding:4px 7px;border-radius:999px;white-space:nowrap}
+.t-v{color:var(--v10);background:var(--v10-bg)} .t-s{color:var(--sys);background:var(--sys-bg)}
+.t-d{color:var(--diff);background:var(--diff-bg)} .t-e{color:var(--same);background:var(--same-bg)}
+.t-n{color:var(--bad);background:var(--bad-bg)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0 4px;font-size:12.5px;color:var(--muted)}
+.filters button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 10px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.filters button:focus-visible,nav.toc a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:14.5px;list-style:none;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸";color:var(--accent);transition:transform .15s}
+details[open] summary::before{transform:rotate(90deg)}
+details .body{padding:0 16px 14px 34px;font-size:14px}
+details .body p{max-width:none}
+details .body ul{margin:0;padding-left:18px}
+details .body li{margin:3px 0}
+.verdict{background:var(--accent-soft);border-radius:10px;padding:14px 18px;margin:16px 0}
+.verdict h4{margin:0 0 6px;font:700 14px var(--f-display);color:var(--accent)}
+.verdict ul{margin:0;padding-left:18px;font-size:14px}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
+.toggles li{font-size:12.5px;border:1px dashed var(--line);background:var(--surface);padding:4px 10px;border-radius:6px}
+.toggles li::before{content:"⏻ ";color:var(--accent)}
+pre.flow{font:12.5px/1.6 var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;margin:10px 0;white-space:pre}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid2>*{min-width:0}
+.bug{border-left:3px solid var(--bad);background:var(--surface);border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14px}
+.bug b{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stats .n{font:700 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.stats .l{font-size:12.5px;color:var(--muted)}
+.foot{margin-top:60px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:960px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0}
+  nav.toc{position:static;max-height:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface);margin-bottom:24px}
+  nav.toc .list{display:none} nav.toc.open .list{display:block}
+  .tocbtn{display:block!important}
+  .thesis,.grid2{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+.tocbtn{display:none;width:100%;text-align:left;font:600 14px var(--f-body);background:none;border:0;color:var(--fg);padding:6px 0;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" id="toc" aria-label="目錄">
+  <button class="tocbtn" id="tocbtn" aria-expanded="false">目錄 ▾</button>
+  <div class="list" id="toclist"></div>
+</nav>
+<main id="main">
+<header class="hero" id="top">
+  <div class="eyebrow">互動設計分析報告 · 2026-10-29</div>
+  <h1>v10demo 與 system 0.0.3：介面、功能與細節差異</h1>
+  <p class="lede">同一個產品「AI 筆電選購助手」目前有兩套實作。<b>v10demo</b> 是三個靜態檔案組成的設計示範（<code>index.html</code>、<code>engine.js</code>、<code>admin.html</code>）；<b>system</b> 是 React＋FastAPI＋PostgreSQL 的正式系統。本報告逐模組比較兩者在使用者端與管理後台的差異，指出各自的長處、system 中「看起來有、其實沒作用」的地方，並建議整合方向與可做成開關的項目。</p>
+  <div class="meta">
+    <span>分析方式：<b>10 個分析代理平行閱讀原始碼</b>，所有結論附 <code>檔案:行號</code></span>
+    <span>範圍：<b>v10demo/</b> vs <b>system/</b>（不含繁簡字差異）</span>
+    <span>只讀程式碼，未啟動系統</span>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="legend">
+    <span class="tag t-v">只有 v10</span><span class="tag t-s">只有 system</span><span class="tag t-d">做法不同</span><span class="tag t-e">相同</span><span class="tag t-n">兩邊都沒有／有缺陷</span>
+  </div>
+</header>
+
+<section id="summary">
+  <h2>一頁看懂：兩個版本的本質差異</h2>
+  <div class="thesis">
+    <div class="v"><span class="lbl">v10demo · 設計得很完整的示範</span><p>它是一套「懂行店員」：先複述你說的話，翻譯成實測門檻，例如「剪 4K → 匯出 7.5 分鐘以內」。只問會改變結論的問題，推薦前會確認一次，再用實測數字說明「這台為什麼適合你、你要接受什麼」。後台是營運工作台，有待辦、徽章，每個數字都能點進去看對話。改規則要先存草稿、預覽影響、跑回歸測試、寫明原因才能發佈，而且能回滾。<b>但是資料、權限、模型調用全部是模擬的。</b></p></div>
+    <div class="s"><span class="lbl">system 0.0.3 · 真的能跑的工程底座</span><p>它有真實的登入與角色、PostgreSQL、CSV 匯入與版本回滾、可以接上的 LLM 供應商、軟體畫像審核流程、變更紀錄，以及 GSAP 動畫事件佇列。但推薦是「分數排序表」，理由大多是模板字。追問沒有上限，也沒有確認步驟。後台偏向攤開資料表，而且有不少<b>「看起來有、其實沒作用」</b>的地方：規則開關、5 個閾值、告警、token 統計、分數一致性檢查。</p></div>
+  </div>
+  <p><b>總結建議：</b>以 <b>system 的資料層與權限</b>為底座，把 <b>v10 的互動流程、推薦內容邏輯、後台工作流程</b>移植過去。動手移植之前，先修好 system 的「假功能」，因為它們違反了專案原則「程式碼決定事實」。</p>
+  <h3>各模組建議保留哪一版</h3>
+  <div class="tblwrap"><table id="matrix"><thead><tr><th>模組</th><th>主要採用</th><th>理由</th><th>從另一版補進來的</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<div id="chapters"></div>
+
+<section class="ch" id="bugs">
+  <div class="chhead"><span class="chcode">附錄 A</span><h2>system 中「看起來有、其實沒作用」的地方</h2></div>
+  <p class="scope">這些問題會讓管理員或使用者誤以為功能正常。比起「沒有這個功能」，這種情況更危險。建議在整合前先處理。</p>
+  <div id="buglist"></div>
+</section>
+
+<section class="ch" id="toggles">
+  <div class="chhead"><span class="chcode">附錄 B</span><h2>建議做成功能開關的項目（總表）</h2></div>
+  <p class="scope">依 CLAUDE.md「每個細節功能都帶有開關」的要求，彙整各章建議，供 M 做使用者測試時切換。</p>
+  <div class="tblwrap"><table id="toggletbl"><thead><tr><th>範圍</th><th>開關</th><th>建議預設</th><th>來源</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<div class="foot">產出方式：10 個分析代理分別負責 U1–U3（使用者端）與 A1–A7（後台），閱讀 <code>v10demo/</code> 與 <code>system/</code> 原始碼後各自回報，最後整合成本報告。報告中的行號都在分析時實際讀到，其中 5 處已經另外抽查確認。v10demo 的資料都是模擬的，system 的部分功能也還在原型階段，「只有 v10」不代表 v10 的功能已經可以上線。</div>
+</main>
+</div>
+
+<script>
+const T={v:['t-v','只有 v10'],s:['t-s','只有 system'],d:['t-d','做法不同'],e:['t-e','相同'],n:['t-n','兩邊都沒有／缺陷']};
+
+const MATRIX=[
+ ['版面與視覺','v10','有手機版、深色模式、無障礙設計，字體適合繁中；system 只有桌機版','system 的動畫分級、候選數量自動切換卡片密度'],
+ ['對話與追問','v10','會回顯理解、追問有上限、可以跳過、會確認、放寬只放剛好夠，最能讓使用者覺得「被理解」','system 的 LLM 理解層、卡片 when/priority 題庫、軟體畫像'],
+ ['推薦卡片','v10（內容）＋ system（外殼）','v10 用實測數字對照需求；system 是分數加模板字','system 的縮圖、購買連結、單台回饋、對比工作台'],
+ ['後台架構與首頁','v10（互動）＋ system（權限）','v10 有待辦首頁、hash 路由、即時搜尋、數字能點進去看對話','system 的真實角色權限、A2 用戶頁、C7 管理員管理'],
+ ['對話紀錄','v10 清單＋單輪說明','system 清單沒有篩選，最多只顯示 200 筆','system 的 ProfileDiff、原句高亮、run_id 雙向跳轉'],
+ ['待處理','v10','system 沒有這個功能','—'],
+ ['需求洞察','v10','v10 有交叉熱力圖、供需缺口、價格敏感度','system 的「系統怎麼回應」「數據暴露什麼」面板'],
+ ['規則／詞庫／權重','v10 流程＋ system 資料庫','v10 有草稿、影響預覽、回歸測試、版本回滾；system 的開關大多沒有作用','system 的 C1 軟體畫像與審核流程'],
+ ['卡片管理','system 為底','system 有真實統計、能追到單一輪','v10 的流程分頁、文案編輯、改動前先看影響'],
+ ['鏈路／性能／日誌','v10 互動＋ system 資料','system 的耗時大多是估算的','system 的 Span 樹、通知順序檢查'],
+ ['模型與提示詞','system 為底','system 能真的接上模型、測試連線','v10 的逐次調用明細、成本試算、備用模型、提示詞草稿'],
+ ['資料庫與機型','system 管線＋ v10 介面','system 有 CSV 匯入與版本回滾','v10 的篩選、改價、hold 狀態、影片出處'],
+];
+
+const CH=[
+{id:'u1',code:'U1',grp:'使用者端',title:'版面、視覺、動畫與回饋',
+ scope:'v10demo/index.html、engine.js ↔ system/frontend/src/UserApp.tsx、animation.ts、styles/*.css',
+ v:'響應式介面設計完整：有 3 個斷點、深色模式、無障礙標記，動畫全部用輕量 CSS。',
+ s:'只能在桌機看的動畫展示介面：用 GSAP 事件佇列播放「系統正在思考」，動畫可以分 4 級。但它沒有手機版、沒有深色模式，部分動畫在目前的 DOM 結構下播不出來。',
+ rows:[
+ ['整體骨架','CSS Grid 三欄（228px 側欄＋對話 35fr＋機型 65fr），外框是 16px 圓角卡片','Flex 三欄（240px＋35%＋其餘），滿版貼齊視窗','d'],
+ ['側欄收合','收成 64px mini 模式，計數變成角標，狀態存在 localStorage','收成 64px，滑過會浮出提示，狀態存在帳號設定','d'],
+ ['手機與窄螢幕','1380、1180、760 三個斷點；≤760 時切成「對話／機型」兩個分頁，彈窗改成底部抽屜','<code>min-width:1200px</code>，viewport 寫死成 <code>width=1440</code>，手機看到的是縮小的桌機版','v'],
+ ['深色模式','有完整的深色色彩變數，也能用 data-theme 強制切換','沒有，很多地方寫死 #fff','v'],
+ ['字體','PingFang TC、JhengHei 優先，數字用 DIN 並開等寬','Inter、Microsoft YaHei、PingFang SC 優先，繁中會用簡體字形顯示','d'],
+ ['圓角與密度','卡片 12–16px，留白寬','統一 8px，留白緊','d'],
+ ['首屏（左側）','3 句生活化的範例句，點了直接送出','4 個常見問題＋3 張基礎需求卡（預算、用途、便攜）','d'],
+ ['首屏（右側）','依 4 個價位帶分組瀏覽，每組先顯示 8 台','直接把 371 台排成格子','d'],
+ ['輸入區','自動長高；Enter 送出前檢查 <code>isComposing</code>（注音選字不會誤送）；有 focus 光圈','2 行固定；可以拖機型卡片進來 @ 引用；沒有 IME 檢查，也沒有 focus 樣式','d'],
+ ['思考中','三個跳動圓點','脈衝圓點加輪播文字（整理需求→篩選機型→重算分數），但文字是固定劇本','d'],
+ ['需求進入檔案','需求卡整塊閃一下底色（1.2s）','req_fly 飛入動畫：目前抓不到起點元素，永遠退回淡入','d'],
+ ['候選數量變化','數字放大彈跳','數字在 1 秒內從舊值滾到新值','d'],
+ ['重新排序','直接重繪','先維持舊順序，再換成新順序並依序淡入（名字叫 flip，但不是真的 FLIP）','s'],
+ ['分數與權重動畫','沒有','產品力分數字滾動；權重面板自動彈出，滑桿滑到新值','s'],
+ ['動畫控制','只遵守 prefers-reduced-motion','完整、中等、少量、無 4 級，加上 3 種速度；點畫面任何地方可以跳過','s'],
+ ['動畫時鎖住輸入','不鎖','動畫播完前送出鍵停用：「正在處理 / 播放結果」','s'],
+ ['浮層','統一的 sheet：有遮罩、有過場，手機上變成底部抽屜','各面板用 absolute 疊在上面，沒有遮罩、沒有過場','d'],
+ ['對比入口','底部 tray，最多 3 台','右下角浮動卡，可拖曳加入，最多 10 台，可以全螢幕','d'],
+ ['卡片操作鈕','一直顯示','緊湊和中等密度下要滑過才出現，觸控裝置看不到','d'],
+ ['Toast','只有一個，aria-live，滑入，停留 3.6s','每次新建一個，沒有動畫，2.2s 後消失，連續出現會疊在一起','d'],
+ ['錯誤顯示','搜尋沒結果時給「清除搜尋」','程式崩潰時把錯誤 stack 直接顯示給使用者','d'],
+ ['無障礙','focus-visible、aria-live、aria-pressed、按 / 聚焦搜尋、Esc 關閉','只有 Esc；卡片是不能聚焦的 div；👍👎 沒有標籤','v'],
+ ['示範自動播放','逐字打字效果，加上「示範播放中」提示條','沒有','v'],
+ ['登入閘門','不用登入','一點輸入框就跳出登入視窗，使用者沒機會先打字','s'],
+ ],
+ details:[
+ ['手機版：system 實際上不能用','<ul><li>v10 在 <code>index.html:406-442</code> 處理兩段斷點，在 <code>:417-420</code> 切換分頁，在 <code>:434-435</code> 改成底部抽屜，<code>:1-3</code> 有 viewport-fit=cover。</li><li>system：<code>user-demo.css:8</code> 寫死 <code>min-width:1200px</code>，<code>frontend/index.html:5</code> 寫死 <code>width=1440</code>。<code>app.css:63-69</code> 的 1200px 斷點在手機上永遠不會觸發。</li><li>很多消費者用手機查筆電，這是最優先的差距。</li></ul>'],
+ ['「需求飛入」動畫目前播不出來','<ul><li><code>animation.ts:252-255</code> 的飛入起點，是最後一個 <code>.bubble</code> 裡的 <code>.tag</code>。</li><li>但「識別到的需求」卡（<code>UserApp.tsx:1155</code>）是 bubble 旁邊的另一個 <code>.card</code>，所以永遠找不到起點，只會退回 <code>:257-270</code> 的淡入。</li><li>reorder 事件（<code>animation.ts:611-613</code>、<code>:516-534</code>）只是依序淡入，沒有「滑到新位置」的連續感。</li></ul>'],
+ ['真的有效果、值得保留的 system 動畫','<ul><li>數字滾動：<code>animation.ts:431-466</code></li><li>產品力分滾動：<code>:489-514</code></li><li>權重面板自動打開、滑桿移動：<code>:358-429</code></li><li>前三名光圈加名次徽章：<code>:536-558</code></li><li>這些演出最能呼應「讓使用者感受到系統了解他」。</li></ul>'],
+ ['輸入法誤送','<ul><li>v10 在 <code>index.html:1272</code> 判斷 <code>!e.isComposing</code>。</li><li>system 在 <code>UserApp.tsx:667</code> 只判斷 Enter 和 Shift。在 Safari 上，注音選字按的 Enter 可能直接把訊息送出。</li><li>這是台灣使用者的硬需求。</li></ul>'],
+ ['動畫鎖定的代價','<ul><li><code>UserApp.tsx:147</code> 的 <code>locked = busy || animLock</code> 讓動畫越長、使用者等越久。</li><li>「跳過動畫」的點擊事件在 <code>animation.ts:123-128</code> 和 <code>UserApp.tsx:201-206</code> 註冊了兩次。</li></ul>'],
+ ],
+ verdict:['版面、色彩、字體、深色模式、手機版、無障礙：<b>採用 v10</b>','「系統正在理解你」的動畫演出：<b>採用 system 的 GSAP 事件佇列</b>，但要先修好飛入動畫的起點選取，並把重新排序改成真的 FLIP','動畫分級和速度：<b>採用 system</b>，正好拿來當使用者測試的變因','輸入區：v10 的 IME 檢查和 focus 樣式，加上 system 的拖曳 @ 引用'],
+ toggles:['動畫等級（4 級）','動畫速度','需求飛入：飛入／閃光／無','數量變化：滾動／彈跳／靜態','重排：FLIP／淡入／瞬間','權重面板自動彈出','動畫時鎖住輸入','思考中：三點／輪播文字','卡片密度：自動／手動／固定','卡片操作鈕常駐','首屏引導（例句／FAQ／需求卡）','右側首屏：價位帶／全部格狀','深色模式','對比上限與入口形式']},
+
+{id:'u2',code:'U2',grp:'使用者端',title:'對話流程與追問方式',
+ scope:'v10demo/engine.js（needsFlow、decideAction）↔ system/backend/app/pipeline.py（run_turn）、domain.py、cards.py',
+ v:'由程式主導的訪談：每輪先說「記下了：A → 我會怎麼篩」，再按固定順序問，最多 3 題。答案不影響推薦的題目就跳過不問；每題都能說「不確定」或跳過；推薦前會先確認一次。',
+ s:'由候選台數驅動的卡片式篩選器：LLM 把使用者的話拆成標籤，程式依「剩下幾台」決定下一步，每輪出一張追問卡。沒有確認步驟，不能跳過，題數沒有上限，也不處理「只問某台機型」。',
+ flowV:`使用者輸入 ─► detectIntent（engine.js:861）
+   ├ 查單台／比較／為什麼不是它／沒實測的機型 ─► 直接回答，不動需求
+   └ 說需求 ─► parseNeeds（規則）─► 「記下了：X → 只留…」
+                │
+                ├ 說了「不要太重」 ─► 先問「多重算太重？」
+                ▼
+          依順序找還缺的資訊（nextKey）
+                │ 預算／便攜：不管怎麼答第一名都一樣 ─► 跳過，並說明原因
+                │ 已經問滿 3 題 ─► 停止追問
+                ▼
+       ┌ 追問卡（還剩 n 題／不確定／跳過）
+       ├ 0 台 ─► 衝突卡（每次只放寬一項，只放到剛好夠）
+       ├ 「我這樣理解你，對嗎？」─► 「對，幫我挑」
+       └ 推薦：「我選 X。…和第二名比…」`,
+ flowS:`使用者輸入（必須先登入）─► LLM 理解需求（pipeline.py:161）
+   └ LLM 失敗 ─► 改用關鍵字比對
+   └ 點選卡片 ─► 直接寫入需求檔案
+        ▼
+ 合併進需求檔案；還沒有軟體 ─► 把「軟體」排第一
+        ▼
+ 依候選台數決定動作（domain.py:777）
+   0 台 → 放寬　≤5 → 對比　6–20 → 推薦或追問
+   21–50 → 暫時靠前　>50 → 追問
+        ▼
+ 挑 priority 最高的一張追問卡（cards.py:718）
+        ▼
+ 卡片：需求標籤 + 候選數變化 + 追問／推薦／放寬
+ 回覆：LLM 根據事實寫 2–5 句`,
+ rows:[
+ ['開場白','「說說你要拿筆電做什麼」＋「不用懂規格」','「我是你的筆記本選購助手」＋「從 371 台實測機型縮小範圍」','d'],
+ ['開始前要登入','不用','聚焦輸入框就跳出登入','s'],
+ ['理解需求的方式','純規則，結果可預測','LLM 產生增量修改指令，失敗時改用關鍵字','d'],
+ ['回顯「我理解你」','每輪逐條顯示「你說的 → 我會怎麼篩」','需求標籤卡，加上 LLM 寫的 2–5 句','d'],
+ ['需求摘要句','<code>profileSentence</code>：「幫女兒挑一台能跑 CLO3D 的筆電，8000 以內。」','沒有','v'],
+ ['修改需求','說明單（我怎麼判斷、幾台做得到），加「改答案」「拿掉這一項」','瀏覽器原生 <code>prompt()</code> 改文字，或按 ✕ 刪除','d'],
+ ['低信心需求','「不確定」的需求會標成「假設」','信心 &lt;0.5 的硬條件降為參考，要使用者點一下確認','d'],
+ ['什麼時候追問','看缺哪項資訊，再模擬「答案會不會改變第一名」','看候選台數，加上卡片的 when 條件','d'],
+ ['第一題','「主要拿它做什麼？」','「你主要用哪些軟件工作？」（priority 520）','d'],
+ ['題數上限','最多 3 題（askMax）','沒有上限','v'],
+ ['進度提示','「還剩 n 題」／「最後一題」','沒有','v'],
+ ['跳過','每張卡都有「跳過，直接看建議」','沒有','v'],
+ ['「不確定」選項','每題都有「不確定，幫我判斷」','只有部分卡有「都行」','d'],
+ ['不問沒影響的題目','不管怎麼答第一名都一樣，就不問，並說明原因','沒有','v'],
+ ['模糊詞','「不要太重」會先問「多重算太重？」','直接記成「輕薄便攜」參考標籤','v'],
+ ['推薦前確認','「我這樣理解你，對嗎？」，分成必要條件和排序參考','沒有','v'],
+ ['零結果','衝突卡：每次只放寬一項、只放到剛好夠，並顯示放寬後會是哪一台','只有「放寬尺寸／預算」，整項拿掉','d'],
+ ['改主意','支援「不是 A 而是 B」、「再便宜一點」，並能「還是要保留」復原','完全靠 LLM，沒有復原','d'],
+ ['只問某台機型','單台判斷、點名對比、為什麼不是它、沒有實測的機型','可以拖卡片 @ 引用，但後端沒用到 refs','v'],
+ ['無關輸入','「這句話裡我沒聽出和選筆電有關的條件…」','一律跑完整個流程','d'],
+ ['每輪的候選數卡','只在需要時出現','每輪都顯示「候選池 A 台 → B 台」','s'],
+ ['LLM 失敗時的文案','（不依賴 LLM）','工程語氣：「候選從上一輪收到 N 臺正式候選」','d'],
+ ],
+ details:[
+ ['追問措辭對照','<ul><li><b>預算</b>：v10「預算上限大概多少？」加「不設上限／不確定」（<code>engine.js:885</code>）；system「方便說一下預算大概在哪個區間嗎？」4 個區間（<code>cards.py:97-102</code>）。</li><li><b>便攜</b>：v10「一週大概帶出門幾天？」用行為頻率問（<code>engine.js:888</code>）；system「這臺電腦平時怎麼帶？」（<code>cards.py:141</code>）。</li><li><b>剪輯</b>：system「你偶爾剪 4K 視頻時…」（<code>cards.py:70</code>）題目本身就預設了使用者會剪 4K。</li><li>v10 每題都有 <code>why</code>（為什麼問），但 <code>askCard</code> 沒有顯示出來。</li></ul>'],
+ ['「不問沒影響的題目」怎麼運作','<ul><li><code>matters()</code>（<code>engine.js:1188</code>）把每個選項都模擬一次，第一名都不變就跳過。</li><li>跳過時會說明：「『預算』不管你怎麼回答，我推薦的都會是同一台，所以這題我先不問。之後想改，直接說就好。」（<code>engine.js:1291</code>）</li><li>這是「系統懂我」最強的訊號之一。</li></ul>'],
+ ['system 的放寬按鈕在 LLM 不可用時沒有作用','<ul><li>按放寬送出的是純文字「放寬預算」，沒有帶 card_id（<code>UserApp.tsx:1203</code>），所以只能靠 LLM 理解。</li><li><code>heuristic_ops</code>（<code>pipeline.py:514-550</code>）沒有任何刪除規則，LLM 失敗時按了也不會有變化。</li></ul>'],
+ ['@ 機型只有入口','<ul><li><code>run_turn</code> 有 <code>refs</code> 參數（<code>pipeline.py:220</code>），但函式裡沒有用到。</li><li>觸發比較意圖時，比的是候選池前 5 名（<code>:393-394</code>），不是使用者點名的機型。</li></ul>'],
+ ['system 候選 6–20 台且還缺資訊時會繼續問','<code>pipeline.py:361-363</code> 把 recommend 改成 probe。再加上題數沒有上限，容易變成連續問卷。'],
+ ],
+ verdict:['對話骨架<b>採用 v10</b>：回顯、問題順序加 matters、題數上限、跳過與假設、推薦前確認、只放寬一項、意圖分流','從 system 保留三樣：<b>LLM 作為理解層</b>（輸出收斂到 v10 的需求檔案結構）、<b>卡片 when/priority 題庫</b>、<b>軟體畫像</b>','system 的「依候選數決定動作」可以保留成一種策略，用開關切換'],
+ toggles:['開場形式','開始前要登入','每輪回顯「你說的 → 我會怎麼篩」','需求摘要句','追問決策策略','第一題：用途或軟體','題數上限 askMax','不問沒影響的題目','跳過按鈕','「不確定」選項','進度提示','顯示「為什麼問」','模糊詞插問','推薦前確認','低信心需求要點確認','放寬方式','兩台接近時反問','意圖分流（4 種各自開關）','回覆文字：模板或 LLM','每輪候選數卡']},
+
+{id:'u3',code:'U3',grp:'使用者端',title:'推薦卡片與推薦結果',
+ scope:'v10demo/index.html、engine.js ↔ UserApp.tsx、thumbs.tsx、backend/app/cards.py、scoring.py',
+ v:'以「需求對照」為主：先挑一台最適合你的，再用實測數字逐條說明它過了你哪些條件、你要接受什麼，以及為什麼不是別台。',
+ s:'以「分數排序」為主：每張卡都用產品力分、性價比、七維分數說話。推薦理由和風險多是固定模板，沒有把實測數字和使用者說過的需求連起來。',
+ rows:[
+ ['對話中的推薦','一段推薦文字（我選 X、達標幾項、和第二名比贏在哪），加「看詳情」「為什麼不是別台」','推薦卡列 1–5 台：名次、名稱、價格、GPU、產品力分','d'],
+ ['推薦數量','主推 1 台，加最多 2 台替代','推薦 5 台／暫時靠前 3 台／對比 5 台','d'],
+ ['推薦的角色','最適合你、想省錢、想更輕、備選、差一點','只有名次','v'],
+ ['推薦理由','逐條「你的需求：實測值」，標 ✓／△／✕','固定句：「在當前權重下得分都排在候選前列」','d'],
+ ['風險提示','「要接受的」，附實測數字（例如續航只有 6 小時）','後端沒有提供，畫面永遠顯示「需結合預算與便攜權衡」「風險中等」','n'],
+ ['分數呈現','不給使用者看分數','產品力分、性價比，加七維長條','d'],
+ ['實測原始數字','4K 匯出分鐘、3A 幀數、續航、分貝、鍵盤溫度、R23、P3 色域','只有型號、尺寸、重量，加 0–100 的維度分','v'],
+ ['影片時間與連結','引擎有算出時間戳，但畫面沒顯示，而且時間戳是 hash 假造的','沒有這個欄位；CSV 有影片欄，但匯入時丟掉了','n'],
+ ['縮圖','沒有','依品牌配色的 SVG 筆電示意圖','s'],
+ ['購買連結','沒有','詳情裡有，點擊會記錄事件','s'],
+ ['和第一名比','每台都附一句和第一名的差別','沒有','v'],
+ ['為什麼不是別台','有專屬卡片：熱門但落選的機型和原因','沒有','v'],
+ ['指名查詢','checkCard：結論、需求對照、要接受的','沒有','v'],
+ ['兩台很接近時','分數差不到 5%，就問「你更在乎哪一個？」','沒有','v'],
+ ['結果分組','主推 → 也可以考慮 → 其他也符合的 → 差一點 → 不符合（依原因分組）','正式候選 → 邊界 → 已排除','d'],
+ ['排除原因','附數字：「超出預算 ¥800」「匯出要 12 分鐘（需要 9 分鐘以內）」','只有類別：「超出當前預算」','d'],
+ ['卡片資訊密度','卡片或清單，手動切換','依候選台數自動切 4 級','s'],
+ ['對比','最多 3 台：先給文字結論，再列需求對照和 11 列實測','最多 10 台：規格、分數、優點和風險（模板字）','d'],
+ ['回饋','只能對整則推薦按 👍／👎','每一台都能按 👍／👎，按 👎 會追問原因','s'],
+ ['候選很少時','有符合的就推薦','≤5 台時改成「對比」，反而拿不到明確推薦','d'],
+ ],
+ details:[
+ ['v10 的卡片類型','<ul><li>推薦文字：<code>index.html:909-915</code>，文字由 <code>engine.js:1235-1245</code> 的 <code>recText</code> 產生</li><li>主推大卡：<code>index.html:1055-1061</code>，需求對照 <code>marksHTML</code> 在 <code>:883-887</code></li><li>也可以考慮（代價句 <code>dealText</code>）：<code>engine.js:1058-1062</code></li><li>單台判斷卡 checkCard：<code>index.html:916-920</code></li><li>為什麼不是別台：<code>index.html:933-936</code></li><li>詳情抽屜（11 項實測）：<code>index.html:1114-1126</code></li><li>對比結論：<code>engine.js:1155-1167</code></li></ul>'],
+ ['system 的卡片類型','<ul><li>需求標籤、候選數、軟體、追問、推薦、暫時靠前、對比、放寬：<code>UserApp.tsx:1154-1209</code></li><li>組裝的地方：<code>pipeline.py:366-396</code></li><li>候選卡 LaptopCard（4 級密度）：<code>UserApp.tsx:1068-1152</code></li></ul>'],
+ ['模板字會讓使用者誤會','<ul><li><code>public_laptop</code>（<code>pipeline.py:185-204</code>）沒有輸出 pros、risk、sev。</li><li>所以優點永遠是「X 表現突出」，風險永遠是「風險中等」，「證據：實測數據庫」也只列尺寸和 CPU。</li><li>使用者可能以為這些真的經過評估。</li></ul>'],
+ ['推薦邏輯：使用者感受得到的差別','<ul><li><b>v10</b>（<code>engine.js:571-619</code>）：先用實測門檻分成符合、差一點、不符合。用途會改變「性能」怎麼算（剪片看匯出時間，遊戲看幀數）。有風險扣分，最後用 <code>picksFor</code> 挑出不同角色。</li><li><b>system</b>（<code>scoring.py</code>）：產品力分是七維加權平均，依分數排序。性價比是在當次候選內換算，所以同一台機器在不同對話裡的性價比不一樣。</li><li>使用者的感受：v10 像一個懂行的店員，說「剪 4K 只要 6 分鐘，但比較重」；system 像一張評分表，只說「第 1 名 82.3 分」。</li></ul>'],
+ ],
+ verdict:['推薦的<b>內容與邏輯採用 v10</b>：角色挑選、需求對照、要接受的、代價句、為什麼不是別台、兩台接近時反問。這些要<b>搬到後端計算</b>，維持「程式碼決定事實」','推薦的<b>外殼採用 system</b>：縮圖、購買連結、單台回饋、密度切換、對比工作台','<b>刪除前端的模板字</b>：沒有資料就不顯示，不要顯示假的預設字','重新檢討「候選 ≤5 台就只對比、不推薦」這條規則'],
+ toggles:['顯示產品力分（建議關）','顯示性價比（建議關）','七維長條只在詳情顯示','顯示實測原始數字','需求對照 ✓△✕','「要接受的」與條數','影片時間點（建議關，等有真資料）','影片連結（跳到該秒或只開影片）','推薦數量 1／3／5','角色標籤','代價句','和第一名比','為什麼不是別台','兩台接近時反問與門檻','縮圖：示意圖、真機照片或不顯示','購買連結','單台或整則回饋','排除原因附數字','對比上限','推薦時機規則']},
+
+{id:'a0',code:'A0',grp:'管理後台',title:'頁面對應圖：14 頁對 14 頁',
+ scope:'v10demo/admin.html:1407 PAGES ↔ system/frontend/src/AdminApp.tsx:7 NAV',
+ v:'9 個營運頁不分組，另外一組「工程」5 頁。用 hash 路由，可以加書籤，側欄有徽章。',
+ s:'分成 3 組：「看用戶 A1–A4」「看系統 B1–B2」「維護配置 C1–C8」。有頁面代碼和麵包屑，但網址固定是 /admin。',
+ rows:[
+ ['home 工作台','有待辦、6 個 KPI 加迷你圖、新手導覽','A1 總覽：8 個純數字 KPI、7 步漏斗、最近告警','d'],
+ ['queue 待處理','差評、沒結果、沒聽懂、沒測過的機型、已處理','沒有','v'],
+ ['conv 對話','清單篩選加單輪白話說明','A3 對話','d'],
+ ['insight 需求洞察','熱力圖、供需缺口、價格敏感度','A4 需求與行為統計','d'],
+ ['cards 卡片','5 種流程卡，可以編輯文案','拆成 C8 點選卡片和 C5 介面文案','d'],
+ ['sync 同步檢查','示範架構才需要，另外附重跑比對','沒有','v'],
+ ['lib 機型庫','營運工具：篩選、改價、上下架','C3 數據維護','d'],
+ ['rules 規則與詞庫','一頁 5 個分頁','拆成 C1 軟體畫像、C2 規則、C6 權重與公式','d'],
+ ['sys 系統','告警與改動、文案索引、權限','拆成 B2、C5、C7','d'],
+ ['perf 性能','P50、P95、P99、SLO、趨勢','沒有獨立頁，只在 B2 有平均值','v'],
+ ['trace 執行鏈路','11 段加子步驟，有預算','B1 運行回放','d'],
+ ['logs 日誌','有篩選、未讀徽章','合併到 B2 日誌與告警','d'],
+ ['llm 模型與提示詞','調用紀錄、供應商與成本、提示詞','C4 模型與供應商','d'],
+ ['db 資料庫','資料表、DDL、慢查詢、備份（示意數值）','沒有','v'],
+ ['（沒有）','—','A2 用戶：列表、詳情、備註、收藏','s'],
+ ['（沒有）','—','C7 管理員與權限（真的能用）','s'],
+ ],
+ details:[],
+ verdict:['側欄分組<b>採用 system 的三分法</b>，再把 v10 的「待處理」放在最上面當第 0 組','頁面代碼（A1…C8）只放在麵包屑，當成工程識別用'],
+ toggles:['側欄分組模式','頁面代碼顯示位置']},
+
+{id:'a1',code:'A1',grp:'管理後台',title:'首頁、導航、用戶、系統設定與權限',
+ scope:'admin.html：home、sys、全域導航 ↔ AdminApp.tsx：A1、A2、C7、NAV；core/security.py',
+ v:'以任務為中心的營運工作台：打開就知道今天要處理什麼，每個數字都能點進去看背後的對話。',
+ s:'以資料表為中心的工程控制台：權限和登入都是真的，但導覽、首頁洞察和互動細節都比較薄。',
+ rows:[
+ ['網址路由','hash 路由 <code>#page.arg</code>，可以加書籤、重新整理、按上一頁，還會記住捲動位置','網址固定是 /admin，重新整理就回到 A1，不能分享連結','d'],
+ ['側欄徽章','待處理數、規則「草稿」、未讀錯誤數','沒有','v'],
+ ['麵包屑','沒有','「後台 › A1 總覽」','s'],
+ ['全域搜尋','打字即時分組顯示（頁面、機型、對話），按 / 聚焦','貼上編號後按 Enter，跳到第一個符合的結果','d'],
+ ['提示框','自製，支援多行和鍵盤聚焦','只有原生 title','v'],
+ ['響應式和深色','有','後台最小寬度 1280px，沒有深色模式','v'],
+ ['首頁 KPI','6 個：對話、拿到建議、平均追問、收藏、好評率、單次成本；每個都有迷你圖和環比','8 個純數字：註冊、活躍、對話、訊息、輪數、到達推薦、追問回答率、模型失敗率','d'],
+ ['首頁待辦','5–6 個待辦按鈕，直接跳到要處理的分頁','沒有','v'],
+ ['首頁圖表','每日折線（點某天看對話）、漏斗附「停在這一步的原因」、「停在哪」長條','7 步漏斗，點了帶篩選進 A3','d'],
+ ['KPI 能點進去','每個數字都對應到那批對話','都跳到沒有篩選的 A3','d'],
+ ['時間篩選','24h／7d／30d，加裝置、來源；全站共用','1／7／30 天，只有 A1、A4 有','d'],
+ ['角色','管理員／唯讀，左下角直接切換（示範用）','superadmin／observer，由後端判斷','d'],
+ ['唯讀的呈現','按鈕停用加提示','頁首橫幅、隱藏寫入按鈕，後端回 403','d'],
+ ['登入','沒有','帳密登入；但登入框<b>預先填好預設密碼</b>','s'],
+ ['首次登入改密碼','沒有','後端有 must_change_password，後台前端沒接上','n'],
+ ['登出','沒有','後台沒有登出按鈕','n'],
+ ['用戶頁','沒有','A2：列表（沒有搜尋、分頁）、詳情、內部備註、收藏','s'],
+ ['管理員管理','寫死的 3 人表格','新增、改角色、停用、重設密碼；保護最後一個超級管理員','s'],
+ ['查看記錄','顯示人名','只顯示 admin_id 數字','d'],
+ ['新手導覽','「這個後台管 6 件事」','沒有','v'],
+ ['視覺密度','字體 14px，留白寬，文案口語','字體 12.5px，8 欄 KPI，表格多','d'],
+ ],
+ details:[
+ ['安全問題：上線前一定要處理','<ul><li>登入框預先填好系統預設的管理員帳號和密碼（<code>AdminApp.tsx:137-138</code>）。</li><li>種子帳號是 <code>must_change_password=True</code>（<code>seed.py:172-173</code>），但後台登入後直接進 A1（<code>AdminApp.tsx:291-296</code>），強制改密碼只寫在使用者端。</li><li>沒有登出按鈕；token 有效 14 天（<code>core/security.py:23</code>）。</li><li>C7 重設密碼的臨時密碼放在 2.2 秒就消失的 toast 裡（<code>AdminApp.tsx:835-842</code>）。</li></ul>'],
+ ['v10 首頁的各個區塊','<ul><li>待辦：<code>admin.html:1665-1671</code></li><li>KPI 迷你圖與環比：<code>:1672-1678</code>，環比算法在 <code>:1649-1657</code></li><li>漏斗「停在這一步的原因」：<code>:1684-1688</code></li><li>新手導覽：<code>:1693</code></li></ul>'],
+ ['system 首頁的小問題','「最近對話」「最近告警」不受天數篩選影響（<code>api.py:901-902</code>），和頁首的「近 N 天」說法不一致。'],
+ ],
+ verdict:['資訊架構與互動<b>採用 v10</b>：hash 路由、徽章、待辦首頁、能點進去的 KPI、即時搜尋、全站共用篩選','權限與帳號<b>採用 system</b>：後端角色、<code>deny_observer</code>、C7 的保護規則、A2 用戶頁、查看記錄寫入資料庫','補上：登出、首次改密碼、移除預填密碼'],
+ toggles:['首頁待辦列（逐項）','新手導覽卡','KPI 迷你圖、環比','KPI 組合（6、8 或自選）','數字能不能點進去','側欄徽章（3 種）','搜尋模式','全站共用篩選','唯讀：停用或隱藏','首次登入強制改密碼','預填帳密（只限開發環境）','個資遮罩程度','查看記錄顯示人名或 ID']},
+
+{id:'a2',code:'A2',grp:'管理後台',title:'對話紀錄',
+ scope:'admin.html：conv（convFiltered、convDetail、traceHtml）↔ AdminApp.tsx：A3（A3Card、A3Detail）、api.py admin_convs',
+ v:'給營運人員的診斷工作台：有篩選、搜尋、白話的單輪說明，能用新規則重跑比對，也能寫備註、存成回歸用例。',
+ s:'紀錄檢視器：照實還原聊天內容，但每輪 8 段多半是原始 JSON。清單本身沒有篩選元件，只能從別的頁面點進來時帶入條件。',
+ rows:[
+ ['清單欄位','時間、第一句話（小字顯示輪數、裝置、來源、標籤）、結果徽章、第一推薦、回饋圖示','編號、用戶、標題、輪數、候選、動作、狀態','d'],
+ ['結果分類','6 類：拿到建議、追問中離開、確認時離開、沒有結果、只問機型、沒聽懂','只顯示原始的 status 和 last_action','v'],
+ ['時間、裝置、來源篩選','有','沒有','v'],
+ ['結果、回饋、行為篩選','3 個下拉選單','後端支援，但只能從 A1、A4 的圖表點進來時帶入','d'],
+ ['標籤篩選','有','後端支援 tag，前端沒有地方傳入','n'],
+ ['清單內搜尋','搜第一句話、機型、編號','沒有','v'],
+ ['分頁','「再顯示 40 條」','沒有；後端最多回傳 200 筆','v'],
+ ['詳情版面','右側只說明選定的那一輪，預設選最後一次給建議的那輪','右側把每一輪的 8 段疊在一起，預設收合','d'],
+ ['逐輪說明','白話：聽到了什麼、用了哪些條件、候選怎麼變、為什麼是這幾台','8 段，多半是原始 JSON','d'],
+ ['需求檔案變化','沒有逐輪差異','ProfileDiff 用 + ~ - 標出新增、修改、刪除','s'],
+ ['原句高亮','在說明區對照，沒認出的詞旁邊有「加到詞庫」','直接在聊天泡泡裡用 &lt;mark&gt; 標出，沒認出的詞標黃','d'],
+ ['當時的卡片','由引擎重建，並標出使用者點了哪個選項','照原樣顯示存下來的卡片，看不出使用者選了哪一項','d'],
+ ['候選清單','前 10 台可以點開；邊緣、排除分組折疊','只有數量，加上原始 JSON','d'],
+ ['標籤','4 個營運標籤：典型需求、推薦有爭議、話術可改、資料問題','5 個問題標籤：好案例、識別錯誤、追問沒答、候選為 0、用戶不滿；會寫入變更紀錄','d'],
+ ['對話備註','有','沒有','v'],
+ ['跳到鏈路','切到工程模式後才有','每則訊息的 run_id 都能點進 B1，B1 也能回到對話','d'],
+ ['跳到機型','可以','有傳 onLaptop，但元件沒有用到','n'],
+ ['「重播」','用現在的規則或草稿規則重跑，比較當時、線上、草稿三種結果','跳到 B1 看當時的執行紀錄，不會重新計算','d'],
+ ['上一條／下一條','有','沒有','v'],
+ ['這個人的其他對話','有','只顯示 u_id 文字','v'],
+ ['設為回歸用例','有','沒有','v'],
+ ['從卡片定位','沒有','從 C8 點進來會捲到那一輪，並高亮那張卡','s'],
+ ['歷史保護','前端停用','後端用 <code>reject_conv_history</code> 擋下修改歷史對話','s'],
+ ['匯出','沒有','沒有','n'],
+ ],
+ details:[
+ ['同一個詞，意思不同：「重播」','<ul><li>v10 的「用現在的規則重跑」（<code>admin.html:2044-2063</code>）是調規則時最有價值的工具。</li><li>system 的「回放」（<code>AdminApp.tsx:1060</code>、<code>1153</code>）只是看歷史紀錄。</li><li>兩種都需要，應該<b>改成不同名稱</b>分開。</li></ul>'],
+ ['system 找不到某一類對話','<ul><li>清單頁（<code>AdminApp.tsx:435-444</code>）沒有任何篩選元件。</li><li>後端有 <code>limit(400)</code>（<code>api.py:1018</code>），最多回傳 200 筆（<code>:1039</code>），超過的對話在後台看不到。</li><li>全域搜尋只比對 <code>c_</code> 前綴（<code>api.py:1655</code>）。</li></ul>'],
+ ['v10 本身的小缺口','結果篩選（<code>admin.html:1869</code>）少了「沒聽懂」，這一類列得出來卻篩不出來。'],
+ ],
+ verdict:['<b>清單採用 v10</b>：篩選列、結果徽章、全文搜尋、分頁。後端要補時間、結果、搜尋參數和 offset','<b>詳情採用 v10 的單輪說明</b>加白話／工程切換，並吸收 system 的 ProfileDiff、原句高亮、照原樣保存的卡片','保留 system 的 run_id 雙向跳轉、C8 定位、後端標籤紀錄和歷史保護'],
+ toggles:['結果分類徽章','第一推薦欄、回饋圖示','詳情預設：白話／工程／並列','只看選定那一輪或全部展開','原句高亮','ProfileDiff','標出使用者點了哪個選項','原始 JSON 區塊','耗時與成本','用新規則重跑','設為回歸用例','標籤清單可自訂','對話備註','記錄誰看過','匯出']},
+
+{id:'a3',code:'A3',grp:'管理後台',title:'待處理、需求洞察與同步檢查',
+ scope:'admin.html：queue、insight、sync ↔ AdminApp.tsx：A1、A3 TAGS、A4、B2；api.py /admin/stats',
+ v:'待處理是一條完整的待辦流水線：自動歸類、附診斷、處理完會自動消掉。洞察回答的是「哪類需求多、庫裡夠不夠、價格怎麼影響推薦」。',
+ s:'沒有待處理頁。A4 是七個長條圖，回答的是「各種東西各有多少」。點進去看對話時，常常沒有帶篩選條件。',
+ rows:[
+ ['獨立的待辦頁','導覽第 2 項','沒有','v'],
+ ['分類方式','自動歸成 5 個分頁：差評、沒結果、沒聽懂、沒測過的機型、已處理','只有 A3 的手動標籤','d'],
+ ['自動發現問題','從最近的對話找出差評、放寬、沒聽懂、問到未收錄機型','只有「沒認出的詞」會自動記錄','v'],
+ ['差評','每條附原因、第一句話、當時推薦什麼，加上診斷','後端有存原因，但畫面只顯示 up/down 計數','v'],
+ ['沒結果','依條件組合分群，診斷「差一點的有幾台」「只差價格」','只有手動標籤','v'],
+ ['沒聽懂','依詞分群，<b>當場加詞並預覽重新理解的結果</b>','列出詞和次數，「去錄入」建立軟體草稿（只限軟體名稱）','d'],
+ ['沒測過的機型','顯示被問次數和用途分布，可以加進待測清單','沒有','v'],
+ ['完成後自動消掉','加詞、匯入、改規則後重新計算','建立草稿後計數不會歸零','v'],
+ ['導覽徽章','總數加每個分頁的數字','沒有','v'],
+ ['洞察時間篩選','7／30 天，加裝置、來源','1／7／30 天','d'],
+ ['主圖表','預算 × 用途熱力圖，格子顯示對話數、可選台數，不夠的標「缺」','預算、用途分成兩張長條圖','d'],
+ ['供需缺口','有','沒有','v'],
+ ['只差價格的機型','列出超出預算 25% 以內的機型','沒有','v'],
+ ['價格敏感度','模擬調價後的人數折線圖','沒有','v'],
+ ['追問效果','每題的回答率、候選縮減多少、答完拿到建議的比例','只有兩個總數，加題目分布','d'],
+ ['待測清單','「接下來測什麼」','沒有','v'],
+ ['系統層面的面板','沒有','動作分布、排除原因、模擬資料比例、動畫等級','s'],
+ ['點進去看對話','每個數字都能點','預算、用途點了是沒有篩選的 A3','d'],
+ ['同步檢查','設定指紋比對，加推送到使用者端（示範架構才需要）','不需要（前後端讀同一個資料庫）','e'],
+ ['用現行規則重跑歷史對話','最近 30 次，比對當時和現在的推薦','沒有','v'],
+ ],
+ details:[
+ ['system 的告警沒有資料來源','<code>Alert</code> 只在 <code>models.py:291</code> 定義，整個 backend 沒有任何地方建立它。A1 的「最近告警」和 B2 的告警頁在正式環境會一直是空的。'],
+ ['DIMS 不是 A4 的維度','<code>AdminApp.tsx:13</code> 的 DIMS 只用在 C6 權重頁。A4 的維度寫死在 <code>api.py:1846-1878</code>。'],
+ ['沒認出的詞不受時間篩選影響','<code>api.py:1784</code> 直接取前 20 筆，沒有套用 since，所以切換 1／7／30 天時內容不變。'],
+ ['同步檢查值得保留的那一半','v10 的「用現行設定重跑真實對話」（<code>admin.html:2892-2909</code>）其實就是回歸核對。建議移植到 system，改名為「改動影響檢查」，放在 C2／C6 儲存的前後。'],
+ ],
+ verdict:['<b>待處理整頁採用 v10</b>：差評、聽不懂、沒結果，正好都是「系統不了解使用者」的時刻，最貼近專案的唯一標準','<b>洞察以 v10 為主</b>，保留 system 的「系統怎麼回應」「數據暴露什麼」面板','同步檢查的指紋比對不需要；重跑比對要移植'],
+ toggles:['待處理頁與徽章','4 個分類各自開關','修好後自動移到已處理','低頻條目是否收起與門檻','診斷文字','加詞即時預覽','熱力圖「缺」標記與門檻','只差價格的比例','價格敏感度：圖表或表格','數字能不能點進去','洞察計算：現行規則或歷史快照','系統面板對非工程角色顯示','儲存規則時自動回歸核對']},
+
+{id:'a4',code:'A4',grp:'管理後台',title:'規則、詞庫與權重',
+ scope:'admin.html：rules（RULE_KEYS、KNOBS、SIM.impact、golden）、engine.js BASE_CFG ↔ C1、C2、C6；seed.py、domain.py、scoring.py',
+ v:'規則是一組可以試算的參數：改動先存草稿，用 30 天的對話重跑，跑過回歸用例，寫明原因才發佈，而且可以回滾。',
+ s:'規則拆成三頁，存在資料庫。但 C2 的開關和 C6 的大多數閾值<b>後端根本不讀</b>，而且沒有草稿、預覽、回歸測試和版本。',
+ rows:[
+ ['頁面組織','一頁 5 個分頁：閾值和權重、詞庫、試一句、回歸用例、版本記錄','三頁：C1 軟體畫像、C2 規則、C6 權重與公式','d'],
+ ['規則的本質','23 個數值或開關，引擎每次都讀','30 條規則說明（R001–R030）','d'],
+ ['開關有作用嗎','有','<b>沒有</b>：流程不讀 <code>Rule.enabled</code>','n'],
+ ['數值編輯','± 步進鈕，有上下限和單位','C2 只能啟停；C6 是純文字輸入框','d'],
+ ['用途效能合格線','12 個：剪輯匯出分鐘、遊戲幀數、P3 色域','沒有；改用軟體畫像的 RAM／VRAM 門檻','d'],
+ ['每天帶出門的重量上限','dailyKg 2 kg，可以調','沒有（travel_tol 存了但沒用到）','v'],
+ ['風險扣分','3 條寫死，每條扣 4 分','軟體畫像有 risk 欄位，但篩選和排序都不用','n'],
+ ['設定合理性檢查','7 條，不合理就不能發佈','只檢查權重合計是 100','v'],
+ ['草稿 → 發佈','有，側欄和底部浮條會提示','按保存就直接生效','v'],
+ ['影響預覽','用 30 天的對話重跑，看第一推薦、結果、追問各變了幾次','沒有','v'],
+ ['逐筆對比','當時、線上、草稿三種結果','沒有','v'],
+ ['試一句','並排顯示線上和草稿的回答','沒有','v'],
+ ['回歸用例','7 條黃金用例，發佈前自動跑','沒有（只有 pytest）','v'],
+ ['修改原因','發佈時必填','固定寫「啟停」或「更新權重與公式」','d'],
+ ['版本與回滾','v10–v12 有差異對照，回滾前先預覽','規則沒有版本；權重只有一個版本號，不能回滾','v'],
+ ['稽核紀錄','localStorage','<code>change_logs</code> 表記下前後值','d'],
+ ['詞庫','「把 X 當成 Y」，可以先試聽加詞前後的差別，並顯示出現次數','別名掛在軟體上，用字串互相包含比對（太寬鬆）','d'],
+ ['軟體門檻畫像','沒有','每種用法都有 hard、risk、權重增減、測試項、來源','s'],
+ ['軟體審核流程','沒有','草稿 → 審核 → 啟用 → 廢棄','s'],
+ ['權重合成','依用途加減、帶出門程度加減、偏好加成，最後按比例換算','LLM 建議（信心 ≥0.75）加軟體畫像增減，再調整成合計 100','d'],
+ ],
+ details:[
+ ['C2 的開關是假的','<ul><li>切換會呼叫 <code>PATCH /rules/{code}</code>（<code>api.py:1163-1177</code>），只寫資料庫。</li><li><code>pipeline.py:25</code> 的 import 裡沒有 Rule。命中哪些規則是 <code>rules_hit()</code> 寫死判斷的（<code>pipeline.py:586-607</code>）。</li><li>所以關掉 R004 不會改變推薦。</li></ul>'],
+ ['C6 的閾值多半沒有作用','<ul><li>只有預算、尺寸、重量三組寬限（<code>domain.py:62-69</code>）和 idle_end_minutes 真的會被讀取。</li><li><code>weight_approve</code>、<code>weight_ask</code>、<code>hard_filter</code>、<code>tier</code>、<code>compare_max</code> 全後端沒有讀取，程式寫死的是 0.75（<code>pipeline.py:336</code>）和 0.5（<code>:294</code>）。</li></ul>'],
+ ['C1 新建的軟體永遠無法啟用','從線索建立的草稿 <code>usages=[]</code>（<code>api.py:1211-1233</code>），但啟用時要求必須有用法（<code>api.py:1251</code>）。畫面上也沒有編輯門檻的表單。'],
+ ['v10 的發佈流程','<ul><li>改值就建立草稿，改回原值會自動清掉草稿（<code>admin.html:2382-2387</code>）。</li><li>影響預覽：<code>SIM.impact</code>（<code>:1026-1036</code>）</li><li>合理性檢查：<code>rulesProblems</code>（<code>:1370-1377</code>）</li><li>回歸用例：<code>:1395-1401</code></li><li>發佈時必填原因：<code>:2399-2411</code></li><li>版本回滾：<code>:2490-2502</code></li></ul>'],
+ ],
+ verdict:['<b>互動流程採用 v10</b>：草稿 → 影響預覽 → 回歸用例 → 必填原因 → 發佈 → 版本與回滾，搬到 system 的資料庫上（v10 已示範 <code>rule_versions</code>、<code>golden_cases</code> 兩張表）','<b>保留 system 的 C1 軟體畫像和審核流程</b>，並補上門檻編輯表單','C2 先處理：做不到真正開關的規則，改成唯讀說明，不要假裝可以開關'],
+ toggles:['每條規則啟停（要真的被流程讀取）','每條風險扣分與扣分值','軟體 risk 是否參與排序','用途權重加減、偏好加成','權重合成方式','LLM 權重建議與採用門檻','發佈前強制過回歸用例','影響預覽重跑天數','修改原因必填','詞庫自訂目標詞與比對方式','候選分段 tier 可調']},
+
+{id:'a5',code:'A5',grp:'管理後台',title:'卡片管理與介面文案',
+ scope:'admin.html：cards（CSW、CST、cardPreview）↔ AdminApp.tsx：C8（C8List、C8Detail）、C5；cards.py CARD_SEEDS、api.py',
+ v:'卡片是對話流程中的 5 種決策節點（追問、確認、衝突、推薦、需求區）。可以調行為、改雙語文案、用同一個引擎預覽，改之前會先看 30 天的影響。',
+ s:'卡片是 23 張追問題模板，只能啟用或停用。另外有點選統計和追溯，可以從卡片追到對話高亮和回放。文案、題目、選項都改不了。',
+ rows:[
+ ['卡片的定義','5 種流程卡，加 4 種固定樣式卡','23 張追問題模板（系統產出的卡不在目錄裡）','d'],
+ ['頁面結構','總覽、追問、確認、衝突、推薦、需求區分頁','清單（可以依分類篩選）→ 詳情','d'],
+ ['卡片流程圖','出現順序和每一步的流失','沒有','v'],
+ ['觸發條件','中文描述，例如「第一次給建議之前」','顯示 when 的 JSON 原文和優先級','d'],
+ ['單題、單選項開關','追問逐題停用；衝突卡 11 種放寬方式逐項開關','只有整張卡一個 enabled','v'],
+ ['數值參數','推薦台數 1–3、放寬選項 1–4、「很接近」門檻 1–10%','沒有','v'],
+ ['改之前先看影響','用 30 天的對話重跑，確認後才套用','切換後立即生效','v'],
+ ['文案編輯','問題、選項、按鈕、提示都能改，繁中和英文各一份','不能改（PATCH 只接受 enabled）','v'],
+ ['預覽','用同一個引擎跑出使用者端看到的樣子','用後台樣式畫問題和選項','d'],
+ ['手機／電腦預覽','沒有','沒有','n'],
+ ['使用統計','出現、回答、不確定、跳過、離開、對推薦的影響','展示、點選、點選率、無視、手打繞開、選項分布','d'],
+ ['差評統計','推薦卡有好評率和差評原因','沒有','v'],
+ ['卡片 → 規則','文字連結','相關規則代碼，可以點進 C2','d'],
+ ['卡片 → 對話','開啟篩選後的對話清單','開到單一輪並高亮這張卡','d'],
+ ['回放','沒有','每列都有回放','s'],
+ ['介面文案範圍','開場、副標、例句、空白狀態，加上各卡文案','歡迎語、常見問題（可以增刪，也能選發送方式）、篩選分組','d'],
+ ['文案儲存','離開欄位就存，每組可以恢復預設','先存草稿，按「保存」才寫入','d'],
+ ['文案預覽','有','沒有','v'],
+ ['影片和實測的顯示開關','沒有','沒有','n'],
+ ],
+ details:[
+ ['兩邊的卡片清單','<ul><li><b>v10</b>（<code>admin.html:2666-2672</code>）：追問卡、確認卡、衝突卡、推薦卡、需求區，另有機型問答、對比、為什麼不是別台、沒測過的機型 4 種固定卡。</li><li><b>system</b>（<code>cards.py:42</code> 起）：常用軟體、剪輯強度、預算、主要用途、便攜性、使用場景、螢幕尺寸、重量上限、螢幕需求、獨顯或核顯、作業系統、遊戲類型、記憶體、螢幕材質、厚度、刷新率、持續性能、擴展、續航、品牌、遊戲或創作（預設停用）、學生場景、噪音。</li></ul>'],
+ ['v10 的確認、衝突、推薦卡在 system 沒有管理介面','system 的 C8 大致只對應到 v10 的「追問卡」分頁。'],
+ ['模型選卡只是佔位寫法','<code>cards.py:737-754</code> 最後仍退回規則選卡。<code>card_selector</code> 設定（<code>:764-770</code>）沒有放到介面上。'],
+ ],
+ verdict:['<b>以 system 為底</b>：保留真實權限、統計、對話高亮和回放','移植 v10：依流程分頁（補上確認、衝突、推薦、需求區）、開放編輯文案並加上版本、改動前先看影響、用使用者端真實元件預覽','C5 和卡片文案合併成「文案中心」：草稿 → 預覽 → 發佈 → 回滾'],
+ toggles:['每張卡和單一選項的啟用','確認卡，以及說清楚時跳過確認','跳過按鈕','兩台接近時反問與門檻','推薦台數、放寬選項數','選卡策略：規則或模型','推薦理由顯示實測數據','顯示影片時間點','顯示影片連結','為什麼不是別台、對比、回饋','假設標籤顯示','常見問題發送方式','先看影響再套用']},
+
+{id:'a6',code:'A6',grp:'管理後台',title:'執行鏈路、性能與日誌',
+ scope:'admin.html：trace、perf、logs（838–925、3455–3610）↔ AdminApp.tsx：B1（B1View、MiniWf）、B2；trace.ts；pipeline.py',
+ v:'功能完整但資料是模擬的：每一步都有預算、超時、重試、數字核對、成本、SQL，也有 P50、P95、P99 和 SLO。',
+ s:'讀的是真實資料，但只實際量了「整輪」和「兩次模型調用」三個時間。其他 span 的長度是 <code>trace.ts</code> 按固定比例估出來的。告警從來沒被寫入，性能頁只有平均值。',
+ rows:[
+ ['資料來源','腳本產生 60 天的模擬對話','真實的 runs 表，用 perf_counter 計時','d'],
+ ['瀑布圖形式','平鋪清單，固定展開','Span 樹，可以展開或收起','d'],
+ ['階段','11 段，加 10 個子步驟（2a–2f、9a–9d）','11 段，只有 2a 一個子步驟','d'],
+ ['各 span 耗時','每一步各自產生（模擬值）','只有第 2、9 段是實測，其他按比例估算','d'],
+ ['每步預算與超預算標記','有','沒有','v'],
+ ['超時切換備用模型','8 秒後切換，產生第 2 次嘗試的 span','超時 60 秒；失敗時改用關鍵字或模板','v'],
+ ['數字核對失敗後重新生成','9c mismatch → 9b.2','沒有；「重試」徽章永遠不會出現','v'],
+ ['SQL','讀寫庫的步驟都顯示 SQL','有「讀寫」頁籤，但沒有內容','v'],
+ ['token 和成本','顯示供應商、模型、token、成本','B1 標頭的 token 抓錯欄位，永遠是 0；沒有成本','n'],
+ ['提示詞與版本快照','可以連到提示詞全文','沒有，只存回覆的前 120 字','v'],
+ ['通知順序檢查','沒有','檢查動畫通知是否排在事實通知前面','s'],
+ ['前後端分數一致','沒有','有欄位，但<b>永遠顯示「一致 ✓」</b>','n'],
+ ['實作進度標記','沒有','已實現、部分、規劃；但「跳過」也會被標成「規劃」','s'],
+ ['P50、P95、P99','整輪、每階段、使用者感知時間、每天趨勢、分布圖','只有平均值','v'],
+ ['SLO 目標','可以設 P95 目標秒數','沒有','v'],
+ ['執行列表篩選','超時、出錯、沒調用理解模型，加上搜尋','最近 80 筆，沒有篩選','v'],
+ ['一般日誌','有級別、模組、內容，可以篩選','後端有回傳 event_logs，畫面沒顯示','v'],
+ ['告警規則','5 條，可以設門檻和通知渠道','沒有規則，Alert 也從未被寫入','v'],
+ ['未讀錯誤徽章','有','沒有','v'],
+ ['跳到出錯的步驟','自動選中出錯或最慢的那一步','只會選第一段','v'],
+ ['日誌 ↔ 執行 ↔ 對話','雙向跳轉','雙向跳轉','e'],
+ ['變更日誌','只有文字','含修改前後的原始資料','d'],
+ ],
+ details:[
+ ['兩邊的階段切法','<ul><li><b>v10</b>（<code>admin.html:838-860</code>）：1 對話總管 → 2 需求理解（2a 載入上下文、2b 組提示詞、2c 模型調用、2d 校驗、2e 寫狀態、2f 推送）→ 3 詞庫畫像 → 4 篩選 → 5 權重合成 → 6 打分 → 7 動作 → 8 卡片資料 → 9 回覆（9a、9b、<b>9c 數字核對</b>、9d）→ 10 介面 → 11 日誌</li><li><b>system</b>（<code>trace.ts:1-13</code>）：第 5 步改成「審批權重建議」，權重合成併進第 6 步；第 4、8 步的類型和 v10 對調；沒有數字核對。</li></ul>'],
+ ['system 的耗時大多是估算的','<ul><li>實測的只有 <code>pipeline.py:262</code>、<code>:417</code>、<code>:458</code>。</li><li><code>trace.ts:85-100</code> 用 <code>share(0.06)</code> 這類比例攤分，瀏覽器時間取總時間的 4%（<code>:126</code>）。</li><li>「4 候選篩選 300ms」不能當成真的量測值。</li></ul>'],
+ ['三個資料錯誤','<ul><li>token：<code>AdminApp.tsx:1202</code> 讀 <code>tokens_in</code>，後端存的是 <code>prompt_tokens</code>（<code>llm.py:134-135</code>）。</li><li>分數一致：<code>_run_pub</code>（<code>api.py:2633-2652</code>）沒有回傳 scoring_mismatch。</li><li>告警：backend 沒有任何地方建立 <code>Alert(</code>。</li></ul>'],
+ ['trace.ts 不是使用者端的程式','只有 <code>AdminApp.tsx:5</code> 引用它；使用者端只在 <code>UserApp.tsx:408</code> 存了 run_id。'],
+ ],
+ verdict:['<b>資料層採用 system</b>（真實資料），<b>互動和資訊架構採用 v10</b>','後端在每一步實際記錄 t_start、ms、status、attempt、tokens、cost，取代比例估算','移植預算、P50/P95/P99、SLO、日誌篩選、告警規則；保留 system 的 Span 樹和通知順序檢查','先修三個資料錯誤：token 欄位、scoring_mismatch、告警寫入'],
+ toggles:['瀑布圖展開或收合','時間軸含瀏覽器時間','預算與超預算標記','token 與成本','提示詞全文與版本快照','SQL（限工程角色）','實作進度標記（開發期）','通知順序檢查','分數一致性檢查','數字核對後重新生成','超時秒數與備用模型','告警規則與通知渠道','未讀錯誤徽章','SLO 目標秒數','自動選中出錯的步驟']},
+
+{id:'a7',code:'A7',grp:'管理後台',title:'模型、提示詞、資料庫與機型庫',
+ scope:'admin.html：llm（3622–3651）、db、lib ↔ admin/ModelPage.tsx（C4）、AdminApp.tsx（C3）；llm.py、seed.py、importer.py、models.py',
+ v:'維運視角：看得到每一次調用，能估成本，有備用模型，但提示詞唯讀。機型庫是營運工具，資料庫頁全是示意數值。',
+ s:'工程視角：能真的接上模型、新增供應商、改提示詞，但沒有防護。資料用 CSV 整批匯入並可以版本回滾，但機型只能看，影片出處在匯入時就丟掉了。',
+ rows:[
+ ['供應商','寫死 4 家（附境外合規說明）','可以自己新增或移除；預設 DeepSeek 加本機 CC Switch','s'],
+ ['協定','OpenAI 相容','OpenAI 相容或 Anthropic','s'],
+ ['金鑰','只顯示遮罩，不能輸入','新增時輸入，畫面只顯示後 4 位；沒有更換金鑰的 API','d'],
+ ['新增流程','沒有','先測通才能加入','s'],
+ ['用途指派','需求理解、生成回覆、備用','需求理解、回覆生成','d'],
+ ['備援','8 秒超時切備用模型','沒有備用模型；改用關鍵字或模板，超時 60 秒','d'],
+ ['逐次調用紀錄','時間、用途、模型、耗時、token、成本、狀態，可以篩選','C4 只有彙總；B2 有逐筆，但沒有 token 和成本','v'],
+ ['成本','每天成本圖、單次對話成本、換供應商前試算','單價手動填','d'],
+ ['測試連線','假的','真的送出 pong 並顯示耗時','s'],
+ ['提示詞編輯','唯讀（附註「之後要先存草稿、重跑對比」）','可以編輯，<b>存檔立刻上線</b>；編輯框一開始是空的','d'],
+ ['提示詞版本','p-nlu-1.5 這類版本號，每次執行都記下用了哪一版','整數版本，可以回滾；但不寫變更紀錄，執行時也不記錄版本','d'],
+ ['機型清單','分頁 25/50/100，有排序，顯示被推薦和被排除的統計','只取前 80 筆，沒有分頁','v'],
+ ['篩選與搜尋','7 種狀態，加品牌、類型、價位、年份','前端沒有（API 其實支援 q/brand/offset）','v'],
+ ['機型編輯','改價（先看影響）、批次上下架','只能切換上下架','v'],
+ ['匯入','三步：檢查 → 看影響 → 匯入；增量，可以撤回','上傳 → 預覽 → 欄位對應 → 發佈；<b>整批取代</b>','d'],
+ ['資料版本回滾','只能撤回匯入','有版本歷史，可以回滾到任一版','s'],
+ ['影片來源','每項實測都有 video_id 和秒數','CSV 有影片欄，importer 沒有對應它','v'],
+ ['未測機型','hold 狀態，不進候選','缺的值算成 None，機型照樣進候選','v'],
+ ['資料庫維運頁','資料表、DDL、慢查詢、備份（示意值）','沒有','v'],
+ ['匯出','沒有','沒有','n'],
+ ],
+ details:[
+ ['預設提示詞的內容差別','<ul><li><b>v10 p-nlu-1.5</b>（<code>admin.html:3410</code>）：只抽明說的條件，每條附 evidence；認不出的詞放進 <code>unknown_terms</code>；「便宜點」這類說法標成 relative，交給規則換算。</li><li><b>system NLU v1</b>（<code>seed.py:117-150</code>）：輸出增量 ops，每筆帶 kind 和 confidence，並注入 profile 和 software；禁止回傳機型、分數。沒有 unknown_terms 和 relative。</li><li><b>v10 p-reply-1.3</b>（<code>:3412</code>）：先複述條件再下結論；<b>沒有實測資料要明講</b>；不用行銷語氣，不用驚嘆號。</li><li><b>system REPLY v1</b>（<code>seed.py:153-161</code>）：禁止內部術語，寫 2–5 句。少了「沒有實測要明講」和「不用行銷語氣」。</li></ul>'],
+ ['改提示詞可能讓整輪對話壞掉','提示詞用 <code>tmpl.format()</code> 套入（<code>pipeline.py:166</code>、<code>414</code>），但外層只接 ModelError。管理員存了少佔位符的提示詞，會丟出 KeyError，不會退回關鍵字或模板，而且存檔立刻上線（<code>api.py:1631-1634</code>）。'],
+ ['資料回滾會改掉資料來源','<code>admin_data_rollback</code> 呼叫 publish 時沒有帶 data_source（<code>api.py:2152</code>），預設值是 "simulated"。一批「實測」資料回滾後，會全部變成「模擬」。'],
+ ['其他資料問題','<ul><li>欄位對應只涵蓋 13 個欄位（<code>importer.py:329-343</code>），計分卻用了大約 45 欄。</li><li>編號重複只出現警告，發佈時沒有擋下。</li><li>測試模型的 API 沒有呼叫 deny_observer（<code>api.py:1538-1540</code>）。</li></ul>'],
+ ],
+ verdict:['模型：<b>以 system 為底</b>，補回 v10 的逐次調用明細（含提示詞版本）、成本試算、備用模型、提示詞草稿與重跑對比','預設提示詞補上 v10 的「沒有實測要明講」「不用行銷語氣」和 unknown_terms','資料：<b>管線採用 system</b>，<b>機型庫介面採用 v10</b>。優先修三件事：匯入影片出處欄位、回滾會改掉資料來源、前端接上搜尋和分頁'],
+ toggles:['備用模型與超時秒數','失敗時的降級方式','數字核對與重新生成','提示詞發佈前要草稿和重跑對比','NLU 注入欄位','回覆規則（沒實測要明講、不用行銷語氣）','調用紀錄顯示 token 和成本','成本趨勢與試算','機型清單欄位','缺實測（hold）的機型能否進候選','推薦附影片連結和時間點','模擬資料的機型能否推薦','匯入：整批取代或增量','上下架或改價前先看影響','資料庫維運頁']},
+];
+
+const BUGS=[
+ ['C2 規則開關沒有作用','流程不讀 <code>Rule.enabled</code>（<code>pipeline.py:25</code> 沒有 import Rule），命中哪些規則是寫死判斷的（<code>:586-607</code>）。'],
+ ['C6 有 5 個閾值沒人讀','weight_approve、weight_ask、hard_filter、tier、compare_max；另外 travel_tol 讀進來了但沒有用到。'],
+ ['告警永遠是空的','backend 沒有任何地方建立 <code>Alert(</code>，A1 和 B2 的告警區在正式環境會一直是空的。'],
+ ['B1 的 token 永遠是 0','<code>AdminApp.tsx:1202</code> 讀 tokens_in，後端存的是 prompt_tokens。'],
+ ['「前後端分數一致 ✓」是假的','<code>_run_pub</code> 沒有回傳 scoring_mismatch，所以永遠顯示一致。'],
+ ['B1 的耗時大多是估算的','只有 3 個數字是實測，其他由 <code>trace.ts:85-100</code> 按比例攤分。'],
+ ['推薦卡的風險和證據是模板字','<code>public_laptop</code> 沒有提供 risk 和 pros，畫面永遠顯示「風險中等」。'],
+ ['需求飛入動畫播不出來','選取器找不到起點元素（<code>animation.ts:252</code> 對上 <code>UserApp.tsx:1155</code>）。'],
+ ['放寬按鈕在 LLM 失敗時沒有作用','按鈕送出純文字，關鍵字備援沒有刪除規則。'],
+ ['@ 機型只有入口','<code>run_turn</code> 的 refs 沒有被使用。'],
+ ['C1 新建的軟體永遠無法啟用','草稿 usages=[]，但啟用時要求必須有用法。'],
+ ['資料回滾會把「實測」改成「模擬」','<code>api.py:2152</code> 沒有帶 data_source。'],
+ ['影片出處在匯入時被丟掉','importer 的 COL 沒有對應「測試視頻鏈接」欄。'],
+ ['改提示詞可能讓整輪對話壞掉','format 錯誤沒有被攔下，而且存檔立刻上線。'],
+ ['登入框預填預設密碼、沒有登出、沒接首次改密碼','<code>AdminApp.tsx:137-138</code>、<code>:291-296</code>。'],
+ ['手機無法正常使用','viewport 寫死成 1440，min-width 1200px。'],
+ ['注音輸入時按 Enter 可能誤送','<code>UserApp.tsx:667</code> 沒有判斷 isComposing。'],
+];
+
+/* render */
+const $=s=>document.querySelector(s);
+const tag=k=>`<span class="tag ${T[k][0]}">${T[k][1]}</span>`;
+let counts={v:0,s:0,d:0,e:0,n:0},rowsTotal=0;
+CH.forEach(c=>c.rows.forEach(r=>{counts[r[3]]++;rowsTotal++}));
+$('#stats').innerHTML=[[rowsTotal,'比對項目'],[counts.v,'只有 v10 有'],[counts.s,'只有 system 有'],[BUGS.length,'system 中的「假功能」與缺陷']].map(([n,l])=>`<div><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+$('#matrix tbody').innerHTML=MATRIX.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+
+$('#chapters').innerHTML=CH.map(c=>`
+<section class="ch" id="${c.id}">
+ <div class="chhead"><span class="chcode">${c.code}</span><h2>${c.title}</h2></div>
+ <p class="scope">比較範圍：${c.scope}</p>
+ <div class="thesis"><div class="v"><span class="lbl">v10demo</span><p>${c.v}</p></div><div class="s"><span class="lbl">system</span><p>${c.s}</p></div></div>
+ ${c.flowV?`<h3>對話流程對照</h3><div class="grid2"><pre class="flow">v10demo\n\n${c.flowV}</pre><pre class="flow">system\n\n${c.flowS}</pre></div>`:''}
+ <h3>差異對照表（${c.rows.length} 項）</h3>
+ <div class="filters" role="group" aria-label="篩選差異類型">篩選：
+  <button aria-pressed="true" data-f="all">全部</button>${['v','s','d','n','e'].filter(k=>c.rows.some(r=>r[3]===k)).map(k=>`<button aria-pressed="false" data-f="${k}">${T[k][1]} ${c.rows.filter(r=>r[3]===k).length}</button>`).join('')}
+ </div>
+ <div class="tblwrap"><table><thead><tr><th>項目</th><th>v10demo</th><th>system</th><th>差異</th></tr></thead><tbody>
+ ${c.rows.map(r=>`<tr data-k="${r[3]}"><td>${r[0]}</td><td class="c">${r[1]}</td><td class="c">${r[2]}</td><td class="t">${tag(r[3])}</td></tr>`).join('')}
+ </tbody></table></div>
+ ${c.details.length?`<h3>重點細節（附程式位置）</h3>`+c.details.map((d,i)=>`<details${i===0?' open':''}><summary>${d[0]}</summary><div class="body">${d[1].startsWith('<')?d[1]:'<p>'+d[1]+'</p>'}</div></details>`).join(''):''}
+ <div class="verdict"><h4>建議</h4><ul>${c.verdict.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+ <h3>可做成開關</h3><ul class="toggles">${c.toggles.map(x=>`<li>${x}</li>`).join('')}</ul>
+</section>`).join('');
+
+$('#buglist').innerHTML=BUGS.map((b,i)=>`<div class="bug"><b>${i+1}. ${b[0]}</b><br>${b[1]}</div>`).join('');
+
+const tg=[];CH.forEach(c=>c.toggles.forEach(t=>{const m=t.match(/（(建議[^）]*)）/);tg.push([c.code+' '+c.title,t.replace(/（建議[^）]*）/,''),m?m[1].replace('建議',''):'—',c.code])}));
+$('#toggletbl tbody').innerHTML=tg.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><a href="#${r[3].toLowerCase()}">${r[3]}</a></td></tr>`).join('');
+
+/* toc */
+const items=[['summary','','一頁看懂','總覽'],...CH.map(c=>[c.id,c.code,c.title,c.grp]),['bugs','附錄 A','system 的假功能','附錄'],['toggles','附錄 B','開關總表','附錄']];
+let g='';$('#toclist').innerHTML=items.map(([id,code,t,grp])=>{let h='';if(grp!==g){g=grp;h=`<div class="grp">${grp}</div>`}return h+`<a href="#${id}" data-id="${id}">${code?`<span class="code">${code}</span>`:''}${t}</a>`}).join('');
+$('#tocbtn').addEventListener('click',()=>{const o=$('#toc').classList.toggle('open');$('#tocbtn').setAttribute('aria-expanded',o)});
+const links=[...document.querySelectorAll('#toclist a')];
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.dataset.id===e.target.id))}}),{rootMargin:'-20% 0px -70% 0px'});
+items.forEach(([id])=>{const el=document.getElementById(id);if(el)io.observe(el)});
+
+/* filters */
+document.querySelectorAll('.filters').forEach(f=>f.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ f.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+ const k=b.dataset.f;f.nextElementSibling.querySelectorAll('tbody tr').forEach(tr=>tr.hidden=k!=='all'&&tr.dataset.k!==k)}));
+</script>
+</body>
+</html>
