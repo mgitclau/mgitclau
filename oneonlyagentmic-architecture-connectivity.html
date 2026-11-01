@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OneOnlyAgentMic 架構與連線</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 單欄技術提案；比較表可橫向捲動，推薦項以邊框與標籤標示 */
+:root{
+  --bg:#eef1f3;--panel:#fff;--fg:#1b2329;--muted:#5a6872;--line:#d3dae0;--accent:#0b6b74;--accent-fg:#fff;--soft:#d9ecee;--warn:#9a5200;
+  --display:"Noto Serif TC","Songti TC",serif;--body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;--mono:"JetBrains Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12181c;--panel:#1b2329;--fg:#e8edf0;--muted:#9fadb6;--line:#33414a;--accent:#5cc2cb;--accent-fg:#0b2226;--soft:#1f3a3f;--warn:#f0ad5c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12181c;--panel:#1b2329;--fg:#e8edf0;--muted:#9fadb6;--line:#33414a;--accent:#5cc2cb;--accent-fg:#0b2226;--soft:#1f3a3f;--warn:#f0ad5c;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 72px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:52px}
+.wrap>*{min-width:0}
+section{display:grid;gap:18px}
+section>*{min-width:0}
+h1,h2{font-family:var(--display);line-height:1.3;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,5vw,42px)}
+h2{font-size:clamp(23px,3.6vw,29px)}
+h3{font-size:18px;margin:0;line-height:1.4}
+h4{font-size:14px;margin:0;color:var(--muted)}
+p{margin:0;max-width:70ch}
+ul{margin:0;padding-left:20px}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lead{color:var(--muted)}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.08em;color:var(--accent)}
+.toc{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.verdict{background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:20px;display:grid;gap:14px}
+.vgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.vgrid>div{min-width:0}
+.vgrid b{display:block}
+.vgrid span{color:var(--muted);font-size:14px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px;line-height:1.55}
+th,td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-weight:700;white-space:nowrap}
+tr.best td{background:var(--soft)}
+.flow{display:grid;grid-template-columns:minmax(0,1fr) 150px minmax(0,1.25fr);gap:12px;align-items:stretch}
+.lane{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;align-content:start;min-width:0}
+.lane.mid{align-content:center;text-align:center;border-style:dashed;font-size:14px}
+.step{border:1px solid var(--line);border-radius:4px;padding:6px 10px;font-size:14px}
+.step small{display:block;color:var(--muted);font-family:var(--mono);font-size:11.5px;overflow-wrap:anywhere}
+.step.hot{background:var(--soft);border-color:var(--accent)}
+.opts{display:grid;gap:16px}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:12px}
+.opt.best{border-color:var(--accent)}
+.opth{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;justify-content:space-between}
+.tag{font-size:12px;padding:1px 9px;border-radius:999px;background:var(--soft);white-space:nowrap}
+.tag.no{background:none;color:var(--warn);outline:1px solid var(--warn)}
+.pc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;font-size:15px}
+.pc>div{min-width:0}
+code{font-family:var(--mono);font-size:.88em;overflow-wrap:anywhere}
+.note{font-size:14px;color:var(--muted)}
+@media (max-width:760px){.vgrid,.pc,.flow{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header style="display:grid;gap:12px">
+  <h1>OneOnlyAgentMic 架構與連線</h1>
+  <p class="lead">Android 手機錄音，交給你自己的 Windows 11 桌機做 ASR 和 Agent 分析。本頁比較系統架構和手機↔桌機連線方案，並給出建議。查證日 2026-10-31；速度與準確率多為廠商自報，都還沒在目標硬體上實測。</p>
+  <nav class="toc" aria-label="目錄"><a href="#verdict">結論</a><a href="#arch">架構方案</a><a href="#design">推薦架構</a><a href="#compute">桌機算力</a><a href="#conn">連線方案</a><a href="#poc">驗證計畫</a><a href="#src">來源</a></nav>
+</header>
+
+<section id="verdict" class="verdict">
+  <div class="eyebrow">結論</div>
+  <div class="vgrid">
+    <div><b>架構：批次工作管線</b><span>手機上傳分段，桌機排隊處理，手機再取回結果。桌機離線也不影響錄音。</span></div>
+    <div><b>連線：區網 → iroh → Tailscale</b><span>同網段走區網；遠端首選 iroh；iroh 的 PoC 不過就用 Tailscale。</span></div>
+    <div><b>算力：依硬體分層</b><span>ASR 預設走 CPU，LLM 走 Vulkan。8GB 直接呼叫 <code>llama-server</code>，16GB 以上才用 opencode。</span></div>
+  </div>
+</section>
+
+<section id="arch">
+  <div class="eyebrow">第一部分</div>
+  <h2>系統架構方案</h2>
+  <p>三個方案的差別在於手機和桌機如何交接工作。第一版選 A：需求不要求即時，而且 8GB 內顯機種要靠排隊才跑得完。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>比較項目</th><th>A 批次工作管線（推薦）</th><th>B 同步資料夾</th><th>C 即時串流</th></tr></thead>
+    <tbody>
+      <tr><td>做法</td><td>自訂上傳、工作佇列、結果 API</td><td>雙向同步資料夾，桌機監看檔案</td><td>邊錄邊傳，桌機即時辨識</td></tr>
+      <tr><td>桌機離線</td><td>正常，稍後補傳</td><td>正常，稍後補傳</td><td>即時功能失效，要退回批次</td></tr>
+      <tr><td>確認後才刪音檔</td><td>有明確 ACK</td><td>要另行設計</td><td>要另行設計</td></tr>
+      <tr><td>工作進度</td><td>精確</td><td>只能從檔案推測</td><td>精確</td></tr>
+      <tr><td>背景耗電</td><td>低，定期連線</td><td>視同步頻率</td><td>高，連線長期不斷</td></tr>
+      <tr><td>8GB 內顯</td><td>適合，可排隊</td><td>適合</td><td>不適合，ASR 要持續佔資源</td></tr>
+      <tr><td>開發量</td><td>中</td><td>低</td><td>高</td></tr>
+      <tr><td>適用時機</td><td>第一版</td><td>快速原型</td><td>後續選配</td></tr>
+    </tbody>
+  </table></div>
+  <div class="opts">
+    <article class="opt best">
+      <div class="opth"><h3>A 批次工作管線</h3><span class="tag">推薦</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>桌機關機、斷網都不影響錄音</li><li>每段都有 ACK，音檔不會誤刪</li><li>可在手機顯示每個處理階段</li><li>記憶體小的機器也能靠排隊完成</li></ul></div>
+        <div><h4>缺點</h4><ul><li>結果有延遲，不能邊講邊看</li><li>上傳協定和工作狀態要自己實作</li></ul></div>
+      </div>
+    </article>
+    <article class="opt">
+      <div class="opth"><h3>B 同步資料夾</h3><span class="tag no">僅適合原型</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>開發量最少</li><li>Syncthing 全程端對端加密</li><li>雙向同步很貼近「音檔過去、結果回來」</li></ul></div>
+        <div><h4>缺點</h4><ul><li>官方 Android 版已於 2024-12 封存</li><li>社群 fork 活躍，但有維護者交接爭議</li><li>「確認後才刪檔」要另外補</li><li>中繼速度遠低於直連</li></ul></div>
+      </div>
+    </article>
+    <article class="opt">
+      <div class="opth"><h3>C 即時串流</h3><span class="tag no">後續選配</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>可做即時字幕</li><li>對話中就能看到重點</li></ul></div>
+        <div><h4>缺點</h4><ul><li>桌機離線或網路差就失效</li><li>耗電最高，背景連線也最不穩</li><li>ASR 持續佔用記憶體，8GB 機種難以負擔</li></ul></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="design">
+  <h2>推薦架構的組成</h2>
+  <p>音源、傳輸、ASR、分析四個擴充點互相獨立（下圖醒目處）。之後加入錄音豆只要新增一個音源實作，其他部分不用改。</p>
+  <div class="flow">
+    <div class="lane"><h3>Android App</h3>
+      <div class="step hot">音源 CaptureSource<small>內建 / 有線 / 藍牙 / 錄音豆</small></div>
+      <div class="step">分段編碼<small>1–5 分鐘 Opus 分段</small></div>
+      <div class="step">本機錄音區<small>Room + App 私有目錄</small></div>
+      <div class="step">同步 Worker<small>WorkManager</small></div>
+      <div class="step">結果 UI<small>Jetpack Compose</small></div>
+    </div>
+    <div class="lane mid"><div class="step hot">傳輸 Transport<small>區網 / iroh / Tailscale</small></div><div>上傳分段 →<br>← ACK 與進度<br>← 取回結果</div></div>
+    <div class="lane"><h3>Windows 11 常駐服務</h3>
+      <div class="step">接收與驗證<small>SHA-256 去重</small></div>
+      <div class="step">工作佇列與資源排程<small>SQLite，8GB 一次跑一個重型工作</small></div>
+      <div class="step hot">ASR AsrEngine<small>sherpa-onnx + Qwen3-ASR 0.6B</small></div>
+      <div class="step">繁體轉換<small>OpenCC s2twp</small></div>
+      <div class="step hot">分析 Analyzer<small>llama-server 或 opencode</small></div>
+      <div class="step">JSON Schema 驗證與結果庫<small>摘要、心智圖、提醒草稿</small></div>
+    </div>
+  </div>
+  <p class="note">常駐服務建議用 Rust，因為 iroh 本身是 Rust。ASR 和 LLM 都以獨立子程序執行，工作結束就退出，記憶體可以完整釋放，崩潰也不會拖垮常駐服務。</p>
+</section>
+
+<section id="compute">
+  <h2>如何使用桌機算力</h2>
+  <p>目前沒有穩定、跨廠商、又不綁 Windows 版本的 ONNX GPU 路線，所以 ASR 預設走 CPU，LLM 走 Vulkan。第一次啟動時要實測再決定，因為 Radeon 內顯跑 LLM 可能比 CPU 慢。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>硬體（門檻為推論）</th><th>ASR</th><th>語者分離</th><th>分析</th></tr></thead>
+    <tbody>
+      <tr><td>8GB、內顯或純 CPU</td><td>Qwen3-ASR 0.6B int8；更低階用 SenseVoice</td><td>3D-Speaker + seg3，可關閉</td><td>直接呼叫 <code>llama-server</code> + Qwen3.5 2B q4</td></tr>
+      <tr><td>16GB，或獨顯 4–6GB</td><td>Breeze-ASR-25 Q5，或 Qwen3-ASR 1.7B</td><td>同上</td><td>opencode + 7–14B 模型，需實測</td></tr>
+      <tr><td>NVIDIA 8GB VRAM 以上</td><td>Breeze + faster-whisper CUDA</td><td>pyannote community-1</td><td>opencode + 更大模型</td></tr>
+      <tr><td>Intel Arc 或 Core Ultra</td><td>可選 OpenVINO Whisper</td><td>同第一層</td><td>Vulkan 或 OpenVINO</td></tr>
+      <tr><td>任何硬體，且同意上雲</td><td>同上</td><td>同上</td><td>opencode + 雲端模型，品質最穩，但逐字稿會離開桌機</td></tr>
+    </tbody>
+  </table></div>
+  <div class="pc">
+    <div><h3>為什麼 8GB 不走 opencode</h3><ul><li>Ollama 官方寫 opencode 需要 64k 以上 context，opencode 文件建議 16–32k</li><li>小模型常見不呼叫工具的回報（#25352、#51268）</li><li>這一步只是「讀逐字稿、輸出 JSON」，一次呼叫就能完成</li></ul></div>
+    <div><h3>opencode 的使用限制</h3><ul><li>官網文件多對應 v1；v2 原始碼查無結構化輸出，改用 MCP 工具回傳 JSON</li><li>逐字稿可能夾帶指令，必須禁用 <code>bash</code>、<code>webfetch</code>、<code>websearch</code></li><li>官方建議 WSL，原生 Windows 要實測</li><li>用 <code>opencode run</code> 逐次執行，外層加 timeout 與重試</li></ul></div>
+  </div>
+</section>
+
+<section id="conn">
+  <div class="eyebrow">第二部分</div>
+  <h2>手機↔桌機連線方案</h2>
+  <p>資料量比想像中小：16 kHz Opus 24 kbps 每小時約 10.8 MB，8 小時約 86 MB，走 2 Mbit/s 中繼約 7 分鐘傳完。所以穩定性和設定難度比帶寬重要，批次同步也不需要低延遲。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>方案</th><th>使用者設定</th><th>公開伺服器</th><th>佔 VPN 槽</th><th>可內嵌 App</th><th>授權</th><th>費用</th></tr></thead>
+    <tbody>
+      <tr class="best"><td><b>iroh</b>（首選）</td><td>低，掃 QR；開發成本高</td><td>否，中繼有疑慮</td><td>否</td><td>官方 Kotlin 綁定</td><td>MIT / Apache-2.0</td><td>公共中繼僅供開發測試；Pro $19/月</td></tr>
+      <tr class="best"><td><b>Tailscale</b>（備援）</td><td>低，要裝 App 和帳號</td><td>否</td><td>是</td><td>社群方案，不成熟</td><td>核心 BSD-3</td><td>6 人內免費，限非商用</td></tr>
+      <tr class="best"><td><b>區網直連</b>（必備）</td><td>低</td><td>否</td><td>否</td><td>是</td><td>—</td><td>免費</td></tr>
+      <tr><td>FRP + VPS</td><td>高</td><td><b>是</b></td><td>否</td><td>不需要</td><td>Apache-2.0</td><td>VPS 自付</td></tr>
+      <tr><td>Cloudflare Tunnel</td><td>中</td><td>否，靠 Cloudflare</td><td>否</td><td>不需要</td><td>cloudflared Apache-2.0</td><td>免費，穩定網址需網域</td></tr>
+      <tr><td>純 WireGuard</td><td>高</td><td>需公網入口</td><td>未驗證</td><td>可</td><td>Android 版 Apache-2.0</td><td>免費</td></tr>
+      <tr><td>Syncthing</td><td>中</td><td>否</td><td>否</td><td>可</td><td>MPL-2.0</td><td>免費</td></tr>
+      <tr><td>Headscale</td><td>高</td><td><b>是</b></td><td>是</td><td>同 Tailscale</td><td>BSD-3</td><td>VPS 自付</td></tr>
+      <tr><td>NetBird</td><td>低</td><td>否（雲端版）</td><td>是（推論）</td><td>Android 未證實</td><td>客戶端 BSD-3</td><td>5 人、100 機器</td></tr>
+      <tr><td>ZeroTier</td><td>低</td><td>否</td><td>是（推論）</td><td>libzt 授權未驗證</td><td>主體 MPL-2.0</td><td>10 裝置，非商用</td></tr>
+      <tr><td>libp2p</td><td>開發成本高</td><td>需要中繼</td><td>否</td><td>可</td><td>go 版 MIT</td><td>中繼自備</td></tr>
+      <tr><td>WebRTC</td><td>開發成本高</td><td><b>需要信令</b></td><td>否</td><td>可</td><td>未查</td><td>TURN 另計</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="opts">
+    <article class="opt best">
+      <div class="opth"><h3>iroh</h3><span class="tag">首選，PoC 通過後定案</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>掃一次 QR 就配對，不用帳號或另一個 App</li><li>不佔 VPN 槽，可同時開公司 VPN</li><li>官方有 Kotlin 綁定，也支援 Windows x86_64</li><li>週期性連線、傳完就關，符合官方對 Android 背景的建議（推論）</li></ul></div>
+        <div><h4>缺點</h4><ul><li>Maven 版不含 Android，要用 NDK 自行編譯</li><li>有第三方回報 async 呼叫在 Android 卡住（未驗證，必測）</li><li>公共中繼限速、無保證，官方不建議用於生產</li><li>開源專案沒有人替所有使用者付中繼費</li></ul></div>
+      </div>
+    </article>
+    <article class="opt best">
+      <div class="opth"><h3>Tailscale</h3><span class="tag">備援，現在就能用</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>工程量最小，App 只要連到一個位址</li><li>NAT 穿透成熟，打不通時有 DERP 保底</li><li>Windows 和 Android 都有官方 App</li></ul></div>
+        <div><h4>缺點</h4><ul><li>要裝 App、註冊帳號，還會佔 VPN 槽</li><li>依賴 Tailscale 公司的控制面</li><li>Personal 方案限非商用</li><li>DERP 官方案例僅 2.2 Mbit/s，但批次音檔仍夠用</li></ul></div>
+      </div>
+    </article>
+    <article class="opt best">
+      <div class="opth"><h3>區網直連</h3><span class="tag">必備</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>最快，不經第三方</li><li>適合回家後整夜批次同步</li></ul></div>
+        <div><h4>缺點</h4><ul><li>只在同網段有效</li><li>Android 17 起 target 37 要處理 <code>ACCESS_LOCAL_NETWORK</code></li></ul></div>
+      </div>
+    </article>
+    <article class="opt">
+      <div class="opth"><h3>FRP + VPS</h3><span class="tag no">進階選項</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>行為單純，手機走一般網路，不佔 VPN</li><li>可全權掌控，Apache-2.0</li></ul></div>
+        <div><h4>缺點</h4><ul><li>要租 VPS 並維護，等於自架中繼，與目標衝突</li><li>端點公開，認證和 TLS 要自己處理</li><li>部分防毒會誤報 frpc</li></ul></div>
+      </div>
+    </article>
+    <article class="opt">
+      <div class="opth"><h3>Cloudflare Tunnel</h3><span class="tag no">進階選項</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>桌機只需對外連線，不用開埠</li><li>手機就是一般 HTTPS，背景行為最單純</li></ul></div>
+        <div><h4>缺點</h4><ul><li>穩定網址需要自己的網域</li><li>免費方案單請求上限 100 MB，要分段</li><li>HTTP 流量會在 Cloudflare 解密，音檔必須另外加密</li><li>條款對大量音訊的適用方式未確認</li></ul></div>
+      </div>
+    </article>
+    <article class="opt">
+      <div class="opth"><h3>純 WireGuard</h3><span class="tag no">進階選項</span></div>
+      <div class="pc">
+        <div><h4>優點</h4><ul><li>無第三方依賴</li><li>直連速度最好</li></ul></div>
+        <div><h4>缺點</h4><ul><li>要設定路由器、DDNS 或公網 IPv6</li><li>IPv4 在 CGNAT 後無法運作</li><li>對非網路專家不實際</li></ul></div>
+      </div>
+    </article>
+  </div>
+
+  <div class="tbl"><table style="min-width:560px">
+    <thead><tr><th>不建議的方案</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>Headscale</td><td>需要公開伺服器，等於自架中央控制面</td></tr>
+      <tr><td>NetBird、ZeroTier</td><td>可用，但對本專案沒有勝過 Tailscale 的明顯優勢；ZeroTier 中繼慢</td></tr>
+      <tr><td>libp2p</td><td>IMC 2026 論文量到打洞成功率 70% ± 7.1%（非手機專測），Relay v2 也不適合傳檔保底</td></tr>
+      <tr><td>WebRTC</td><td>仍要信令與 TURN，會把中央服務帶回來</td></tr>
+      <tr><td>Syncthing</td><td>見架構方案 B</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>為什麼這樣排序</h3>
+  <p>App 依序嘗試區網、iroh、使用者設定的位址，三者共用同一個傳輸介面。iroh 是唯一同時做到免帳號、免 VPN App、免公開伺服器、不佔 VPN 槽，又有官方 Android 綁定路徑的選項。主要風險是 Android 綁定成熟度和中繼。如果想最快做出第一版，就先用 Tailscale 上線，之後再補 iroh。</p>
+  <p class="note">沒有方案能完全不依賴他人的基礎設施。區網和 WireGuard 不靠第三方，但只適用部分網路環境。iroh 和 Tailscale 靠第三方協助建立連線，內容仍加密。FRP 和 Headscale 則要自己維護伺服器。</p>
+
+  <div class="tbl"><table style="min-width:560px">
+    <thead><tr><th>你的情況</th><th>建議</th></tr></thead>
+    <tbody>
+      <tr><td>一般使用者</td><td>iroh（PoC 後）；目前可先用 Tailscale</td></tr>
+      <tr><td>需要同時開公司 VPN</td><td>iroh</td></tr>
+      <tr><td>公司網路封鎖 UDP</td><td>Tailscale DERP 或 Cloudflare Tunnel（需實測）</td></tr>
+      <tr><td>想完全自主</td><td>已有 VPS 就用 frp，或自架 iroh 中繼</td></tr>
+      <tr><td>大多在家同步</td><td>區網直連即可</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="poc">
+  <h2>定案前要先驗證</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>PoC</th><th>內容</th><th>通過條件</th></tr></thead>
+    <tbody>
+      <tr><td>連線</td><td>iroh Android 綁定</td><td>Android 14–17 非同步呼叫正常；worker 內完成 100 MB 傳輸；公共中繼下可續傳</td></tr>
+      <tr><td>ASR</td><td>20–30 分鐘真實錄音比較 Qwen、Breeze、SenseVoice</td><td>取得 CER、RTF、峰值 RAM</td></tr>
+      <tr><td>硬體</td><td>Intel 內顯、AMD 內顯、純 CPU 跑 llama.cpp</td><td>確認 Vulkan 與 CPU 的取捨</td></tr>
+      <tr><td>opencode</td><td>v2 原生 Windows，MCP 輸出</td><td>成功率達標，測出最低硬體門檻</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">尚無可靠數據：手機行動網路連家用桌機的打洞成功率、iroh 在 Android 的實際吞吐量、內顯上的 ASR 與 LLM 速度、Qwen 的中英夾雜表現。</p>
+</section>
+
+<section id="src">
+  <h2>主要來源</h2>
+  <ul style="font-size:14px">
+    <li>連線：<a href="https://docs.iroh.computer/languages/kotlin">iroh Kotlin</a>、<a href="https://docs.iroh.computer/concepts/relays">iroh 中繼</a>、<a href="https://tailscale.com/blog/how-nat-traversal-works">Tailscale NAT 穿透</a>、<a href="https://tailscale.com/kb/1105/other-vpns">Tailscale 與其他 VPN</a>、<a href="https://headscale.net/stable/setup/requirements">Headscale 需求</a>、<a href="https://github.com/fatedier/frp">frp</a>、<a href="https://github.com/cloudflare/cloudflared">cloudflared</a>、<a href="https://github.com/syncthing/syncthing-android">Syncthing Android</a></li>
+    <li>Android：<a href="https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start">前景服務背景啟動</a>、<a href="https://developer.android.com/develop/background-work/services/fgs/timeout">前景服務時限</a>、<a href="https://developer.android.com/about/versions/17/behavior-changes-17">Android 17 行為變更</a></li>
+    <li>ASR：<a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a>、<a href="https://github.com/QwenLM/Qwen3-ASR">Qwen3-ASR</a>、<a href="https://huggingface.co/MediaTek-Research/Breeze-ASR-25">Breeze-ASR-25</a>、<a href="https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/supported-execution-providers">Windows ML EP</a></li>
+    <li>LLM 與 Agent：<a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md">llama.cpp server</a>、<a href="https://github.com/anomalyco/opencode">opencode</a>、<a href="https://docs.ollama.com/integrations/opencode">Ollama 的 opencode 整合</a>、<a href="https://github.com/anomalyco/opencode/issues/46735">opencode #46735</a>、<a href="https://github.com/anomalyco/opencode/issues/51268">#51268</a></li>
+  </ul>
+</section>
+</main>
+</body>
+</html>
