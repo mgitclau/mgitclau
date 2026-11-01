@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VoiceEasyUse 介面原型 v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版面概念：上方切換版本，下方是一個真的能操作的 App 視窗；說話者的顏色是全頁唯一的鮮明元素。 */
+:root{
+  --bg:#e9edf1; --surface:#fbfcfd; --sunken:#f0f3f6; --line:#d3dae1; --ink:#17212b; --muted:#566473;
+  --accent:#0b6b6b; --on-accent:#ffffff; --accent-soft:#d8eeec;
+  --s1:#1f66b5; --s2:#bd4a12; --s3:#7a3fc4;
+  --ok:#1b7a43; --warn:#9a6300; --warn-soft:#fbf0d6; --bad:#b3261e;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10161c; --surface:#182129; --sunken:#121a21; --line:#2e3b47; --ink:#e6ecf1; --muted:#9dabb8;
+  --accent:#4cc4bd; --on-accent:#08201f; --accent-soft:#17393a;
+  --s1:#70b0f2; --s2:#f29a6b; --s3:#bb95f2;
+  --ok:#66cf93; --warn:#e6b64e; --warn-soft:#37301a; --bad:#f28b82; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10161c; --surface:#182129; --sunken:#121a21; --line:#2e3b47; --ink:#e6ecf1; --muted:#9dabb8;
+  --accent:#4cc4bd; --on-accent:#08201f; --accent-soft:#17393a;
+  --s1:#70b0f2; --s2:#f29a6b; --s3:#bb95f2;
+  --ok:#66cf93; --warn:#e6b64e; --warn-soft:#37301a; --bad:#f28b82; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.shell{max-width:1120px;margin:0 auto;display:grid;gap:14px}
+h1,h2,h3,p{margin:0}
+h1{font-size:22px;line-height:1.3}
+h2{font-size:18px;line-height:1.35;text-wrap:balance}
+h3{font-size:15px}
+.muted{color:var(--muted)} .small{font-size:13px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.note{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between}
+.note p{flex:1 1 280px;min-width:0;color:var(--muted);font-size:14px}
+/* App 視窗 */
+.win{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.bar{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--sunken);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.bar .sp{flex:1}
+.body{padding:20px;display:grid;gap:16px;min-width:0}
+.stack{display:grid;gap:12px;min-width:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.end{justify-content:flex-end}
+.row.between{justify-content:space-between}
+button.btn{font:inherit;font-size:14px;padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.btn:hover:not(:disabled){border-color:var(--muted)}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+button.big{padding:11px 22px;font-size:15px}
+button.btn:disabled{opacity:.55;cursor:not-allowed}
+button.link{all:unset;color:var(--accent);cursor:pointer;font-size:13px}
+button:focus-visible,select:focus-visible,input:focus-visible,[contenteditable]:focus-visible,label.drop:focus-within,button.link:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+select,input[type=text]{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0;max-width:100%}
+.chip{display:inline-block;font-size:12px;line-height:1.5;padding:0 7px;border-radius:4px;background:var(--sunken);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.chip.rec{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.chip.ok{color:var(--ok)} .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+/* 規格 */
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.spec div b{display:block;font-size:16px}
+.spec div span{font-size:12px;color:var(--muted)}
+.dev{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.dev label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer}
+.dev label.on{border-color:var(--accent);background:var(--accent-soft)}
+.dev input{margin-top:5px}
+/* 模型 */
+.mods{display:grid;gap:0;border:1px solid var(--line);border-radius:6px}
+.mod{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 180px;gap:8px 14px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.mod:first-child{border-top:0}
+.mod.off{opacity:.62}
+.mod select{width:100%}
+.modact{display:grid;gap:4px;justify-items:end}
+.prog{height:6px;background:var(--sunken);border-radius:3px;overflow:hidden;width:100%;border:1px solid var(--line)}
+.prog i{display:block;height:100%;background:var(--accent)}
+/* 匯入 */
+label.drop{display:grid;place-items:center;gap:4px;text-align:center;border:1.5px dashed var(--muted);border-radius:8px;padding:30px 16px;cursor:pointer;background:var(--sunken)}
+label.drop.tall{padding:64px 16px}
+label.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+label.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.fileline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 12px;border:1px solid var(--line);border-radius:6px}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:14px}
+.opts label{display:inline-flex;gap:6px;align-items:center}
+/* 編輯 */
+.split{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+.wave{display:flex;align-items:center;gap:1px;height:56px;background:var(--sunken);border-radius:6px;padding:0 6px;overflow:hidden}
+.wave i{flex:1 1 0;min-width:1px;border-radius:1px;background:var(--line)}
+.wave i.b1{background:var(--s1)}.wave i.b2{background:var(--s2)}.wave i.b3{background:var(--s3)}
+.tracks{display:grid;gap:4px}
+.track{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;font-size:12px}
+.track .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane{position:relative;height:12px;background:var(--sunken);border-radius:2px}
+.lane b{position:absolute;top:0;bottom:0;border-radius:2px;border:0;padding:0;cursor:pointer}
+.segs{display:grid;gap:0;max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.seg{display:grid;grid-template-columns:60px 112px minmax(0,1fr);gap:4px 10px;padding:8px 10px;border-top:1px solid var(--line);align-items:start}
+.seg:first-child{border-top:0}
+.seg.cur{background:var(--accent-soft)}
+.seg button.t{all:unset;cursor:pointer;color:var(--muted);font:13px var(--mono);padding-top:5px}
+.seg select{width:100%;font-size:13px;padding:3px 4px;font-weight:700}
+.seg p{padding:3px 4px;border-radius:4px;overflow-wrap:anywhere}
+.c1{color:var(--s1)}.c2{color:var(--s2)}.c3{color:var(--s3)}
+.b1{background:var(--s1)}.b2{background:var(--s2)}.b3{background:var(--s3)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.spk{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.spk:first-of-type{border-top:0}
+.spk .row{gap:6px}
+.spk input{flex:1 1 90px}
+.banner{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:9px 12px;background:var(--warn-soft);color:var(--warn);border-radius:6px;font-size:14px}
+.preview{background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:12.5px/1.55 var(--mono);max-height:190px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.list{display:grid}
+.list>div{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}
+.list>div:first-child{border-top:0}
+.center{max-width:640px;width:100%;margin:0 auto}
+footer{color:var(--muted);font-size:13px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;font-size:14px;max-width:calc(100vw - 32px)}
+@media (max-width:760px){
+  .body{padding:14px}
+  .mod{grid-template-columns:minmax(0,1fr)}
+  .modact{justify-items:start}
+  .split{grid-template-columns:minmax(0,1fr)}
+  .seg{grid-template-columns:60px minmax(0,1fr)}
+  .seg p{grid-column:1/-1}
+  .track{grid-template-columns:70px minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="head">
+    <h1>VoiceEasyUse 介面原型 v3</h1>
+    <span class="muted small">以推薦組合為主，可實際點按</span>
+  </header>
+  <div class="note"><p>第一次打開先完成設定，之後從首頁匯入音訊就能開始。</p><button class="btn" id="reset" type="button">重新開始</button></div>
+  <main class="win" id="app"></main>
+  <footer>這是介面示意，不會真的分析音訊。不論匯入哪個檔案，顯示的都是範例逐字稿；電腦規格、模型大小和預估時間也都是範例數字。匯入的檔案只讀取檔名，不會上傳。</footer>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+const GROUPS=[
+ {id:'asr',name:'語音辨識',job:'把說話轉成文字',req:true,opts:[
+  {id:'text',n:'純文字模型（範例）',mb:250,note:'最快',ts:false},
+  {id:'base',n:'Whisper Base',mb:142,note:'快',ts:true},
+  {id:'turbo',n:'Whisper Large-v3 Turbo',mb:1600,note:'較平衡',rec:true,ts:true},
+  {id:'large',n:'Whisper Large-v3',mb:3100,note:'最準',ts:true}]},
+ {id:'sep',name:'人聲分離',job:'去掉背景音樂和噪音',req:false,opts:[
+  {id:'demucs',n:'Demucs v4',mb:80,note:'較快',rec:true},
+  {id:'demucsft',n:'Demucs v4 精細',mb:320,note:'較乾淨'}]},
+ {id:'dia',name:'說話者區分',job:'分出誰在什麼時候說話',req:true,opts:[
+  {id:'pyannote',n:'Pyannote',mb:30,note:'',rec:true}]},
+ {id:'vp',name:'音色辨識',job:'記住聲音，下次自動標名字',req:false,opts:[
+  {id:'ecapa',n:'ECAPA 聲紋模型',mb:25,note:'',rec:true}]}];
+
+const VOICES=[{key:'v1',c:1},{key:'v2',c:2},{key:'v3',c:3}];
+const SEGS=[
+ [0,6.2,'v1','大家早，我們先看上週的進度，字幕匯出這塊做得怎麼樣了？'],
+ [6.6,13.4,'v2','匯出已經可以了，SRT 和 VTT 都測過，時間軸很準。'],
+ [13.8,19.5,'v2','不過長音檔的記憶體用量還要再看一下。'],
+ [20,27.3,'v3','我這邊試了兩小時的訪談，16 GB 的機器跑得動，只是比較久。'],
+ [27.8,33,'v1','大概要多久？如果超過半小時，要先提醒使用者。'],
+ [33.5,40.1,'v3','用 GPU 大約十五分鐘，只用 CPU 就要快一個小時。'],
+ [40.6,46,'v2','那介面上要顯示預估時間，選裝置的時候就看得到。'],
+ [46.4,52,'v1','好，這個列進下週的工作，今天先到這裡。']];
+const DUR=52, SAMPLE='週會錄音.m4a';
+
+function newState(id){
+ const S={ver:id,device:'gpu',file:null,lang:'auto',mode:'balanced',use:{sep:false,vp:true},m:{},
+  job:{state:'idle',pct:0},speakers:[],segs:[],cur:0,fmt:'srt',withNames:true,library:[],played:null,
+  screen:'setup1',custom:false,noTs:false,
+  recent:[{name:'季度回顧.m4a',count:3,named:true},{name:'訪談0312.wav',count:3,named:false}]};
+ GROUPS.forEach(g=>{const o=g.opts.find(x=>x.rec);S.m[g.id]={choice:o.id,status:'none',pct:0,have:{}}});
+ return S;
+}
+const states={r:newState('r')};
+let ver='r';
+const cur=()=>states[ver];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opt=(g,S)=>g.opts.find(o=>o.id===S.m[g.id].choice);
+const size=mb=>mb>=1000?(mb/1000).toFixed(1)+' GB':mb+' MB';
+const hasTs=S=>opt(GROUPS[0],S).ts;
+const fmtOf=S=>S.noTs?'plain':S.fmt;
+const needed=S=>GROUPS.filter(g=>hasTs(S)?(g.req||S.use[g.id]):(g.id==='asr'||g.id==='sep'&&S.use.sep));
+function setChoice(S,g,id){const m=S.m[g];m.choice=id;m.status=m.have[id]?'ready':'none';m.pct=0;
+ if(g==='asr')S.mode={text:'text',base:'fast',turbo:'balanced',large:'best'}[id]}
+const missing=S=>needed(S).filter(g=>S.m[g.id].status==='none');
+const loading=S=>needed(S).filter(g=>S.m[g.id].status==='downloading');
+const label=(S,key)=>{const p=S.speakers.find(x=>x.key===key);return p.name||('說話者 '+p.c)};
+const unnamed=S=>S.speakers.filter(p=>!p.name);
+const mmss=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2800)}
+
+/* ---------- 流程 ---------- */
+function setFile(S,name){S.file=name;S.job={state:'idle',pct:0};S.speakers=[];S.segs=[]}
+function clearFile(S){setFile(S,null)}
+function finishJob(S,name,preset,forceTs){
+ S.file=name||S.file;S.job={state:'done',pct:100};S.noTs=!forceTs&&!hasTs(S);
+ const auto=k=>S.use.vp&&(S.library.find(l=>l.key===k)||{}).name;
+ S.speakers=S.noTs?[]:VOICES.map(v=>{const a=auto(v.key);const n=a||(preset&&preset[v.key])||'';return{key:v.key,c:v.c,name:n,auto:!!a}});
+ S.segs=SEGS.map(s=>({a:s[0],b:s[1],key:s[2],text:s[3]}));S.cur=0;
+ if(!S.recent.find(r=>r.name===S.file))S.recent.unshift({name:S.file,count:S.noTs?0:3,named:false});
+}
+function stages(S){const a=['轉換格式'];if(S.use.sep)a.push('分離人聲');a.push('辨識文字');if(hasTs(S)){a.push('區分說話者');if(S.use.vp)a.push('比對聲紋')}return a}
+function start(S){if(!S.file||missing(S).length||loading(S).length)return;S.job={state:'running',pct:0}}
+function dl(S,g){const m=S.m[g];if(m.status==='none'){m.status='downloading';m.pct=0}}
+function tick(){
+ let dirty=false;
+ Object.values(states).forEach(S=>{
+  GROUPS.forEach(g=>{const m=S.m[g.id];if(m.status==='downloading'){
+    m.pct+=Math.max(4,30-opt(g,S).mb/120);if(m.pct>=100){m.status='ready';m.pct=100;m.have[m.choice]=true;if(S===cur()&&!missing(S).length&&!loading(S).length)toast('模型都下載好了')}
+    dirty=dirty||S===cur()}});
+  if(S.job.state==='running'){S.job.pct+=S.device==='gpu'?2.2:.9;
+    if(S.job.pct>=100){finishJob(S);S.screen='edit'}
+    dirty=dirty||S===cur()}
+ });
+ const a=document.activeElement;
+ if(dirty&&!(a&&(a.tagName==='INPUT'&&a.type==='text'||a.isContentEditable)))render();
+}
+setInterval(tick,130);
+
+/* ---------- 共用區塊 ---------- */
+function specBlock(S){
+ const d=[['gpu','Apple GPU','推薦','1 小時音檔約 8 分鐘，速度和耗電較平衡'],['cpu','CPU','','1 小時音檔約 30 分鐘，相容性最好']];
+ return `<div class="spec">
+  <div><b>Apple M4</b><span>處理器</span></div><div><b>16 GB</b><span>記憶體</span></div>
+  <div><b>212 GB</b><span>剩餘空間</span></div><div><b>macOS</b><span>作業系統</span></div></div>
+ <div class="dev" role="radiogroup" aria-label="運算裝置">${d.map(x=>`<label class="${S.device===x[0]?'on':''}">
+  <input type="radio" name="dev-${S.ver}" data-chg="device" value="${x[0]}" ${S.device===x[0]?'checked':''}>
+  <span><b>${x[1]}</b> ${x[2]?`<span class="chip rec">${x[2]}</span>`:''}<br><span class="small muted">${x[3]}</span></span></label>`).join('')}</div>`;
+}
+function modelBlock(S){
+ const rec=GROUPS.reduce((n,g)=>n+g.opts.find(o=>o.rec).mb,0);
+ return `<div class="row between"><span class="small muted">依這台電腦的記憶體標出推薦模型</span>
+  <button class="btn" data-act="dlRec" type="button">下載全部推薦模型（${size(rec)}）</button></div>
+ <div class="mods">${GROUPS.map(g=>modelRow(S,g)).join('')}</div>`;
+}
+function metaLine(g,o){return [size(o.mb),o.note,g.id==='asr'?(o.ts?'有時間戳':'無時間戳'):''].filter(Boolean).join(' · ')}
+function modelRow(S,g){
+ const m=S.m[g.id],on=needed(S).includes(g);
+ const act=m.status==='ready'?`<span class="chip ok">已安裝</span>`:
+  m.status==='downloading'?`<div class="prog" role="progressbar" aria-valuenow="${Math.round(m.pct)}" aria-label="${g.name}下載進度"><i style="width:${m.pct}%"></i></div><span class="small muted mono">${Math.round(m.pct)}%</span>`:
+  `<button class="btn" data-act="dl" data-arg="${g.id}" type="button">下載 ${size(opt(g,S).mb)}</button>`;
+ return `<div class="mod ${on?'':'off'}"><div><b>${g.name}</b> ${g.req?'<span class="chip">必要</span>':`<label class="small"><input type="checkbox" data-chg="use" value="${g.id}" ${on?'checked':''}> 使用</label>`}
+   <br><span class="small muted">${g.job}</span></div>
+  <div class="stack" style="gap:2px"><select aria-label="${g.name}模型" data-chg="choice" data-g="${g.id}" ${m.status==='downloading'?'disabled':''}>${g.opts.map(o=>`<option value="${o.id}" ${o.id===m.choice?'selected':''}>${o.n}${o.rec?' ★ 推薦':''}</option>`).join('')}</select><span class="small muted">${metaLine(g,opt(g,S))}</span></div>
+  <div class="modact">${act}</div></div>`;
+}
+function drop(S,tall){
+ if(S.file)return `<div class="fileline"><b>${esc(S.file)}</b><span class="small muted mono">00:52</span><span style="flex:1"></span>
+  ${S.job.state==='running'?'':'<button class="link" data-act="clear" type="button">換一個檔案</button>'}</div>`;
+ return `<label class="drop ${tall?'tall':''}" data-drop><input type="file" id="file-${S.ver}" accept="audio/*,video/*" data-chg="file">
+  <b>把音訊拖到這裡，或點一下選檔案</b><span class="small muted">支援 MP3、M4A、WAV 和影片檔</span></label>
+  <div class="row"><button class="link" data-act="sample" type="button">沒有檔案？改用範例音檔</button></div>`;
+}
+function opts(S){
+ return `<div class="opts">
+  <label>語言 <select id="lang-${S.ver}" data-chg="lang">${[['auto','自動偵測'],['zh','中文'],['en','英文'],['ja','日文']].map(o=>`<option value="${o[0]}" ${S.lang===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></label>
+  <label>模式 <select id="mode-${S.ver}" data-chg="mode">${[['fast','快速'],['balanced','平衡'],['best','精準']].concat(S.mode==='text'?[['text','純文字模型']]:[]).map(o=>`<option value="${o[0]}" ${S.mode===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></label>
+  <label><input type="checkbox" data-chg="use" value="sep" ${S.use.sep?'checked':''}> 分離人聲</label>
+  ${hasTs(S)?`<label><input type="checkbox" data-chg="use" value="vp" ${S.use.vp?'checked':''}> 用聲紋自動標名</label>`:''}</div>`;
+}
+function startBtn(S){
+ const m=missing(S),l=loading(S);
+ if(S.job.state==='running')return `<button class="btn pri big" disabled type="button">處理中…</button>`;
+ if(!S.file)return `<button class="btn pri big" disabled type="button">請先匯入音訊</button>`;
+ if(l.length)return `<button class="btn pri big" disabled type="button">正在下載 ${l.length} 個模型…</button>`;
+ if(m.length)return `<button class="btn pri big" data-act="dlMissing" type="button">先下載缺少的 ${m.length} 個模型（${m.map(g=>g.name).join('、')}）</button>`;
+ if(S.job.state==='done')return `<button class="btn big" data-act="start" type="button">重新處理</button>`;
+ return `<button class="btn pri big" data-act="start" type="button">開始處理</button>`;
+}
+function progress(S){
+ if(S.job.state!=='running')return'';
+ const st=stages(S),i=Math.min(st.length-1,Math.floor(S.job.pct/100*st.length));
+ return `<div class="stack"><div class="row between small"><span>${st[i]}（${i+1}/${st.length}）</span><span class="mono">${Math.round(S.job.pct)}%</span></div>
+  <div class="prog" role="progressbar" aria-valuenow="${Math.round(S.job.pct)}" aria-label="處理進度"><i style="width:${S.job.pct}%"></i></div></div>`;
+}
+function wave(S){
+ let h='';const n=110;
+ for(let i=0;i<n;i++){const t=(i+.5)/n*DUR,s=S.segs.find(x=>t>=x.a&&t<=x.b);
+  const v=s?22+Math.abs(Math.sin(i*1.7)+Math.sin(i*.37))*34:6;
+  const c=s?S.speakers.find(p=>p.key===s.key).c:0;
+  h+=`<i class="${c?'b'+c:''}" style="height:${v.toFixed(0)}%"></i>`}
+ return `<div class="wave" aria-hidden="true">${h}</div>`;
+}
+function tracks(S){
+ return `<div class="tracks">${S.speakers.map(p=>`<div class="track"><span class="nm c${p.c}">${esc(label(S,p.key))}</span><div class="lane">${S.segs.map((s,i)=>s.key===p.key?`<b class="b${p.c}" style="left:${s.a/DUR*100}%;width:${(s.b-s.a)/DUR*100}%" data-act="seg" data-arg="${i}" role="button" tabindex="0" aria-label="跳到 ${mmss(s.a)}"></b>`:'').join('')}</div></div>`).join('')}</div>`;
+}
+function transcript(S){
+ return `<div class="segs" data-keep="segs">${S.segs.map((s,i)=>{const c=S.speakers.find(p=>p.key===s.key).c;return `<div class="seg ${i===S.cur?'cur':''}">
+  <button class="t" data-act="seg" data-arg="${i}" type="button">${mmss(s.a)}</button>
+  <select class="c${c}" aria-label="${mmss(s.a)} 的說話者" data-chg="segSpk" data-i="${i}">${S.speakers.map(p=>`<option value="${p.key}" ${p.key===s.key?'selected':''}>${esc(label(S,p.key))}</option>`).join('')}</select>
+  <p contenteditable="true" spellcheck="false" data-text="${i}">${esc(s.text)}</p></div>`}).join('')}</div>`;
+}
+function speakerPanel(S){
+ return `<div class="stack"><h3>說話者</h3><div>${S.speakers.map(p=>{const n=S.segs.filter(s=>s.key===p.key);const t=n.reduce((a,s)=>a+s.b-s.a,0);
+  return `<div class="spk"><div class="row"><span class="dot b${p.c}"></span><b>說話者 ${p.c}</b>${p.auto?'<span class="chip rec">聲紋比對</span>':p.name?'<span class="chip ok">已命名</span>':'<span class="chip warn">待命名</span>'}
+   <span class="small muted mono">${n.length} 句 · ${Math.round(t)} 秒</span></div>
+   <div class="row"><button class="btn" data-act="play" data-arg="${p.key}" type="button" aria-label="試聽說話者 ${p.c}">${S.played===p.key?'播放中…':'試聽'}</button>
+   <input type="text" id="nm-${S.ver}-${p.key}" aria-label="說話者 ${p.c} 的名字" placeholder="輸入名字" value="${esc(p.name)}" data-enter="${p.key}">
+   <button class="btn" data-act="name" data-arg="${p.key}" type="button">儲存</button></div></div>`}).join('')}</div>
+  ${S.use.vp?'<p class="small muted">名字會存進聲紋庫，下次同一個人出現就自動標上。</p>':'<p class="small muted">開啟聲紋自動標名後，名字才會留到下一個檔案。</p>'}</div>`;
+}
+function banner(S){
+ const u=unnamed(S);if(!u.length)return'';
+ return `<div class="banner"><span>還有 ${u.length} 位說話者沒有名字。先試聽再輸入，字幕才會顯示名字。</span></div>`;
+}
+function build(S){
+ const ms=(t,sep)=>{const h=Math.floor(t/3600),m=Math.floor(t/60)%60,s=Math.floor(t%60),l=Math.round((t%1)*1000);return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':')+sep+String(l).padStart(3,'0')};
+ const nm=s=>S.withNames?label(S,s.key):'';
+ if(fmtOf(S)==='plain')return S.segs.map(s=>s.text).join('\n')+'\n';
+ if(S.fmt==='srt')return S.segs.map((s,i)=>`${i+1}\n${ms(s.a,',')} --> ${ms(s.b,',')}\n${S.withNames?nm(s)+'：':''}${s.text}`).join('\n\n')+'\n';
+ if(S.fmt==='vtt')return 'WEBVTT\n\n'+S.segs.map(s=>`${ms(s.a,'.')} --> ${ms(s.b,'.')}\n${S.withNames?`<v ${nm(s)}>`:''}${s.text}`).join('\n\n')+'\n';
+ return S.segs.map(s=>`[${mmss(s.a)}] ${S.withNames?nm(s)+'：':''}${s.text}`).join('\n')+'\n';
+}
+function exportBlock(S){
+ const F=[['srt','SRT 字幕'],['vtt','VTT 字幕'],['txt','逐字稿（含時間和名字）'],['plain','純文字']],f=fmtOf(S);
+ const ext=f==='vtt'?'vtt':f==='srt'?'srt':'txt';
+ return `<div class="stack"><div class="row between"><h3>匯出</h3>
+  <div class="opts"><label>格式 <select id="fmt-r" data-chg="fmt">${F.map(o=>`<option value="${o[0]}" ${f===o[0]?'selected':''} ${S.noTs&&o[0]!=='plain'?'disabled':''}>${o[1]}${S.noTs&&o[0]!=='plain'?'（需要時間戳）':''}</option>`).join('')}</select></label>
+  ${f==='plain'?'':`<label><input type="checkbox" data-chg="withNames" ${S.withNames?'checked':''}> 包含說話者名字</label>`}</div></div>
+  ${S.noTs?'<p class="small muted">這份結果用無時間戳的模型處理，SRT、VTT 和逐字稿都無法產生。</p>':f==='plain'?'<p class="small muted">只有內容，不含時間、名字和序號。</p>':''}
+  <pre class="preview" tabindex="0" aria-label="匯出預覽">${esc(build(S))}</pre>
+  <div class="row end"><button class="btn" data-act="copy" type="button">複製</button><button class="btn pri" data-act="save" type="button">下載 .${ext}</button></div></div>`;
+}
+function libraryBlock(S){
+ return `<div class="stack"><h2>聲紋庫</h2><p class="small muted">這些人的聲音已經記住，處理新檔案時會自動標名。</p>
+ <div class="list">${S.library.length?S.library.map(l=>`<div><span>${esc(l.name)}</span><button class="link" data-act="forget" data-arg="${l.key}" type="button">移除</button></div>`).join(''):'<div><span class="muted">還沒有資料。在處理結果裡幫說話者命名後，就會出現在這裡。</span></div>'}</div></div>`;
+}
+function statusLine(S){
+ const m=missing(S).length,l=loading(S).length;
+ return m?`<span class="chip warn">缺 ${m} 個模型</span>`:l?`<span class="chip warn">下載中</span>`:`<span class="chip ok">就緒</span>`;
+}
+function settingsBlock(S){return `<div class="stack"><h2>電腦與運算裝置</h2>${specBlock(S)}</div><div class="stack"><h2>模型</h2>${modelBlock(S)}</div>${libraryBlock(S)}`}
+function editor(S){
+ if(S.noTs)return `<div class="row between"><div class="row"><h2>${esc(S.file)}</h2><span class="chip warn">無時間戳</span></div>
+   <button class="link" data-act="clear" type="button">處理另一個檔案</button></div>
+  <div class="banner">這份結果只有文字。要做字幕或區分說話者，請改用有時間戳的模型重新處理。</div>
+  <div class="segs" data-keep="segs">${S.segs.map((s,i)=>`<div style="padding:8px 10px"><p contenteditable="true" spellcheck="false" data-text="${i}">${esc(s.text)}</p></div>`).join('')}</div>${exportBlock(S)}`;
+ return `<div class="row between"><div class="row"><h2>${esc(S.file)}</h2><span class="small muted mono">00:52 · ${S.speakers.length} 位說話者</span></div>
+   <button class="link" data-act="clear" type="button">處理另一個檔案</button></div>
+  ${banner(S)}${wave(S)}${tracks(S)}
+  <div class="split">${transcript(S)}${speakerPanel(S)}</div>${exportBlock(S)}`;
+}
+function home(S,gear){
+ return `<div class="center stack">
+  ${drop(S,true)}${opts(S)}
+  <div class="row end">${startBtn(S)}</div>${progress(S)}
+  <div class="stack" style="margin-top:8px"><h3>最近的檔案</h3><div class="list">${S.recent.map((r,i)=>`<div><button class="link" data-act="openRecent" data-arg="${i}" type="button">${esc(r.name)}</button><span class="row"><span class="small muted">${r.count} 位說話者</span>${r.named?'<span class="chip ok">已完成</span>':'<span class="chip warn">待命名</span>'}</span></div>`).join('')}</div></div></div>`;
+}
+const bar=(title,right='')=>`<div class="bar"><span>${title}</span><span class="sp"></span>${right}</div>`;
+
+/* ---------- 各版本 ---------- */
+const VIEW={
+ r(S){
+  const gear=`<button class="link" data-act="rScreen" data-arg="${S.screen==='settings'?'back':'settings'}" type="button">${S.screen==='settings'?'返回':'設定'}</button>`;
+  const right=`<span>Apple M4</span>${statusLine(S)}${gear}`;
+  if(S.screen==='setup1')return bar('首次設定 1/2')+`<div class="body"><div class="center stack" style="max-width:760px"><h2>先檢查這台電腦</h2>${specBlock(S)}<div class="row end"><button class="btn pri" data-act="rScreen" data-arg="setup2" type="button">下一步</button></div></div></div>`;
+  if(S.screen==='setup2'){
+   const rec=GROUPS.reduce((n,g)=>n+g.opts.find(o=>o.rec).mb,0);
+   const go=missing(S).length===0;const busy=loading(S).length>0;
+   return bar('首次設定 2/2')+`<div class="body"><div class="center stack" style="max-width:760px"><h2>下載推薦組合</h2>
+   <p class="muted">這台電腦適合下面這組模型，共 ${size(rec)}，處理時不需要連網。</p>
+   ${S.custom?modelBlock(S):`<div class="list">${GROUPS.map(g=>{const m=S.m[g.id],o=opt(g,S);return `<div><span><b>${g.name}</b> <span class="small muted">${g.job}</span></span><span class="row"><span class="small muted">${metaLine(g,o)}</span>${m.status==='ready'?'<span class="chip ok">已安裝</span>':m.status==='downloading'?`<span class="small mono">${Math.round(m.pct)}%</span>`:''}</span></div>`}).join('')}</div>`}
+   <div class="row between"><button class="link" data-act="custom" type="button">${S.custom?'收起模型清單':'我想自己選模型'}</button>
+   <span class="row">${go&&!busy?'<button class="btn pri big" data-act="rScreen" data-arg="home" type="button">開始使用</button>':busy?'<button class="btn" data-act="rScreen" data-arg="home" type="button">背景下載，先進首頁</button>':`<button class="btn pri big" data-act="dlRec" type="button">下載推薦組合</button>`}</span></div></div></div>`;
+  }
+  if(S.screen==='settings')return bar('設定',right)+`<div class="body">${settingsBlock(S)}</div>`;
+  if(S.screen==='edit'&&S.job.state==='done')return bar('VoiceEasyUse',right)+`<div class="body">${editor(S)}</div>`;
+  return bar('VoiceEasyUse',right)+`<div class="body">${home(S)}</div>`;
+ }
+};
+
+function render(){
+ const keep={};document.querySelectorAll('[data-keep]').forEach(e=>keep[e.dataset.keep]=e.scrollTop);
+ const S=cur();
+ $('#app').innerHTML=VIEW[ver](S);
+ document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep])e.scrollTop=keep[e.dataset.keep]});
+}
+function saveName(S,key){
+ const v=$('#nm-'+S.ver+'-'+key).value.trim(),p=S.speakers.find(x=>x.key===key);
+ if(!v){toast('請先輸入名字');return}
+ p.name=v;p.auto=false;
+ if(S.use.vp){const l=S.library.find(x=>x.key===key);if(l)l.name=v;else S.library.push({key,name:v})}
+ toast(S.use.vp?`已命名為「${v}」，並存進聲紋庫`:`已命名為「${v}」`);render();
+}
+const ACT={
+ dl:(S,a)=>dl(S,a),
+ dlRec(S){GROUPS.forEach(g=>{const o=g.opts.find(x=>x.rec);if(S.m[g.id].status==='none'){S.m[g.id].choice=o.id;dl(S,g.id)}if(!g.req)S.use[g.id]=true})},
+ dlMissing(S){missing(S).forEach(g=>dl(S,g.id))},
+ sample:S=>setFile(S,SAMPLE),
+ clear(S){clearFile(S);S.screen='home'},
+ start,
+ custom:S=>S.custom=!S.custom,
+ rScreen(S,a){S.screen=a==='back'?(S.job.state==='done'?'edit':'home'):a},
+ seg:(S,a)=>S.cur=+a,
+ play(S,a){S.played=a;clearTimeout(ACT.pt);ACT.pt=setTimeout(()=>{S.played=null;render()},1500);const f=S.segs.findIndex(s=>s.key===a);if(f>=0)S.cur=f},
+ name:(S,a)=>saveName(S,a),
+ forget(S,a){S.library=S.library.filter(l=>l.key!==a)},
+ openRecent(S,a){const r=S.recent[+a];finishJob(S,r.name,r.named?{v1:'陳小明',v2:'王大華',v3:'林怡君'}:null,true);S.screen='edit'},
+ copy(S){const t=build(S);(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('已複製字幕'),()=>toast('無法複製，請直接從預覽選取文字'))},
+ save(S){const u=URL.createObjectURL(new Blob([build(S)],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;const f=fmtOf(S);a.download=S.file.replace(/\.[^.]+$/,'')+(f==='plain'?'-純文字.txt':'.'+f);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('已下載 '+a.download)}
+};
+function acceptFile(S,f){
+ if(!f)return;
+ if(/^(audio|video)\//.test(f.type)||/\.(mp3|m4a|wav|flac|ogg|aac|mp4|mov|mkv)$/i.test(f.name)){setFile(S,f.name);toast('已匯入。原型會以範例內容示範結果');render()}
+ else toast(`「${f.name}」不是音訊或影片檔，請換一個檔案`);
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+ const S=cur(),n=b.dataset.act;ACT[n](S,b.dataset.arg);
+ if(n!=='save'&&n!=='copy'&&n!=='name')render();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){e.preventDefault();saveName(cur(),e.target.dataset.enter)}
+ if((e.key==='Enter'||e.key===' ')&&e.target.matches('.lane b')){e.preventDefault();e.target.click()}
+});
+document.addEventListener('change',e=>{
+ const c=e.target.dataset.chg;if(!c)return;const S=cur(),v=e.target.value;
+ if(c==='device')S.device=v;
+ if(c==='use'){S.use[v]=e.target.checked}
+ if(c==='choice')setChoice(S,e.target.dataset.g,v);
+ if(c==='lang')S.lang=v;
+ if(c==='mode')setChoice(S,'asr',{fast:'base',balanced:'turbo',best:'large',text:'text'}[v]);
+ if(c==='fmt')S.fmt=v;
+ if(c==='withNames')S.withNames=e.target.checked;
+ if(c==='segSpk')S.segs[+e.target.dataset.i].key=v;
+ if(c==='file'){acceptFile(S,e.target.files[0]);return}
+ render();
+});
+document.addEventListener('focusout',e=>{const i=e.target.dataset&&e.target.dataset.text;if(i!==undefined&&i!==null){const S=cur();if(S.segs[+i]){S.segs[+i].text=e.target.textContent.trim();const p=document.querySelector('.preview');if(p)p.textContent=build(S)}}});
+['dragenter','dragover'].forEach(n=>document.addEventListener(n,e=>{const d=e.target.closest&&e.target.closest('[data-drop]');e.preventDefault();document.querySelectorAll('[data-drop]').forEach(x=>x.classList.toggle('over',x===d))}));
+document.addEventListener('drop',e=>{e.preventDefault();const d=e.target.closest&&e.target.closest('[data-drop]');if(d)acceptFile(cur(),e.dataTransfer.files[0])});
+$('#reset').addEventListener('click',()=>{states[ver]=newState(ver);render();toast('已重新開始')});
+render();
+</script>
+</body>
+</html>

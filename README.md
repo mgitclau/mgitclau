@@ -15,3 +15,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 用戶端 Demo | https://mgitclau.github.io/mgitclau/laptop-assistant-user-demo.html | 2026-11-01 |
 | VoiceEasyUse 介面原型 | https://mgitclau.github.io/mgitclau/voiceeasyuse-ui-prototype.html | 2026-11-01 |
 | VoiceEasyUse 介面原型 v2 | https://mgitclau.github.io/mgitclau/voiceeasyuse-ui-prototype-v2.html | 2026-11-01 |
+| VoiceEasyUse 介面原型 v3 | https://mgitclau.github.io/mgitclau/voiceeasyuse-ui-prototype-v3.html | 2026-11-01 |
