@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Monitor 設計稿 v2</title>
+<style>
+:root{
+  --bg:#f6f5f1;--ink:#1f2328;--mute:#616873;--line:#dcdad2;--card:#fff;
+  --term:#101318;--panel:#171b21;--tcard:#1e232b;--tline:#303743;--tink:#eef0f3;--tmute:#98a1b0;
+  --blue:#62adff;--amber:#ffc24d;--green:#4fd98f;--violet:#c49bff;--red:#ff6f68;--grey:#8691a2;--pink:#ff7ac6;
+  --opus:#ff9d5c;--fable:#d78cf5;--sonnet:#62adff;--haiku:#3fd8c6;
+}
+:root:not([data-theme="light"]){color-scheme:light dark}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0d0f12;--ink:#e6e8ec;--mute:#a0a8b4;--line:#2a2f37;--card:#181b20}
+}
+:root[data-theme="dark"]{--bg:#0d0f12;--ink:#e6e8ec;--mute:#a0a8b4;--line:#2a2f37;--card:#181b20}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:30px;line-height:1.25;margin:0 0 8px}
+h2{font-size:20px;margin:40px 0 12px}
+p{margin:0 0 12px}
+.lead{color:var(--mute);max-width:62ch}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 12px}
+.controls button{font:inherit;font-size:14px;padding:7px 13px;min-height:38px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.controls button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.window{display:grid;grid-template-columns:minmax(0,1fr) 520px;background:var(--term);border:1px solid var(--tline);border-radius:12px;overflow:hidden;color:var(--tink);font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang TC",monospace}
+.chat{padding:16px;display:flex;flex-direction:column;gap:9px;min-width:0;color:var(--tmute)}
+.chat p{margin:0}
+.chat b{color:var(--tink);font-weight:500}
+.chat .prompt{margin-top:auto;border:1px solid var(--tline);border-radius:6px;padding:7px 10px}
+.pane{background:var(--panel);border-left:1px solid var(--tline);padding:14px;min-width:0;min-height:560px}
+
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.big{font-size:56px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.big small{display:block;font-size:12px;font-weight:400;color:var(--tmute);margin-top:6px}
+.pips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.pip{width:20px;height:20px;border-radius:4px;background:var(--c);transition:background .3s}
+.pip.ended{background:transparent;box-shadow:inset 0 0 0 2px var(--c);opacity:.65}
+.stack{display:flex;height:10px;border-radius:3px;overflow:hidden;background:var(--tline);gap:2px}
+.stack i{display:block;background:var(--c);transition:flex-grow .4s;flex:1 1 0}
+.keys{display:flex;flex-wrap:wrap;gap:3px 11px;margin-top:6px;font-size:12px;color:var(--tmute)}
+.keys span::before{content:"";display:inline-block;width:8px;height:8px;background:var(--c);margin-right:4px;border-radius:2px}
+
+.alert{display:flex;align-items:center;gap:9px;margin-top:12px;padding:8px 10px;background:var(--violet);color:#16101f;border-radius:7px;font-weight:600;animation:blink 1.6s ease-in-out infinite}
+.alert.hot{background:var(--red);color:#1d0807;animation:none}
+@keyframes blink{50%{opacity:.72}}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.tile{background:var(--tcard);border:2px solid color-mix(in srgb,var(--c) 55%,transparent);border-radius:9px;overflow:hidden;display:flex;flex-direction:column;min-width:0;transition:border-color .3s}
+.tile.ended{border-color:var(--tline);opacity:.6}
+.tile.need{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 35%,transparent)}
+.body{display:grid;grid-template-columns:72px minmax(0,1fr);gap:9px;padding:10px;align-items:center}
+.ring{position:relative;width:72px;height:72px}
+.ring svg{display:block;width:100%;height:100%}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.info{min-width:0}
+.badge{display:inline-block;padding:1px 7px;border-radius:4px;background:var(--m);color:#10131a;font-weight:700;font-size:12px}
+.nm{font-weight:600;font-size:14px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk{color:var(--tmute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip{display:flex;align-items:center;gap:8px;padding:7px 10px;margin-top:auto;background:color-mix(in srgb,var(--c) 20%,transparent);min-width:0}
+.strip svg{flex:none;width:27px;height:27px;fill:var(--c);shape-rendering:crispEdges}
+.st{min-width:0;flex:1}
+.st b{display:block;color:var(--c);font-size:14px;line-height:1.2}
+.st em{display:block;font-style:normal;font-size:11.5px;color:var(--tink);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
+.time{flex:none;color:var(--tmute);font-size:11.5px;align-self:flex-start}
+.empty{display:grid;place-items:center;gap:10px;padding:80px 0;color:var(--tmute)}
+.empty svg{width:54px;height:54px;fill:var(--grey);shape-rendering:crispEdges}
+
+.states{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;padding:0;margin:0;list-style:none}
+.states li{display:flex;align-items:center;gap:10px;background:#171b21;border-radius:8px;padding:9px 11px;color:#eef0f3;font-size:14px}
+.states svg{flex:none;width:27px;height:27px;fill:var(--c);shape-rendering:crispEdges}
+.note{color:var(--mute);font-size:15px;max-width:70ch}
+@media (max-width:980px){.window{grid-template-columns:minmax(0,1fr)}.chat{display:none}.pane{border-left:0;min-height:0}}
+@media (max-width:440px){.grid{grid-template-columns:minmax(0,1fr)}.big{font-size:46px}}
+@media (prefers-reduced-motion:reduce){.alert{animation:none}.pip,.stack i,.tile{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Agent Monitor 設計稿 v2</h1>
+  <p class="lead">不用讀字也能看懂：方塊是每個 subagent，圓環是 context 用量，顏色和動態圖示是狀態，色塊是模型。畫面正用假資料模擬運作。</p>
+
+  <div class="controls" role="group" aria-label="範例情境">
+    <button data-s="busy" aria-pressed="true">多個執行中</button>
+    <button data-s="high" aria-pressed="false">Context 快滿</button>
+    <button data-s="done" aria-pressed="false">全部結束</button>
+    <button data-s="none" aria-pressed="false">沒有 subagent</button>
+  </div>
+
+  <div class="window">
+    <section class="chat" aria-label="對話區示意">
+      <p><b>&gt; 檢查 API、補測試，再更新文件</b></p>
+      <p>我會分給 subagent 平行處理，右邊可以看進度。</p>
+      <div class="prompt">&gt;</div>
+    </section>
+    <aside class="pane" aria-label="Agent Monitor 面板"><div id="pane"></div></aside>
+  </div>
+
+  <h2>圖示對照</h2>
+  <ul class="states" id="legend"></ul>
+
+  <h2>實作時的差異</h2>
+  <p class="note">終端機版會用像素圖繪製，圓環和圖示會比這裡更方塊，文字則維持一般字元。圓環百分比是估算值，每次模型請求完成後更新。「等待權限」要實作時驗證是否每種情況都抓得到。</p>
+</main>
+
+<script>
+const G={
+gear:["....#....\n.#.###.#.\n..#####..\n.##...##.\n###...###\n.##...##.\n..#####..\n.#.###.#.\n....#....",".#.....#.\n#.#####.#\n.##...##.\n.#.....#.\n.#.....#.\n.#.....#.\n.##...##.\n#.#####.#\n.#.....#."],
+sand:["#########\n.#.....#.\n..#####..\n...###...\n....#....\n...#.#...\n..#...#..\n.#..#..#.\n#########","#########\n.#.....#.\n..#...#..\n...#.#...\n....#....\n...###...\n..#####..\n.#######.\n#########"],
+lock:["...###...\n..#...#..\n..#...#..\n.#######.\n.###.###.\n.###.###.\n.#######.\n.#######.\n........."],
+clock:["..#####..\n.#..#..#.\n#...#...#\n#...#...#\n#...###.#\n#.......#\n#.......#\n.#.....#.\n..#####.."],
+check:[".........\n........#\n.......##\n#.....##.\n##...##..\n.##.##...\n..###....\n...#.....\n........."],
+cross:["#.......#\n.#.....#.\n..#...#..\n...#.#...\n....#....\n...#.#...\n..#...#..\n.#.....#.\n#.......#"],
+stop:[".........\n.#######.\n.#######.\n.#######.\n.#######.\n.#######.\n.#######.\n.#######.\n........."],
+zzz:["....#####\n.......#.\n......#..\n.....####\n.###.....\n...#.....\n..#......\n.###.....\n........."],
+dots:[0,1,2].map(a=>Array.from({length:9},(_,y)=>Array.from({length:9},(_,x)=>{const d=[[0,1],[3,4],[6,7]].findIndex(p=>p.includes(x));if(d<0)return'.';const top=d===a?2:5;return(y===top||y===top+1)?'#':'.'}).join('')).join('\n'))
+};
+const S={
+  thinking:{l:'思考中',c:'var(--blue)',g:'dots'},
+  tool:{l:'呼叫工具',c:'var(--green)',g:'gear'},
+  waiting:{l:'等待中',c:'var(--amber)',g:'sand'},
+  permission:{l:'等你允許',c:'var(--violet)',g:'lock'},
+  pending:{l:'排隊中',c:'var(--grey)',g:'clock'},
+  idle:{l:'閒置',c:'var(--grey)',g:'zzz'},
+  completed:{l:'已完成',c:'var(--green)',g:'check'},
+  failed:{l:'失敗',c:'var(--red)',g:'cross'},
+  killed:{l:'已停止',c:'var(--grey)',g:'stop'}
+};
+const MODELS={opus:'Opus',fable:'Fable',sonnet:'Sonnet',haiku:'Haiku'};
+const ACTIVE=['thinking','tool','waiting','permission'], ENDED=['completed','failed','killed'];
+const TOOLS=['Grep  router','Read  auth.ts','Edit  api.test.ts','Bash  npm test','Glob  src/**','Write  README.md'];
+const a=(name,desc,model,used,win,state,detail,time)=>({name,desc,model,used,win,state,detail,time});
+const scenes={
+  busy:()=>[
+    a('Explore','掃描 API 路由','haiku',38,200,'tool','Grep  router',8),
+    a('tester','補齊單元測試','sonnet',82,200,'thinking','',14),
+    a('reviewer','審查權限邏輯','opus',146,500,'permission','Bash  npm audit',62),
+    a('docs','更新文件','fable',240,1000,'waiting','背景工作 build',33),
+    a('planner','拆解任務','sonnet',0,200,'pending','',2),
+    a('search','查專案慣例','haiku',51,200,'completed','',130),
+  ],
+  high:()=>[
+    a('migrator','改寫資料存取層','sonnet',176,200,'tool','Edit  db/client.ts',261),
+    a('reviewer','全專案安全審查','opus',440,500,'thinking','',408),
+    a('tester','跑整合測試','sonnet',124,200,'tool','Bash  npm test',75),
+  ],
+  done:()=>[
+    a('Explore','掃描 API 路由','haiku',61,200,'completed','',72),
+    a('tester','補齊單元測試','sonnet',109,200,'completed','',303),
+    a('reviewer','審查權限邏輯','opus',212,500,'failed','API 連線中斷',220),
+    a('docs','更新文件','fable',310,1000,'killed','',48),
+  ],
+  none:()=>[]
+};
+let cur=scenes.busy(),scene='busy',frame=0;
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>s<60?s+'s':Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
+const heat=p=>p>=85?'var(--red)':p>=70?'var(--amber)':'var(--green)';
+function sprite(name,f=0){
+  const fr=G[name],rows=fr[f%fr.length].split('\n');let r='';
+  rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='#')r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`}));
+  return `<svg viewBox="0 0 9 9" aria-hidden="true">${r}</svg>`;
+}
+function ring(p,col,pending){
+  const n=24,on=Math.round(p/100*n);let r='';
+  for(let i=0;i<n;i++)r+=`<rect x="31" y="3" width="6" height="11" rx="1" transform="rotate(${i*15} 34 34)" fill="${i<on?col:'#343c49'}"/>`;
+  return `<div class="ring"><svg viewBox="0 0 68 68" aria-hidden="true">${r}</svg><b>${pending?'—':p+'%'}</b></div>`;
+}
+function tile(x){
+  const s=S[x.state],p=Math.min(100,Math.round(x.used/x.win*100)),ended=ENDED.includes(x.state);
+  const cls=[ended?'ended':'',x.state==='permission'?'need':''].join(' ');
+  return `<article class="tile ${cls}" style="--c:${s.c};--m:var(--${x.model})" aria-label="${esc(x.name)}，${MODELS[x.model]}，用量約 ${p}%，${s.l}">
+    <div class="body">${ring(p,heat(p),x.state==='pending')}
+      <div class="info"><span class="badge">${MODELS[x.model]}</span><div class="nm">${esc(x.name)}</div><div class="tk">${esc(x.desc)}</div></div>
+    </div>
+    <div class="strip">${sprite(s.g,frame)}<div class="st"><b>${s.l}</b><em>${esc(x.detail)}</em></div><span class="time">${fmt(x.time)}</span></div>
+  </article>`;
+}
+function draw(){
+  const box=document.getElementById('pane');
+  if(!cur.length){box.innerHTML=`<div class="empty">${sprite('zzz')}<span>目前沒有 subagent</span></div>`;return}
+  const active=cur.filter(x=>ACTIVE.includes(x.state)).length;
+  const groups=Object.keys(S).map(k=>({k,n:cur.filter(x=>x.state===k).length})).filter(g=>g.n);
+  const need=cur.filter(x=>x.state==='permission');
+  const hot=cur.filter(x=>!ENDED.includes(x.state)&&x.used/x.win>=.85);
+  const order=[...cur].sort((p,q)=>(q.state==='permission')-(p.state==='permission')||ENDED.includes(p.state)-ENDED.includes(q.state));
+  box.innerHTML=`<div class="hero">
+      <div class="big">${active}<small>個執行中 / 共 ${cur.length}</small></div>
+      <div>
+        <div class="pips">${order.map(x=>`<span class="pip ${ENDED.includes(x.state)?'ended':''}" style="--c:${S[x.state].c}" title="${esc(x.name)}"></span>`).join('')}</div>
+        <div class="stack">${groups.map(g=>`<i style="--c:${S[g.k].c};flex-grow:${g.n}"></i>`).join('')}</div>
+        <div class="keys">${groups.map(g=>`<span style="--c:${S[g.k].c}">${S[g.k].l} ${g.n}</span>`).join('')}</div>
+      </div>
+    </div>`
+    +(need.length?`<div class="alert">${need.length} 個 subagent 在等你允許：${esc(need[0].name)}</div>`:'')
+    +(hot.length?`<div class="alert hot">${esc(hot[0].name)} 的 context 快滿了</div>`:'')
+    +`<div class="grid">${order.map(tile).join('')}</div>`;
+}
+function step(){
+  cur.forEach((x,i)=>{
+    if(ENDED.includes(x.state))return;
+    x.time+=1;
+    if(x.state==='thinking'&&frame%6===i%6){x.state='tool';x.detail=TOOLS[(frame+i)%TOOLS.length]}
+    else if(x.state==='tool'&&frame%6===(i+3)%6){x.state='thinking';x.detail='';x.used=Math.min(x.win,x.used+Math.ceil(x.win*.012))}
+    else if(x.state==='pending'&&frame%10===9){x.state='thinking';x.used=9}
+  });
+  frame++;draw();
+}
+document.querySelectorAll('.controls button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.controls button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  scene=b.dataset.s;cur=scenes[scene]();draw();
+}));
+document.getElementById('legend').innerHTML=Object.values(S).map(s=>`<li style="--c:${s.c}">${sprite(s.g)}<span>${s.l}</span></li>`).join('');
+draw();
+if(!reduce)setInterval(step,700);
+</script>
+</body>
+</html>
