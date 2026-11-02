@@ -3,412 +3,200 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LaptopNewV2 系統組成確認</title>
-<meta name="description" content="AI 筆電選購助手 LaptopNewV2：整個網站由哪些部分組成、彼此怎麼接、哪些是已確認、哪些待確認。">
+<title>筆電推薦系統 概覽確認</title>
 <style>
-:root{
-  --bg:#f7f7f5;--surface:#ffffff;--surface-2:#f0f0ec;--border:#dcdcd5;
-  --text:#1d1d1b;--muted:#5f5f58;
-  --accent:#1f5fbf;--accent-soft:#e3ecfa;
-  --ok:#1f7a4d;--ok-soft:#e1f2e8;
-  --warn:#9a5b00;--warn-soft:#fbeed7;
-  --inherit:#5b3fa8;--inherit-soft:#ece6f8;
-  --llm:#b03a5b;--llm-soft:#f8e3ea;
-  --code:#f0f0ec;
-  --shadow:0 1px 2px rgba(0,0,0,.05);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#141414;--surface:#1e1e1e;--surface-2:#262626;--border:#3a3a3a;
-    --text:#ececea;--muted:#a3a39c;
-    --accent:#7aa7f0;--accent-soft:#1d2a42;
-    --ok:#6fcf97;--ok-soft:#173224;
-    --warn:#f0b35a;--warn-soft:#3b2a0f;
-    --inherit:#b59cf0;--inherit-soft:#2a2240;
-    --llm:#f08aa6;--llm-soft:#3d1f2a;
-    --code:#262626;--shadow:none;
+  :root{
+    --bg:#f6f7f9;--card:#fff;--text:#1d2229;--muted:#5f6b7a;--line:#e1e5ea;
+    --accent:#2563eb;--accent-soft:#e8efff;--ok:#15803d;--ok-soft:#e4f5ea;--warn:#b45309;--warn-soft:#fff3e0;
   }
-}
-:root[data-theme="dark"]{
-  --bg:#141414;--surface:#1e1e1e;--surface-2:#262626;--border:#3a3a3a;
-  --text:#ececea;--muted:#a3a39c;
-  --accent:#7aa7f0;--accent-soft:#1d2a42;
-  --ok:#6fcf97;--ok-soft:#173224;
-  --warn:#f0b35a;--warn-soft:#3b2a0f;
-  --inherit:#b59cf0;--inherit-soft:#2a2240;
-  --llm:#f08aa6;--llm-soft:#3d1f2a;
-  --code:#262626;--shadow:none;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
-.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 80px}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-h1{font-size:1.7rem;margin:0 0 4px;line-height:1.3}
-h2{font-size:1.3rem;margin:48px 0 12px;padding-top:12px;border-top:2px solid var(--border)}
-h3{font-size:1.05rem;margin:20px 0 8px}
-p{margin:8px 0}
-.sub{color:var(--muted);font-size:.95rem}
-button.theme{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.9rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);margin:12px 0}
-.lead{font-size:1.08rem;background:var(--accent-soft);border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 10px 10px 0}
-.tag{display:inline-block;font-size:.78rem;padding:1px 8px;border-radius:999px;border:1px solid transparent;vertical-align:middle;white-space:nowrap}
-.t-ok{background:var(--ok-soft);color:var(--ok)}
-.t-inh{background:var(--inherit-soft);color:var(--inherit)}
-.t-ask{background:var(--warn-soft);color:var(--warn)}
-.t-llm{background:var(--llm-soft);color:var(--llm)}
-.t-prog{background:var(--accent-soft);color:var(--accent)}
-.legend{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
-.legend span{font-size:.9rem}
-table{width:100%;border-collapse:collapse;font-size:.93rem;margin:10px 0}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
-th{background:var(--surface-2);font-weight:600}
-code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-pre{background:var(--code);border:1px solid var(--border);border-radius:10px;padding:14px;overflow:auto;font-size:.85rem;line-height:1.5}
-.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
-.toc a{font-size:.88rem;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 12px;color:var(--text);text-decoration:none}
-.toc a:hover{border-color:var(--accent)}
-/* 系統圖 */
-.stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
-.layer{border:1px dashed var(--border);border-radius:12px;padding:10px 12px;background:var(--surface)}
-.layer .name{font-size:.8rem;color:var(--muted);letter-spacing:.04em;margin-bottom:6px}
-.boxes{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-.box{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:.88rem;line-height:1.4}
-.box b{display:block;font-size:.92rem}
-.box.core{border-color:var(--accent);background:var(--accent-soft)}
-.box.llm{border-color:var(--llm);background:var(--llm-soft)}
-.box.data{border-color:var(--ok);background:var(--ok-soft)}
-.arrow{text-align:center;color:var(--muted);font-size:1.1rem;line-height:1}
-/* 核心鏈 */
-.chain{display:grid;gap:0;margin:12px 0}
-.chain .step{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-.chain .n{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.9rem}
-.chain .n.llm{background:var(--llm)}
-.chain .n.data{background:var(--ok)}
-.chain .step p{margin:2px 0}
-.grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.q{counter-reset:none}
-.q li{margin:10px 0;padding-left:4px}
-.q li b{display:block}
-.q li .my{color:var(--muted);font-size:.92rem}
-ul{padding-left:1.3em}
-li{margin:3px 0}
-.foot{color:var(--muted);font-size:.85rem;margin-top:40px;border-top:1px solid var(--border);padding-top:12px}
-@media (max-width:600px){
-  h1{font-size:1.4rem}
-  table{display:block;overflow-x:auto;white-space:nowrap}
-  .boxes{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
-}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121519;--card:#1b1f25;--text:#e6e9ee;--muted:#9aa5b4;--line:#2b323b;
+      --accent:#6ea0ff;--accent-soft:#1d2a44;--ok:#4ade80;--ok-soft:#14301f;--warn:#fbbf24;--warn-soft:#3a2a0e;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,"PingFang TC","Noto Sans TC",system-ui,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 16px 96px}
+  h1{font-size:28px;margin:0 0 4px}
+  h2{font-size:20px;margin:0}
+  h3{font-size:16px;margin:16px 0 6px;color:var(--muted)}
+  p{margin:8px 0}
+  .lead{color:var(--muted);margin-bottom:24px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+  .head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .num{display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:600;border-radius:6px;padding:0 8px;margin-right:8px}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;white-space:nowrap}
+  ul,ol{margin:6px 0;padding-left:22px}
+  li{margin:3px 0}
+  code{background:var(--accent-soft);padding:1px 6px;border-radius:4px;font-size:14px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .step{background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:15px}
+  .arrow{color:var(--muted)}
+  .arch{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+  .box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+  .box b{display:block;margin-bottom:4px}
+  .box.core{border-color:var(--accent);background:var(--accent-soft)}
+  .vote{display:flex;gap:8px;flex-wrap:wrap}
+  .vote button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;padding:4px 14px;cursor:pointer;font-size:14px}
+  .vote button.on-ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+  .vote button.on-warn{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+  textarea{width:100%;min-height:56px;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;resize:vertical}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px}
+  .bar .in{max-width:960px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .bar button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:inherit;cursor:pointer}
+  .bar span{color:var(--muted);font-size:14px}
+  .tag{font-size:13px;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>
-  <div>
-    <h1>LaptopNewV2 · 系統組成確認</h1>
-    <div class="sub">AI 筆電選購助手 · 第二版重新啟動 · 整理日期 2026-11-02</div>
-  </div>
-  <button class="theme" onclick="toggleTheme()">切換深淺色</button>
-</header>
+  <h1>筆電推薦系統 — 架構理解確認</h1>
+  <p class="lead">以下是我對整個網站組成的理解。每一節請選「同意」或「需修改」，有意見可寫在欄位裡；最後按底部「複製回饋」把結果貼回對話給我。</p>
 
-<p class="lead" style="margin-top:18px">
-一句話：使用者用自然語言說需求，<b>語言模型只負責「聽懂」和「把結果說成人話」</b>；需求變成權重、權重算出每台筆電的分數、分數排出名次、名次產生推薦理由，<b>這整條核心鏈全部由程式決定</b>，可重現、可解釋、可測試。
-</p>
+  <section data-key="1">
+    <div class="head"><h2><span class="num">1</span>系統定位</h2><div class="vote"></div></div>
+    <p>一個<b>對外服務</b>的筆電推薦網站：使用者用自然語言描述需求，系統透過 AI 追問釐清，再從資料庫中<b>依程式計算的分數排序</b>，列出最適合的筆電並解釋理由。</p>
+    <p>兩個核心原則：<b>AI 負責理解與解釋，排名由確定性演算法計算</b>（結果可重現、可測試）；<b>不綁定單一 AI 廠商</b>（DeepSeek、MiMo、Grok、GPT、GLM 等可切換）。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
 
-<div class="legend">
-  <span class="tag t-ok">已確認</span><span>你這次已經告訴我的條件</span>
-  <span class="tag t-inh">承接</span><span>我從先前三份設計文件理解到、打算延用的做法</span>
-  <span class="tag t-ask">待確認</span><span>需要你拍板</span>
-  <span class="tag t-llm">模型</span><span>由語言模型做的事</span>
-  <span class="tag t-prog">程式</span><span>由確定性程式做的事</span>
+  <section data-key="2">
+    <div class="head"><h2><span class="num">2</span>使用者流程</h2><div class="vote"></div></div>
+    <div class="flow">
+      <div class="step">① 描述需求</div><span class="arrow">→</span>
+      <div class="step">② AI 轉成結構化需求檔</div><span class="arrow">→</span>
+      <div class="step">③ 系統追問 2～4 題</div><span class="arrow">→</span>
+      <div class="step">④ 回答後更新需求檔（最多 3 輪）</div><span class="arrow">→</span>
+      <div class="step">⑤ 過濾＋評分排序</div><span class="arrow">→</span>
+      <div class="step">⑥ 顯示排名、分數分解與推薦理由</div>
+    </div>
+    <p style="margin-top:12px">使用者可在結果頁調整權重（例如「更重視續航」）即時重排，不必重新對話。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="3">
+    <div class="head"><h2><span class="num">3</span>系統組成</h2><div class="vote"></div></div>
+    <div class="arch">
+      <div class="box"><b>前端（Next.js）</b>對話介面、結果列表、比較頁、筆電詳情頁</div>
+      <div class="box core"><b>advisor 模組</b>需求抽取、追問生成、需求檔管理</div>
+      <div class="box core"><b>ranking 模組</b>硬性條件過濾、多準則加權評分、理由資料</div>
+      <div class="box core"><b>catalog 模組</b>筆電規格、效能分數、查詢與詳情</div>
+      <div class="box"><b>llm 抽象層</b>統一介面、多廠商設定、備援切換、JSON schema 驗證</div>
+      <div class="box"><b>import 模組</b>把你的筆電／效能資料匯入並標準化為分數</div>
+      <div class="box"><b>PostgreSQL</b>主要資料庫，migration 版本化</div>
+      <div class="box"><b>基礎設施</b>Docker、GitHub Actions CI、監控與錯誤追蹤、Secret 管理</div>
+    </div>
+    <p>架構採<b>模組化單體</b>：單一後端部署，模組間只透過公開介面溝通，每張資料表只屬於一個模組。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="4">
+    <div class="head"><h2><span class="num">4</span>資料模型</h2><div class="vote"></div></div>
+    <table>
+      <tr><th>資料</th><th>內容</th><th>來源</th></tr>
+      <tr><td>筆電（laptops）</td><td>品牌、型號、價格、CPU、GPU、RAM、儲存、螢幕尺寸／解析度／更新率、重量、電池、OS、連接埠、上市年份</td><td>你的筆電資料</td></tr>
+      <tr><td>效能（benchmarks）</td><td>CPU／GPU 原始跑分等效能數據</td><td>你的效能資料</td></tr>
+      <tr><td>標準化分數（scores）</td><td>由上兩者換算的 0～100 分：效能、顯示、攜帶性、續航、CP 值…</td><td>import 模組計算</td></tr>
+      <tr><td>需求檔（requirement profile）</td><td>預算、用途、必要條件、偏好、權重</td><td>advisor 從對話產出</td></tr>
+      <tr><td>對話紀錄（sessions）</td><td>每輪問答與最終排名，供除錯與改進</td><td>系統記錄</td></tr>
+    </table>
+    <p><span class="tag">待確認</span> 實際欄位要看過你的資料檔後再定案，目前只是預期內容。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="5">
+    <div class="head"><h2><span class="num">5</span>排名引擎</h2><div class="vote"></div></div>
+    <ol>
+      <li><b>硬性過濾</b>：預算上限、必要條件（例如 RAM ≥ 16GB、OS）不符的直接排除。</li>
+      <li><b>加權評分</b>：各項標準化分數 × 需求檔權重，權重先由用途自動推導（如影片剪輯 → 效能與螢幕高），再依追問結果微調。</li>
+      <li><b>輸出</b>：總分排序，附每台的分數分解與「為何推薦／取捨」資料，交由 AI 轉成白話說明。</li>
+    </ol>
+    <p>這個模組是純函式，不碰 AI 與資料庫，會先寫測試再實作。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="6">
+    <div class="head"><h2><span class="num">6</span>對外服務的必要配套</h2><div class="vote"></div></div>
+    <ul>
+      <li><b>CI</b>：Lint、型別檢查、單元／整合測試、E2E、安全掃描；未通過不得合併。</li>
+      <li><b>環境</b>：dev／staging／prod 分離，Docker 統一環境，一鍵回滾。</li>
+      <li><b>可觀測性</b>：結構化日誌、錯誤追蹤、AI 呼叫的延遲與成本監控。</li>
+      <li><b>安全</b>：API key 放 Secret Manager、輸入驗證、Rate Limit（防止 AI 呼叫被濫用）、安全標頭。</li>
+      <li><b>成本控制</b>：每個 session 的 AI 呼叫次數上限、結果快取。</li>
+      <li><b>法務</b>：隱私聲明、服務條款、對話資料保存政策。</li>
+    </ul>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="7">
+    <div class="head"><h2><span class="num">7</span>建置順序</h2><div class="vote"></div></div>
+    <table>
+      <tr><th>階段</th><th>內容</th><th>完成標準</th></tr>
+      <tr><td>0 規格</td><td>架構文件、資料模型、ADR、CLAUDE.md</td><td>你審閱通過</td></tr>
+      <tr><td>1 地基</td><td>專案骨架、PostgreSQL、Docker、CI、部署到 staging</td><td>Hello World 自動部署</td></tr>
+      <tr><td>2 資料與排名</td><td>匯入你的資料、標準化分數、排名引擎＋測試</td><td>給定需求檔能排出合理結果</td></tr>
+      <tr><td>3 AI 層</td><td>llm 抽象層、需求抽取、追問生成</td><td>自然語言 → 需求檔，多模型可切換</td></tr>
+      <tr><td>4 前端切片</td><td>對話 → 結果頁完整打通</td><td>E2E 通過</td></tr>
+      <tr><td>5 強化</td><td>推薦理由、權重調整、比較頁、監控、安全、壓測</td><td>上線檢查表通過</td></tr>
+      <tr><td>6 上線</td><td>灰度放量</td><td>指標穩定</td></tr>
+    </table>
+    <p>版本管理依你的慣例：每次更新複製為新版本資料夾（<code>v0.0.1</code> → <code>v0.0.2</code>），根目錄維護 <code>CHANGELOG.md</code>。</p>
+    <textarea placeholder="意見（選填）"></textarea>
+  </section>
+
+  <section data-key="8">
+    <div class="head"><h2><span class="num">8</span>我仍需要你決定的事</h2><div class="vote"></div></div>
+    <ul>
+      <li><b>資料檔</b>：筆電資料與效能資料的檔案與格式（CSV／Excel／JSON），請放進 <code>LaptopNewV2</code> 資料夾。</li>
+      <li><b>介面語言</b>：繁體中文為主？是否需要英文？</li>
+      <li><b>使用者帳號</b>：第一版需要登入（收藏、歷史紀錄）嗎？我建議第一版不做，匿名 session 即可。</li>
+      <li><b>管理後台</b>：是否需要網頁後台維護筆電資料，還是以匯入指令更新即可？</li>
+      <li><b>技術棧</b>：Next.js + TypeScript + Drizzle + PostgreSQL，是否同意？</li>
+      <li><b>SubAgent 分工</b>：資料模型與排名引擎由我主導；llm 層、前端、CI 設定分派 SubAgent 平行進行，是否同意？</li>
+    </ul>
+    <textarea placeholder="請在這裡回答以上問題"></textarea>
+  </section>
 </div>
 
-<div class="toc">
-  <a href="#s1">1 已知條件</a><a href="#s2">2 系統全貌</a><a href="#s3">3 七大組成</a>
-  <a href="#s4">4 一輪對話</a><a href="#s5">5 核心鏈</a><a href="#s6">6 資料怎麼進來</a>
-  <a href="#s7">7 對外服務要補的</a><a href="#s8">8 建置順序</a><a href="#s9">9 待你確認</a>
-</div>
+<div class="bar"><div class="in">
+  <button id="copy">複製回饋</button>
+  <span id="status">選擇與意見會自動暫存在這個瀏覽器</span>
+</div></div>
 
-<!-- 1 -->
-<h2 id="s1">1. 已知條件</h2>
-<div class="card">
-<table>
-<tr><th style="width:28%">項目</th><th>內容</th><th style="width:90px">狀態</th></tr>
-<tr><td>服務型態</td><td>對外服務，要走完整的 CI、環境分離、部署、監控、安全流程</td><td><span class="tag t-ok">已確認</span></td></tr>
-<tr><td>資料庫</td><td>PostgreSQL</td><td><span class="tag t-ok">已確認</span></td></tr>
-<tr><td>資料來源</td><td>你已有「筆電資料」與「效能實測資料」兩份，由我設計匯入流程</td><td><span class="tag t-ok">已確認</span></td></tr>
-<tr><td>語言模型</td><td>接多家：DeepSeek、MiMo、Grok、GPT、GLM 等，透過統一閘道，後台可切換、可比較</td><td><span class="tag t-ok">已確認</span></td></tr>
-<tr><td>推薦邏輯</td><td>權重是核心：需求 → 權重 → 分數 → 排序 → 理由，全由程式計算；模型只做理解與表達</td><td><span class="tag t-inh">承接</span></td></tr>
-<tr><td>後端語言</td><td>先前文件寫「TypeScript 已確認」（方案 B）；但 system 0.0.3 是 Python FastAPI。這次重新開始，要用哪一個？</td><td><span class="tag t-ask">待確認</span></td></tr>
-<tr><td>既有程式碼</td><td><code>LaptopNewV2/</code> 資料夾目前是空的。先前的 v10demo、system 0.0.3 是否要移植部分邏輯（例如七維評分、卡片題庫）？</td><td><span class="tag t-ask">待確認</span></td></tr>
-</table>
-</div>
-
-<!-- 2 -->
-<h2 id="s2">2. 系統全貌</h2>
-<p class="sub">由上而下：誰在用 → 看到什麼 → 伺服器怎麼處理 → 核心邏輯 → 資料與外部服務。藍色是核心、紅色是語言模型、綠色是資料。</p>
-<div class="stack">
-  <div class="layer"><div class="name">使用者</div>
-    <div class="boxes">
-      <div class="box"><b>一般使用者（訪客）</b>說需求、回答追問、看推薦、對比、收藏、回饋</div>
-      <div class="box"><b>管理員</b>管機型資料、規則、模型、開關、看對話回放與統計</div>
-    </div></div>
-  <div class="arrow">↓</div>
-  <div class="layer"><div class="name">表現層（瀏覽器）</div>
-    <div class="boxes">
-      <div class="box"><b>A. 使用者前台</b>對話區＋需求檔案＋結果區（推薦卡、候選池、對比工作台）</div>
-      <div class="box"><b>F. 管理後台</b>機型庫、規則與權重表、模型與提示詞、評測、開關、回放、統計</div>
-    </div></div>
-  <div class="arrow">↓ HTTPS / SSE 串流</div>
-  <div class="layer"><div class="name">應用層（API 伺服器）</div>
-    <div class="boxes">
-      <div class="box"><b>對話總管</b>身分、限流、冪等、對話鎖</div>
-      <div class="box"><b>一輪對話編排器</b>依序呼叫理解 → 引擎 → 回覆</div>
-      <div class="box"><b>後台服務</b>設定版本、發布、稽核</div>
-      <div class="box"><b>背景工作 worker</b>匯入、評測、影響評估、統計、清理</div>
-    </div></div>
-  <div class="arrow">↓</div>
-  <div class="layer"><div class="name">領域層（純邏輯套件，不碰網路與資料庫）</div>
-    <div class="boxes">
-      <div class="box llm"><b>C. 需求理解 NLU</b>一句話 → 需求標籤＋訊號＋強度＋原文依據</div>
-      <div class="box core"><b>B. 決策引擎</b>門檻篩選 → 權重帳本 → 七維評分 → 排序 → 動作決策 → 追問價值 → 理由產生</div>
-      <div class="box llm"><b>回覆生成</b>只拿引擎算好的事實，改寫成人話；數字核對不過就用模板</div>
-      <div class="box"><b>功能開關</b>每個細節都能開關、分流、記錄</div>
-    </div></div>
-  <div class="arrow">↓</div>
-  <div class="layer"><div class="name">基礎設施層</div>
-    <div class="boxes">
-      <div class="box llm"><b>D. 模型閘道</b>多家模型統一介面；路由、逾時、重試、熔斷、備援、計費</div>
-      <div class="box data"><b>資料存取</b>Drizzle / SQLAlchemy ＋ 版本化 migration</div>
-      <div class="box"><b>可觀測性</b>追蹤、指標、結構化日誌、錯誤追蹤</div>
-    </div></div>
-  <div class="arrow">↓</div>
-  <div class="layer"><div class="name">資料與外部</div>
-    <div class="boxes">
-      <div class="box data"><b>E. PostgreSQL</b>機型、實測、軟體畫像、詞庫、對話、執行紀錄、設定版本、評測</div>
-      <div class="box data"><b>Redis</b>限流、對話鎖、佇列、SSE 事件暫存</div>
-      <div class="box data"><b>物件儲存</b>模型完整請求／回應、匯入檔、評測報告</div>
-      <div class="box llm"><b>模型供應商</b>DeepSeek / MiMo / Grok / GPT / GLM …</div>
-    </div></div>
-</div>
-
-<!-- 3 -->
-<h2 id="s3">3. 七大組成</h2>
-
-<div class="card">
-<h3>A. 使用者前台 <span class="tag t-inh">承接</span></h3>
-<p>三欄版面：左邊對話歷史、中間對話、右邊結果。首屏給 3 句可直接點的範例需求句＋基礎需求卡（預算／用途／便攜），右側依價位分組瀏覽全部機型。</p>
-<ul>
-  <li><b>需求檔案</b>：每條需求一張小卡，顯示原話、第幾輪加的、信心度、它影響了哪個權重、硬條件「拿掉會多 N 台」。低信心用虛線框＋替代選項，使用者不改就代表接受。<b>不做確認卡</b>（先前已決定）。</li>
-  <li><b>結果區</b>：主推大卡（好在哪、要接受什麼、為什麼不是第 2 名）、也可以考慮（有角色：想省錢／想更輕）、差一點（差在哪、差多少）、不符合（按原因分組）。候選數量不同時自動切換卡片密度。</li>
-  <li><b>追問卡</b>：一輪最多一張，會說還剩幾題、可以跳過、可以答「不確定」。</li>
-  <li><b>權重面板</b>：七個維度可拖動，拖動時瀏覽器用同一份引擎即時預覽，套用後以伺服器結果為準；手動調過的維度鎖定。</li>
-  <li><b>其他</b>：機型詳情抽屜（含「我怎麼判斷」與實測出處）、對比工作台、收藏、每台可 👍👎 並追問原因、指名查詢「那 XX 呢」。</li>
-  <li><b>體驗</b>：先送結果卡片（1–2 秒內），文字再串流；斷線重連拿最新狀態。</li>
-</ul>
-</div>
-
-<div class="card">
-<h3>B. 決策引擎（系統的心臟） <span class="tag t-prog">程式</span> <span class="tag t-inh">承接</span></h3>
-<p>純函式套件：輸入「需求檔案＋規則設定＋機型資料快照＋開關值」，輸出「候選分組、分數、動作、卡片資料、理由」。同樣的輸入永遠得到同樣的輸出，伺服器、前台預覽、後台試算、worker 共用同一份。細節見第 5 節。</p>
-</div>
-
-<div class="card">
-<h3>C. 需求理解（NLU）與回覆生成 <span class="tag t-llm">模型</span> <span class="tag t-inh">承接</span></h3>
-<ul>
-  <li><b>混合模式</b>：先跑規則解析（別名、數字、關鍵字），規則聽不懂的部分才呼叫模型，預估省 30–60% 呼叫。</li>
-  <li><b>模型只回 JSON</b>：需求標籤（硬條件／偏好／軟體）＋訊號 id＋強度（very／normal／light）＋原文依據。<b>模型不出數字</b>，點數由程式查表。依據不在原文裡的欄位直接丟掉。</li>
-  <li><b>軟體辨識</b>：別名表 → 軟體畫像（工作類型 × 資源需求等級），只有官方最低需求才當硬門檻；模糊時加消歧義追問。</li>
-  <li><b>回覆生成</b>：只拿到引擎算好的事實 JSON，逐句串流，每句的數字要對得上事實，對不上就刪；逾時或刪光就用模板句。</li>
-  <li><b>失敗路徑</b>：格式錯重試 1 次 → 換備用模型 → 只用規則結果並請使用者補充。模型壞了，系統不能壞。</li>
-</ul>
-</div>
-
-<div class="card">
-<h3>D. 模型閘道（接多家模型） <span class="tag t-ok">已確認</span></h3>
-<ul>
-  <li>所有模型呼叫只能走這裡。角色分 <code>nlu</code>（要準、要快、結構化）、<code>reply</code>（要自然、串流）、<code>judge</code>（評測評審）。</li>
-  <li>路由設定存資料庫：每個角色的主模型、備用清單、分流比例、影子模型、溫度與逾時；後台改了就生效。</li>
-  <li>OpenAI 相容格式的模型（DeepSeek、GLM、Grok、MiMo、GPT 都提供）：後台填網址、模型名、金鑰即可；其他格式寫一個轉接器。</li>
-  <li>逾時、重試（只對網路錯誤與 429）、熔斷、多金鑰輪替、每次呼叫計算成本、完整請求／回應壓縮存物件儲存。</li>
-  <li><b>評測平台</b>：同一批測試題丟給多個模型，自動算格式合格率、欄位 F1、結果一致率（第一名是否相同）、數字核對通過率、延遲、每千輪成本，畫成「效果／成本」散佈圖；再走影子模式 → A/B 分流 → 全量。</li>
-</ul>
-</div>
-
-<div class="card">
-<h3>E. 資料層 <span class="tag t-ok">已確認</span> PostgreSQL</h3>
-<table>
-<tr><th style="width:22%">群組</th><th>主要資料表</th><th>說明</th></tr>
-<tr><td>機型與實測</td><td><code>laptops</code>、<code>laptop_measurements</code>、<code>price_history</code>、<code>data_versions</code></td><td>你的兩份資料匯入後的歸宿；每次發布存成一份不可修改的資料版本快照，引擎啟動時整份載入記憶體</td></tr>
-<tr><td>知識</td><td><code>software_profiles</code>、<code>lexicon_aliases</code>、<code>signal_table</code></td><td>軟體畫像、別名、訊號 → 維度點數表</td></tr>
-<tr><td>對話與執行</td><td><code>conversations</code>、<code>messages</code>、<code>runs</code>、<code>llm_calls</code>、<code>candidate_summaries</code></td><td>每輪記 6 個版本號（引擎、規則、資料、提示詞、路由、開關）＋權重帳本，任何一輪都能重現</td></tr>
-<tr><td>設定</td><td><code>rule_versions</code>、<code>prompt_versions</code>、<code>model_routes</code>、<code>feature_flags</code>、<code>cards</code></td><td>全部版本化、不可修改；發布走「草稿 → 檢查 → 回歸測試 → 影響評估 → 金絲雀 → 全量」</td></tr>
-<tr><td>評測</td><td><code>eval_datasets</code>、<code>eval_cases</code>、<code>eval_runs</code>、<code>eval_results</code>、<code>golden_cases</code></td><td>理解題、整段對話回歸用例、回覆題、人工評分</td></tr>
-<tr><td>回饋與稽核</td><td><code>feedback</code>、<code>card_events</code>、<code>unknown_phrases</code>、<code>admin_audit_log</code></td><td>讚／踩、卡片曝光點擊、聽不懂的說法、後台修改紀錄</td></tr>
-</table>
-</div>
-
-<div class="card">
-<h3>F. 管理後台 <span class="tag t-inh">承接</span> <span class="tag t-ask">待確認範圍</span></h3>
-<div class="grid2">
-  <div><b>資料</b><ul><li>機型庫：上傳 CSV → 驗證 → 比對差異 → 資料版本草稿 → 發布</li><li>資料品質報告：缺實測、異常值、填補值標記、價格過期</li><li>軟體畫像、別名、訊號點數表</li></ul></div>
-  <div><b>規則與引擎</b><ul><li>七維基準權重、門檻容差、動作規則（幾台 → 追問／推薦／放寬）</li><li>追問卡題庫：每個選項必須設定影響（權重或硬條件），沒影響的標紅</li><li>試算：輸入一段需求，看權重帳本、前 5 名逐維貢獻</li></ul></div>
-  <div><b>模型</b><ul><li>供應商與模型、金鑰（只顯示末四碼）、角色路由、分流比例</li><li>提示詞版本</li><li>評測：資料集、跑評測、排行榜、散佈圖</li></ul></div>
-  <div><b>營運</b><ul><li>對話回放：每輪的鏈路、耗時、模型呼叫、權重快照</li><li>功能開關與實驗報表、測試群組連結</li><li>統計：拿到建議率、離開率、聽不懂率、成本</li><li>角色：管理員／編輯者／唯讀；全部修改寫稽核</li></ul></div>
-</div>
-</div>
-
-<div class="card">
-<h3>G. 平台基礎（對外服務必備） <span class="tag t-ok">已確認</span></h3>
-<p>Monorepo、CI（Lint → 型別 → 架構依賴檢查 → 單元 → 建置 → 整合 → 安全掃描 → E2E）、Docker、測試與正式環境分離、版本化 migration（expand-and-contract）、一鍵回滾、OpenTelemetry 追蹤、Sentry、SLO 告警、密鑰管理、限流、Dependabot。</p>
-</div>
-
-<!-- 4 -->
-<h2 id="s4">4. 一輪對話怎麼跑</h2>
-<div class="card">
-<div class="chain">
-  <div class="step"><div class="n">1</div><div><p><b>對話總管</b> <span class="tag t-prog">程式</span></p><p class="sub">驗身分、每人每分鐘限 10 輪、同一 <code>client_request_id</code> 只處理一次、同一對話同時只跑一輪。回 SSE <code>run_started</code>。</p></div></div>
-  <div class="step"><div class="n llm">2</div><div><p><b>需求理解</b> <span class="tag t-llm">模型</span>（規則先行，聽不懂才呼叫）</p><p class="sub">輸出需求標籤＋訊號＋強度＋原文依據的 JSON；程式驗證格式與依據。點卡片時直接查表，不呼叫模型。回 SSE <code>state_updated</code>。</p></div></div>
-  <div class="step"><div class="n">3</div><div><p><b>詞庫與軟體畫像</b> <span class="tag t-prog">程式</span></p><p class="sub">別名正規化、軟體 → 硬門檻與訊號展開、未收錄機型攔截。</p></div></div>
-  <div class="step"><div class="n">4</div><div><p><b>門檻篩選</b> <span class="tag t-prog">程式</span></p><p class="sub">每台分成正式候選／邊界（差一點，保留但標註）／淘汰，每條淘汰原因有固定代碼（例如 <code>BUDGET_OVER</code>）。資料缺測不淘汰。</p></div></div>
-  <div class="step"><div class="n">5</div><div><p><b>權重帳本</b> <span class="tag t-prog">程式</span></p><p class="sub">每輪從基準權重重新推導，不在上一輪結果上疊加；每一分記錄「哪句話、哪條訊號、加了多少」。手動鎖定的維度固定。</p></div></div>
-  <div class="step"><div class="n">6</div><div><p><b>評分與排序</b> <span class="tag t-prog">程式</span></p><p class="sub">七維分數（性能、螢幕、便攜、續航、散熱、噪音、擴展）× 權重 → 產品力分；性價比＝比同價位平均高幾分。</p></div></div>
-  <div class="step"><div class="n">7</div><div><p><b>動作決策＋追問價值</b> <span class="tag t-prog">程式</span></p><p class="sub">依候選台數決定追問／領先／推薦／對比／放寬；追問前先模擬每個答案會不會改變前幾名，不會改變的題目不問；整段對話最多問 3 次。</p></div></div>
-  <div class="step"><div class="n">8</div><div><p><b>理由產生器＋卡片資料</b> <span class="tag t-prog">程式</span></p><p class="sub">逐維貢獻、相對優勢、要接受的、和第 2 名的差別、分差太小就反問；每個數字附實測出處。回 SSE <code>cards_updated</code>（使用者此時已看到結果）。</p></div></div>
-  <div class="step"><div class="n llm">9</div><div><p><b>回覆生成</b> <span class="tag t-llm">模型</span></p><p class="sub">只拿第 8 步的事實改寫成人話，逐句串流並核對數字。回 SSE <code>assistant_delta</code>。</p></div></div>
-  <div class="step"><div class="n data">10</div><div><p><b>寫入紀錄</b> <span class="tag t-prog">程式</span></p><p class="sub">一個交易寫完訊息、狀態、執行紀錄、模型呼叫摘要、權重帳本、6 個版本號；完整模型紀錄非同步送物件儲存。回 SSE <code>run_completed</code>。</p></div></div>
-</div>
-<p class="sub">延遲目標：送出到看到結果卡片 P50 ≤ 1.5 秒（不用模型時 ≤ 0.3 秒）；第一個字 P50 ≤ 3 秒。使用者直接改需求檔案或拖權重時完全不呼叫模型。</p>
-</div>
-
-<!-- 5 -->
-<h2 id="s5">5. 核心鏈：需求 → 權重 → 分數 → 理由</h2>
-<p class="sub">這是先前分析報告認定「現在斷掉、第二版要先接通」的部分，也是我理解中最需要你確認的設計。</p>
-
-<div class="card">
-<h3>5.1 需求檔案（profile）</h3>
-<p>每條需求帶：類型（硬條件／偏好／軟體）、欄位與值、訊號 id、強度、信心度、原文依據、第幾輪加的、來源（模型／規則／卡片／手動）。硬條件只進篩選、不進權重；偏好與軟體只進權重。</p>
-</div>
-
-<div class="card">
-<h3>5.2 權重帳本（方案 A：檔案重算＋加法點數）</h3>
-<pre>raw[維度] = 基準權重[維度] + Σ（訊號點數表[訊號][維度] × 強度係數 × 信心係數）
-  · 同一群組（例如 mobility：常帶出門／偶爾／放桌上）只取最強的一個，不同群組才相加
-  · 每個訊號、每個維度都有上限；單一維度占比上限（例如 50%）
-  · 手動鎖定的維度固定，其餘按 raw 比例分配剩下的 100（最大餘數法取整）
-輸出：weights（合計 100）＋ ledger[{維度, 訊號, 來源需求, 原文, 點數}]</pre>
-<table>
-<tr><th>訊號範例</th><th>性能</th><th>螢幕</th><th>便攜</th><th>續航</th><th>散熱</th><th>噪音</th><th>擴展</th></tr>
-<tr><td>常帶出門（carry）</td><td></td><td></td><td>+10</td><td>+5</td><td></td><td></td><td></td></tr>
-<tr><td>軟體：Premiere 4K 剪輯</td><td>+15</td><td>+3</td><td></td><td></td><td>+5</td><td></td><td></td></tr>
-<tr><td>用途：辦公學習</td><td>−8</td><td></td><td>+3</td><td>+5</td><td></td><td>+2</td><td></td></tr>
-<tr><td>偏好：要安靜</td><td></td><td></td><td></td><td></td><td></td><td>+8</td><td></td></tr>
-</table>
-<p class="sub">強度係數：很在意 ×1.5、一般 ×1.0、偶爾 ×0.5；剪輯強度 輕／中／重 ×0.6／1.0／1.5。全部放後台可調。效果：刪掉需求權重自然退回；同一需求出現 10 輪只算一次；可以直接說「因為你常帶出門，便攜從 14% 提高到 17%」。</p>
-</div>
-
-<div class="card">
-<h3>5.3 兩層評分</h3>
-<ul>
-  <li><b>第一層</b>：七個大維度，由權重帳本決定比例。</li>
-  <li><b>第二層</b>：每個大維度內的細項子權重由「工作負載畫像向量」混合而成（例如 Office 文書：單核 35／多核 10／Office 實測 40…；3ds Max CPU 算圖：CPU 算圖 60…），沒有軟體資訊時用通用向量。</li>
-  <li><b>正規化</b>：改用全庫百分位（隨資料版本固定），不用「距第一名 %」，避免分數擠在高分區。</li>
-  <li><b>資料品質</b>：填補值加標記並用同類保守值計分；異常值排除在正規化基準外。</li>
-  <li><b>平手處理</b>：前兩名分差小於門檻（例如 1.5 分）視為打平，依使用者權重最高的維度決勝或反問。</li>
-</ul>
-</div>
-
-<div class="card">
-<h3>5.4 理由產生器（程式算、模型只措辭）</h3>
-<table>
-<tr><th style="width:22%">句型</th><th>怎麼算</th></tr>
-<tr><td>權重變化</td><td>來自帳本：「你要剪 4K，性能 33% → 38%」，每輪最多 2 句</td></tr>
-<tr><td>相對優勢</td><td>貢獻度 = 權重 × (這台分數 − 候選中位數)，取前 2；同分台數過半的維度不說</td></tr>
-<tr><td>要接受的</td><td>高權重但低於中位數、軟體風險線沒過、明顯偏弱，最多 2 句；沒有就顯示「沒有明顯短板」</td></tr>
-<tr><td>和第 2 名比</td><td>逐維貢獻差：贏在…輸在…，附價格差</td></tr>
-<tr><td>反問</td><td>分差太小且互有輸贏 → 「你比較在乎 A 還是 B？」取代推薦語氣</td></tr>
-</table>
-</div>
-
-<div class="card">
-<h3>5.5 動作規則（承接，門檻後台可調）</h3>
-<table>
-<tr><th>正式候選台數</th><th>動作</th><th>畫面</th></tr>
-<tr><td>0</td><td>relax</td><td>放寬建議卡：說出哪些條件互相衝突、放寬哪一條能多幾台（所有硬條件都要試，不只尺寸與預算）</td></tr>
-<tr><td>1～5</td><td>compare</td><td>對比卡</td></tr>
-<tr><td>6～20</td><td>recommend / probe</td><td>推薦卡（需求夠多且追問價值低）或追問卡</td></tr>
-<tr><td>21～50</td><td>leading</td><td>領先機型（前 3）＋追問卡</td></tr>
-<tr><td>&gt; 50</td><td>probe</td><td>追問卡；連續 2 輪追問後下一輪一定給推薦</td></tr>
-</table>
-</div>
-
-<!-- 6 -->
-<h2 id="s6">6. 你的資料怎麼進來</h2>
-<div class="card">
-<pre>你的「筆電資料」＋「效能實測資料」
-  ↓ 上傳 CSV / Excel（後台或指令）
-① 驗證：必填欄位、單位（TB/GB）、數值範圍、重複機型
-② 比對差異：新增／修改／下架，列出異常值與填補值
-③ 標準化：每台算出細項分（距百分位）、七維分數、填補標記、資料來源與日期
-④ 存成資料版本草稿 → 跑回歸用例 → 影響評估（近 30 天對話第一名改變比例）
-⑤ 發布：不可修改的 data_version 快照；API 收到通知重新載入</pre>
-<p><span class="tag t-ask">待確認</span> 先前的模擬資料有 581 欄、371 台，價格是人民幣。你這次的真實資料：格式、欄位數、台數、幣別、實測項目（Cinebench、Time Spy、Procyon、續航、噪音、螢幕量測…）各是什麼？<b>我需要先看到資料，才能定最後的資料模型。</b></p>
-</div>
-
-<!-- 7 -->
-<h2 id="s7">7. 對外服務要補的部分</h2>
-<div class="card">
-<div class="grid2">
-  <div><b>容量（沿用先前假設：每天 1 萬人 × 10 則）</b><ul><li>尖峰約 10 輪／秒，設計目標 20 輪／秒</li><li>模型呼叫尖峰約 2,400 次／分鐘：主備模型分屬不同供應商、多金鑰、混合理解省呼叫</li><li>引擎評分幾毫秒，不是瓶頸；瓶頸在模型供應商速率上限</li></ul></div>
-  <div><b>部署</b><ul><li>前台、後台靜態檔走 CDN；API 容器 ×3 自動擴充；worker ×2</li><li>託管 PostgreSQL（主庫＋唯讀副本、每日備份、時間點還原）、託管 Redis、物件儲存</li><li>測試環境結構相同、規格較小；正式環境手動按鈕部署、一鍵回滾</li></ul></div>
-  <div><b>安全</b><ul><li>模型金鑰只放密鑰管理服務；後台兩步驟驗證；三種角色；稽核紀錄</li><li>訪客匿名代碼（HttpOnly Cookie）、輸入長度上限、每人與每 IP 限流</li><li>模型沒有任何工具或資料庫權限，被提示詞注入也改不了推薦</li><li>送給模型的內容不含個資；保留政策與刪除入口</li></ul></div>
-  <div><b>監控與告警</b><ul><li>每輪每階段耗時（追蹤）、每秒輪數、錯誤率、P95、佇列長度</li><li>各模型呼叫數、失敗率、成本、備援切換次數</li><li>業務：拿到建議率、中途離開率、零結果率、聽不懂率</li><li>以 SLO 告警，避免告警疲勞</li></ul></div>
-</div>
-</div>
-
-<!-- 8 -->
-<h2 id="s8">8. 建置順序（每一步都可跑、可測）</h2>
-<div class="card">
-<table>
-<tr><th style="width:6%">#</th><th style="width:26%">階段</th><th>內容</th><th style="width:30%">完成標準</th></tr>
-<tr><td>0</td><td>規格與地基</td><td>架構文件、資料模型（看過你的資料後定案）、API 契約、ADR、<code>CLAUDE.md</code>；monorepo、CI、Docker、測試與正式環境、監控</td><td>Hello World 自動部署到測試環境，CI 全綠</td></tr>
-<tr><td>1</td><td>資料匯入＋引擎</td><td>匯入你的兩份資料並標準化；決策引擎純函式：門檻、權重帳本、兩層評分、動作、追問價值、理由產生器；完整單元測試</td><td>給定需求檔案，排序與理由可重現；「刪掉需求權重退回」等測試通過</td></tr>
-<tr><td>2</td><td>不用模型也能用</td><td>資料庫、API、SSE、使用者前台；理解先用規則版、回覆先用模板句</td><td>三個示範情境從前端到資料庫跑通，E2E 通過</td></tr>
-<tr><td>3</td><td>接上語言模型</td><td>模型閘道（多家）、混合理解、回覆生成、數字核對、備援</td><td>關掉主模型時系統仍正常回覆</td></tr>
-<tr><td>4</td><td>後台核心</td><td>機型庫與資料版本、規則與權重表、追問卡題庫、模型路由、對話回放、功能開關、發布流程</td><td>改一條規則能看到影響、發布、回滾</td></tr>
-<tr><td>5</td><td>評測平台</td><td>評測資料集、自動評分、排行榜、散佈圖、影子模式、A/B 分流</td><td>一次比較 5 家以上模型並產生報告</td></tr>
-<tr><td>6</td><td>上線準備</td><td>壓力測試、安全審查、備份還原與回滾演練、告警、灰度放量</td><td>達到每秒 20 輪且延遲達標；上線檢查表全過</td></tr>
-</table>
-<p class="sub">階段 0～2 由我依序做，你親自審核；階段 3 之後引擎、前台、後台、閘道各自獨立，可分派給 SubAgent 平行進行。</p>
-</div>
-
-<!-- 9 -->
-<h2 id="s9">9. 待你確認（回覆編號即可）</h2>
-<div class="card">
-<ol class="q">
-  <li><b>後端語言與技術棧</b><span class="my">我的建議：TypeScript 全棧（Fastify API ＋ React/Vite 前台與後台 ＋ Drizzle ＋ PostgreSQL），引擎可在瀏覽器與伺服器共用同一份程式碼。替代：Python FastAPI 後端（延續 system 0.0.3）＋ React 前端，引擎就無法在瀏覽器即時預覽。</span></li>
-  <li><b>是否承接先前設計</b><span class="my">七維評分、權重帳本（方案 A）、兩層子權重（畫像向量）、理由產生器、追問價值、動作規則、不做確認卡——以上我打算全部承接，有哪一項要改？</span></li>
-  <li><b>先前程式碼要不要移植</b><span class="my">v10demo 的 engine.js 與 system 0.0.3 的評分、卡片題庫邏輯。建議：只移植「卡片題庫內容」與「七維細項定義」，引擎重寫並以先前分析的問題清單（權重疊加、正規化、填補值）為測試案例。</span></li>
-  <li><b>資料</b><span class="my">請把筆電資料與效能資料放進 <code>/Users/m/Desktop/LaptopNewV2/</code> 或告訴我路徑；並說明幣別與價格單位。</span></li>
-  <li><b>介面語言</b><span class="my">先前 demo 文案是簡體中文（「筆記本」）。這次對外服務的主要市場是台灣（繁體、新台幣）還是中國大陸（簡體、人民幣）？還是兩者都要（多語言＋多幣別）？</span></li>
-  <li><b>使用者帳號</b><span class="my">建議第一版只做訪客（收藏與歷史存本機），帳號留介面之後再做。</span></li>
-  <li><b>後台第一版範圍</b><span class="my">建議：機型庫、規則與權重表、追問卡、模型路由、對話回放、功能開關；評測平台排在階段 5；統計圖表與實驗報表最後。</span></li>
-  <li><b>第一批接哪些模型</b><span class="my">你列的 DeepSeek、MiMo、Grok、GPT、GLM；是否還有 Claude、Gemini、Qwen？金鑰由你提供，放環境變數。</span></li>
-  <li><b>雲端平台</b><span class="my">建議從 Google Cloud Run 或 Render 起步（不用管伺服器、SSE 支援好），之後可搬。</span></li>
-  <li><b>容量假設</b><span class="my">每天 1 萬人 × 10 則是否仍然適用？這影響限流、模型額度與部署規格。</span></li>
-</ol>
-</div>
-
-<div class="foot">整理依據：laptop-assistant-plan-b-architecture（2026-10-29）、laptop-guide-architecture（system 0.0.3）、laptop-v10-vs-system-diff（2026-10-30 更新），以及本次對話確認的條件。標成「承接」的內容是我的理解，不代表你已同意；請以第 9 節逐項回覆。</div>
-</div>
 <script>
-function toggleTheme(){
-  var r=document.documentElement,cur=r.getAttribute('data-theme');
-  var dark=cur?cur==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;
-  r.setAttribute('data-theme',dark?'light':'dark');
-  try{localStorage.setItem('theme',dark?'light':'dark')}catch(e){}
-}
-try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}
+(function(){
+  const KEY='laptop-overview-feedback';
+  let state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
+  const titles={};
+  document.querySelectorAll('section').forEach(sec=>{
+    const k=sec.dataset.key, vote=sec.querySelector('.vote'), ta=sec.querySelector('textarea');
+    titles[k]=sec.querySelector('h2').textContent.replace(/^\d+/,'').trim();
+    const s=state[k]||{};
+    const btns=[['ok','同意'],['warn','需修改']].map(([v,label])=>{
+      const b=document.createElement('button');b.textContent=label;b.dataset.v=v;
+      b.onclick=()=>{s.v=v;state[k]=s;save();paint()};vote.appendChild(b);return b;
+    });
+    ta.value=s.note||'';
+    ta.oninput=()=>{s.note=ta.value;state[k]=s;save()};
+    function paint(){btns.forEach(b=>{b.className=(s.v===b.dataset.v)?'on-'+b.dataset.v:''})}
+    paint();
+  });
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  document.getElementById('copy').onclick=async()=>{
+    const lines=['【架構理解回饋】'];
+    Object.keys(titles).forEach(k=>{
+      const s=state[k]||{};
+      lines.push(`${k}. ${titles[k]}：${s.v==='ok'?'同意':s.v==='warn'?'需修改':'未選擇'}${s.note?'\n   意見：'+s.note.trim():''}`);
+    });
+    const text=lines.join('\n');
+    try{await navigator.clipboard.writeText(text);document.getElementById('status').textContent='已複製，請貼回對話。'}
+    catch(e){prompt('請手動複製：',text)}
+  };
+})();
 </script>
 </body>
 </html>
