@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>筆電推薦系統 概覽確認</title>
+<title>筆電推薦系統 概覽確認 v2</title>
 <style>
   :root{
     --bg:#f6f7f9;--card:#fff;--text:#1d2229;--muted:#5f6b7a;--line:#e1e5ea;
@@ -20,10 +20,11 @@
   .wrap{max-width:960px;margin:0 auto;padding:32px 16px 96px}
   h1{font-size:28px;margin:0 0 4px}
   h2{font-size:20px;margin:0}
-  h3{font-size:16px;margin:16px 0 6px;color:var(--muted)}
+  h3{font-size:16px;margin:16px 0 6px}
   p{margin:8px 0}
-  .lead{color:var(--muted);margin-bottom:24px}
+  .lead{color:var(--muted);margin-bottom:16px}
   section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+  section.changes{border-color:var(--warn);background:var(--warn-soft)}
   .head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
   .num{display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:600;border-radius:6px;padding:0 8px;margin-right:8px}
   table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
@@ -32,6 +33,7 @@
   ul,ol{margin:6px 0;padding-left:22px}
   li{margin:3px 0}
   code{background:var(--accent-soft);padding:1px 6px;border-radius:4px;font-size:14px}
+  pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;overflow:auto}
   .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .step{background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:15px}
   .arrow{color:var(--muted)}
@@ -49,85 +51,126 @@
   .bar button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:inherit;cursor:pointer}
   .bar span{color:var(--muted);font-size:14px}
   .tag{font-size:13px;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 6px}
+  .tag.ok{color:var(--ok);background:var(--ok-soft)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>筆電推薦系統 — 架構理解確認</h1>
-  <p class="lead">以下是我對整個網站組成的理解。每一節請選「同意」或「需修改」，有意見可寫在欄位裡；最後按底部「複製回饋」把結果貼回對話給我。</p>
+  <h1>筆電推薦系統 — 架構理解確認 v2</h1>
+  <p class="lead">依你第一輪的回饋修改。每一節請選「同意」或「需修改」，最後按底部「複製回饋」貼回對話。</p>
+
+  <section class="changes">
+    <h2>這一版改了什麼</h2>
+    <ul>
+      <li><b>第 1 節</b>：加入你提出的三個核心洞察，權重系統升為整個系統的中樞。</li>
+      <li><b>第 2 節</b>：取消追問次數與輪數上限；問題的選擇以「最可能改變排名」為準。</li>
+      <li><b>第 4 節</b>：已讀取 <code>laptops.csv</code>（370 筆、179 欄），資料模型改為依實際欄位；發現缺少 CPU／GPU 跑分，列為待確認。</li>
+      <li><b>第 5 節</b>：硬性條件改為「扣分而非排除」，全部筆電永遠都計算總分，並提示「略超條件但很值得考慮」的機型。</li>
+      <li><b>第 6 節</b>：依你的決定移除 CI、環境分離、安全、成本控制、法務。</li>
+      <li><b>第 7、8 節</b>：建置順序配合上述調整；第 8 節改為新的待確認事項。</li>
+    </ul>
+  </section>
 
   <section data-key="1">
-    <div class="head"><h2><span class="num">1</span>系統定位</h2><div class="vote"></div></div>
-    <p>一個<b>對外服務</b>的筆電推薦網站：使用者用自然語言描述需求，系統透過 AI 追問釐清，再從資料庫中<b>依程式計算的分數排序</b>，列出最適合的筆電並解釋理由。</p>
-    <p>兩個核心原則：<b>AI 負責理解與解釋，排名由確定性演算法計算</b>（結果可重現、可測試）；<b>不綁定單一 AI 廠商</b>（DeepSeek、MiMo、Grok、GPT、GLM 等可切換）。</p>
+    <div class="head"><h2><span class="num">1</span>系統定位與三個核心洞察</h2><div class="vote"></div></div>
+    <p>一個對外服務的筆電推薦網站。使用者用自然語言描述需求，系統透過對話逐步理解，再以<b>權重 × 筆電表現</b>算出每台的分數並排序。</p>
+    <table>
+      <tr><th>洞察</th><th>系統上的對應</th></tr>
+      <tr><td>① 深入理解真實需求</td><td>對話中的每句話都轉成<b>可計算的條件與權重</b>，而不只是關鍵字。</td></tr>
+      <tr><td>② 讓使用者感覺被理解</td><td>介面即時顯示<b>需求標籤</b>與<b>權重變化</b>，用 GSAP 動畫呈現 AI 的理解過程。</td></tr>
+      <tr><td>③ 只問最可能改變結果的問題</td><td>每個候選問題先估算「問了之後排名會變多少」，優先問影響最大的，不問無意義的問題。</td></tr>
+    </table>
+    <h3>權重系統（中樞）</h3>
+    <p>使用者每表達一個需求，對應項目的權重就會調整；每台筆電的分數 = Σ（項目權重 × 該筆電在該項目的標準化表現）。使用者表達得越精確，權重越貼近真實需求，分數高的筆電就越符合需求。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="2">
     <div class="head"><h2><span class="num">2</span>使用者流程</h2><div class="vote"></div></div>
     <div class="flow">
-      <div class="step">① 描述需求</div><span class="arrow">→</span>
-      <div class="step">② AI 轉成結構化需求檔</div><span class="arrow">→</span>
-      <div class="step">③ 系統追問 2～4 題</div><span class="arrow">→</span>
-      <div class="step">④ 回答後更新需求檔（最多 3 輪）</div><span class="arrow">→</span>
-      <div class="step">⑤ 過濾＋評分排序</div><span class="arrow">→</span>
-      <div class="step">⑥ 顯示排名、分數分解與推薦理由</div>
+      <div class="step">① 描述需求（可以很模糊）</div><span class="arrow">→</span>
+      <div class="step">② AI 更新需求檔與權重，介面顯示需求標籤</div><span class="arrow">→</span>
+      <div class="step">③ 評估哪些未知資訊最會影響排名</div><span class="arrow">→</span>
+      <div class="step">④ 用友善的方式問最有價值的問題</div><span class="arrow">→</span>
+      <div class="step">⑤ 回到 ②，直到排名穩定或使用者想看結果</div><span class="arrow">→</span>
+      <div class="step">⑥ 顯示排名、分數分解、推薦理由與「值得考慮」提示</div>
     </div>
-    <p style="margin-top:12px">使用者可在結果頁調整權重（例如「更重視續航」）即時重排，不必重新對話。</p>
+    <h3>設計要點</h3>
+    <ul>
+      <li><b>沒有固定次數或輪數上限</b>。停止追問的依據是「再問也不太會改變排名」，或使用者主動要求看結果。</li>
+      <li>排名<b>從第一句話起就持續存在</b>，每次回答後即時更新，使用者隨時可看目前的推薦。</li>
+      <li>對不清楚自己需求的使用者，用情境式問題引導（例如「平常會帶出門嗎？」），而不是問規格。</li>
+      <li>結果頁可直接調整權重即時重排，不必重新對話。</li>
+    </ul>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="3">
     <div class="head"><h2><span class="num">3</span>系統組成</h2><div class="vote"></div></div>
     <div class="arch">
-      <div class="box"><b>前端（Next.js）</b>對話介面、結果列表、比較頁、筆電詳情頁</div>
-      <div class="box core"><b>advisor 模組</b>需求抽取、追問生成、需求檔管理</div>
-      <div class="box core"><b>ranking 模組</b>硬性條件過濾、多準則加權評分、理由資料</div>
-      <div class="box core"><b>catalog 模組</b>筆電規格、效能分數、查詢與詳情</div>
-      <div class="box"><b>llm 抽象層</b>統一介面、多廠商設定、備援切換、JSON schema 驗證</div>
-      <div class="box"><b>import 模組</b>把你的筆電／效能資料匯入並標準化為分數</div>
-      <div class="box"><b>PostgreSQL</b>主要資料庫，migration 版本化</div>
-      <div class="box"><b>基礎設施</b>Docker、GitHub Actions CI、監控與錯誤追蹤、Secret 管理</div>
+      <div class="box"><b>前端（Next.js + GSAP）</b>對話介面、需求標籤與權重視覺化、即時排名列表、筆電詳情與比較</div>
+      <div class="box core"><b>advisor 模組</b>需求抽取、需求檔與權重管理、問題價值評估、追問生成</div>
+      <div class="box core"><b>ranking 模組</b>標準化表現 × 權重計分、軟性條件扣分、「值得考慮」判定、分數分解</div>
+      <div class="box core"><b>catalog 模組</b>筆電規格、測試數據、標準化分數的查詢</div>
+      <div class="box"><b>llm 抽象層</b>統一介面、多廠商（DeepSeek、MiMo、Grok、GPT、GLM…）設定、備援切換、JSON 驗證</div>
+      <div class="box"><b>import 模組</b>讀取 CSV、清理、換算標準化分數、寫入資料庫</div>
+      <div class="box"><b>PostgreSQL</b>主要資料庫</div>
     </div>
-    <p>架構採<b>模組化單體</b>：單一後端部署，模組間只透過公開介面溝通，每張資料表只屬於一個模組。</p>
+    <p>模組化單體，單一後端部署。細節會在架構文件中繼續補充，這裡只確認組成是否正確。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="4">
-    <div class="head"><h2><span class="num">4</span>資料模型</h2><div class="vote"></div></div>
+    <div class="head"><h2><span class="num">4</span>資料模型（依 laptops.csv 實際內容）</h2><div class="vote"></div></div>
+    <p>已讀取 <code>laptops.csv</code>：<b>370 筆、179 欄</b>，全部為 Windows 11 機型，價格 4,699～32,499 CNY，品牌以 ASUS、HP、Lenovo、Thunderobot、MSI 等為主。欄位可分為七群：</p>
     <table>
-      <tr><th>資料</th><th>內容</th><th>來源</th></tr>
-      <tr><td>筆電（laptops）</td><td>品牌、型號、價格、CPU、GPU、RAM、儲存、螢幕尺寸／解析度／更新率、重量、電池、OS、連接埠、上市年份</td><td>你的筆電資料</td></tr>
-      <tr><td>效能（benchmarks）</td><td>CPU／GPU 原始跑分等效能數據</td><td>你的效能資料</td></tr>
-      <tr><td>標準化分數（scores）</td><td>由上兩者換算的 0～100 分：效能、顯示、攜帶性、續航、CP 值…</td><td>import 模組計算</td></tr>
-      <tr><td>需求檔（requirement profile）</td><td>預算、用途、必要條件、偏好、權重</td><td>advisor 從對話產出</td></tr>
-      <tr><td>對話紀錄（sessions）</td><td>每輪問答與最終排名，供除錯與改進</td><td>系統記錄</td></tr>
+      <tr><th>欄位群</th><th>內容舉例</th><th>用途</th></tr>
+      <tr><td>基本與價格</td><td>品牌、系列、價格、保固、上市測試日期</td><td>顯示、價格條件</td></tr>
+      <tr><td>機身與攜帶性</td><td>重量、旅行重量、厚度、尺寸、材質</td><td>攜帶性分數</td></tr>
+      <tr><td>核心規格</td><td>CPU 型號／核心／功耗、獨顯型號／VRAM／TGP、NPU、RAM、SSD</td><td>效能分數、硬性條件</td></tr>
+      <tr><td>記憶體與儲存實測</td><td>讀寫速度、延遲、M.2 插槽</td><td>效能與擴充性分數</td></tr>
+      <tr><td>螢幕實測</td><td>尺寸、解析度、面板、更新率、亮度、色域、ΔE、PWM、HDR</td><td>顯示分數（創作、遊戲）</td></tr>
+      <tr><td>散熱、噪音、溫度</td><td>各負載下的功耗、溫度、噪音、鍵盤與掌托溫度</td><td>安靜度與舒適度分數</td></tr>
+      <tr><td>續航與連接</td><td>電池容量、實測續航、USB／HDMI／網路孔、Wi-Fi、生物辨識</td><td>續航分數、連接埠條件</td></tr>
     </table>
-    <p><span class="tag">待確認</span> 實際欄位要看過你的資料檔後再定案，目前只是預期內容。</p>
+    <h3>兩項發現</h3>
+    <ul>
+      <li><span class="tag">待確認</span> <b>沒有 CPU／GPU 跑分欄位</b>（例如 Cinebench、3DMark）。目前只能從功耗（cpu_max_power_w、gpu_tgp_w）粗估效能。你提到的「效能資料」是另一個檔案嗎？若沒有，我會建一張 CPU／GPU 型號對應分數的查表。</li>
+      <li><span class="tag">注意</span> 資料標記為 <code>data_status = simulated</code>（規則模擬），正式上線前需要換成真實資料，但不影響現在的系統設計。</li>
+    </ul>
+    <h3>資料庫表</h3>
+    <p><code>laptops</code>（原始欄位）、<code>laptop_scores</code>（每台的各項標準化分數 0～100）、<code>component_scores</code>（CPU／GPU 查表）、<code>sessions</code>（對話、需求檔、權重歷程、最終排名）。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="5">
-    <div class="head"><h2><span class="num">5</span>排名引擎</h2><div class="vote"></div></div>
-    <ol>
-      <li><b>硬性過濾</b>：預算上限、必要條件（例如 RAM ≥ 16GB、OS）不符的直接排除。</li>
-      <li><b>加權評分</b>：各項標準化分數 × 需求檔權重，權重先由用途自動推導（如影片剪輯 → 效能與螢幕高），再依追問結果微調。</li>
-      <li><b>輸出</b>：總分排序，附每台的分數分解與「為何推薦／取捨」資料，交由 AI 轉成白話說明。</li>
-    </ol>
-    <p>這個模組是純函式，不碰 AI 與資料庫，會先寫測試再實作。</p>
+    <div class="head"><h2><span class="num">5</span>排名引擎（軟性條件版）</h2><div class="vote"></div></div>
+    <p><b>所有筆電永遠都在候選池中並計算總分，沒有任何條件會直接排除。</b></p>
+    <pre>總分 = Σ 權重ᵢ × 標準化表現ᵢ  −  Σ 條件偏離扣分ⱼ
+
+條件偏離扣分：使用者的「硬性」條件（預算、重量上限、必須有獨顯…）
+轉成扣分項，偏離越多扣越多，例如預算 6,000 的使用者：
+  6,200 元 → 小扣分   7,500 元 → 中扣分   12,000 元 → 大扣分</pre>
+    <ul>
+      <li><b>權重動態調整</b>：使用者每句話都可能改變多個權重，介面同步顯示變化。</li>
+      <li><b>「值得考慮」提示</b>：若某台筆電有條件偏離，但扣分前的分數明顯高於符合條件的機型，結果中會標示「略超出預算，但綜合表現很值得考慮」。</li>
+      <li><b>分數分解</b>：每台都能看到各項得分與扣分，AI 據此生成白話的推薦理由與取捨。</li>
+      <li>偏離多少算「略微」、扣分曲線怎麼設定，會在實作時用實際資料調校。</li>
+    </ul>
+    <p>這個模組仍是純函式、不碰 AI，會先寫測試確保權重邏輯正確。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="6">
-    <div class="head"><h2><span class="num">6</span>對外服務的必要配套</h2><div class="vote"></div></div>
+    <div class="head"><h2><span class="num">6</span>配套（已精簡）</h2><div class="vote"></div></div>
+    <p>依你的決定，<b>不做</b>：CI、環境分離、安全掃描、成本控制、法務文件。</p>
+    <p>保留的最低限度：</p>
     <ul>
-      <li><b>CI</b>：Lint、型別檢查、單元／整合測試、E2E、安全掃描；未通過不得合併。</li>
-      <li><b>環境</b>：dev／staging／prod 分離，Docker 統一環境，一鍵回滾。</li>
-      <li><b>可觀測性</b>：結構化日誌、錯誤追蹤、AI 呼叫的延遲與成本監控。</li>
-      <li><b>安全</b>：API key 放 Secret Manager、輸入驗證、Rate Limit（防止 AI 呼叫被濫用）、安全標頭。</li>
-      <li><b>成本控制</b>：每個 session 的 AI 呼叫次數上限、結果快取。</li>
-      <li><b>法務</b>：隱私聲明、服務條款、對話資料保存政策。</li>
+      <li>排名引擎與權重邏輯的單元測試（這是系統的核心，沒有測試很難調校）。</li>
+      <li>基本的錯誤日誌，以及 AI 呼叫失敗時的備援模型切換。</li>
+      <li>API key 放在環境變數，不寫進程式碼。</li>
     </ul>
+    <p>這些項目之後要補都可以獨立加上，不影響現在的設計。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
@@ -135,28 +178,26 @@
     <div class="head"><h2><span class="num">7</span>建置順序</h2><div class="vote"></div></div>
     <table>
       <tr><th>階段</th><th>內容</th><th>完成標準</th></tr>
-      <tr><td>0 規格</td><td>架構文件、資料模型、ADR、CLAUDE.md</td><td>你審閱通過</td></tr>
-      <tr><td>1 地基</td><td>專案骨架、PostgreSQL、Docker、CI、部署到 staging</td><td>Hello World 自動部署</td></tr>
-      <tr><td>2 資料與排名</td><td>匯入你的資料、標準化分數、排名引擎＋測試</td><td>給定需求檔能排出合理結果</td></tr>
-      <tr><td>3 AI 層</td><td>llm 抽象層、需求抽取、追問生成</td><td>自然語言 → 需求檔，多模型可切換</td></tr>
-      <tr><td>4 前端切片</td><td>對話 → 結果頁完整打通</td><td>E2E 通過</td></tr>
-      <tr><td>5 強化</td><td>推薦理由、權重調整、比較頁、監控、安全、壓測</td><td>上線檢查表通過</td></tr>
-      <tr><td>6 上線</td><td>灰度放量</td><td>指標穩定</td></tr>
+      <tr><td>0 規格</td><td>架構文件、資料模型、權重項目定義、CLAUDE.md</td><td>你審閱通過</td></tr>
+      <tr><td>1 資料</td><td>專案骨架、PostgreSQL、匯入 CSV、CPU／GPU 查表、標準化分數</td><td>370 台都有完整分數</td></tr>
+      <tr><td>2 排名引擎</td><td>權重模型、軟性條件扣分、值得考慮判定、測試</td><td>給定需求檔能排出合理結果</td></tr>
+      <tr><td>3 AI 對話層</td><td>llm 抽象層、需求抽取、權重更新、問題價值評估與追問</td><td>自然語言可驅動排名變化</td></tr>
+      <tr><td>4 前端</td><td>對話介面、需求標籤與權重動畫、即時排名、詳情與比較</td><td>完整流程可操作</td></tr>
+      <tr><td>5 調校與上線</td><td>用真實對話調整權重曲線與問題策略，部署上線</td><td>推薦結果你認可</td></tr>
     </table>
-    <p>版本管理依你的慣例：每次更新複製為新版本資料夾（<code>v0.0.1</code> → <code>v0.0.2</code>），根目錄維護 <code>CHANGELOG.md</code>。</p>
     <textarea placeholder="意見（選填）"></textarea>
   </section>
 
   <section data-key="8">
-    <div class="head"><h2><span class="num">8</span>我仍需要你決定的事</h2><div class="vote"></div></div>
-    <ul>
-      <li><b>資料檔</b>：筆電資料與效能資料的檔案與格式（CSV／Excel／JSON），請放進 <code>LaptopNewV2</code> 資料夾。</li>
-      <li><b>介面語言</b>：繁體中文為主？是否需要英文？</li>
-      <li><b>使用者帳號</b>：第一版需要登入（收藏、歷史紀錄）嗎？我建議第一版不做，匿名 session 即可。</li>
-      <li><b>管理後台</b>：是否需要網頁後台維護筆電資料，還是以匯入指令更新即可？</li>
-      <li><b>技術棧</b>：Next.js + TypeScript + Drizzle + PostgreSQL，是否同意？</li>
-      <li><b>SubAgent 分工</b>：資料模型與排名引擎由我主導；llm 層、前端、CI 設定分派 SubAgent 平行進行，是否同意？</li>
-    </ul>
+    <div class="head"><h2><span class="num">8</span>待確認事項</h2><div class="vote"></div></div>
+    <p><span class="tag ok">已確認</span> 上一輪你同意的預設：介面繁體中文、第一版不做登入、資料用匯入指令更新、Next.js + TypeScript + Drizzle + PostgreSQL、SubAgent 分工（我主導資料模型與排名引擎）。</p>
+    <ol>
+      <li><b>效能資料</b>：是否有另一個 CPU／GPU 跑分檔案？沒有的話，我建查表（需要你認可此做法）。</li>
+      <li><b>價格顯示</b>：資料為人民幣（CNY），介面就直接顯示人民幣嗎？</li>
+      <li><b>權重項目</b>：我初步規劃 8 項——效能（CPU）、繪圖（GPU）、攜帶性、續航、螢幕品質、安靜與散熱、擴充與連接、價格合理性。這樣分可以嗎？要增減嗎？</li>
+      <li><b>多筆同型號</b>：CSV 中同一型號可能有不同配置或測試模式的多筆資料，排名時以「每個配置為一台」處理，可以嗎？</li>
+      <li><b>目標使用者</b>：主要是中國大陸市場的消費者嗎？這會影響問題的措辭與用途分類（例如遊戲、設計、辦公、學生）。</li>
+    </ol>
     <textarea placeholder="請在這裡回答以上問題"></textarea>
   </section>
 </div>
@@ -168,11 +209,11 @@
 
 <script>
 (function(){
-  const KEY='laptop-overview-feedback';
+  const KEY='laptop-overview-feedback-v2';
   let state={};
   try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
   const titles={};
-  document.querySelectorAll('section').forEach(sec=>{
+  document.querySelectorAll('section[data-key]').forEach(sec=>{
     const k=sec.dataset.key, vote=sec.querySelector('.vote'), ta=sec.querySelector('textarea');
     titles[k]=sec.querySelector('h2').textContent.replace(/^\d+/,'').trim();
     const s=state[k]||{};
@@ -187,7 +228,7 @@
   });
   function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
   document.getElementById('copy').onclick=async()=>{
-    const lines=['【架構理解回饋】'];
+    const lines=['【架構理解回饋 v2】'];
     Object.keys(titles).forEach(k=>{
       const s=state[k]||{};
       lines.push(`${k}. ${titles[k]}：${s.v==='ok'?'同意':s.v==='warn'?'需修改':'未選擇'}${s.note?'\n   意見：'+s.note.trim():''}`);
