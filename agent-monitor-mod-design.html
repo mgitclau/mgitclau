@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Monitor 設計稿</title>
+<style>
+:root{
+  --bg:#f6f5f1;--ink:#1f2328;--mute:#616873;--line:#dcdad2;--card:#fff;
+  --term:#14171c;--term2:#1b1f26;--tline:#2c323c;--tink:#e6e8ec;--tmute:#8b94a3;
+  --blue:#6cb0ff;--amber:#f2bd5b;--green:#62d29a;--violet:#c3a1ff;--red:#ff8079;--grey:#7d8695;
+  --opus:#f0a36b;--fable:#d79bf0;--sonnet:#6cb0ff;--haiku:#62d2c4;
+}
+:root:not([data-theme="light"]){color-scheme:light dark}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#101215;--ink:#e6e8ec;--mute:#a0a8b4;--line:#2a2f37;--card:#181b20}
+}
+:root[data-theme="dark"]{--bg:#101215;--ink:#e6e8ec;--mute:#a0a8b4;--line:#2a2f37;--card:#181b20}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Segoe UI",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:30px;line-height:1.25;margin:0 0 8px;letter-spacing:-.01em}
+h2{font-size:20px;margin:44px 0 12px}
+p{margin:0 0 12px}
+.lead{color:var(--mute);max-width:64ch}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 12px}
+.controls button{font:inherit;font-size:14px;padding:7px 13px;min-height:38px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.controls button:focus-visible{outline:2px solid var(--sonnet);outline-offset:2px}
+
+.window{background:var(--term);border:1px solid var(--tline);border-radius:10px;overflow:hidden;color:var(--tink);
+  display:grid;grid-template-columns:minmax(0,1fr) 400px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang TC",monospace}
+.chat{padding:16px;border-right:1px solid var(--tline);min-width:0;display:flex;flex-direction:column;gap:10px}
+.chat p{margin:0}
+.chat .you{color:var(--tmute)}
+.chat .call{color:var(--tmute);padding-left:12px;border-left:2px solid var(--tline)}
+.prompt{margin-top:auto;border:1px solid var(--tline);border-radius:6px;padding:7px 10px;color:var(--tmute)}
+.pane{padding:12px 14px 14px;min-width:0;background:var(--term2)}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--tline)}
+.ph b{font-weight:600}
+.ph span{color:var(--tmute);font-size:12px}
+.count{display:flex;align-items:baseline;gap:10px;padding:10px 0 8px;flex-wrap:wrap}
+.count .n{font-size:30px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
+.count .t{color:var(--tmute);font-size:12px}
+.agent{padding:9px 0;border-top:1px solid var(--tline)}
+.r1,.r2,.r3{display:flex;align-items:center;gap:8px;min-width:0}
+.name{font-weight:600;white-space:nowrap}
+.desc{color:var(--tmute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c)}
+.running .dot{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.r2{margin-top:3px}
+.model{flex:none;width:52px;color:var(--m)}
+.bar{flex:1;height:7px;min-width:40px;background:#2c323c;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--b,var(--tmute));border-radius:4px;transition:width .5s}
+.pct{flex:none;width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.tok{flex:none;width:92px;text-align:right;color:var(--tmute);font-size:12px;font-variant-numeric:tabular-nums}
+.r3{margin-top:3px;color:var(--c)}
+.r3 em{font-style:normal;color:var(--tmute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.r3 .time{margin-left:auto;flex:none;color:var(--tmute);font-size:12px}
+.agent.ended{opacity:.55}
+.section-label{color:var(--tmute);font-size:12px;padding:12px 0 2px}
+.empty{color:var(--tmute);padding:28px 0;text-align:center}
+
+.states{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:0;margin:0;list-style:none}
+.states li{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+.states b{display:flex;align-items:center;gap:8px}
+.states .swatch{width:10px;height:10px;border-radius:50%;background:var(--c);outline:1px solid rgba(0,0,0,.25)}
+.states span{color:var(--mute)}
+.fields{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--line)}
+.fields th,.fields td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.fields th{font-weight:600}
+.scroll{overflow-x:auto}
+code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (max-width:820px){
+  .window{grid-template-columns:minmax(0,1fr)}
+  .chat{display:none}
+  .fields{min-width:560px}
+}
+@media (max-width:420px){.tok{display:none}}
+@media (prefers-reduced-motion:reduce){.running .dot{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Agent Monitor 設計稿</h1>
+  <p class="lead">Claude Code 側邊面板，一眼看出有幾個 subagent 在跑、各用什麼模型、context 用了多少，以及正在做什麼。以下全是假資料，切換情境可看不同畫面。</p>
+
+  <div class="controls" role="group" aria-label="範例情境">
+    <button data-s="busy" aria-pressed="true">多個執行中</button>
+    <button data-s="high" aria-pressed="false">Context 快滿</button>
+    <button data-s="done" aria-pressed="false">全部結束</button>
+    <button data-s="none" aria-pressed="false">沒有 subagent</button>
+  </div>
+
+  <div class="window">
+    <section class="chat" aria-label="對話區示意">
+      <p class="you">&gt; 檢查 API、補測試，再更新文件</p>
+      <p>我會分成四個 subagent 平行處理。</p>
+      <p class="call">Agent · 掃描 API 路由</p>
+      <p class="call">Agent · 補齊單元測試</p>
+      <p class="call">Agent · 審查權限邏輯</p>
+      <p class="call">Agent · 更新文件</p>
+      <div class="prompt">&gt;</div>
+    </section>
+    <aside class="pane" aria-label="Agent Monitor 面板">
+      <div class="ph"><b>Agents</b><span id="clock">示意資料</span></div>
+      <div id="pane" aria-live="off"></div>
+    </aside>
+  </div>
+
+  <h2>狀態對照</h2>
+  <ul class="states" id="legend"></ul>
+
+  <h2>資料來源與限制</h2>
+  <div class="scroll">
+  <table class="fields">
+    <thead><tr><th>欄位</th><th>來源</th><th>說明</th></tr></thead>
+    <tbody>
+      <tr><td>執行中數量</td><td><code>$.agent.list()</code></td><td>準確。</td></tr>
+      <tr><td>模型</td><td><code>turn.step</code> 的 <code>model</code></td><td>準確，每次請求更新。</td></tr>
+      <tr><td>Token 用量 %</td><td><code>turn.step</code> 的 usage 除以 context 上限</td><td>估算值，前面標 <code>~</code>。上限來自 mod 內建對照表，每次請求完成後才更新。</td></tr>
+      <tr><td>狀態</td><td><code>$.agent.list()</code>、<code>turn.step</code>、<code>tool.call</code></td><td>大多準確。「等待權限」要實作時驗證是否每種情況都抓得到。</td></tr>
+    </tbody>
+  </table>
+  </div>
+</main>
+
+<script>
+const S={
+  pending:{l:'排隊中',c:'var(--grey)',d:'已建立，還沒開始。'},
+  thinking:{l:'思考中',c:'var(--blue)',d:'正在等模型回應。'},
+  tool:{l:'呼叫工具',c:'var(--green)',d:'工具執行中，顯示工具與目標。'},
+  waiting:{l:'等待中',c:'var(--amber)',d:'在等背景工作或計畫核准。'},
+  permission:{l:'等待權限',c:'var(--violet)',d:'在等你允許工具呼叫。'},
+  idle:{l:'閒置',c:'var(--grey)',d:'回合之間，等待新訊息。'},
+  completed:{l:'已完成',c:'var(--green)',d:'順利結束。'},
+  failed:{l:'失敗',c:'var(--red)',d:'因錯誤結束。'},
+  killed:{l:'已停止',c:'var(--grey)',d:'被手動或系統停止。'}
+};
+const M={opus:'var(--opus)',fable:'var(--fable)',sonnet:'var(--sonnet)',haiku:'var(--haiku)'};
+const A=(name,desc,model,used,win,state,detail,time)=>({name,desc,model,used,win,state,detail,time});
+const scenes={
+  busy:[
+    A('Explore','掃描 API 路由','haiku',38,200,'tool','Grep  router\\.(get|post)','8s'),
+    A('tester','補齊單元測試','sonnet',82,200,'thinking','','14s'),
+    A('reviewer','審查權限邏輯','opus',146,500,'permission','Bash  npm audit','1m 02s'),
+    A('docs','更新文件','fable',24,1000,'waiting','背景工作 npm run build','33s'),
+    A('planner','拆解任務','sonnet',0,200,'pending','','2s'),
+    A('search','查專案慣例','haiku',51,200,'completed','','2m 10s'),
+  ],
+  high:[
+    A('migrator','改寫資料存取層','sonnet',176,200,'tool','Edit  db/client.ts','4m 21s'),
+    A('reviewer','全專案安全審查','opus',440,500,'thinking','','6m 48s'),
+    A('tester','跑整合測試','sonnet',124,200,'tool','Bash  npm test','1m 15s'),
+  ],
+  done:[
+    A('Explore','掃描 API 路由','haiku',61,200,'completed','','1m 12s'),
+    A('tester','補齊單元測試','sonnet',109,200,'completed','','5m 03s'),
+    A('reviewer','審查權限邏輯','opus',212,500,'failed','API 連線中斷','3m 40s'),
+    A('docs','更新文件','fable',31,1000,'killed','','48s'),
+  ],
+  none:[]
+};
+const ENDED=new Set(['completed','failed','killed']);
+const LIVE=new Set(['thinking','tool','waiting','permission','pending','idle']);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const barColor=p=>p>=85?'var(--red)':p>=70?'var(--amber)':'var(--green)';
+const fmtK=k=>k>=1000?(k/1000)+'M':k+'k';
+function row(a){
+  const p=a.win?Math.round(a.used/a.win*100):0, s=S[a.state];
+  const usage=a.state==='pending'
+    ?`<span class="bar"><i style="width:0"></i></span><span class="pct">—</span><span class="tok">—</span>`
+    :`<span class="bar"><i style="width:${p}%;--b:${barColor(p)}"></i></span><span class="pct">~${p}%</span><span class="tok">${a.used}k/${fmtK(a.win)}</span>`;
+  return `<div class="agent ${ENDED.has(a.state)?'ended':'running'}" style="--c:${s.c};--m:${M[a.model]}">
+    <div class="r1"><span class="dot"></span><span class="name">${esc(a.name)}</span><span class="desc">${esc(a.desc)}</span></div>
+    <div class="r2"><span class="model">${a.model}</span>${usage}</div>
+    <div class="r3"><span>${s.l}</span><em>${esc(a.detail)}</em><span class="time">${a.time}</span></div>
+  </div>`;
+}
+function draw(k){
+  const list=scenes[k], live=list.filter(a=>LIVE.has(a.state)), ended=list.filter(a=>ENDED.has(a.state));
+  const pane=document.getElementById('pane');
+  if(!list.length){pane.innerHTML='<div class="empty">目前沒有 subagent</div>';return}
+  const wait=live.filter(a=>a.state==='waiting'||a.state==='permission').length;
+  const fail=ended.filter(a=>a.state==='failed').length;
+  const bits=[wait?`${wait} 個等待`:'',`${ended.length} 個已結束`,fail?`${fail} 個失敗`:''].filter(Boolean).join(' · ');
+  pane.innerHTML=`<div class="count"><span class="n">${live.length}</span><span>個執行中</span><span class="t">${bits}</span></div>`
+    +live.map(row).join('')
+    +(ended.length?`<div class="section-label">已結束</div>`+ended.map(row).join(''):'');
+}
+document.querySelectorAll('.controls button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.controls button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  draw(b.dataset.s);
+}));
+document.getElementById('legend').innerHTML=Object.values(S).map(s=>`<li style="--c:${s.c}"><b><i class="swatch"></i>${s.l}</b><span>${s.d}</span></li>`).join('');
+draw('busy');
+</script>
+</body>
+</html>

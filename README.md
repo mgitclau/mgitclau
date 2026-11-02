@@ -18,3 +18,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | VoiceEasyUse 介面原型 v3 | https://mgitclau.github.io/mgitclau/voiceeasyuse-ui-prototype-v3.html | 2026-11-01 |
 | VoiceEasyUse 介面原型 v4 | https://mgitclau.github.io/mgitclau/voiceeasyuse-ui-prototype-v4.html | 2026-11-02 |
 | LaptopNewV2 · 系統組成確認 | https://mgitclau.github.io/mgitclau/laptopnewv2-system-overview.html | 2026-11-03 |
+| Agent Monitor 設計稿 | https://mgitclau.github.io/mgitclau/agent-monitor-mod-design.html | 2026-11-03 |
