@@ -21,3 +21,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | Agent Monitor 設計稿 | https://mgitclau.github.io/mgitclau/agent-monitor-mod-design.html | 2026-11-03 |
 | Agent Monitor 設計稿 v2 | https://mgitclau.github.io/mgitclau/agent-monitor-mod-design-v2.html | 2026-11-03 |
 | AI 筆電選購助手 · system 0.0.5 施工計畫 | https://mgitclau.github.io/mgitclau/laptop-system-v005-plan.html | 2026-11-04 |
+| AI 筆電選購助手 · system 0.0.5 完成報告 | https://mgitclau.github.io/mgitclau/laptop-system-v005-report.html | 2026-11-04 |

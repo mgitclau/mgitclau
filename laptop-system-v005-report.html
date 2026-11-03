@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>system 0.0.5 完成報告</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1f2328;--mute:#5c6470;--line:#e2e4e8;--acc:#0b6e4f;--acc2:#b35c00;--warn:#8a1c1c;--soft:#eef5f1;--soft2:#fff4e6;--soft3:#f3f0ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 12px;padding-top:8px;border-top:2px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:8px 0}
+.sub{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;color:var(--acc)}
+.kpi span{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px;margin:10px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{background:var(--soft);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tblwrap{overflow-x:auto}
+code{font-family:var(--mono);font-size:13px;background:var(--soft3);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;line-height:1.5}
+.ok{color:var(--acc);font-weight:600;white-space:nowrap}
+.part{color:var(--acc2);font-weight:600;white-space:nowrap}
+.note{background:var(--soft);border-radius:10px;padding:10px 14px;margin:10px 0}
+.q{background:var(--soft2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.toc a{text-decoration:none;color:var(--acc);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--card)}
+ul{padding-left:22px}
+li{margin:3px 0}
+@media (max-width:760px){h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>system 0.0.5 完成報告</h1>
+<p class="sub">2026-11-04 · 對照 <code>docs/system-v0.0.5-施工計畫.html</code> 的 22 個工作包 · 程式在 <code>system-v0.0.5/</code>，規格、審查與交接文件在 <code>docs/v0.0.5-規格/</code></p>
+
+<div class="toc">
+<a href="#s1">1 結果一覽</a><a href="#s2">2 工作包完成狀態</a><a href="#s3">3 核心鏈前後對照</a><a href="#s4">4 實機驗證</a><a href="#s5">5 審查與修補</a><a href="#s6">6 功能開關</a><a href="#s7">7 M 接下來要做的事</a><a href="#s8">8 已知限制</a><a href="#s9">9 怎麼啟動與測試</a>
+</div>
+
+<h2 id="s1">1. 結果一覽</h2>
+<div class="grid">
+<div class="kpi"><b>22 / 22</b><span>工作包完成（W17 留下的對比卡台數接線已由 W20 補上）</span></div>
+<div class="kpi"><b>834</b><span>後端 pytest 全過（0.0.4 時 64 個）</span></div>
+<div class="kpi"><b>243</b><span>前端 Vitest 全過（0.0.4 沒有前端測試）</span></div>
+<div class="kpi"><b>286</b><span>功能開關（28 個分組，public 98 個）</span></div>
+<div class="kpi"><b>42</b><span>審查發現（W18 18 條＋W19 24 條），全部有處理結果</span></div>
+</div>
+<p>一句話：0.0.4 的核心鏈在「需求 → 權重 → 細項 → 分數 → 理由」每一段都有斷點；0.0.5 把每一段改成可記帳、可解釋、可用開關切回舊行為的純函式，再由 pipeline 串起來，並補上新版首屏、對話卡片與後台頁。<code>tsc</code>、<code>vite build</code> 也通過（<code>frontend/dist</code> 已更新）。</p>
+
+<h2 id="s2">2. 工作包完成狀態</h2>
+<p class="sub">測試數＝該工作包主要測試檔的測試數（依檔案歸屬估算；後續修補加在同一檔的也算進去）。0.0.4 留下的舊測試檔另有 66 個。</p>
+<div class="tblwrap"><table>
+<tr><th>編號</th><th>工作包</th><th>狀態</th><th>主要測試檔</th><th>測試數</th></tr>
+<tr><td>S1</td><td>後端骨架（開關註冊表、routers、migrate、pipeline 掛勾）</td><td class="ok">完成</td><td><code>test_flags</code>、<code>test_migrate</code>、<code>test_hooks</code></td><td class="n">23</td></tr>
+<tr><td>S2</td><td>前端骨架（後台頁註冊表、卡片渲染表、功能開關頁、Vitest）</td><td class="ok">完成</td><td><code>cards/index</code>、<code>flags</code>、<code>FlagsPage</code></td><td class="n">11</td></tr>
+<tr><td>W1</td><td>K1 權重帳本與需求訊號表</td><td class="ok">完成</td><td><code>test_weights</code></td><td class="n">35</td></tr>
+<tr><td>W2</td><td>K2 正規化、性價比、平手、breakdown</td><td class="ok">完成</td><td><code>test_scoring_v5</code></td><td class="n">40</td></tr>
+<tr><td>W3</td><td>K3 細項匯入與子權重混合</td><td class="ok">完成</td><td><code>test_subweights</code>、<code>test_sub_items_import</code></td><td class="n">45</td></tr>
+<tr><td>W4</td><td>K4 軟體畫像 2.0</td><td class="ok">完成</td><td><code>test_software</code></td><td class="n">76</td></tr>
+<tr><td>W5</td><td>K5-A 理由產生器</td><td class="ok">完成</td><td><code>test_reason</code></td><td class="n">44</td></tr>
+<tr><td>W6</td><td>K5-B 追問價值、上限、需求檔案、首屏資料</td><td class="ok">完成</td><td><code>test_followup</code>、<code>test_profile_view</code>、<code>test_home</code></td><td class="n">82</td></tr>
+<tr><td>W7</td><td>規則與閾值接線、告警、鏈路實測</td><td class="ok">完成</td><td><code>test_rules_engine</code>、<code>test_alerts</code>、<code>test_trace</code></td><td class="n">144</td></tr>
+<tr><td>W8</td><td>資料品質</td><td class="ok">完成</td><td><code>test_data_quality</code>、<code>DataQualityPage</code></td><td class="n">45</td></tr>
+<tr><td>W9</td><td>模型與提示詞</td><td class="ok">完成</td><td><code>test_llm_v5</code>、<code>test_prompt_guard</code></td><td class="n">43</td></tr>
+<tr><td>W10</td><td>pipeline 整合接線</td><td class="ok">完成</td><td><code>test_integration_v5</code></td><td class="n">17</td></tr>
+<tr><td>W11</td><td>U1 版面、首屏、需求檔案、動畫</td><td class="ok">完成</td><td><code>Home</code>、<code>ProfilePanel</code>、<code>Composer</code>、<code>UserAppU1</code>、<code>animation</code>、<code>toast</code></td><td class="n">44</td></tr>
+<tr><td>W12</td><td>U2 對話卡片</td><td class="ok">完成</td><td><code>w12</code>、<code>Requirements</code></td><td class="n">70</td></tr>
+<tr><td>W13</td><td>U3 推薦卡、對比、詳情、權重面板</td><td class="part">完成（子權重編輯介面未做）</td><td><code>results</code></td><td class="n">29</td></tr>
+<tr><td>W14</td><td>A2／A3 對話紀錄、待處理、需求洞察</td><td class="ok">完成</td><td><code>test_admin_w14</code>、<code>W14</code></td><td class="n">34</td></tr>
+<tr><td>W15</td><td>A4 權重中心與畫像編輯器</td><td class="ok">完成</td><td><code>test_admin_weights</code>、<code>WeightCenterPage</code>、<code>SoftwarePage</code>、<code>RulesPage</code></td><td class="n">40</td></tr>
+<tr><td>W16</td><td>A1／A5／A6／A7 後台其他頁</td><td class="ok">完成</td><td><code>test_card_copy</code>、<code>CardsPage</code>、<code>Login</code>、<code>ModelPageV5</code>、<code>TracePage</code></td><td class="n">41</td></tr>
+<tr><td>W17</td><td>回歸整合、開關去重、實機驗證</td><td class="ok">完成</td><td><code>test_turn_query</code>、<code>test_flags_coverage</code></td><td class="n">47</td></tr>
+<tr><td>W18</td><td>核心鏈審查（F1 修補）</td><td class="ok">完成</td><td><code>test_w18_core</code>、<code>test_golden_v004</code></td><td class="n">30</td></tr>
+<tr><td>W19</td><td>介面與基礎審查（F2 修補）</td><td class="ok">完成</td><td><code>test_w19_fixes</code>、<code>w19</code>、<code>w19-flags</code>、<code>ErrorBoundary</code></td><td class="n">65</td></tr>
+<tr><td>W20</td><td>文件、小修補、完成報告</td><td class="ok">完成</td><td><code>test_w20_fixes</code>、<code>api/applyWeights</code></td><td class="n">6</td></tr>
+</table></div>
+
+<h2 id="s3">3. 核心鏈前後對照</h2>
+<div class="tblwrap"><table>
+<tr><th>環節</th><th>0.0.4 斷在哪</th><th>0.0.5 怎麼接</th></tr>
+<tr><td>① 辨識</td><td>畫像庫只有 PS／AI／PR；子字串比對，Final Cut Pro、「Pro Max」被認成 Premiere；「PS5」會被當成修圖</td><td>畫像 2.0：工作類型 × 0–3 等級，3D 軟體 10 套；別名表＋整詞比對（容許黏著版本號，如 Blender4.2）；模糊時出消歧義卡；模型可給目錄外軟體暫定等級</td></tr>
+<tr><td>② 需求 → 權重</td><td>模型的權重建議一輪輪疊加；刪掉需求不退回；「常帶出門」不改權重；拖滑桿後全部鎖死</td><td>權重帳本：每輪從後台基準重新推導、每一分都有來源句；13 列訊號點數 × 強度係數；只鎖使用者真的拖的那一維；「恢復系統建議」</td></tr>
+<tr><td>③ 大維度 → 細項</td><td>子權重寫死；Office、VRay、Blender、NPU 沒進評分</td><td>細項實測已匯入；畫像等級經中央換算表變成子權重向量，再依主次占比與強度混合；覆蓋率不足的細項自動停用</td></tr>
+<tr><td>④ 分數</td><td>正規化用「距第一名 %」；填補值不標；性價比每輪跳動；同分按 id 字母序</td><td>全庫百分位正規化；填補值標「估計」並用同類保守值；性價比改同價位期望差；平手門檻內依使用者最重視的維度決勝；每台附 breakdown</td></tr>
+<tr><td>⑤ 理由</td><td>前端永遠顯示「風險中等」模板字</td><td>程式算出優勢、要接受的、和第 2 名比、權重為什麼變；模型只負責措辭，檢查器核對數字與弱項</td></tr>
+<tr><td>⑥ 追問</td><td>題目不管會不會改變結果都問</td><td>先模擬每個答案會不會改變前幾名，不會就不問並說明；上限 3 題、連續 2 題、忽略冷卻</td></tr>
+<tr><td>後台接線</td><td>規則的啟用狀態沒人讀；C6 多個閾值沒人讀；告警從沒寫入；「分數一致 ✓」是假的</td><td>流程真的讀規則與閾值，接不上的標「尚未生效」；五種告警會寫入；分數一致性三態；每步實測耗時</td></tr>
+</table></div>
+
+<h2 id="s4">4. 實機驗證（W17，PostgreSQL＋uvicorn，模型實際有回應）</h2>
+<div class="tblwrap"><table>
+<tr><th>示範句</th><th>第一輪</th><th>按「直接看建議」後的第 1 名與理由</th></tr>
+<tr><td>「我要剪 4K 影片，預算 4 萬 5，常帶出門」</td><td>追問（正式候選 199 台）；帳本 4 筆：常帶出門 → 便攜 +10、續航 +5；Premiere Pro → 性能 +9、螢幕 +2；需求檔案顯示預算排除 172 台</td><td><b>華碩 a豆 14 Air 2026</b>；優勢：續航、性能；要接受的：擴充性；前兩名接近，出一張反問卡（理由卡不再重複帶反問）</td></tr>
+<tr><td>「我要用 3ds Max 做室內設計渲染，預算 4 萬」</td><td>追問（正式候選 155 台）；出渲染器追問卡；帳本 3ds Max → 性能 +17、散熱 +4；預算排除 216 台</td><td><b>聯想 小新 Pro 16 GT 388H</b>（GJS0001）；優勢：性能、續航；要接受的：散熱。<span class="part">注意：它的售價 13,500 元是 CSV 原值、明顯偏低，排第 1 多半是資料問題。</span></td></tr>
+</table></div>
+<ul>
+<li>指名查詢「那 ROG 魔霸9 呢」→ 狀態卡：正式第 52／199 名、預算符合、3 種配置；需求檔案沒有多出「品牌」條件。</li>
+<li>「為什麼不是小新 Pro 16 GT」→ 2 台：GJS0001 正式第 2 名（便宜 13,100 元、產品力低 0.7 分）、BIBA0002 被預算排除。</li>
+<li>後台待處理、需求洞察、規則接線（30 條：已生效 16、固定 8、無 6）、權重預覽、訊號表端點全部 200。</li>
+<li>實機時修了 3 個問題：<code>/api/flags/public</code> 不需登入；不存在的 <code>/api/*</code> 回 404；機型名不再被當成聽不懂的詞。</li>
+<li>W20 再次啟動資料庫確認 <code>GET /api/admin/flags</code> 回 286 個開關、28 個分組、public 98 個，和開關總表一致。</li>
+</ul>
+
+<h2 id="s5">5. 審查發現與修補統計</h2>
+<div class="tblwrap"><table>
+<tr><th>審查</th><th>高</th><th>中</th><th>低</th><th>合計</th><th>處理</th></tr>
+<tr><td>W18 核心鏈（權重、畫像、子權重、分數、理由、追問、接線）</td><td class="n">1</td><td class="n">7</td><td class="n">10</td><td class="n">18</td><td>16 條已修；#11 平手「和組長比」保留並改文件；#12 追問模擬不重算子權重，註明為近似（成本太高）</td></tr>
+<tr><td>W19 介面、後台與基礎設施</td><td class="n">2</td><td class="n">8</td><td class="n">14</td><td class="n">24</td><td>全部處理：F2 修 21 條、W17 已先處理 2 條、M7 對比卡台數由 W20 接上</td></tr>
+</table></div>
+<p>重要修補：拖一個滑桿會鎖住六個維度（高）；登入前讀不到開關（高）；使用者設定的動畫值永遠蓋過開關（高）；<code>legacy_delta</code> 不等於 0.0.4（新增逐值比對 0.0.4 的黃金測試）；「PS5」被當成 Photoshop；開關可存入 NaN／無限大；強制改密碼只在前端擋；後台對話紀錄等頁改用 SQL 時間窗（1,000 筆對話快 10～100 倍）。W19 另列出的陸用詞已把 0.0.5 新寫文案改成台灣用語；W20 收尾再改 <code>pipeline.py</code>「系統預設」與提示詞尾、<code>subweights.py</code>「記憶體容量」。</p>
+<p>W20 小修補：對比卡台數改讀 <code>rules_engine.compare_card_max</code>（規則引擎開＝深入對比段上限 5 台；@ 指名比較才用 C6 <code>compare_max</code>）；前端套用權重時送 <code>changed_dim</code>（使用者實際拖過的維度），後端不必再推斷。</p>
+
+<h2 id="s6">6. 功能開關</h2>
+<div class="note">共 <b>286</b> 個開關、28 個分組，public（使用者端讀得到）98 個；在後台「系統設定 → 功能開關」頁管理。完整清單（預設值、範圍、讀取點、測試）：<code>docs/v0.0.5-規格/開關總表.md</code>。</div>
+<ul>
+<li>歷程：W17 去重前 301 → 去重 16 個後 285 → 修 W18 #17 新增 <code>weight.conflict_weight_max</code> → 286。</li>
+<li>後端有讀的 235 個中 213 個有開／關測試；22 個後台顯示類（<code>conv.*</code>、<code>insights.*</code>、<code>pending.*</code> 等）待補「改值後輸出跟著變」的測試。</li>
+<li>新行為預設開、每個都可切回 0.0.4；例外（預設關）11 項的理由寫在總表第 2 節。</li>
+</ul>
+
+<h2 id="s7">7. M 接下來要做的事</h2>
+<h3>校準（都在後台，改了即時生效）</h3>
+<div class="tblwrap"><table>
+<tr><th>項目</th><th>在哪裡改</th><th>現在的值</th><th>怎麼校準</th></tr>
+<tr><td>平手門檻 <code>score.tie_gap</code></td><td>功能開關（分數計算）</td><td>0.3 分（原規劃 1.5，W10 量到前 10 名相鄰分差中位數 0.7）</td><td>看真實對話裡反問卡出現的頻率：太常出現就調低，太少就調高</td></tr>
+<tr><td>需求訊號點數、強度係數</td><td>權重中心 → 需求訊號表；功能開關 <code>weight.strength_*</code>、<code>weight.edit_*</code>、<code>weight.cap_*</code></td><td>報告起始值（例：常帶出門 便攜 +10；很在意 ×1.5）</td><td>用權重中心的「改動影響預覽」看最近對話第 1 名會不會變</td></tr>
+<tr><td>畫像換算表（等級 → 目標權重、記憶體／顯存容量表）</td><td>權重中心 → 子權重換算表</td><td>性能 36／42／50、散熱 10／12／14、記憶體 16G=50、32G=80、64G+=100</td><td>拿 3D、剪輯使用者實測案例對照推薦結果</td></tr>
+<tr><td>填補值判定比例 <code>data.filled_ratio</code></td><td>功能開關（資料品質）</td><td>0.25</td><td>換真實資料後重跑；看「機型與資料品質」頁被標成填補的筆數是否合理</td></tr>
+<tr><td>覆蓋率門檻 <code>score.coverage_min</code>／<code>subw.coverage_min</code></td><td>功能開關</td><td>0.6</td><td>真實資料細項覆蓋率出來後再決定</td></tr>
+</table></div>
+<h3>要核實的資料</h3>
+<ul>
+<li>GJS0001「聯想 小新 Pro 16 GT AI 元啟版 2026 388H」售價 13,500 元（明顯偏低），它在多個情境排第 1。</li>
+<li>重量填補值（196 筆 2.43 kg 被標「估計」）、TB/GB 自動修正的 14 筆、Octane 填在核顯機的異常清單。</li>
+<li>遊戲幀數目前固定 1080P 平均，排序不可靠；可在 <code>subw.game_fps_metric</code> 改看 1% Low。</li>
+<li>影片連結與時間點（<code>ui.video_timestamp</code> 預設關），逐台核對後再打開。</li>
+</ul>
+<h3>要在後台填的</h3>
+<ul>
+<li>「模型與供應商」→ 單價表：填各模型每百萬 token 單價，成本試算與執行回放的成本才有數字。</li>
+<li>「軟體畫像庫」→ 3ds Max 以外 9 套 3D 軟體的需求等級標「待核實」，依官方需求確認後啟用。</li>
+<li>首次登入 <code>admin@local</code>（密碼 <code>ChangeMe!2026</code>）後會要求改密碼。</li>
+</ul>
+<h3>要你決定的</h3>
+<ul>
+<li><code>followup.unsure</code>：每張追問卡的「不確定」要假設哪個答案（需要逐卡定題）。</li>
+<li>進階子權重要不要開放使用者在前端編輯（後端端點 <code>POST /api/conversations/{cid}/subweights</code> 已備好）。</li>
+<li>每輪都重出一次軟體卡（0.0.4 起的行為，前端已收合），要不要改成只在新增時顯示。</li>
+</ul>
+
+<h2 id="s8">8. 已知限制</h2>
+<ul>
+<li>資料是模擬的：重量大量填補、GJS0001 售價偏低、遊戲幀數排序不可靠；黃金樣本測試綁定目前這份 CSV，換真實資料（<code>資料清理/laptops_clean.csv</code>）時要重跑。</li>
+<li>平手門檻、訊號點數、強度係數、換算表、填補比例等數值都是起始值，待真實使用者校準。</li>
+<li>未做：點擊統計 <code>click_stats</code>（仍用平均）、追問「不確定」選項 <code>followup.unsure</code>、前端子權重編輯介面。</li>
+<li>追問模擬不重算子權重（只有剪輯強度卡受影響，價值會略為低估）。</li>
+<li>多 worker 部署時，後台只改單台實測又只在一個行程重算，其他行程的正規化快取要等資料或公式版本更新才失效。</li>
+<li>前端打包 672 KB，超過 Vite 建議的 500 KB，之後可把後台頁改成動態載入。</li>
+</ul>
+
+<h2 id="s9">9. 怎麼啟動與測試（Mac）</h2>
+<pre>cd /Users/m/Desktop/Laptopbuyingassisstant/system-v0.0.5
+lsof -nP -iTCP:5433 -sTCP:LISTEN          # 確認 5433 沒有別的 PG（v0.0.4 也用 5433）
+pg_ctl -D data/pg-mac -o "-p 5433 -k /tmp" -l logs/postgres-mac.log -w start
+cd backend && UV_PROJECT_ENVIRONMENT=.venv-mac uv run --no-sync uvicorn app.main:app --port 8010
+# 瀏覽器開 http://127.0.0.1:8010 ，後台 /admin；用完 pg_ctl -D data/pg-mac stop
+
+# 測試（不需要 PostgreSQL）
+cd backend  &amp;&amp; UV_PROJECT_ENVIRONMENT=.venv-mac uv run --no-sync --with pytest pytest -q   # 834 passed
+cd frontend &amp;&amp; npx tsc --noEmit &amp;&amp; npm test &amp;&amp; npm run build                                # 243 passed</pre>
+<p class="sub">升級注意：v0.0.5 的 <code>.venv-mac</code> 要在自己的資料夾 <code>uv sync</code>；開機會自動補欄位、補開關、升級提示詞並重算細項分數；舊對話下一輪由需求檔案重算權重。</p>
+</div>
+</body>
+</html>
