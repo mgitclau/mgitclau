@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>system 0.0.5 施工計畫</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1f2328;--mute:#5c6470;--line:#e2e4e8;--acc:#0b6e4f;--acc2:#b35c00;--warn:#8a1c1c;--soft:#eef5f1;--soft2:#fff4e6;--soft3:#f3f0ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--card:#1d2024;--ink:#e6e8eb;--mute:#a0a7b1;--line:#30343a;--acc:#5fcf9d;--acc2:#f0a04b;--warn:#ff8a8a;--soft:#1b2a24;--soft2:#2b2318;--soft3:#24203a}}
+:root[data-theme="dark"]{--bg:#15171a;--card:#1d2024;--ink:#e6e8eb;--mute:#a0a7b1;--line:#30343a;--acc:#5fcf9d;--acc2:#f0a04b;--warn:#ff8a8a;--soft:#1b2a24;--soft2:#2b2318;--soft3:#24203a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 12px;padding-top:8px;border-top:2px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:8px 0}
+.sub{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;color:var(--acc)}
+.kpi span{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px;margin:10px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{background:var(--soft);font-weight:600}
+tr:last-child td{border-bottom:0}
+.tblwrap{overflow-x:auto}
+code{font-family:var(--mono);font-size:13px;background:var(--soft3);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;line-height:1.5}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);margin-right:4px;white-space:nowrap}
+.t-core{background:var(--soft);color:var(--acc);border-color:var(--acc)}
+.t-ui{background:var(--soft3)}
+.t-admin{background:var(--soft2);color:var(--acc2);border-color:var(--acc2)}
+.t-warn{color:var(--warn);border-color:var(--warn)}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:12px 0}
+.step{flex:1 1 150px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:10px 12px;min-width:150px}
+.step b{display:block;font-size:14px}
+.step small{color:var(--mute)}
+.wave{border-left:5px solid var(--acc2)}
+.q{background:var(--soft2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.q b{color:var(--acc2)}
+.note{background:var(--soft);border-radius:10px;padding:10px 14px;margin:10px 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.toc a{text-decoration:none;color:var(--acc);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--card)}
+ul{padding-left:22px}
+li{margin:3px 0}
+@media (max-width:760px){h1{font-size:22px}.step{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>system 0.0.5 施工計畫：把《v10demo 對 system 差異分析》做進 system</h1>
+<p class="sub">2026-11-04 · 依 9 個調查代理（Opus）對報告與 <code>system-v0.0.4</code> 程式碼的比對結果彙整 · 施工前請 M 確認第 6 節的決定</p>
+<div class="toc">
+<a href="#s1">1 目標與範圍</a><a href="#s2">2 調查結果</a><a href="#s3">3 核心鏈施工順序</a><a href="#s4">4 工作包與代理分工</a><a href="#s5">5 波次與時程</a><a href="#s6">6 需要 M 決定的事</a><a href="#s7">7 不做與風險</a><a href="#s8">8 版本管理與驗收</a>
+</div>
+
+<h2 id="s1">1. 目標與範圍</h2>
+<div class="card">
+<p><b>一句話：</b>複製 <code>system-v0.0.4</code> 成 <code>system-v0.0.5</code>，把報告裡「核心」六章（K0–K5）、使用者端三章（U1–U3）、後台八章（A0–A7）、卡片樣本館，以及附錄 A 的缺陷修正全部做進去。每個新行為都有開關，每個驗收條件都有自動化測試。</p>
+<p><b>原則（報告 K0 與 M 的方向）：</b>先讓權重算對，再讓分數有區分度，最後才講成人話。以 system 為主體，v10 只借用表達方式與互動細節。程式碼決定事實，模型只負責理解與表達。</p>
+<p><b>不做：</b>確認卡、深色模式、v10 的草稿／回歸／發佈流程、後台首頁（之後再做）、v10 的硬門檻推薦邏輯、使用者端簡體用詞整理（依先前指示略過語言處理）。</p>
+</div>
+
+<h2 id="s2">2. 調查結果摘要</h2>
+<div class="grid">
+<div class="kpi"><b>9 份</b><span>規格摘要（K1–K5、U、A、C、DEV），共 4,272 行，存於 <code>docs/v0.0.5-規格/</code></span></div>
+<div class="kpi"><b>26 / 29</b><span>附錄 A 缺陷在 0.0.4 仍存在（使用者端 11 條全在；後台 15 條只修了 weight_approve；K2 的 9 個計分問題全在）</span></div>
+<div class="kpi"><b>約 300 →約 200</b><span>報告列出的開關（含重複）→ 去重後預估數量，統一放進新的開關註冊表</span></div>
+<div class="kpi"><b>64 通過</b><span>0.0.4 後端 pytest（不需 PostgreSQL，1.9 秒）；前端 <code>tsc</code> 與 <code>vite build</code> 通過</span></div>
+</div>
+<h3>0.0.4 已經修好、不用再做的</h3>
+<ul>
+<li>價格全面改新台幣、預算解析「4 萬 5」「3 到 5 萬」（報告中所有和 ¥ 有關的缺點視為已修，只補回歸測試）。</li>
+<li>自動套用權重的門檻已讀 <code>weight_approve</code>（<code>pipeline.py:410</code>）。</li>
+<li>軟體畫像的權重加成只加一次（<code>pending_software</code>／<code>applied_software</code>），後台已有權重變化表。</li>
+</ul>
+<h3>核心鏈現在斷在哪裡（0.0.4 查證）</h3>
+<div class="tblwrap"><table>
+<tr><th style="width:110px">環節</th><th>0.0.4 現況</th><th>證據</th></tr>
+<tr><td>① 辨識</td><td>畫像庫只有 PS／AI／PR；<code>match_software</code> 雙向子字串比對，Final Cut Pro、「Pro Max」會被認成 Premiere；規則後備寫死</td><td><code>seed.py:54-115</code>、<code>pipeline.py:49</code>、<code>:630-633</code></td></tr>
+<tr><td>② 需求→權重</td><td>LLM 權重建議仍一輪輪疊加；刪掉需求不退回；「常帶出門」「剪輯強度」不改權重；23 張追問卡沒有任何選項帶權重；第一輪退回程式寫死預設而非 C6</td><td><code>pipeline.py:307,310,407-431</code>、<code>domain.py:232</code></td></tr>
+<tr><td>③ 大維度→細項</td><td>子權重寫死（單核 20／多核 25／GPU 35／記憶體 10／儲存 10）；<code>sub_delta</code> 沒人讀；COL 只對應 50 欄，Office、VRay、Blender、NPU 都沒進評分</td><td><code>scoring.py:33-57</code>、<code>seed.py:66,86,106</code></td></tr>
+<tr><td>④ 分數</td><td>正規化用「距全庫第一名 %」；填補值不標記；性價比按當次候選換算，每輪跳動；同分按 id 字母序決勝；續航第一名用異常值 27.5 h；TB/GB 錯 14 筆、Octane 填在核顯機 96 筆</td><td><code>scoring.py:68,211,335</code>、<code>importer.py:129,221-227,273</code>、<code>domain.py:745</code></td></tr>
+<tr><td>⑤ 理由</td><td><code>public_laptop</code> 沒有 pros／risk／sev，前端永遠顯示「風險中等」模板字</td><td><code>pipeline.py:257-277</code>、<code>UserApp.tsx:1111-1128</code></td></tr>
+<tr><td>後台接線</td><td>C2 規則 <code>enabled</code> 沒被流程讀；C6 的 weight_ask、hard_filter、tier、compare_max 沒人讀；告警從沒寫入；B1 token 永遠 0；「分數一致 ✓」是假的；登入框預填密碼、沒登出</td><td><code>pipeline.py:672</code>、<code>AdminApp.tsx:171-172,1236</code></td></tr>
+</table></div>
+<div class="note"><b>調查代理另外發現的報告內部矛盾（施工時依第 6 節決定）：</b>K2 與 K3 的正規化預設不同；K3（每用途手填完整子權重向量）與 K4（填 0–3 等級再查換算表）的子權重產生方式不同；K2 平手門檻與 K5 <code>reason.close_gap</code> 要合一；K1 重度剪輯算例沒套「每訊號 +20 上限」；細項命名（<code>render_cpu</code> vs <code>vray_cpu</code>）與記憶體對照表數值不一致。</div>
+
+<h2 id="s3">3. 核心鏈施工順序（報告 K0 的 8 個階段 → 工作包）</h2>
+<div class="flow">
+<div class="step"><b>1 權重帳本</b><small>每輪從 C6 基準重算、記帳、手動鎖定</small><br><span class="tag t-core">W1</span></div>
+<div class="step"><b>2 需求訊號表</b><small>13 列訊號點數 × 強度係數</small><br><span class="tag t-core">W1</span></div>
+<div class="step"><b>3 資料品質標記</b><small>填補值、異常值、TB/GB、Octane</small><br><span class="tag t-core">W8</span></div>
+<div class="step"><b>4 正規化與性價比</b><small>全庫百分位、同價位期望差、平手門檻</small><br><span class="tag t-core">W2</span></div>
+<div class="step"><b>5 軟體畫像 2.0</b><small>工作類型 × 等級、別名與消歧義、硬門檻</small><br><span class="tag t-core">W4</span></div>
+<div class="step"><b>6 細項子權重</b><small>五條軸、實測匯入、向量混合</small><br><span class="tag t-core">W3</span></div>
+<div class="step"><b>7 理由產生器</b><small>逐維貢獻、優勢、要接受的、和第 2 名比</small><br><span class="tag t-core">W5</span></div>
+<div class="step"><b>8 追問價值</b><small>模擬答案是否改變前 3 名、上限進後台</small><br><span class="tag t-core">W6</span></div>
+</div>
+<p class="sub">階段 1–8 的程式都是「新檔案裡的純函式＋測試」，可以平行寫；最後由 W10 一次接進 <code>run_turn</code>，所以依賴順序不會變成等待順序。</p>
+
+<h2 id="s4">4. 工作包與代理分工（22 個代理，全部用 Opus 5.5）</h2>
+<p>每個代理拿到：自己的規格摘要、開發者手冊、骨架約定（新端點放 <code>routers/</code>、開關用 <code>flags</code> 註冊表、新卡片放 <code>user/cards/</code>、新後台頁放 <code>admin/</code>）。工作範圍 ＝ 自己的新檔 ＋ 註冊表裡的一行 ＋ 自己的測試檔，盡量不碰 <code>api.py</code>、<code>run_turn</code> 本體與兩個大元件。</p>
+
+<h3>波次 0：骨架（2 個代理，平行；先合併再開放下一波）</h3>
+<div class="tblwrap"><table>
+<tr><th style="width:60px">編號</th><th style="width:170px">工作包</th><th>內容</th><th style="width:220px">新檔案／驗收</th></tr>
+<tr><td>S1</td><td>後端骨架</td><td>共用相依抽到 <code>deps.py</code>；<code>routers/</code> 套件與集中註冊點，新端點一律放這裡；<code>flags.py</code>（register／get_flag／ensure_defaults，啟動時只補缺 key、不覆寫管理員改過的值）＋ <code>flags/</code> 每功能一檔；<code>GET/PUT /api/admin/flags</code>；<code>migrate.py</code> 的 ensure_columns；<code>run_turn</code> 開掛勾點（post_profile、post_snapshot、card_builders、fact_builders、event_builders）；既有 2 個開關搬進註冊表</td><td><code>flags.py</code>、<code>deps.py</code>、<code>routers/</code>、<code>migrate.py</code>、<code>pipeline_hooks.py</code>；測試：ensure_defaults 補缺不覆寫、掛勾點不改變 0.0.4 行為（64 個舊測試全過）</td></tr>
+<tr><td>S2</td><td>前端骨架</td><td>後台頁面註冊表 <code>admin/pages.ts</code>（每頁一檔，仿 ModelPage）；使用者端卡片渲染表 <code>user/cards/</code>（Card 改查表）；新後台頁「功能開關」C9（依分組、中文名稱與說明渲染 toggle／數字框，存檔寫稽核）；<code>api/</code> 依功能拆檔；引入 Vitest ＋ Testing Library 與 1 個範例測試；<code>styles/</code> 每功能一檔</td><td><code>admin/pages.ts</code>、<code>admin/FlagsPage.tsx</code>、<code>user/cards/index.tsx</code>、<code>vitest.config.ts</code>；驗收：tsc、build、vitest 通過，畫面與 0.0.4 相同</td></tr>
+</table></div>
+
+<h3>波次 1：核心後端（9 個代理，平行；純函式＋測試，不碰 run_turn）</h3>
+<div class="tblwrap"><table>
+<tr><th style="width:60px">編號</th><th style="width:170px">工作包</th><th>內容（依規格摘要）</th><th style="width:230px">新檔案／驗收測試</th></tr>
+<tr><td>W1</td><td><span class="tag t-core">K1</span>權重帳本與需求訊號表</td><td><code>derive_weights(profile, base, table, locks) → (weights, ledger)</code> 純函式：每輪從 C6 基準重算，不疊加；13 列訊號點數表（含 sw:Premiere／Photoshop 過渡列）、強度詞係數、剪輯強度係數、每訊號單維上限 +20、單維最高 50%、加法正規化到 100；手動鎖定與「系統建議權重」獨立保存；LLM 只輸出訊號與強度（<code>weight_llm_free_delta</code> 預設關）；R020 衝突訊號；12 個開關＋C6 參數</td><td><code>weights.py</code>、<code>flags/weights.py</code>；測試：同一需求跑 10 輪權重不變、刪需求退回基準、手動鎖定不被蓋、報告 2.11 算例（依第 6 節 D14 修正期望值）、每開關開／關各一</td></tr>
+<tr><td>W2</td><td><span class="tag t-core">K2</span>正規化、性價比、平手、breakdown</td><td>三種正規化（距第一名%／全庫百分位／p5–p95）與資料版本綁定；填補值三種處理（實測／同類保守值／缺值）；性價比四種（關／當次 min-max／全庫百分位／同價位期望差，期望曲線每輪用使用者權重重算）；α 參與排序；平手門檻 δ 與「使用者最高權重維度」決勝；尺寸適配移出螢幕（開關）；邊界候選排序；持續性能基準修正；<code>breakdown</code>（D_i、w_i、c_i、a_i、子項原值／百分位／品質）供 K5；default_power 改讀 C6</td><td><code>scoring.py</code> 增量＋<code>normalize.py</code>；測試：拯救者 Y7000X 黃金樣本（65.4 分）、名目權重與實際影響力一致、性價比跨輪穩定、δ 平手決勝、開關開／關</td></tr>
+<tr><td>W3</td><td><span class="tag t-core">K3</span>細項匯入與子權重混合</td><td>importer 補 Office、VRay、Blender、NPU、遊戲幀數、記憶體／顯存容量等細項（放 JSONB，不改表）；性能拆單核、多核、GPU、記憶體、NPU 五軸；每工作類型子權重向量 → 主次占比（0.7／0.3）→ 強度 α（0.4／0.7／1.0）→ 與通用向量混合；缺值策略與覆蓋率門檻（0.6）；續航第一名排除異常值；Procyon 0 視為缺值；既有資料庫依 formula_version 自動重算 ＋ 後台「重算」按鈕；14 個細項各自開關</td><td><code>subweights.py</code>、<code>importer.py</code> 增量、<code>flags/subw.py</code>；測試：報告實算例（86 對 86、產品力 78.0 對 72.0）、關閉總開關＝0.0.4 行為、覆蓋率低自動停用</td></tr>
+<tr><td>W4</td><td><span class="tag t-core">K4</span>軟體畫像 2.0</td><td>畫像結構 <code>workloads[]={id,label,demand{cpu_single,cpu_multi,gpu,vram,ram,sustain,display_color}(0–3),benchmarks,ask,default}</code>；中央換算表（等級→大維度目標權重 36/42/50、散熱 10/12/14、子項倍率 1+0.5×等級、ram／vram 容量表）；別名表（明確／模糊＋上下文）與消歧義追問卡；官方最低需求當硬門檻、建議值當風險線；顯存硬門檻改開關；首批種子：3ds Max（報告完整數值）＋ Blender、Maya、SketchUp、Rhino、Revit、C4D、D5、Lumion、Enscape（等級標「待核實」）；舊 PS／AI／PR usages 自動遷移；修好 C1 草稿無法啟用；C1 API 補別名、工作類型、等級、門檻；線索加 conversation_id；19 個開關</td><td><code>software.py</code>、<code>models_software.py</code>、<code>seed_software.py</code>、<code>routers/software.py</code>；測試：Final Cut Pro 不再認成 Premiere、「3ds Max 室內設計渲染，預算 4 萬」實跑（以 0.0.4 新台幣重跑為基準）、消歧義卡觸發、硬門檻／風險線</td></tr>
+<tr><td>W5</td><td><span class="tag t-core">K5-A</span>理由產生器</td><td>逐維貢獻 ＝ 權重 × (分數 − 候選中位數)；優勢前 2 條（min_contrib 0.5、並列感知名次）；要接受的最多 2 條（軟體風險線 &gt; 高權重低於中位數 &gt; 明顯偏弱）；和第 2 名比（贏在哪、輸在哪、價差）；權重變化句（因為你說 X，Y 從 a% 到 b%，門檻 3 點）；方案 A 模板句／方案 B LLM 措辭＋檢查器核對數字與機型；填補值不得當證據；證據優先用軟體啟用的細項；前 N 名附理由；20 個開關</td><td><code>reason.py</code>、<code>flags/reason.py</code>；測試：報告 A4「剪 4K 影片，預算 4 萬 5，常帶出門」JSON 期望（依 0.0.4 校正）、檢查器退回模板、每開關開／關</td></tr>
+<tr><td>W6</td><td><span class="tag t-core">K5-B</span>追問價值、上限、需求檔案、首屏資料</td><td>發問前模擬每個答案對前 K 名的影響，價值低於門檻不問並產出「跳過說明」；上限（整段 3、連續 2、忽略冷卻 2 輪、0 = 不限）；每選項「剩 N 台」；反問卡資料（前兩名分差 &lt; δ 且各有贏面）；每張卡選項補 <code>weight_effect</code>／<code>hard</code>（數值來自 K1 訊號表）；需求檔案 API：原話、信心、影響了哪個權重、硬條件「拿掉會多 N 台」、行內編輯、撤銷；<code>GET /api/home</code>：3 句範例句、3 張基礎卡、371 台依 4 個價位分組（界線在後台）；base_cards 改成只在不存在時寫入；放寬選項涵蓋全部硬條件；20 個開關</td><td><code>followup.py</code>、<code>profile_view.py</code>、<code>routers/home.py</code>、<code>flags/followup.py</code>；測試：不影響首選的題不問、上限與冷卻、重量造成 0 台時放寬卡有選項、價位分組台數 34/80/126/131</td></tr>
+<tr><td>W7</td><td><span class="tag t-admin">A4／A6</span>規則與閾值接線、告警、鏈路實測</td><td>pipeline 真的讀 <code>Rule.enabled</code>／params，候選數區間改讀規則；C6 接上 weight_ask、hard_filter、tier、compare_max、travel_tol，接不上的在後台標「尚未生效」；Alert 寫入（五種觸發，見 D10）；每步實際記錄開始時間、耗時、狀態，取代前端比例估算；<code>scoring_mismatch</code> 真的計算並回傳，未檢查顯示「未檢查」；B1 token 欄位名統一；每次模型調用記成本</td><td><code>rules_engine.py</code>、<code>alerts.py</code>、<code>trace_server.py</code>；測試：關掉規則後行為真的改變、每個閾值接線、告警五種觸發、mismatch 真假</td></tr>
+<tr><td>W8</td><td><span class="tag t-admin">A7／K2</span>資料品質</td><td>匯入時辨識填補值（同值比例門檻 25%，可調）並標記 measured／filled／missing；重量填補值不當便攜證據並標「估計」；購買連結佔位網址辨識，前端隱藏按鈕（開關）；影片欄位（含秒數）匯入；TB/GB 自動修正＋異常清單；Octane 填在核顯機列異常清單；回滾保留 data_source；C3 清單搜尋、分頁；管理員確認填補值的流程</td><td><code>importer.py</code> 增量、<code>data_quality.py</code>、<code>routers/data_quality.py</code>；測試：196 筆 2.43 kg 被標記、example.com 判佔位、14 筆 TB/GB 修正、回滾保留來源</td></tr>
+<tr><td>W9</td><td><span class="tag t-admin">A7</span>模型與提示詞</td><td>備用模型（主模型超時秒數可設或失敗時改用，再失敗才退回關鍵字／模板）；提示詞防護（存檔前用假資料試 format、缺佔位符擋下、pipeline 攔截 format 錯誤降級、編輯框帶入現行版本、存檔寫 change_log、每次執行記錄提示詞版本）；逐次調用明細（時間、用途、模型、耗時、token、成本、狀態、版本）；成本試算（歷史 token × 另一供應商單價）；預設提示詞補「沒有實測要明講」「不用行銷語氣」、NLU 補 <code>unknown_terms</code>；<code>/admin/models/{mid}/test</code> 加 deny_observer</td><td><code>llm.py</code> 增量、<code>models_llm.py</code>、<code>routers/llm_admin.py</code>；測試：備用切換、format 錯誤被攔、unknown_terms 回傳、成本計算</td></tr>
+</table></div>
+
+<h3>波次 2：整合與介面（7 個代理，平行；W10 先行半天給出 API 形狀）</h3>
+<div class="tblwrap"><table>
+<tr><th style="width:60px">編號</th><th style="width:170px">工作包</th><th>內容</th><th style="width:230px">驗收</th></tr>
+<tr><td>W10</td><td><span class="tag t-core">整合</span>pipeline 接線</td><td>把 W1–W6 接進 <code>run_turn</code> 掛勾點：需求檔案 → derive_weights → 畫像 2.0 目標值 → 子權重 → 分數 breakdown → 理由 → 追問價值；<code>public_laptop</code> 補 rank、pros、tradeoffs、versus、breakdown、estimated 標記、evidence；TurnResponse 補 ledger、weight_changes、profile_view、skip_note、tradeoff_ask；舊對話升級策略（D11）；效能：一輪多次 snapshot 的快取</td><td>整合測試：兩個示範句（剪 4K／3ds Max）端到端；64 個舊測試仍過；legacy 開關全關時輸出與 0.0.4 相同</td></tr>
+<tr><td>W11</td><td><span class="tag t-ui">U1</span>版面、首屏、需求檔案、動畫</td><td>手機版：viewport 改正、拿掉 min-width、三個斷點、≤760 切「對話／機型」分頁、彈窗改底部抽屜；輸入區自動長高、<code>isComposing</code>、focus 光圈；首屏左側 3 句範例句（點了直接送出）＋ 3 張基礎卡、右側依 4 個價位分組（每組先顯示 8 台）；需求檔案區（原話、信心、影響權重、拿掉會多 N 台、剛變動高亮、行內編輯、假設標籤）；動畫修正：req_fly 找得到起點、重新排序改真 FLIP、鎖輸入最多 1.5 秒、跳過只註冊一次；Toast 單一化；崩潰不顯示 stack；14 個開關</td><td>Vitest：IME 不誤送、斷點、首屏資料渲染；手動：手機寬度操作</td></tr>
+<tr><td>W12</td><td><span class="tag t-ui">U2／C</span>對話卡片</td><td>回顯句與回執附註（更正可復原、偏好、無法判斷）；追問卡「最多再 n 題／最後一題」、每選項「剩 N 台」、跳過、直接看建議、為什麼問；跳過說明卡；取捨反問卡；放寬卡涵蓋全部硬條件並在 LLM 失敗時仍有效（送結構化操作，不是純文字）；規則排除不顯示撤銷；聽不懂時的引導句；@ 機型真的進對比；為什麼不是別台卡；指名查詢卡；消歧義卡；衝突說明卡；P1 的 16 張卡修正；開關依 C 章清單</td><td>Vitest：每種卡片渲染與互動、開關關閉時不出現；後端對應測試在 W6</td></tr>
+<tr><td>W13</td><td><span class="tag t-ui">U3／C</span>推薦卡、對比、詳情、權重面板</td><td>推薦卡：為什麼是它、要接受的、和第 2 名比、權重變化句、名次／百分位、貢獻條、證據（含影片時間點，預設關）、估計值標記、平手標示；對比表多「主要優點」「要接受的」列；詳情抽屜逐項對照需求；收藏標籤顯示價格與狀態、被排除的收藏標狀態；權重面板：不再每輪自動彈出（開關）、顯示帳本明細、手動鎖定、恢復「系統建議」、進階子權重面板（預設收起）、子項原值與來源；購買按鈕依佔位開關隱藏；22 個開關</td><td>Vitest：理由區塊依資料渲染、沒資料不顯示模板字、面板鎖定互動</td></tr>
+<tr><td>W14</td><td><span class="tag t-admin">A2／A3</span>對話紀錄、待處理、需求洞察</td><td>對話清單：篩選列（時間、結果、差評、0 結果、標籤）、全文搜尋、後端 offset／since／until／q、取消 200 上限、分頁、v10 欄位與徽章；詳情只說明選定那一輪（白話＋原始 JSON，權重變化一行）；當時卡片標出點了哪一項、候選前 10 台可點開；跳到機型；待處理頁＋徽章（差評、聽不懂的詞、0 結果、一直改需求），一鍵建 C1 畫像草稿；需求洞察：用途 × 預算熱力圖、供需缺口、只差價格的機型、價格敏感度、權重分布，數字點進去帶篩選</td><td>pytest：清單參數與分頁；Vitest：篩選列、待處理分類；圖表依 dataviz 規範</td></tr>
+<tr><td>W15</td><td><span class="tag t-admin">A4</span>權重中心與畫像編輯器</td><td>C6 擴充成權重中心：大維度基準權重、需求訊號表（可改點數、強度係數）、子權重向量、正規化方式、平手門檻、性價比方式、填補值處理，分頁呈現；C2 規則「尚未生效」標示；改動影響預覽（用最近 N 輪對話重算，顯示幾輪第一名改變）；C1 畫像 2.0 編輯器：別名表、工作類型、各工作的需求等級、門檻、benchmarks、啟用檢查</td><td>Vitest：表單渲染與存檔；pytest：預覽端點</td></tr>
+<tr><td>W16</td><td><span class="tag t-admin">A1／A5／A6／A7</span>後台其他頁</td><td>登入：移除預填（開發環境才預填，受開關）、登出、首次改密碼流程、臨時密碼改成可複製對話框；卡片管理：文案（問題、選項、按鈕、提示）可改並存版本、用使用者端真實元件預覽、C8 依流程分頁（衝突／推薦／需求區）、選項層級啟用、推薦台數、放寬選項數、選卡策略上介面；B1：token、成本、實測時間軸（未量測標示）、權重快照（每輪權重與前 5 名逐維貢獻）、告警區、分數一致性三態；模型頁：備用模型指派、逐次調用明細、成本試算、提示詞存檔前檢查與版本</td><td>Vitest：登入流程、卡片預覽；pytest：文案 PATCH 寫 change_log</td></tr>
+</table></div>
+
+<h3>波次 3：整合、審查、文件（4 個代理）</h3>
+<div class="tblwrap"><table>
+<tr><th style="width:60px">編號</th><th style="width:170px">工作包</th><th>內容</th></tr>
+<tr><td>W17</td><td>回歸整合</td><td>跑全部 pytest、Vitest、tsc、build；解衝突；檢查每個開關都有「開」「關」兩個測試；去重開關總表（合併 U2／U3 重複的「兩台接近時反問」「對比上限」等）；用 PostgreSQL 實際啟動 v0.0.5 跑兩個示範句並截圖</td></tr>
+<tr><td>W18</td><td>程式審查 A（核心鏈）</td><td>以 code-review 方式審 W1–W6、W10 的正確性：權重重算、正規化、理由數字核對、追問模擬；回報給 W17 修正</td></tr>
+<tr><td>W19</td><td>程式審查 B（介面與後台）</td><td>審 W11–W16 與 W7–W9：開關是否真的控制行為、文案是否繁體台灣用語、手機版、稽核寫入</td></tr>
+<tr><td>W20</td><td>文件</td><td>README「功能開關」段落（分組列出全部 key 與說明）、CHANGELOG <code>v0.0.5 — 日期</code>（新增／修改／修正）、VERSION、Mac 啟動說明更新、<code>docs/v0.0.5-規格/</code> 收尾、交付清單說明</td></tr>
+</table></div>
+
+<h2 id="s5">5. 波次與時程</h2>
+<div class="flow">
+<div class="step wave"><b>我先做</b><small>複製 v0.0.4 → v0.0.5、重建 venv、VERSION、把規格摘要放進 docs</small></div>
+<div class="step wave"><b>波次 0</b><small>S1、S2 骨架（平行）→ 合併 → 舊測試全過</small></div>
+<div class="step wave"><b>波次 1</b><small>W1–W9 九個核心與基礎工作包（平行）</small></div>
+<div class="step wave"><b>波次 2</b><small>W10 先接線 → W11–W16 介面（平行）</small></div>
+<div class="step wave"><b>波次 3</b><small>W17 整合、W18／W19 審查、W20 文件 → 回報 M</small></div>
+</div>
+<p>每波結束我會跑一次全部測試並向你回報；中途不會問你問題，第 6 節沒決定的項目就用我建議的預設做，並在後台標「待校準」。</p>
+
+<h2 id="s6">6. 需要 M 決定的事（我已填上建議答案，確認或改掉即可）</h2>
+<div class="q"><b>D1 開關放哪裡？</b>建議：新建開關註冊表（後端 <code>flags</code>），存在 <code>app_meta</code> 的 <code>flags</code> 鍵，後台新增「功能開關」頁依分組顯示中文名稱與說明；數值閾值仍留在 C6；既有 2 個開關搬過去。</div>
+<div class="q"><b>D2 報告沒給預設值的開關怎麼辦？</b>建議：報告有給的照報告；沒給的「新行為預設開」，但每個都保留「關 ＝ 0.0.4 舊行為」可以切回去對照；數值類由實作代理設起始值並在後台標「待校準」。（另一種選法是預設全部舊行為，由你逐個打開。）</div>
+<div class="q"><b>D3 正規化預設？</b>建議：全庫百分位（K0 階段 4 的寫法），「距第一名 %」與「p5–p95」做成選項。</div>
+<div class="q"><b>D4 子權重怎麼產生（K3 與 K4 衝突）？</b>建議：畫像只填 0–3 等級（K4），由中央換算表轉成每個工作類型的子權重向量，再走 K3 的主次占比與強度 α 混合。細項命名統一用 K4 的 <code>vray_cpu／vray_gpu／blender_cpu／blender_gpu</code>，記憶體容量表採 K4 數值。</div>
+<div class="q"><b>D5 平手門檻？</b>建議：只有一個參數 <code>score.tie_gap</code>，起始 1.5 分；K5 的反問與 K2 的決勝都讀它。</div>
+<div class="q"><b>D6 追問上限？</b>建議：依報告整段 3 題、連續 2 題、0 代表不限（TypeScript 版用的 7 不沿用）。</div>
+<div class="q"><b>D7 前端要不要加測試框架？</b>建議：加 Vitest ＋ Testing Library（不裝 Playwright），這是滿足「每個模組都有自動化測試」的最小做法。</div>
+<div class="q"><b>D8 資料問題怎麼處理？</b>建議：重量填補值標「估計」、不當便攜證據、計分用同類保守值；購買連結是佔位網址時隱藏按鈕（開關）；影片欄位匯入但預設不顯示。真資料之後接 <code>資料清理/laptops_clean.csv</code> 另開版本。</div>
+<div class="q"><b>D9 文案與提示詞的草稿／預覽／發佈？</b>建議：不做（依採用決定表）。只做文案編輯＋版本紀錄＋真實元件預覽；提示詞存檔前檢查。</div>
+<div class="q"><b>D10 告警在哪些情況寫入？</b>建議五種：模型呼叫失敗、逾時、0 結果、前後端分數不一致、提示詞 format 錯誤。</div>
+<div class="q"><b>D11 舊對話升級後權重怎麼算？</b>建議：下一輪由需求檔案重算（舊的疊加值不保留）；<code>weight_mode=legacy_delta</code> 可切回舊法對照。</div>
+<div class="q"><b>D12 範圍要不要縮？</b>建議：全部做。若你想縮，最適合挪到 0.0.6 的是 A3 需求洞察圖表（W14 後半）與 A7 成本試算（W9 一小部分）。</div>
+<div class="q"><b>D13 K1 算例矛盾：每訊號 +20 上限何時套？</b>建議：乘完強度係數後才截（重度剪輯算例性能約 36，不是報告的 37），測試期望以此為準；最大餘數法平手時基準權重高者優先。</div>
+<div class="q"><b>D14 既有資料庫怎麼拿到新細項分數？</b>建議：啟動時依 <code>formula_version</code> 自動重算，後台 C3 另加「重算分數」按鈕。</div>
+<div class="q"><b>D15 3ds Max 以外的 3D 軟體等級誰填？</b>建議：實作代理依公開官方需求填初值並標「待核實」，C1 後台可改。</div>
+<div class="q"><b>D16 代理數量與模型</b>：22 個代理，全部 Opus 5.5，分四波執行；每波結束回報一次。</div>
+
+<h2 id="s7">7. 不做清單與風險</h2>
+<div class="card">
+<p><b>不做：</b>確認卡、深色模式、草稿／回歸／發佈流程、後台首頁 KPI 與待辦、v10 硬門檻推薦、字體改 PingFang TC、簡體／陸用詞整理、價位瀏覽（v10 式）、Playwright。</p>
+<ul>
+<li><span class="tag t-warn">風險</span><b>量很大。</b>44 項後台工作、32 張卡片修改、5 張新卡、8 個核心階段、約 200 個開關。四波平行可以壓縮時間，但整合（W10、W17）是瓶頸，我會在那兩步多花時間跑測試。</li>
+<li><span class="tag t-warn">風險</span><b>資料是模擬的。</b>K2、K3 的統計門檻（填補比例、覆蓋率、相關係數）換真實資料後要重跑；黃金樣本測試會綁定目前這份 CSV。</li>
+<li><span class="tag t-warn">風險</span><b>報告數值是起始值。</b>訊號點數、強度係數、換算表、平手門檻都要你用真實使用者校準，所以全部放進後台。</li>
+<li><span class="tag t-warn">風險</span><b>平行修改衝突。</b>靠骨架（新檔＋註冊表一行）降低；W17 負責解衝突，每波結束跑全部測試。</li>
+<li><span class="tag t-warn">注意</span>複製後兩個版本共用 PostgreSQL 埠 5433，同一時間只能啟動一個版本；<code>.venv-mac</code> 要在 v0.0.5 重建，否則會跑到 v0.0.4 的直譯器。</li>
+</ul>
+</div>
+
+<h2 id="s8">8. 版本管理與驗收</h2>
+<div class="card">
+<ol>
+<li><code>cp -R system-v0.0.4 system-v0.0.5</code>；<code>system-v0.0.4</code>、<code>system/</code> 從此不碰。</li>
+<li>v0.0.5 內：<code>rm -rf backend/.venv-mac</code> 後重新 <code>uv sync --frozen --python 3.12</code>；<code>VERSION</code> 改 0.0.5。</li>
+<li>規格摘要 9 份複製到 <code>docs/v0.0.5-規格/</code>，本計畫存成 <code>docs/system-v0.0.5-施工計畫.html</code>。</li>
+<li>測試指令（不需 PostgreSQL）：</li>
+</ol>
+<pre>cd system-v0.0.5/backend && UV_PROJECT_ENVIRONMENT=.venv-mac uv run --no-sync --with pytest pytest -q
+cd system-v0.0.5/frontend && npx tsc --noEmit && npx vitest run && npm run build</pre>
+<ol start="5">
+<li>手動驗收（需 PostgreSQL）：依 README Mac 段落啟動 v0.0.5，跑「我要剪 4K 影片，預算 4 萬 5，常帶出門」與「我要用 3ds Max 做室內設計渲染，預算 4 萬」，核對理由、追問、需求檔案與後台權重快照。</li>
+<li>完成後在專案根目錄 <code>CHANGELOG.md</code> 最上面加 <code>## v0.0.5 — 日期</code>，README 功能開關段落列出全部開關。</li>
+</ol>
+</div>
+<p class="sub">規格摘要原檔：K1 權重系統、K2 分數計算、K3 高級權重、K4 軟體畫像、K5 理由追問需求檔案首屏、U 使用者端、A 管理後台、C 卡片樣本館、DEV 開發者手冊。</p>
+</div>
+</body>
+</html>
