@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>v1.0.8 功能搬遷清單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* 版面概念：一張「搬家清單」——每項功能是一個貼了色標的紙箱，先看總帳，再按色標分批搬。 */
+:root{
+  --paper:#f4f6f8; --sheet:#ffffff; --ink:#18212b; --mute:#5a6675; --rule:#dce2e8;
+  --accent:#1d4f91; --accent-soft:#e6eef8;
+  --must:#1d4f91; --must-bg:#e3ecf8;
+  --worth:#0f7a6c; --worth-bg:#e0f3ef;
+  --later:#a45f0b; --later-bg:#fbefdc;
+  --no:#6b7480; --no-bg:#eceff2;
+  --flag:#b42318; --flag-bg:#fdecea;
+  --f-display:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11161c; --sheet:#182029; --ink:#e4e9ef; --mute:#97a3b1; --rule:#2a3542;
+  --accent:#7fb0f0; --accent-soft:#1d2a3b;
+  --must:#86b4f2; --must-bg:#1c2b40; --worth:#5fd0bd; --worth-bg:#123230;
+  --later:#f0b45e; --later-bg:#352816; --no:#a3acb7; --no-bg:#242c35;
+  --flag:#ff8a80; --flag-bg:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11161c; --sheet:#182029; --ink:#e4e9ef; --mute:#97a3b1; --rule:#2a3542;
+  --accent:#7fb0f0; --accent-soft:#1d2a3b;
+  --must:#86b4f2; --must-bg:#1c2b40; --worth:#5fd0bd; --worth-bg:#123230;
+  --later:#f0b45e; --later-bg:#352816; --no:#a3acb7; --no-bg:#242c35;
+  --flag:#ff8a80; --flag-bg:#3a1d1b; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 var(--f-body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:40px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(28px,5vw,42px);font-weight:900;letter-spacing:.01em}
+h2{font-size:24px;font-weight:900}
+h3{font-size:17px;font-weight:600}
+p{margin:0;max-width:68ch}
+code,.mono{font-family:var(--f-mono);font-size:12.5px}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:4px;word-break:break-all}
+a{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700}
+section{display:flex;flex-direction:column;gap:16px}
+.sec-head{display:flex;flex-direction:column;gap:6px;border-top:2px solid var(--ink);padding-top:14px}
+.lead{font-size:17px;color:var(--mute);max-width:62ch}
+
+/* 開頭 */
+header{display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mute);font-size:13px}
+.answer{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:20px 22px;display:flex;flex-direction:column;gap:10px}
+.answer p{font-size:16px}
+.answer strong{color:var(--accent)}
+
+/* 總帳 */
+.ledger{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.ledger div{background:var(--sheet);padding:16px 16px 14px;display:flex;flex-direction:column;gap:2px}
+.ledger b{font-family:var(--f-display);font-size:38px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.ledger span{font-size:13px;color:var(--mute)}
+.ledger .t{font-weight:700;font-size:14px;color:var(--ink)}
+.c-must b{color:var(--must)} .c-worth b{color:var(--worth)} .c-later b{color:var(--later)} .c-no b{color:var(--no)}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--rule)}
+.bar i{display:block}
+@media (max-width:640px){.ledger{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 關鍵發現 */
+.finds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.find{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.find.alarm{border-color:var(--flag);background:var(--flag-bg)}
+.find h3{font-size:15.5px}
+.find p{font-size:14px;color:var(--mute)}
+.find.alarm p{color:var(--ink)}
+
+/* 評估標準 */
+.crit{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.crit div{border-left:3px solid var(--accent);padding:4px 0 4px 12px;font-size:14px}
+.crit b{display:block;font-size:14.5px}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
+.tiers div{padding:10px 12px;border-radius:8px;font-size:13.5px}
+
+/* 色標 */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6}
+.tag::before{content:"";width:7px;height:7px;border-radius:2px;background:currentColor}
+.t-must{color:var(--must);background:var(--must-bg)}
+.t-worth{color:var(--worth);background:var(--worth-bg)}
+.t-later{color:var(--later);background:var(--later-bg)}
+.t-no{color:var(--no);background:var(--no-bg)}
+.t-ask{color:var(--flag);background:var(--flag-bg)}
+
+/* 篩選 */
+.filters{display:flex;flex-direction:column;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:10px;border-bottom:1px solid var(--rule)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.frow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.frow .lab{font-size:12px;color:var(--mute);letter-spacing:.1em;margin-right:4px;min-width:3em}
+.chip{font:inherit;font-size:13px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{font-size:13px;color:var(--mute);margin-left:auto}
+
+/* 清單 */
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;min-width:0}
+.item summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 14px;align-items:start}
+.item summary::-webkit-details-marker{display:none}
+.item .id{font-family:var(--f-mono);font-size:12px;color:var(--mute);padding-top:3px;min-width:2.6em}
+.item .nm{font-weight:700;font-size:15.5px}
+.item .pl{grid-column:2;color:var(--mute);font-size:14px}
+.item .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.meters{display:flex;gap:10px;font-size:12px;color:var(--mute);white-space:nowrap}
+.meters em{font-style:normal;font-weight:700;color:var(--ink)}
+.item .why{grid-column:2/4;font-size:14px;padding-top:2px}
+.item .why::before{content:"判斷　";color:var(--mute);font-size:12px;letter-spacing:.08em}
+.body{padding:0 16px 14px calc(16px + 2.6em + 14px);display:grid;grid-template-columns:7em minmax(0,1fr);gap:6px 12px;font-size:13.5px}
+.body dt{color:var(--mute)}
+.body dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.item[open] summary{border-bottom:1px dashed var(--rule)}
+.item[open] .body{padding-top:12px}
+@media (max-width:640px){
+  .item summary{grid-template-columns:minmax(0,1fr)}
+  .item .id{display:none}
+  .item .pl,.item .why{grid-column:1}
+  .item .side{flex-direction:row;align-items:center;flex-wrap:wrap}
+  .body{padding-left:16px;grid-template-columns:minmax(0,1fr)}
+  .body dt{margin-top:6px}
+}
+
+/* 路線圖 */
+.road{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--rule);margin-left:8px}
+.step{position:relative;padding:0 0 22px 22px;display:flex;flex-direction:column;gap:6px}
+.step::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--sheet);border:2px solid var(--accent)}
+.step .v{font-family:var(--f-mono);font-weight:600;color:var(--accent);font-size:14px}
+.step h3{font-size:16px}
+.step p{font-size:14px;color:var(--mute)}
+.ids{display:flex;flex-wrap:wrap;gap:5px}
+.ids span{font-family:var(--f-mono);font-size:12px;padding:1px 7px;border-radius:5px;border:1px solid var(--rule);background:var(--sheet)}
+
+/* 表格 */
+.tblwrap{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{font-size:12.5px;color:var(--mute);font-weight:700;letter-spacing:.06em;background:var(--paper)}
+tr:last-child td{border-bottom:0}
+
+.qs{display:flex;flex-direction:column;gap:10px;counter-reset:q}
+.q{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3{font-size:15.5px;font-family:var(--f-body);font-weight:700}
+.q h3::before{counter-increment:q;content:"問題 " counter(q) "　";color:var(--flag);font-size:13px}
+.q p{font-size:14px;color:var(--mute)}
+.q p b{color:var(--ink)}
+footer{color:var(--mute);font-size:13px;border-top:1px solid var(--rule);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">AI 筆電選購助手 · 搬遷評估</span>
+  <h1>v0.0.5 的哪些功能，值得搬進 v1.0.8？</h1>
+  <div class="meta"><span>2026-11-04</span><span>來源：<code>system-v0.0.5</code> → <code>laptop-assistant-v1.0.8</code></span><span>前一份：<a href="https://mgitclau.github.io/mgitclau/laptop-v005-vs-v108-report.html">兩套系統程式碼比較報告</a></span></div>
+  <div class="answer">
+    <p><strong>簡短回答：</strong>v0.0.5 比 v1.0.8 多出約 70 項功能。<strong>18 項必搬、27 項值得搬、18 項之後再說、7 項不要搬</strong>。</p>
+    <p>必搬的項目集中在兩條線：<strong>權重這條鏈要做完整</strong>（帳本、信心、強度、只鎖拖過的那一維、正規化），以及<strong>讓使用者看見系統懂他</strong>（「記下了」回顯、拿掉會多幾台、每條需求影響哪個權重、不可能三角、問某一台怎麼樣）。另外有 6 項是你找真實用戶測試時一定用得到的後台工具。</p>
+    <p>必搬的 18 項裡有 12 項成本是「小」或「小～中」。大約 8～9 個小版本可以把必搬與值得搬做完。</p>
+  </div>
+</header>
+
+<section>
+  <div class="ledger" id="ledger"></div>
+  <div class="bar" id="bar" aria-hidden="true"></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">先看這五件事</span><h2>盤點時發現的關鍵事實</h2></div>
+  <div class="finds">
+    <div class="find alarm"><h3>v1.0.8 拖一次滑桿，系統就不再聽了</h3><p>使用者手動調過任何一個權重後，之後說的新需求全部不會影響排序（<code>turn.ts</code> 用 <code>manualWeights</code> 整組蓋掉）。這直接違反「讓用戶感受到系統懂他」，所以 S2 列為必搬。</p></div>
+    <div class="find alarm"><h3>v1.0.8 用途加分不看信心</h3><p>模型猜錯的用途也會直接改權重，使用者也不知道那是猜的。只有模型「自由建議」才有信心門檻。S3 只要小改動就能補上。</p></div>
+    <div class="find"><h3>很多後台功能在 v1.0.8 資料已經有，只差畫面</h3><p>每次模型呼叫的 token、耗時、錯誤，以及每輪的權重和前幾名，都已經寫進資料庫，只是後台沒有頁面讀取。所以 D1、D7 的成本很低。</p></div>
+    <div class="find"><h3>v0.0.5 有幾項是「規格寫了、程式沒做完」</h3><p>「復原」只刪新值、不還原舊值；軟體官方配置後端有算、前端沒畫；<code>reason_snippets</code> 從沒被呼叫；模型直接判斷強度的 <code>parse_llm_signals</code> 沒接線。這幾項只能拿規格當參考，沒有成品可以照抄。</p></div>
+    <div class="find"><h3>有些東西 v1.0.8 已經做得更好</h3><p>追問題庫加價值閘門、理由產生器、動效方案、需求編輯表單、網址路由、金鑰加密、卡片條件檢查，都不要被 v0.0.5 的做法蓋掉。完整清單見「不要搬回來」一節。</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">怎麼判斷的</span><h2>評估標準與四個色標</h2>
+  <p class="lead">每一項都依同一套標準評估。三位子代理逐項開檔核對兩套程式碼，我再抽查最嚴重的指控。</p></div>
+  <div class="crit">
+    <div><b>對「唯一標準」的貢獻</b>推薦會不會更準？使用者會不會覺得系統懂他？</div>
+    <div><b>是否符合你定的方向</b>權重是核心、不做確認卡、不做草稿／發佈流程、軌跡優先度低</div>
+    <div><b>對你測試調參的幫助</b>有沒有開關、能不能在後台直接調</div>
+    <div><b>搬進 v1.0.8 的成本</b>小＝1 天內、改少數檔案；中＝2～4 天；大＝要動架構</div>
+  </div>
+  <div class="tiers">
+    <div class="t-must"><b>必搬</b>：價值高，而且 v1.0.8 少了它會直接影響推薦品質或測試能力</div>
+    <div class="t-worth"><b>值得搬</b>：有明確價值，排在必搬之後</div>
+    <div class="t-later"><b>之後再說</b>：價值低，或要等軟體資料、清理後的資料、你的決定</div>
+    <div class="t-no"><b>不搬</b>：違反你的方向，或 v1.0.8 已經有更好的做法</div>
+  </div>
+</section>
+
+<section id="list-sec">
+  <div class="sec-head"><span class="eyebrow">完整清單</span><h2>逐項評估</h2>
+  <p class="lead">點任一項可以展開，看 A 的程式位置、B 的現況和依賴關係。編號開頭代表區塊：S 評分核心、U 對話與需求檔案、W 軟體畫像、D 後台、F 基礎工程。</p></div>
+  <div class="filters" role="group" aria-label="篩選">
+    <div class="frow" id="f-tier"><span class="lab">色標</span></div>
+    <div class="frow" id="f-area"><span class="lab">區塊</span><span class="count" id="count"></span></div>
+  </div>
+  <div class="list" id="list"></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">建議順序</span><h2>分版搬遷路線</h2>
+  <p class="lead">依照你的版本規則，每一版都從上一版複製一份新資料夾再修改。排序的原則：先把權重帳本做出來，因為回顯卡、權重來源、五色標籤、衝突卡都要用到它；後台測試工具排在你開始找真實用戶之前。</p></div>
+  <div class="road" id="road"></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">避免誤搬</span><h2>v1.0.8 已經比較好，不要搬回來</h2></div>
+  <div class="tblwrap"><table>
+    <thead><tr><th>項目</th><th>v1.0.8 的做法</th><th>為什麼保留 B</th></tr></thead>
+    <tbody>
+      <tr><td>追問系統</td><td>題庫、出題條件、價值閘門、跳過、選項剩幾台、後台追問決策表</td><td>已經涵蓋 A 的追問 v5，還多了決策表</td></tr>
+      <tr><td>理由產生器</td><td>為什麼是它、要接受的、和第 2 名比、權重為什麼變；模型不准新增數字</td><td>和 A 同精神，不要整套換掉；之後只要接上帳本（S1）</td></tr>
+      <tr><td>權重重算</td><td>每輪從需求檔案重算、刪掉需求自動還原、順序無關、被加分的維度不低於基準</td><td>和 A 的核心等價，還多一層保護</td></tr>
+      <tr><td>模型自由建議</td><td>信心門檻、±5 上限、每維只留最新一筆、已明說的維度不重複加</td><td>比 A 周到</td></tr>
+      <tr><td>使用者自調性能細項</td><td><code>manualPerfSubs</code>＋進階權重開關</td><td>等同 A 的自調向量</td></tr>
+      <tr><td>方案型設定</td><td>動效方案、候選機型顯示方案：複製、預覽、套用</td><td>整組切換，比 A 一堆零散開關更適合 A/B 測試</td></tr>
+      <tr><td>需求編輯表單</td><td>依欄位類型做表單與驗證</td><td>A 是通用文字框；只要從 A 補「硬條件／偏好切換」（U11）</td></tr>
+      <tr><td>模型供應商</td><td>9 家內建、取得模型清單、金鑰 AES-GCM 加密</td><td>A 金鑰是明文</td></tr>
+      <tr><td>卡片條件檢查</td><td>標出無效選項、選了剩幾台</td><td>A 沒有</td></tr>
+      <tr><td>網址路由、併發 409、統一稽核</td><td><code>/c/:id</code>、同一對話同時送出回 409、每個寫入都記修改前後</td><td>A 沒有路由、沒有併發保護</td></tr>
+      <tr><td>認不出的軟體</td><td>標「X（尚無資料）」並寫進待處理</td><td>比 A 讓模型產生暫定畫像更誠實，符合「程式決定事實」</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="eyebrow">需要你決定</span><h2>開工前要你回答的五個問題</h2></div>
+  <div class="qs">
+    <div class="q"><h3>「改動影響預覽」算不算你否決過的回歸流程？</h3><p>它只做唯讀試算：用最近 20 輪對話重算，看有幾輪第一名換人。沒有草稿，也沒有發佈。<b>我的建議：不算，可以做（D14）。</b>參數越多，越需要先看影響範圍。</p></div>
+    <div class="q"><h3>不可能三角和「兩台接近」的反問卡，同一輪都成立時誰先出？</h3><p><b>我的建議：衝突卡先出。</b>它影響的是整體方向，反問卡只是在兩台之間做選擇；方向定了，反問可能就不需要了。</p></div>
+    <div class="q"><h3>軟體消歧義要做成對話卡片，還是只在需求檔案顯示「你是說…」？</h3><p><b>我的建議：先做在需求檔案（併進 U10）。</b>做成卡片容易變成你不想要的確認卡。等軟體資料進來後，再看「max」這類模糊詞實際出現的頻率。</p></div>
+    <div class="q"><h3>什麼時候要交付給 Windows 使用者？</h3><p>B 依賴 PostgreSQL，Windows 一鍵啟動的成本是「大」，A 的 .bat 不能直接拿來用。<b>沒有明確時間前，我建議不排進路線。</b></p></div>
+    <div class="q"><h3>會不會讓協作者進後台？</h3><p>如果會，多管理員與唯讀角色（D19）要提前；如果不會，只在對外前做強制改密碼（D13）就夠。</p></div>
+  </div>
+</section>
+
+<footer>
+  <span>方法：三位子代理分別盤點評分核心（K1～K3）、使用者端與對話（K4、K5、U、C）、後台與基礎設施（A、DEV、開關總表），逐項開檔對照兩套程式碼並附行號；三份盤點中重複的項目已合併（衝突卡、影響預覽、訊號表）。</span>
+  <span>抽查驗證：B 的 <code>manualWeights</code> 整組覆蓋、後端閾值沒有範圍驗證、<code>llmCalls</code> 只被用來計數、A 的 <code>onUndoTag</code> 只刪不還原、<code>reason_snippets</code> 沒被呼叫，以上都屬實。</span>
+  <span>成本是粗估，以「你和我一起做、每版都要補自動化測試與開關」為前提。</span>
+</footer>
+
+</div>
+
+<script>
+const AREAS={S:"評分核心",U:"對話與需求檔案",W:"軟體畫像",D:"後台",F:"基礎工程"};
+const TIERS={must:"必搬",worth:"值得搬",later:"之後再說",no:"不搬"};
+// [id, tier, 名稱, 白話, 價值, 成本, 判斷, A 位置, B 現況, 依賴]
+const ITEMS=[
+["S1","must","逐分權重帳本","每一維的每一分都記錄：哪句話、哪條規則、加多少、狀態（已計入／待確認／信心過低／被開關關掉／同群組被取代／手動鎖定）。","高","中","理由、回顯卡、權重來源、五色標籤、衝突卡都要從帳本取料，是後面一半功能的地基。","weights.py:47 LedgerEntry、_contributions :501、存於 conv.system_weights.ledger","簡化版：buildWeightTrace 只記本輪有變的維度，沒有從基準累計的明細與狀態","無（第一個做）"],
+["S2","must","只鎖使用者拖的那一維","使用者手動調了「螢幕」，只固定螢幕；之後說「常玩遊戲」，性能照樣會提高。可選「鎖定後再說的需求仍能小幅加分」。","高","中","v1.0.8 現在拖一次滑桿就整組蓋掉，之後的話全部不算，這接近 bug。","weights.py:714 _resolve_locks；開關 weight.manual_lock、weight.reinforce_cap","簡化版：turn.ts 以 manualWeights 整組覆蓋，新加減分全部跳過","最好和 S1 一起做"],
+["S3","must","三段信心：計入／待確認／只記錄","模型不太確定的需求先不算分，標成黃色「待確認」，讓使用者一眼看到是系統猜的。","高","小","v1.0.8 的用途、便攜、重視項目加分完全不看信心，猜錯的需求會直接改排序。","weights.py:521-530；門檻 0.75／0.5；開關 weight.pending_show","只有模型自由建議套用 weightApprove","S1"],
+["S4","must","強度詞係數","「很在意安靜」×1.5、「安靜一點更好」×0.5。說得越強烈，加的分越多。","高","小～中","這是「懂他在意的程度」最直接的表現；係數可調、可整個關閉。","weights.py:204-207、_strength_from_text :283（用關鍵字判斷）","沒有，Requirement 沒有 strength 欄位","無；有 S1 才能顯示「×1.5」"],
+["S5","worth","同群組取最強","「常帶出門」加「通勤」不會重複加便攜分；不同類別的需求才相加。","中","小","可以避免「剪輯＋遊戲＋Premiere」把性能疊到失真。","weights.py:608 _select_groups","多個用途、軟體、卡片加分全部相加","無"],
+["S6","worth","三種上限：單訊號／單維總增減／單維最高占比","不管說了多少需求，性能都不會吃掉一半以上的權重。","中","小","三個參數都可在後台調，屬於防呆。","weights.py:539、:629、:666 水位法","只有模型建議 ±5、卡片 ±20 的上限","無"],
+["S7","worth","需求訊號表擴充＋後台可編輯","新增「場景」（出差、咖啡館、宿舍）和「偏好」（安靜、色準、長時間穩定）兩類，每一列都能單獨開關、改點數。","高","中","在 v1.0.8，「很在意安靜」「常在咖啡館」不會反映到排序。做法是擴充 B 的 WeightRules，不照抄 A 的關鍵字比對。","weights.py:89-189 SIGNAL_TABLE、routers/admin_weights.py、WeightCenterPage.tsx","簡化版：只有 5 個用途、3 段便攜、1 個重視項目加分","S4、S5"],
+["S8","later","剪輯強度係數（輕／中／重）","輕度剪輯不會被當成重度剪輯，性能權重拉得沒那麼高。","中","小","B 的剪輯強度追問卡選項已能做出近似效果；有了 S4 後可以併成一般的強度機制。","weights.py:210、:532-538","有追問卡，但沒有乘數","S4"],
+["S9","must","正規化方式可切換＋分位數當第一名","每個細項換算成 0～100 分可以選「離第一名差多少」或「贏過全庫幾 %」；並可用第 99 百分位當第一名，避免單一極端值把其他機型全壓低。","高","中","直接決定分數有沒有區分度，影響排序和理由裡「強／弱」的判斷。先搬兩種模式就好。","normalize.py:252 build_anchor、:268 normalize；開關 score.norm_mode 等 5 個","只有「離第一名」且取最大值，匯入時就算好","需改成保留原始值、載入時正規化"],
+["S10","worth","同價位期望曲線性價比","算出「這台比同價位平均高 3.2 分」，數字穩定，也講得出口。","中高","小","「這台划不划算」是消費者在意的事；目前 B 的性能價格比會隨候選變動。","scoring.py:506 value_curve、:651-675 四種模式","只有候選內 min-max，沒有文字說明","無"],
+["S11","later","性價比混入排序（α）","排序分＝產品力 ×(1−α)＋性價比 ×α。","中","小","可用來測預算敏感型使用者，但 A 預設 α＝0，先不急。","scoring.py:751 rank_score","沒有","S10"],
+["S12","worth","平手門檻＋決勝順序","差不到 0.3 分算平手；平手時先比「使用者最重視那一維」，再比價格。","中高","小","差 0.1 分時用使用者最在意的維度決勝，比用「便宜」更貼近他。","scoring.py:760-817 rank_items","只比分數、價格、id，沒有門檻","無"],
+["S13","worth","缺維度用同類保守值補","整個維度沒資料時，用同類機型的中位數補，不再把它從分母拿掉。","中高","小","現在資料越不完整的機型有時反而越占便宜，這違反「程式碼決定事實」。","scoring.py:619-628；開關 score.missing_dim_mode","缺維度直接從分母移除","無"],
+["S14","later","資料品質三態與後台資料品質頁","每個欄位標「實測／估算／缺」，連結標正常／假的／沒有，後台列出異常並可手動修正。","中","中","要等清理後的 laptops_clean.csv 接線時一起做，先確認新 CSV 有沒有估算標記欄。","normalize.py:162、data_quality.py、DataQualityPage.tsx","匯入時有欄位檢查，沒有三態","資料清理接線"],
+["S15","worth","性能細項擴充（替代跑分鏈、代理公式、容量換算）","沒有 R23 單核分數時改用其他版本的跑分；缺剪輯實測時用多核和 GPU 推算；記憶體容量換算成分數。","中","中～大","讓不同用途「看對的跑分」。要對應清理後 CSV 的英文欄名，不能照搬 A。","subweights.py:73-167 SUB_ITEMS、:362 derived_raw","只有 5 個基本細項＋7 個專項","資料清理接線、S9"],
+["S16","worth","子權重向量（含細項缺值策略）","用途和強度決定性能分裡單核、多核、GPU 各占多少；主要用途占 0.7、次要占 0.3；全庫覆蓋率低於 60% 的細項自動停用。","中高","中","「主要剪片、偶爾修圖」時子權重才會合理。B 的軟體畫像改帶需求等級即可接上。","subweights.py:558-663、:732-808；開關 subw.* 8 個","簡化版：固定細項加減 subDelta，多個軟體直接相加","S4、S15、軟體畫像結構"],
+["S17","later","分數明細補「估算／品質／細項原值」","每維記錄是否為估算值，每個細項記錄原值與百分位。","中","小","B 已有大部分明細，跟著 S14 補齊即可。","scoring.py:677-724","大致已有，缺品質與原值","S14"],
+["S18","later","其他評分小開關","尺寸適配是否算進螢幕分、持續性能算法修正、邊界候選套平手規則等。","低","小","等 S9 搬完，再依實測結果決定。","scoring.py:371-394、normalize.py:241","寫死","S9"],
+["S19","no","加法／乘法兩種合成模式","權重加減分可以用加法或乘法合成。","低","小","規格本身就推薦加法；B 已有「一次合併／逐筆調整」的新舊切換可以對照。","weights.py:641-651","已有 logic.weight_combine","—"],
+
+["U1","must","回顯卡「記下了：X → Y 權重調高」","每一輪先用一句話告訴使用者：你說的 A，我拿去做了 B（當篩選條件、調高哪些權重，或是待確認）。","高","小","讓「權重是核心」被看見，也是 B 原本排定的「B 對話表達」要做的事。只是告知，不需要按確認。","turn_query.py:223-267、user/cards/AckNote.tsx","簡化版：「這句話我聽到了」只列出標籤","最好有 S1"],
+["U2","worth","更正附註與一鍵復原","使用者改口時（預算 4 萬改 5 萬），卡片標註「不是 A 而是 B：已更新」，可以一鍵還原。","中高","小","NLU 改錯時使用者會比較安心。照 B 的做法用一個請求同時刪新值、補回舊值，不要照抄 A。","turn_query.py:251-258（A 是半成品：只刪新值、舊值沒還原）","沒有；但 POST /profile 已支援 upsert＋remove","U1"],
+["U3","must","不可能三角衝突卡","低預算、高性能、輕薄三者同時出現時，直說「很難兼顧」，讓使用者選性能優先或便攜優先，選完直接寫進權重。","高","小～中","這是「懂行的店員」最有感的一刻，也是挖掘真實需求最典型的情境。它是取捨提問，不是確認卡。","weights.py:422-478 detect_conflicts、cards/Conflict.tsx；預算 3 萬、重量 1.6 kg 門檻可調","沒有任何衝突概念","S3、S4；要先定和反問卡的優先順序"],
+["U4","must","指名查詢「X 怎麼樣／適合我嗎」","使用者問某一台，系統回答它在你的條件下排第幾，逐項打勾或打驚嘆號（預算、重量、尺寸…）。","高","中","帶著心儀機型來問是很常見的情境；回答「它排第 7，輸在重量」最能讓人覺得系統懂他。事實全由程式算出。","turn_query.py:30-52、:194；cards/Check.tsx","沒有，NLU 只有比較意圖","先做機型名稱比對"],
+["U5","must","「為什麼不是 X」","使用者問「怎麼沒推薦 X」，系統說明 X 是不符合、差一點，還是符合但排在後面，附上原因和跟第 1 名的差距。","高","小～中","使用者質疑推薦的那一刻，拿出程式算的事實就能建立信任。B 的快照與 versusOf 已備好材料。","turn_query.py:146、cards/WhyNot.tsx","沒有，但 formal／edge／out 與 ReasonCode 都有","U4（共用名稱比對與意圖）"],
+["U6","worth","「問這台」按鈕（A 的 @ 機型）","在機型卡上點「問這台」就能指名詢問；選兩台以上會直接出對比。","中","小～中","A 用拖放加 @，在手機上不好用，建議改成按鈕。","Composer.tsx refs、turn_query.py:75-78","有對比托盤，沒有指名","U4、U5"],
+["U7","must","需求檔案「拿掉這條會多 N 台」","每條硬條件旁顯示「拿掉它會多出幾台」，一眼看出是哪條把選擇卡死。","高","小","正是你要的「讓使用者在面板自己修正」。B 的 relaxOptions 已有單條模擬，抽出來就能用。","profile_view.py:185-186、ProfilePanel.tsx:209","簡化版：漏斗只顯示依序篩掉幾台","無"],
+["U8","must","每條需求顯示「→ 影響的權重」","「剪 4K 影片 → 性能 +4、散熱 +1」。","高","小～中","「權重是核心」最直接的呈現；B 交接文件也把它排在「B 對話表達」。","profile_view.py:46 item_weight_effect","沒有","最好有 S1"],
+["U9","worth","需求標籤五色狀態","已計入、待確認、被鎖定蓋過、讓出、只當篩選，各一種顏色；使用者看得出每條需求有沒有真的影響推薦。","中高","小","讓「系統聽懂了什麼、用了什麼」看得見。帳本做好後成本很低。","weights.py:817 tag_states","簡化版：只有信心顏色點","S1、S2、S3"],
+["U10","worth","低信心「我猜的」＋「你是說：A／B／C」","信心不足的需求用虛線框，下面列出同一題的其他選項，點一下就改。","中高","小～中","取代確認卡的正確做法，讓使用者在面板自己修正。只做在面板，不要做成對話卡。","profile_view.py:70 item_alternatives","簡化版：只有顏色點","無"],
+["U11","worth","行內切換「硬條件／偏好」","把「14 吋」從硬篩改成只是偏好，反過來也可以。","中高","小","B 交接文件第 2 個待決定事項（14 吋、想要華碩算哪一種）讓使用者自己切就解決了。","ProfilePanel.tsx:224-229","沒有，hard 只由 NLU 決定","無"],
+["U12","later","需求檔案摘要列與「第幾輪加的」","標題列顯示「共 6 條 · 本輪 +2」，每條標第幾輪加入。","低～中","小","B 已用需求飛入動畫標出剛變動的項目。","ProfilePanel.tsx:176-180","沒有","—"],
+["U13","worth","聽不懂時的引導卡","第一句話沒被聽懂時，給幾句可以直接點的範例句。","中","小","避免新使用者一開始就卡住。範例句沿用首屏設定。","cards/UnknownHint.tsx","只有一句「我目前還沒有對應的資料」","無"],
+["U14","worth","放寬卡「拿掉全部篩選條件」","拿掉任何單一條件都救不回來時，提供一次全部拿掉的選項。","中","小","目前 B 在這種情況會回空清單，使用者卡住。","followup.py:692-740 remove_all","沒有","無"],
+["U15","worth","首屏基礎卡顯示「剩 N 台」","預算、用途、攜帶三張首屏卡的每個選項都顯示選了會剩幾台。","中","小","首屏是你指定的重點，讓使用者一開始就看到選擇的後果。可沿用追問卡的 counts。","home.py、Home.tsx:95-96","追問卡有，首屏卡沒有","無"],
+["U16","later","追問時先給「暫時靠前」3 台","還在追問階段就先秀出目前前三名。","低","小","B 右側結果區本來就即時更新，只有手機停在對話分頁時才有差。","pipeline.py:1296","沒有","—"],
+["U17","later","點價位組標題直接設預算","在首屏點「3～4 萬」就把預算設成這個區間。","低～中","小","小便利，不急。","Home.tsx:124","沒有","—"],
+["U18","later","舊追問卡顯示「已回答 → 你的答案」","回頭看對話時知道當時選了什麼。","低","小","B 已顯示「這題已回答」。","common.tsx:28-40","簡化版","—"],
+["U19","no","「沒錯，就是這樣」確認按鈕","需求要按確認才算進分數。","—","—","本質就是確認流程，違反你「不做確認卡」的決定。","ProfilePanel.tsx:233","—","—"],
+
+["W1","worth","軟體用途卡「你主要拿它做哪種工作？」","同一套軟體分建模、渲染等用途，問清楚再決定硬體需求。","中高","小","B 一律取第一個用途；用 B 現有題庫加一張卡就能做，資料由你提供。","software_cards.py:109-143","usages[0]，ask 欄位沒用到","你的軟體用途資料"],
+["W2","later","軟體別名比對 2.0","「max」要看上下文才判斷是不是 3ds Max（遇到 Pro Max、M4 Max 不認）；後台可把詞標成「不是軟體」。","中","中","機制有價值，但 B 目前只有 3 套軟體，模糊情況很少。等你上傳軟體需求表時一起做。","software.py:241-309、:375-451","只用整串比對","你的軟體資料"],
+["W3","later","軟體消歧義卡","「你說的 max 是 3ds Max 嗎？」","中","中","容易變成確認卡。建議先做進 U10 的面板替代選項（見問題 3）。","software_cards.py:79、:211","沒有","W2、你的決定"],
+["W4","later","「哪套 3D 軟體」與渲染器卡","問 Corona／V-Ray／Redshift 等。","中","中","只對 3D 使用者有用，要有資料才有意義。","software.py:106-124、software_cards.py:98,145","沒有","W1、W2、軟體資料"],
+["W5","later","軟體官方配置與需求等級顯示","軟體卡顯示官方最低／建議配置，需求檔案顯示需求等級。","中","小","A 後端有算、前端沒畫，屬於規格寫了但沒完成。等軟體需求表進來。","software.py:1029、:1044、:1060","只有 riskText","軟體資料"],
+["W6","no","認不出的軟體由模型產生暫定畫像","模型猜一個軟體需求畫像。","低","—","B 標「尚無資料」並送進待處理，更誠實，也符合「程式決定事實」。","software.py:1077","已等效且更好","—"],
+
+["D1","must","模型呼叫明細","每一輪、每一次模型呼叫的 token、耗時、成功或失敗、錯誤訊息；可依用途、狀態、模型篩選。","高","小","測不同模型時要看成功率與延遲。資料 B 早就記了，只差頁面，投入最少、收益最大。","model_usage.py、routers/llm_admin.py:56-155","llm_calls 表已存，後台只用來計數","無"],
+["D2","must","告警（模型失敗、逾時、0 結果）","發生時自動記一筆，同一對話 10 分鐘內只記一次，後台可標成已看。","高","小～中","真人測試時模型靜悄悄失敗、退回規則，你不會知道。分數不一致告警不需要（B 不會發生）。","alerts.py:30-241、AlertList.tsx","只有兩個總數","無"],
+["D3","must","對話紀錄篩選與分頁","依時間、結果類型（給了建議／還在追問／0 結果／沒聽懂）、差評、標籤、用途、預算篩選，可以翻頁。","高","中","真人測試一多，要能快速找到「0 結果」「差評」的對話。先做 6～8 個常用條件。","admin_analytics.py:165-360、ConversationsPage.tsx","只能搜標題、最多 200 筆","D4"],
+["D4","must","對話標籤","替對話貼「受試者 A」「學生組」「訪談 3」，之後用標籤篩選。","高","小","找真實用戶測試時，要把對話和受試者、實驗組別對起來。","api.py:2472-2485","沒有","無"],
+["D5","must","待處理擴充","系統自動整理該處理的事：差評、聽不懂的詞、0 結果、一直改需求；側欄顯示數字。","高","中","等於「下一步該調什麼」的清單。沿用 B「寫入時就記錄」的做法。","admin_analytics.py:555-770、PendingPage.tsx","只有「聽不懂的詞」一類","D3"],
+["D6","must","閾值範圍定義與後端驗證","每個數值設定都有最小值、最大值，後端拒絕不合理的值。範圍定義放在前後端共用的 contracts。","高","小～中","你會一直開開關關、改數字，打錯時後端要擋下來。不照抄 A 的 286 個開關，每個開關跟著對應功能一起搬。","flags/__init__.py:41-347、_ranges.py","後端 thresholds 是 z.record(z.number())，沒有範圍檢查","無（之後每個新開關都照這個規格）"],
+["D7","worth","每輪權重快照","回放某一輪時，看到前 5 名各維度分數與貢獻。","中","小","調權重時看得出「為什麼是它第一」。B 存了權重和前幾名，用 engine 重算即可。","TracePage.tsx、trace.weight_snapshot","有權重與名稱，沒有各維貢獻","無"],
+["D8","worth","對話詳情補回饋與「點了哪個選項」","回看對話時看到使用者在卡片上點了什麼、給了什麼回饋。","中","小","B 詳情頁已有 askTrace，只缺這兩點。","admin_analytics.py:425-570","沒有 feedback","無"],
+["D9","worth","需求洞察：用途×預算熱力圖與供需缺口","看出哪種用途、哪個預算的人最多，哪一格常常 0 結果，哪些機型只差在價格。","高","中","直接指出哪一類使用者得不到好推薦（例如「要買 Mac 會得到 0 台」）。","admin_analytics.py:770-825、InsightsPage.tsx","沒有","D3 的分桶"],
+["D10","worth","備用模型","主模型失敗或逾時時先換另一家，還是不行才退回規則。","中","小～中","減少真人測試時「突然變笨」的情況。搭配 D2 才看得到主模型失敗次數。","llm.py:160-180、:266-330","失敗就直接退回規則","D2"],
+["D11","worth","模型單價與成本試算","填好各家單價，就能估「過去 30 天改用 X 家要花多少」。","中","小","選模型時的參考；token 已經有記。","llm.py:182 call_cost、llm_admin.py:156-226","沒有","D1"],
+["D12","worth","提示詞段落開關與未知佔位符警告","提示詞裡用【段落】包起來的部分可以用開關關掉，不用改全文。","中","小","很符合「每個細節都要有開關」，例如測要不要叫模型說理由。降級機制不搬（B 不會當掉）。","prompt_guard.py","只檢查必要佔位符","D6"],
+["D13","worth","強制改密碼","管理員第一次登入要先改掉預設密碼。","低（上線前必要）","小","對外給真實使用者之前要完成，並刪掉 admin@test.com。","api.py:579-590、admin_auth.py","沒有","無"],
+["D14","worth","改動影響預覽（需你確認）","改權重或閾值前，先用最近 20 輪對話試算，看幾輪第一名換人。不寫入資料庫。","高","中","參數一多就需要。它很接近你否決過的「回歸」流程，但沒有草稿與發佈，請見問題 1。","admin_weights.py:465 preview_runs、:527","沒有；simulateProfile 可重用","S1～S7 做完後效益最大"],
+["D15","worth","三個後台小補強","每日模型呼叫上限、模型逾時秒數改成後台可調；稽核紀錄頁顯示修改前後差異。","中","小","都是幾十行的改動。B 目前上限只能用環境變數改、逾時寫死 8／10 秒。","A 在 assignments 可設逾時","上限在環境變數；before／after 已存但沒顯示","D6"],
+["D16","later","每一步耗時時間軸","一輪拆成理解、篩選、選卡、寫回覆，各花幾毫秒。","中","小～中","先用 D1 的模型耗時就能看出大部分瓶頸；偏軌跡，你定為低優先。","trace_server.py、TracePage.tsx:179-270","只有整輪總毫秒數","—"],
+["D17","later","進階洞察：權重分布、價格敏感度","使用者把各維權重調成什麼樣子；提高預算的人最後有沒有拿到建議。","中","小～中","權重分布對校準預設權重有用，可當 D9 的延伸。","admin_analytics.py:826-925","沒有","D9、D18"],
+["D18","later","使用者行為事件","記下點對比、點購買、展開詳情等動作。","中～高","小～中","等 D9 做好、確定要看哪些行為再加。注意 A 這支端點不用登入就能寫庫，搬的時候要補驗證。","api.py:878 POST /events","沒有","D9"],
+["D19","later","多管理員與唯讀角色","邀請助手進後台，只給看、不給改的權限。","中","中","只在你找協作者時才需要，見問題 5。","api.py:2298-2392","只有 user／admin","D13"],
+["D20","later","Windows 一鍵啟動","雙擊 .bat 自動安裝環境並啟動。","視交付需求","大","B 依賴 PostgreSQL，A 的 .bat 不能直接用；可考慮 Docker 或 PGlite。見問題 4。","一鍵啟動系統.bat","只在 Mac 跑過","你的決定"],
+["D21","no","前後端分數一致性檢查","比對前端自己算的分數和後端是否一樣。","低","—","B 前端不自己算分，這個問題不存在。","score_check.py","架構已消除","—"],
+["D22","no","規則表 R001～R030 與手寫接線狀態","後台列出每條規則以及它有沒有被程式用到。","低～中","大","A 的接線表是手寫的，可能已經不準；B 的選題架構不同。改成「每個開關都要有一支開關測試」自動檢查。","rules_engine.py:373-420","以 rule.* 開關＋閾值代替","—"],
+["D23","no","資料版本發佈與回滾","每次發佈保存一份 CSV，可回到舊版。","低","—","這就是草稿→發佈→回滾流程，你已決定版本另外管理。重新匯入舊 CSV 即可。","api.py:2083-2208","可重新匯入","—"],
+["D24","no","用戶頁、查看紀錄、全域搜尋","後台列出使用者帳號、管理員查看紀錄、跨頁搜尋。","低","—","目前測試用不到；A 的全域搜尋也只是前綴跳轉。","api.py:1000、:2393、:1680","—","—"],
+
+["F1","must","前端錯誤邊界","任何一張卡渲染出錯時，只有那一塊顯示錯誤，不會整頁白屏。","高","小","基礎工程，半天內可完成；舊報告也列為 B 第一優先。","ErrorBoundary.tsx","沒有","無"],
+["F2","worth","手機版細節","輸入框改 16px（iPhone 聚焦不再自動放大）、「機型 N」台數徽章、處理中提示點、底部安全區。","中","小","手機使用者看不到右側的變化。16px 最優先；分頁列在頂部或底部可以做成開關。","user-u1.css:94-125、MobileTabs.tsx","單一斷點、15px 字級","無"],
+];
+
+const ROAD=[
+["v1.0.9","地基補強與兩個立即可用的工具","先補舊報告提到的 B 缺口，再加兩個成本很小、測試立刻用得到的後台工具。",["F1","D6","D15","F2","D1","D4"]],
+["v1.0.10","權重帳本","把權重這條鏈做完整：每一分有來源、猜的先不算、說得越強越重、拖一個滑桿只鎖一維。",["S1","S3","S4","S2"]],
+["v1.0.11","讓使用者看見權重","和 B 原本排定的「B 對話表達」「D 需求檔案」同一批做，全部用 v1.0.10 的帳本。",["U1","U8","U7","U9","U11","U10","U2"]],
+["v1.0.12","排序品質","都是純函式，A 有黃金測試可以對答案。",["S9","S12","S10","S13","S5","S6"]],
+["v1.0.13","懂行的店員","需要新的 NLU 意圖與提示詞，要用真實模型測過。",["U3","U4","U5","U6","U13","U14","U15"]],
+["v1.0.14","真人測試用的後台","在開始找真實用戶之前完成。",["D3","D2","D5","D8","D7"]],
+["v1.0.15","調參與模型","權重參數多了以後，預覽與訊號表的效益最大。",["S7","D14","D10","D11","D12","D13"]],
+["v1.0.16","軟體與性能細項","和清理後 CSV 接線、你上傳軟體需求表一起做。",["W1","S16","S15"]],
+["v1.0.17","需求洞察","有一定數量的真實對話後才有意義。",["D9"]],
+];
+
+const byId=Object.fromEntries(ITEMS.map(x=>[x[0],x]));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=s=>esc(s).replace(/([A-Za-z_][\w.\/]*\.(?:py|tsx?|bat|csv)(?::[\d,\-]+)?)/g,"<code>$1</code>");
+
+// 總帳
+const counts={must:0,worth:0,later:0,no:0};ITEMS.forEach(x=>counts[x[1]]++);
+const total=ITEMS.length;
+const colors={must:"var(--must)",worth:"var(--worth)",later:"var(--later)",no:"var(--no)"};
+const hint={must:"價值高、少了會影響推薦或測試",worth:"有明確價值，排在必搬之後",later:"等資料、等決定，或價值較低",no:"違反方向，或 B 已更好"};
+document.getElementById("ledger").innerHTML=Object.keys(TIERS).map(t=>`<div class="c-${t}"><span class="t">${TIERS[t]}</span><b>${counts[t]}</b><span>${hint[t]}</span></div>`).join("");
+document.getElementById("bar").innerHTML=Object.keys(TIERS).map(t=>`<i style="width:${counts[t]/total*100}%;background:${colors[t]}"></i>`).join("");
+
+// 篩選
+let fT="all",fA="all";
+function chips(el,opts,get,set){
+  const box=document.getElementById(el);
+  opts.forEach(([v,l])=>{const b=document.createElement("button");b.className="chip";b.type="button";b.id=`${el}-${v}`;b.textContent=l;b.setAttribute("aria-pressed",get()===v);b.onclick=()=>{set(v);box.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));render()};box.insertBefore(b,box.querySelector(".count"));});
+}
+chips("f-tier",[["all",`全部 ${total}`],...Object.keys(TIERS).map(t=>[t,`${TIERS[t]} ${counts[t]}`])],()=>fT,v=>fT=v);
+chips("f-area",[["all","全部"],...Object.entries(AREAS)],()=>fA,v=>fA=v);
+
+const order={must:0,worth:1,later:2,no:3};
+function render(){
+  const rows=ITEMS.filter(x=>(fT==="all"||x[1]===fT)&&(fA==="all"||x[0][0]===fA))
+    .sort((a,b)=>order[a[1]]-order[b[1]]);
+  document.getElementById("count").textContent=`顯示 ${rows.length} 項`;
+  document.getElementById("list").innerHTML=rows.map(([id,t,n,d,v,c,why,a,b,dep])=>{
+    const tierTag=id==="D14"?`<span class="tag t-ask">值得搬・需你確認</span>`:`<span class="tag t-${t}">${TIERS[t]}</span>`;
+    return `<details class="item" id="item-${id}"><summary>
+      <span class="id">${id}</span><span class="nm">${esc(n)}</span>
+      <span class="side">${tierTag}<span class="meters">價值 <em>${esc(v)}</em>　成本 <em>${esc(c)}</em></span></span>
+      <span class="pl">${esc(d)}</span>
+      <span class="why">${esc(why)}</span></summary>
+      <dl class="body"><dt>區塊</dt><dd>${AREAS[id[0]]}</dd><dt>A 的位置</dt><dd>${fmt(a)}</dd><dt>B 的現況</dt><dd>${fmt(b)}</dd><dt>依賴</dt><dd>${esc(dep)}</dd></dl></details>`;
+  }).join("")||`<p>這個組合沒有項目。</p>`;
+}
+render();
+
+// 路線
+document.getElementById("road").innerHTML=ROAD.map(([v,h,p,ids])=>`<div class="step"><span class="v">${v}</span><h3>${esc(h)}</h3><p>${esc(p)}</p><div class="ids">${ids.map(i=>`<span title="${esc(byId[i][2])}">${i} ${esc(byId[i][2])}</span>`).join("")}</div></div>`).join("")
+ +`<div class="step"><span class="v">之後</span><h3>等條件成熟再做</h3><p>「之後再說」的 18 項，等軟體資料、清理後的資料或你的決定到位時，再挑出來排版。</p></div>`;
+</script>
+</body>
+</html>
