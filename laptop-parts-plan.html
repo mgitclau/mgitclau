@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>系統各部分優化清單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 版面：一張張「零件卡」，左上看 v0.0.5 的優缺點，右下看 v1.0.9 現況與我的做法；頂部固定列是你選的下一步。 */
+:root{
+  --bg:#f2f4f3; --card:#ffffff; --ink:#1b2422; --mute:#5c6a65; --line:#d9e0dd;
+  --good:#17785b; --good-bg:#e2f2eb; --bad:#b3261e; --bad-bg:#fcebea;
+  --now:#2456b8; --now-bg:#e6edfa; --plan:#8a4b06; --plan-bg:#fff3e0;
+  --pick:#2456b8; --done:#6b7480; --done-bg:#eceff2;
+  --f:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --card:#1a2220; --ink:#e3ebe8; --mute:#9aa9a3; --line:#2c3734;
+  --good:#5fcfa6; --good-bg:#15302a; --bad:#ff8f86; --bad-bg:#3a1e1c; --now:#8db2f5; --now-bg:#1a2740;
+  --plan:#f2b766; --plan-bg:#33261a; --pick:#8db2f5; --done:#aab4be; --done-bg:#252d33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --card:#1a2220; --ink:#e3ebe8; --mute:#9aa9a3; --line:#2c3734;
+  --good:#5fcfa6; --good-bg:#15302a; --bad:#ff8f86; --bad-bg:#3a1e1c; --now:#8db2f5; --now-bg:#1a2740;
+  --plan:#f2b766; --plan-bg:#33261a; --pick:#8db2f5; --done:#aab4be; --done-bg:#252d33; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 var(--f)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
+.wrap{max-width:1040px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2{margin:0;line-height:1.35;text-wrap:balance}
+h1{font-size:clamp(24px,4.4vw,34px);font-weight:900}
+h2{font-size:18px;font-weight:900}
+p{margin:0}
+.sub{color:var(--mute)}
+.how{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:6px}
+.how ol{margin:0;padding-left:1.3em}
+
+/* 頂部固定：你選的下一步 */
+.next{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border:2px solid var(--pick);border-radius:12px;padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.next .lab{font-size:12.5px;font-weight:700;color:var(--pick);white-space:nowrap}
+.next .what{flex:1 1 260px;min-width:0;font-size:14.5px}
+.next .empty{color:var(--mute)}
+.btn{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--pick)}
+.btn-main{background:var(--pick);border-color:var(--pick);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--pick);outline-offset:2px}
+#copyText{width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--ink)}
+
+/* 篩選 */
+.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters label{font-size:13px;color:var(--mute);display:inline-flex;gap:6px;align-items:center;margin-left:6px}
+.count{margin-left:auto;font-size:13px;color:var(--mute)}
+
+/* 零件卡 */
+.list{display:flex;flex-direction:column;gap:12px}
+.part{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;scroll-margin-top:90px}
+.part.on{border:2px solid var(--pick);box-shadow:0 0 0 4px var(--now-bg)}
+.part.isdone{opacity:.75}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.head h2{flex:1 1 auto;min-width:0}
+.num{font-weight:900;color:var(--mute);margin-right:4px;font-variant-numeric:tabular-nums}
+.tag{font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;white-space:nowrap;background:var(--done-bg);color:var(--done)}
+.tag.rec{background:var(--bad-bg);color:var(--bad)}
+.tag.done{background:var(--good-bg);color:var(--good)}
+.tag.size{background:var(--now-bg);color:var(--now)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border-radius:10px;padding:10px 12px;min-width:0}
+.box h3{margin:0 0 4px;font-size:13px;letter-spacing:.04em}
+.box ul{margin:0;padding-left:1.15em;font-size:14px}
+.box li+li{margin-top:2px}
+.box p{font-size:14px}
+.g{background:var(--good-bg)} .g h3{color:var(--good)}
+.b{background:var(--bad-bg)} .b h3{color:var(--bad)}
+.n{background:var(--now-bg)} .n h3{color:var(--now)}
+.p{background:var(--plan-bg)} .p h3{color:var(--plan)}
+.foot{display:flex;justify-content:flex-end}
+@media (max-width:700px){.grid{grid-template-columns:1fr}.part{padding:14px}}
+footer{font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <span class="sub">AI 筆電選購助手 · 2026-11-04 · 目前版本 v1.0.9</span>
+    <h1>系統各部分優化清單</h1>
+    <p class="sub">系統拆成 24 個部分。每個部分寫出 v0.0.5 的優點和缺點、v1.0.9 現在的樣子，以及我打算怎麼改 v1.0.9。</p>
+  </header>
+
+  <section class="how" aria-label="使用方法">
+    <b>怎麼用</b>
+    <ol>
+      <li>往下看每個部分的四塊：<span style="color:var(--good)">v0.0.5 優點</span>、<span style="color:var(--bad)">v0.0.5 缺點</span>、<span style="color:var(--now)">v1.0.9 現在</span>、<span style="color:var(--plan)">我打算優化</span>。</li>
+      <li>挑一個你想先做的，按「選為下一步」。紅色「建議先做」是我的推薦，你可以選別的。</li>
+      <li>按最上面的「複製指令」，貼回對話給我，我就從那一部分開工（開工前仍會先跟你確認細節）。</li>
+    </ol>
+  </section>
+
+  <div class="next" id="next" aria-live="polite">
+    <span class="lab">你選的下一步</span>
+    <span class="what" id="nextWhat"><span class="empty">還沒選。往下看，在想做的部分按「選為下一步」。</span></span>
+    <button type="button" class="btn btn-main" id="copyBtn" disabled>複製指令</button>
+    <button type="button" class="btn" id="clearBtn" disabled>取消選擇</button>
+    <input id="copyText" readonly hidden aria-label="指令文字">
+  </div>
+
+  <div class="filters" role="group" aria-label="篩選">
+    <span id="areaChips" style="display:contents"></span>
+    <label><input type="checkbox" id="hideDone">隱藏已完成</label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <footer>內容依據：三份程式碼盤點（評分核心、使用者端與對話、後台）、後台逐頁截圖比對、v1.0.8 功能搬遷評估，以及 v1.0.9 的實作結果。你的選擇只存在這台電腦的瀏覽器裡。</footer>
+</div>
+
+<script>
+const AREAS=["評分核心","對話與使用者端","後台","基礎工程"];
+// status: rec＝建議先做、later＝之後、done＝已完成
+const PARTS=[
+{n:1,name:"權重系統",area:"評分核心",size:"中",status:"rec",
+ good:["逐分權重帳本：每一分都記下是哪句話、哪條規則加的，還分成已計入、待確認、被鎖定等狀態","三段信心：模型不太確定的需求先不算分，標成黃色「待確認」","強度詞係數：「很在意」×1.5、「偶爾」×0.5","手動調權重只鎖拖的那一維，之後說的新需求照樣會影響其他維度"],
+ bad:["模型直接判斷強度的功能（parse_llm_signals）寫了但沒接上，實際是用關鍵字猜","否定句只用在衝突判斷，「效能不重要」仍可能加分"],
+ now:"每輪從需求檔案重算權重的骨架是對的，但有兩個缺口：使用者拖過一次滑桿，之後說的話就完全不影響排序（後台看得到「未套用：用戶已手動設定權重」）；用途、便攜帶來的加分也不看信心。",
+ plan:"新增權重帳本，記錄每一分的來源與狀態。加上「待確認」門檻與強度係數（很在意／一般／偶爾，可在後台調）。手動調權重改成只鎖拖的那一維。權重面板顯示「+5 來自『剪 4K 影片』」。每項都有開關。"},
+{n:2,name:"需求訊號表",area:"評分核心",size:"中",status:"later",
+ good:["13 種訊號 × 7 個維度的格子表，後台直接改點數","有場景（咖啡館、宿舍、出差）和偏好（要安靜、色準、長時間穩定）","每一列都能單獨開關","同一群組只取最強的一筆，另有三種上限，避免權重疊加失真"],
+ bad:["用關鍵字比對原話，換個說法就抓不到"],
+ now:"只有 5 個用途、3 段便攜、1 個「重視某項」加分。「很在意安靜」「常在咖啡館」不會影響排序。",
+ plan:"把 B 的「用途對權重的影響」表擴充成需求訊號表，加入場景和偏好兩類，每列前面加開關。改由模型判斷屬於哪個訊號，不照抄 A 的關鍵字。三種上限放在表下方。"},
+{n:3,name:"分數計算",area:"評分核心",size:"中",status:"later",
+ good:["三種正規化方式可切換，並可用第 99 百分位當第一名，避免單一極端值壓低其他機型","平手門檻 0.3 分；平手時先比「使用者最重視那一維」","同價位期望曲線性價比：「比同價位平均高 3.2 分」","缺整個維度時用同類機型的中位數補值"],
+ bad:["選項很多，有些小開關的效果還沒用真實資料驗證"],
+ now:"只有「離第一名差多少」一種算法；平手時比價格和編號；缺維度時直接從分母拿掉，資料少的機型反而占便宜。",
+ plan:"先做兩件小事：平手門檻＋依使用者最重視的維度決勝、缺維度用同類保守值補。再加「百分位」正規化，可以和現行算法切換對照。性價比改成同價位期望差。"},
+{n:4,name:"高級權重（性能細項）",area:"評分核心",size:"中～大",status:"later",
+ good:["依用途與強度決定單核、多核、GPU 各占多少（子權重向量）","主要用途 0.7、次要 0.3；輕中重度用不同比例混合","替代跑分鏈與代理公式（缺剪輯實測時用多核＋GPU 推算）","後台有每種軟體工作的細項占比預覽表"],
+ bad:["第二批細項（NPU、HDR 等）寫好了但預設關閉，也沒有計入性能分"],
+ now:"固定 5 個細項，軟體只能加減分，多套軟體直接相加，沒有主次之分。",
+ plan:"等清理後的 CSV 接上、你上傳軟體需求表時一起做：軟體畫像改帶 0～3 需求等級，用換算表產生子權重，加主次占比。後台加細項占比預覽表。"},
+{n:5,name:"需求檔案（面板）",area:"對話與使用者端",size:"小～中",status:"later",
+ good:["每條硬條件旁顯示「拿掉這條會多 N 台」","每條需求顯示影響了哪個權重（剪 4K → 性能 +4）","可以在面板上把硬條件改成偏好，反過來也行","低信心的需求顯示「你是說：A／B／C」，點一下就改"],
+ bad:["「沒錯，就是這樣」按鈕本質上是確認卡，和你的決定相反"],
+ now:"有信心顏色點，也有依序篩掉幾台的漏斗，但看不出是哪一條把選擇卡死，也看不出每條需求影響了哪個權重。",
+ plan:"加「拿掉會多 N 台」（重用現有的放寬模擬）、「→ 影響的權重」、硬條件／偏好切換、低信心替代選項。不做確認按鈕。每項都有開關。"},
+{n:6,name:"對話回應（回顯與更正）",area:"對話與使用者端",size:"小",status:"later",
+ good:["每輪先說「記下了：『常帶出門』→ 便攜權重調高」","使用者改口時標出「不是 4 萬而是 5 萬：已更新」"],
+ bad:["「復原」只做了一半：刪掉新值，但舊值沒有還原"],
+ now:"「這句話我聽到了」只列出標籤，沒有說系統拿它做了什麼。",
+ plan:"回顯卡說明每條需求變成了篩選、調了哪些權重，或是待確認。更正時附「復原」按鈕，用一個請求同時刪除新值、補回舊值。"},
+{n:7,name:"懂行店員（衝突與指名查詢）",area:"對話與使用者端",size:"中",status:"later",
+ good:["不可能三角：同時要低預算、高性能、輕薄時，直接說很難兼顧，讓使用者選方向","「X 怎麼樣」：回答那一台在你的條件下排第幾、哪裡不符合","「為什麼不是 X」：說明是不符合、差一點，還是排在後面","@ 兩台直接比較"],
+ bad:["@ 用拖放操作，手機上不好用"],
+ now:"都沒有。不過 B 的快照已經有正式、邊界、排除三組資料和排除原因，材料都在。",
+ plan:"先做不可能三角卡（選了就寫進權重）。再做機型名稱比對，加上「X 怎麼樣」「為什麼不是 X」兩種回答。機型卡加「問這台」按鈕，取代 @。"},
+{n:8,name:"推薦理由",area:"對話與使用者端",size:"小",status:"later",
+ good:["理由從帳本產生，每一句都說得出來源"],
+ bad:["「引用軟體畫像」的理由片段寫了，但從來沒被呼叫"],
+ now:"B 的理由產生器比 A 好：為什麼是它、你要接受的、和第 2 名比、權重為什麼變，數字都由程式算，模型不能自己加。",
+ plan:"保留 B 的做法。帳本做好後，把「權重為什麼變」改成直接引用帳本的原話。"},
+{n:9,name:"首頁",area:"對話與使用者端",size:"小",status:"later",
+ good:["基礎卡的每個選項都顯示「選了剩 N 台」","第一句話聽不懂時給可點的範例句","點價位組標題就直接設定預算"],
+ bad:["常見問題要逐句設定直接送出或填入，太細"],
+ now:"標題、3 句範例、勾選基礎卡都能在後台改，比 A 直觀；但首頁卡沒有「剩幾台」，聽不懂時只回一句話。",
+ plan:"首頁基礎卡加「剩 N 台」（沿用追問卡的算法），加「聽不懂」引導卡並附範例句。"},
+{n:10,name:"手機版",area:"對話與使用者端",size:"小",status:"later",
+ good:["分頁列在底部，有「機型 N」台數徽章","處理中時對話分頁會亮一個點","有處理 iPhone 底部安全區"],
+ bad:["後台最小寬度 1,280px，手機完全不能用"],
+ now:"分頁列在頂部；輸入框 15px，iPhone 聚焦時畫面會自動放大；沒有台數徽章。",
+ plan:"輸入框改成 16px；加台數徽章與處理中提示點；處理安全區。分頁列放頂部或底部做成開關。"},
+{n:11,name:"軟體畫像庫",area:"後台",size:"中",status:"rec",
+ good:["左邊清單、右邊編輯，切換軟體不用跳頁","別名表可選「明確／模糊」，模糊的要有上下文（max 遇到 Pro Max 不算）","官方需求是小表格（最低／建議 × 記憶體／顯存／硬碟），附官網與核實日期","工作類型用下拉選需求等級，跑分項目用打勾"],
+ bad:["13 套軟體的等級大多標「待核實」"],
+ now:"列表清楚，但用途、門檻和權重要在一大塊 JSON 文字框裡改，漏一個逗號就存不了。你之後要自己輸入大量軟體資料，這是最大的障礙。",
+ plan:"把 JSON 框改成表單：每個用途一張小卡，裡面有名稱、硬門檻、風險門檻、七維加減分格子、細項打勾；別名改成可增刪的列表。模糊別名等軟體表進來時再加。"},
+{n:12,name:"規則",area:"後台",size:"小",status:"later",
+ good:["每條規則用白話寫「什麼情況 → 系統怎麼做」","狀態徽章：已生效、未實作、固定行為，一眼看出哪些真的有用"],
+ bad:["「接線狀態」是手寫的對照表，可能早就不準","規則表和 B 的選題架構不同，搬不過來"],
+ now:"規則都做成功能開關加閾值，沒有「這個開關真的有作用嗎」的標示。",
+ plan:"不搬規則表。在功能開關頁每個開關旁加「已接線」小標，由自動測試產生，不用人工維護。"},
+{n:13,name:"卡片管理（追問卡）",area:"後台",size:"小",status:"later",
+ good:["列表有「7 天出現次數」「7 天點選率」，看得出哪張卡沒人點","優先級可以直接在列表上改","依對話流程分頁：基礎、追問、衝突、推薦"],
+ bad:["編輯頁比 B 簡單，看不到選了剩幾台"],
+ now:"B 的編輯頁比 A 好：有出題條件、選項加減分、「選了剩 N 台」，設定錯的選項會標紅或黃。缺的是上線後卡片表現如何。",
+ plan:"保留 B 的編輯頁。列表加三欄：7 天出現、7 天點選率、最常被選的選項；優先度可以直接在列表上改。"},
+{n:14,name:"功能開關",area:"後台",size:"小",status:"later",
+ good:["每個開關都寫「開：…；關：…」，知道關掉會看到什麼","數值旁標範圍，超出範圍存不進去","有「恢復預設」"],
+ bad:["286 個開關一長頁，很難找"],
+ now:"三欄緊湊版面、底部浮動儲存列，比 A 好找。但說明只有一句；後端也不檢查數值範圍，打錯數字照樣存進去。",
+ plan:"每個開關加「關掉時：…」第二行，加「恢復預設」按鈕。數值範圍寫在前後端共用的定義裡，前端顯示，後端也檢查。"},
+{n:15,name:"權重設定頁",area:"後台",size:"中",status:"later",
+ good:["6 個分頁籤，每頁都不長","每頁底部有「預覽影響」：用最近 20 輪試算，看幾輪第一名換人，不寫入資料庫"],
+ bad:["參數非常多，很多標「待校準」"],
+ now:"格子編輯直觀，「總和 100／100」綠標很好，但全部擠在一長頁。",
+ plan:"改成分頁籤：權重規則｜閾值｜分數設定。和第 2 部分的訊號表一起做。「預覽影響」要先請你確認不算你否決過的回歸流程。"},
+{n:16,name:"對話紀錄與詳情",area:"後台",size:"中",status:"done",
+ good:["列表有結果徽章、第一推薦、篩選","詳情左右兩欄、逐輪分頁、標籤按鈕"],
+ bad:["沒有網址路由，重新整理就跳回首頁"],
+ now:"v1.0.9 已完成：結果徽章、最後推薦、回饋、標籤、篩選、分頁；左邊聊天重現、右邊逐輪分頁、模型呼叫明細、快捷標籤，都有開關。",
+ plan:"已完成。等你試用後再依意見微調。"},
+{n:17,name:"待處理",area:"後台",size:"中",status:"rec",
+ good:["分頁籤附數量：差評、聽不懂的詞、0 結果、一直改需求","每筆有原話和一句診斷","按鈕：看對話、建軟體草稿、處理完；側欄有紅色數字徽章"],
+ bad:["每次讀取都重算一次，資料一多會變慢"],
+ now:"只收「系統沒資料的詞」一類，沒有原話，也不能跳到對話。",
+ plan:"加三類：差評、0 結果、模型失敗或逾時（取代另開告警頁）。每筆附原話、診斷、「看對話」按鈕；聽不懂的詞加「建軟體草稿」。側欄加數字徽章。照 B 的方式在寫入時記錄。"},
+{n:18,name:"模型與供應商",area:"後台",size:"小～中",status:"later",
+ good:["「現在誰在幹活」：理解需求、撰寫回覆各用哪個模型","備用模型與逾時秒數","用量表：呼叫數、平均、P95、錯誤率、token","逐次呼叫明細可篩選、可分頁"],
+ bad:["金鑰明文儲存（B 已加密，這點不搬）"],
+ now:"供應商表乾淨，有 9 家內建、測試連線、金鑰加密，比 A 好。但工作台寫「模型失敗 29 次」卻點不進去看。",
+ plan:"保留供應商表，下方加「近 7 天用量」小表和「逐次呼叫明細」（可篩失敗、可點到對話）。編輯表單加「備用模型」和「逾時秒數」。單價和成本試算之後再做。"},
+{n:19,name:"需求洞察",area:"後台",size:"中",status:"later",
+ good:["用途 × 預算熱力圖，點格子跳到那批對話","每一維最後權重的分布，可以拿來校準預設權重","沒認出的詞、提到的軟體"],
+ bad:["分類有問題：說了「剪 4K」「3ds Max」的對話全被歸到「沒說用途」"],
+ now:"沒有這頁。",
+ plan:"等累積一批真實對話後，做精簡版三塊：熱力圖、權重分布、提到的軟體。分類從最後一輪的需求檔案取，不照抄 A。"},
+{n:20,name:"工作台（後台首頁）",area:"後台",size:"中",status:"later",
+ good:["1／7／30 天切換","「用戶走到哪一步」漏斗，每一條可點到對話","最近對話列表"],
+ bad:["數字多，第一眼不知道該看哪個"],
+ now:"10 個數字卡，不能點，也沒有時間範圍。你先前決定後台首頁之後再做。",
+ plan:"之後做：時間切換、漏斗（每條可點）、數字卡可點，例如「模型失敗」直接跳到篩好的明細。"},
+{n:21,name:"機型與資料品質",area:"後台",size:"小",status:"later",
+ good:["品質摘要表：每個欄位有幾台實測、估算、缺值，填補過半用紅字","異常清單：例如沒有 NVIDIA 顯卡卻有 Octane 分數"],
+ bad:["資料版本發佈與回滾屬於你否決的草稿發佈流程"],
+ now:"列表上可以直接改價、上下架，CSV 先檢查再寫入，日常維護比 A 順手。沒有品質資訊。",
+ plan:"清理後的 CSV 接上時，在機型頁最上面加品質摘要小表。不做版本回滾。"},
+{n:22,name:"管理員與權限",area:"後台",size:"小～中",status:"later",
+ good:["第一次登入強制改密碼","可以新增唯讀觀察員"],
+ bad:["登入用 JWT，無法撤銷，而且預設密鑰沒有檢查"],
+ now:"只有一個管理員角色，不能改密碼；B 的登入狀態存在伺服器端，比 A 安全。",
+ plan:"對外給真實使用者用之前，先做強制改密碼並刪掉 admin@test.com。找協作者時再加唯讀角色。"},
+{n:23,name:"穩定性",area:"基礎工程",size:"小",status:"later",
+ good:["有錯誤邊界：一張卡壞掉不會整頁白屏"],
+ bad:["同一段對話沒有併發保護","updated_at 從不更新，對話 30 分鐘後會被自動結束"],
+ now:"前端沒有錯誤邊界；啟動時不檢查資料庫有沒有升級；一個動畫瀏覽器測試偶發失敗（3 次 1 次）。",
+ plan:"加錯誤邊界；啟動時檢查 migration，沒跑就提示先執行 pnpm setup；修好偶發失敗的動畫測試；回應瘦身（只替前 10 名產生理由）。"},
+{n:24,name:"啟動與部署",area:"基礎工程",size:"大",status:"later",
+ good:["Windows 一鍵啟動：自動安裝環境、下載 PostgreSQL、處理中文路徑"],
+ bad:["要同時維護 Python 和 Node 兩套環境"],
+ now:"只在 Mac 跑過，需要 pnpm 和 Homebrew 裝的 PostgreSQL。",
+ plan:"等你決定要交付給 Windows 使用者時再做，可以考慮 Docker 或內嵌式資料庫，A 的 .bat 不能直接拿來用。"},
+];
+
+const STATUS={rec:["建議先做","tag rec"],later:["之後","tag"],done:["已完成","tag done"]};
+const KEY="laptop-parts-next";
+const store={get(){try{return localStorage.getItem(KEY)}catch{return null}},set(v){try{v?localStorage.setItem(KEY,v):localStorage.removeItem(KEY)}catch{}}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let area="全部", picked=Number(store.get())||null;
+if(!PARTS.some(p=>p.n===picked&&p.status!=="done")) picked=null;
+
+const chipBox=document.getElementById("areaChips");
+["全部",...AREAS].forEach(a=>{const b=document.createElement("button");b.type="button";b.className="chip";b.id="area-"+a;b.textContent=a;b.onclick=()=>{area=a;render()};chipBox.appendChild(b)});
+document.getElementById("hideDone").onchange=render;
+
+function command(p){return `下一步請做：${p.n}. ${p.name} — ${p.plan}`}
+function renderNext(){
+  const p=PARTS.find(x=>x.n===picked);
+  const what=document.getElementById("nextWhat"),copy=document.getElementById("copyBtn"),clear=document.getElementById("clearBtn"),txt=document.getElementById("copyText");
+  if(!p){what.innerHTML='<span class="empty">還沒選。往下看，在想做的部分按「選為下一步」。</span>';copy.disabled=clear.disabled=true;txt.hidden=true;return}
+  what.innerHTML=`<b>${p.n}. ${esc(p.name)}</b>　<span class="sub">${esc(p.plan.slice(0,60))}${p.plan.length>60?"…":""}</span>`;
+  copy.disabled=clear.disabled=false;txt.value=command(p);
+}
+function render(){
+  chipBox.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.textContent===area));
+  const hide=document.getElementById("hideDone").checked;
+  const rows=PARTS.filter(p=>(area==="全部"||p.area===area)&&!(hide&&p.status==="done"));
+  document.getElementById("count").textContent=`顯示 ${rows.length} 個部分`;
+  document.getElementById("list").innerHTML=rows.map(p=>{
+    const [st,cls]=STATUS[p.status];const on=p.n===picked;
+    return `<article class="part${on?" on":""}${p.status==="done"?" isdone":""}" id="part-${p.n}">
+      <div class="head"><h2><span class="num">${p.n}</span>${esc(p.name)}</h2><span class="tag">${p.area}</span><span class="tag size">大小：${p.size}</span><span class="${cls}">${st}</span></div>
+      <div class="grid">
+        <div class="box g"><h3>v0.0.5 優點</h3><ul>${p.good.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div class="box b"><h3>v0.0.5 缺點</h3><ul>${p.bad.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div class="box n"><h3>v1.0.9 現在</h3><p>${esc(p.now)}</p></div>
+        <div class="box p"><h3>我打算優化</h3><p>${esc(p.plan)}</p></div>
+      </div>
+      <div class="foot"><button type="button" class="btn${on?" btn-main":""}" data-pick="${p.n}" aria-pressed="${on}" ${p.status==="done"?"disabled":""}>${p.status==="done"?"已完成":on?"✓ 已選為下一步（再按取消）":"選為下一步"}</button></div>
+    </article>`}).join("");
+  renderNext();
+}
+document.getElementById("list").addEventListener("click",e=>{
+  const b=e.target.closest("[data-pick]");if(!b||b.disabled)return;
+  const n=Number(b.dataset.pick);picked=picked===n?null:n;store.set(picked?String(picked):null);render();
+  if(picked) document.getElementById("next").scrollIntoView({block:"nearest"});
+});
+document.getElementById("clearBtn").onclick=()=>{picked=null;store.set(null);render()};
+document.getElementById("copyBtn").onclick=()=>{
+  const p=PARTS.find(x=>x.n===picked);if(!p)return;const t=command(p),btn=document.getElementById("copyBtn"),txt=document.getElementById("copyText");
+  const fallback=()=>{txt.hidden=false;txt.value=t;txt.focus();txt.select();btn.textContent="請按 ⌘C 複製"};
+  try{navigator.clipboard.writeText(t).then(()=>{btn.textContent="已複製";setTimeout(()=>btn.textContent="複製指令",1600)},fallback)}catch{fallback()}
+};
+render();
+</script>
+</body>
+</html>
