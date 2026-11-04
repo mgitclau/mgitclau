@@ -306,7 +306,8 @@ const result = withIntent(
   mergeRule(parsed, text, profile, library,
             safeRule(text, profile, library, expecting), expecting),
   text, lexicon, parsed);
-// mergeRule：模型的需求為主，規則聽到、模型漏掉的補回（例如預算）
+// mergeRule：以模型的需求為準；規則只補「模型漏掉的預算」和「取消」
+// toOps：證據（原話）在句子裡找不到 → 信心打折；用途對不到類別 → 變成「其他」
 // toSuggestion：模型建議的權重調整，每項最多 ±5（門檻 nluDeltaCap）`,
   intent:`// apps/api/src/turn.ts:257（v1.0.11 新增，開關 intent.router）
 if (router) {
@@ -461,24 +462,24 @@ const STEPS = [
     output:(r) => `${r.firstTurn ? "這是這段對話的第一句，需求檔案是空的。" : "這段對話之前已有操作紀錄（用戶 11/2 01:38 手動調過權重、加過比較）。"}<br><br><b>系統預設權重</b>（總和 100）：${wTable(r.manualWeights ? r.weights : DEFAULT_W)}${r.manualWeights ? "<p>↑ 這是用戶自己調過的權重，不是預設值。</p>" : ""}`,
     time:() => ({v:null, note:"沒有單獨計時"})},
 
-  {phase:"② 聽懂用戶說什麼", id:"rule", mod:"nlu", t:"規則理解", s:"用詞表和固定規則先抓一次",
-    plain:"店員先用經驗快速抓重點：聽到「萬」就是預算、聽到「背去學校」就是要輕。速度快、不會亂講，但說法太特別就聽不懂。",
-    file:"packages/nlu/src/understand.ts:209、rule.ts", code:"rule",
+  {phase:"② 聽懂用戶說什麼", id:"model", mod:"ai", t:"AI 理解（主要）", s:"把句子、已知需求、軟體庫寫成提示詞，請 AI 回 JSON",
+    plain:"聽懂用戶的話主要靠 AI：請一位「很會聽話的助理」讀這句話，用固定格式列出需求，並附上原話當證據。用戶怎麼換說法都是它在理解。格式不合格就再試一次，兩次都不行才改用下一步的規則備案。",
+    file:"packages/nlu/src/understand.ts:217、provider.ts callModel", code:"model",
+    input:(r) => `提示詞：後台「提示詞」頁的 NLU 模板，填入用戶這句話、目前的需求檔案、軟體庫。<br>送出 <b>${r.llm.find((c) => c.slot === "nlu").in}</b> 個 tokens（提示詞全文沒有存）。`,
+    output:(r) => `${llmTable(r.llm.filter((c) => c.slot === "nlu"))}${r.nlu.error ? `<p class="badc">最後結果：${esc(r.nlu.error)} → 改用規則備案</p>` : `<p class="okc">回傳合格的 JSON，進入第 6 步合併。</p>`}`,
+    time:(r) => ({v:aiMs(r, "nlu"), note:`真實紀錄（llm_calls 表）${r.llm.filter((c) => c.slot === "nlu").length > 1 ? `，${r.llm.filter((c) => c.slot === "nlu").length} 次加總` : ""}`})},
+  {id:"rule", mod:"nlu", t:"規則理解（備案）", s:"寫死的詞表：AI 失敗時才當主力，平時只補預算和取消",
+    plain:"店員自己的快速筆記，只在 AI 助理出狀況時才拿出來用。另外有一件事一定會用它：AI 漏掉預算時，靠它補回來。詞表寫死在程式裡（rule.ts，約 590 行），後台改不到，說法太特別就聽不懂。",
+    file:"packages/nlu/src/understand.ts:213、248；rule.ts", code:"rule",
     input:(r) => `「${esc(r.input)}」`,
     output:(r) => r.nlu.source === "rule"
       ? `<p class="okc">這一輪 AI 失敗，最後採用的就是規則的結果：</p>${reqTable(r.nlu.ops)}`
-      : `規則結果有算，但沒有單獨存下來。它會在第 6 步和 AI 的結果合併。`,
+      : `這一輪 AI 成功，規則只當備用。規則結果沒有單獨存下來，第 6 步只拿它補「預算」和「取消」。`,
     time:() => ({v:null, note:"沒有單獨計時，通常不到 1 ms"})},
-  {id:"model", mod:"ai", t:"AI 理解（呼叫模型）", s:"把句子、已知需求、軟體庫寫成提示詞，請 AI 回 JSON",
-    plain:"規則可能漏聽，所以再請一位「很會聽話的助理」（AI）也聽一次，並且要求它用固定格式回答。不合格就再試一次，兩次都不行就放棄、只用規則。",
-    file:"packages/nlu/src/understand.ts:217、provider.ts callModel", code:"model",
-    input:(r) => `提示詞：後台「提示詞」頁的 NLU 模板，填入用戶這句話、目前的需求檔案、軟體庫。<br>送出 <b>${r.llm.find((c) => c.slot === "nlu").in}</b> 個 tokens（提示詞全文沒有存）。`,
-    output:(r) => `${llmTable(r.llm.filter((c) => c.slot === "nlu"))}${r.nlu.error ? `<p class="badc">最後結果：${esc(r.nlu.error)} → 退回規則</p>` : `<p class="okc">回傳合格的 JSON，進入下一步合併。</p>`}`,
-    time:(r) => ({v:aiMs(r, "nlu"), note:`真實紀錄（llm_calls 表）${r.llm.filter((c) => c.slot === "nlu").length > 1 ? `，${r.llm.filter((c) => c.slot === "nlu").length} 次加總` : ""}`})},
-  {id:"merge", mod:"nlu", t:"合併成「聽到的需求」", s:"AI 為主、規則補漏；也收下 AI 的權重建議",
-    plain:"把店員和助理的筆記對一對：以助理的為主，店員有聽到、助理漏掉的補上。助理建議「性能要多看重一點」也記下，但每項最多 ±5。",
-    file:"packages/nlu/src/understand.ts:133 mergeRule", code:"merge",
-    input:() => `第 4 步規則結果 ＋ 第 5 步 AI 的 JSON`,
+  {id:"merge", mod:"nlu", t:"合併成「聽到的需求」", s:"以 AI 為準，規則只補預算和取消；也收下 AI 的權重建議",
+    plain:"需求以助理（AI）的筆記為準。店員的筆記只補兩件事：① 助理漏掉的預算，因為預算是硬條件，不能掉；② 用戶說「不要了」這類取消。原話證據在句子裡找不到的需求，信心會打折。助理建議「性能要多看重一點」也記下，但每項最多 ±5。<br><br>注意：AI 說的用途還要對到系統認得的類別（剪輯、遊戲、辦公學習…），這一步用的還是規則那份詞表（rule.ts:590）。AI 回一段描述時，對不上就變成「其他」，不會加權重。",
+    file:"packages/nlu/src/understand.ts:133 mergeRule、93 toOps", code:"merge",
+    input:() => `第 4 步 AI 的 JSON ＋ 第 5 步規則結果（備用）`,
     output:(r) => `<p>來源：<b>${r.nlu.source === "model" ? "AI 模型" : "規則（AI 失敗）"}</b></p>${reqTable(r.nlu.ops)}
       ${r.nlu.weightSuggestion ? `<p><b>AI 的權重建議：</b>${Object.entries(r.nlu.weightSuggestion.deltas).map(([k, v]) => `${DIM[k]} +${v}`).join("、")}（理由：「${esc(r.nlu.weightSuggestion.reason)}」，信心 ${r.nlu.weightSuggestion.confidence}）</p>` : "<p>沒有權重建議（AI 失敗）。</p>"}
       <p>聽不懂的詞：${r.nlu.unknown.length ? r.nlu.unknown.join("、") : "沒有"}　想比較：${r.nlu.compareIntent ? "是" : "否"}</p>`,

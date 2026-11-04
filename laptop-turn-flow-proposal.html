@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一句話流程提案</title>
+<meta name="description" content="AI 筆電選購助手：現在的一句話處理流程哪裡不合理，以及更合理的新流程提案（可點選每一步看細節）。">
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e2e0d8; --soft:#efede6;
+  --web:#3b6fd8; --api:#7a5af0; --nlu:#0f9d8a; --ai:#e0662c; --eng:#c2930a; --db:#5b6b7a;
+  --ok:#1f8f4e; --bad:#c43c3c; --warn:#b7791f; --code:#f3f2ee; --new:#1f8f4e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f;
+    --web:#7aa2ff; --api:#a993ff; --nlu:#3fd0ba; --ai:#ff9a62; --eng:#e8bf3c; --db:#9aaabb;
+    --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52; --code:#1a1a1e; --new:#4cc982;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f;
+  --web:#7aa2ff; --api:#a993ff; --nlu:#3fd0ba; --ai:#ff9a62; --eng:#e8bf3c; --db:#9aaabb;
+  --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52; --code:#1a1a1e; --new:#4cc982;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:20px;margin:36px 0 10px;padding-top:6px;border-top:1px solid var(--line)}
+.sub{color:var(--muted);margin:0 0 16px;max-width:860px}
+.note{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--muted)}
+.note b{color:var(--ink)}
+code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+.probs{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.prob{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--bad);border-radius:10px;padding:12px 14px}
+.prob h3{margin:0 0 4px;font-size:15.5px}
+.prob .ev{font-size:13px;color:var(--muted);margin-top:6px}
+.prob .fix{font-size:13.5px;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
+.pid{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--bad);border-radius:5px;padding:0 6px;margin-right:6px}
+.fid{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--new);border-radius:5px;padding:0 6px;margin-right:4px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;align-items:start}
+.flow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.phase{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 6px 4px}
+.phase:first-child{margin-top:0}
+.row{display:grid;gap:8px;margin-bottom:14px;position:relative}
+.row.two{grid-template-columns:1fr 1fr}
+.row:not(:last-child)::after{content:"";position:absolute;left:30px;bottom:-15px;width:2px;height:14px;background:var(--line)}
+.step{display:grid;grid-template-columns:30px 1fr;gap:9px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;background:transparent;border:1.5px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:8px 11px;cursor:pointer;position:relative}
+.step:hover{background:var(--soft)}
+.step[aria-selected="true"]{background:var(--soft);border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.step.fallback{border-style:dashed;border-left-style:solid}
+.num{width:26px;height:26px;border-radius:50%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700}
+.st-t{font-weight:600;font-size:14px}
+.st-s{font-size:12.5px;color:var(--muted);line-height:1.45}
+.badge{font-size:11px;font-weight:700;color:var(--new);border:1px solid var(--new);border-radius:99px;padding:0 6px;margin-left:4px;white-space:nowrap}
+.badge.chg{color:var(--warn);border-color:var(--warn)}
+.para{font-size:11.5px;color:var(--muted);margin:-8px 0 6px 4px}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.d-mod{display:inline-block;font-size:12px;color:#fff;background:var(--c);padding:2px 10px;border-radius:99px;margin-bottom:6px}
+.detail h3{margin:2px 0 8px;font-size:19px}
+.plain{background:var(--soft);border-radius:9px;padding:10px 12px;margin:10px 0}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13.5px;margin:12px 0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.cmp div{border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13.5px}
+.cmp h5{margin:0 0 4px;font-size:12.5px;color:var(--muted)}
+.cmp .now{border-left:4px solid var(--bad)}
+.cmp .neo{border-left:4px solid var(--new)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.legend span{font-size:12.5px;padding:3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tl{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.tl h4{margin:0 0 8px;font-size:15px}
+.tlrow{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+.track{position:relative;height:26px;background:var(--soft);border-radius:6px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;white-space:nowrap;overflow:hidden}
+.mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.scale{display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:11.5px;color:var(--muted)}
+.scale div:last-child{display:flex;justify-content:space-between}
+.tlnote{font-size:13px;color:var(--muted);margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600}
+.tablewrap{overflow-x:auto;border-radius:10px}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.plan div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.plan h4{margin:0 0 6px;font-size:15px}
+.plan ul{margin:0;padding-left:18px;font-size:13.5px}
+.qs{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 16px}
+.qs li{margin:8px 0}
+footer{color:var(--muted);font-size:12.5px;margin-top:28px}
+@media (max-width:860px){
+  .main{grid-template-columns:1fr}
+  .detail{position:static;max-height:none}
+  .row.two{grid-template-columns:1fr}
+  .cmp{grid-template-columns:1fr}
+  .tlrow,.scale{grid-template-columns:80px 1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>一句話的流程：哪裡不合理、可以怎麼改（提案）</h1>
+  <p class="sub">這是根據 v1.0.13 程式碼和資料庫真實紀錄寫的改進提案，還沒有實作。原則不變：<b>AI 負責聽懂和表達，程式負責決定推薦</b>。改的是「AI 聽懂之後，程式怎麼接」和「用戶要等多久」。</p>
+  <div class="note">對照頁：<a href="laptop-v1013-turn-flow.html">一句話的旅程（v1.0.13 現況）</a>。下面標「實測」的時間來自資料庫；標「估算」的是依實測時間推算的，要做出來量過才算數。</div>
+
+  <h2>一、現在的流程有 7 個不合理的地方</h2>
+  <div class="probs" id="probs"></div>
+
+  <h2>二、新流程（點每一步看細節）</h2>
+  <div class="legend" id="legend"></div>
+  <div class="main">
+    <div class="flow" id="flow" role="listbox" aria-label="新流程步驟"></div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </div>
+
+  <h2>三、用戶要等多久：現在 vs 新流程</h2>
+  <div id="timeline"></div>
+
+  <h2>四、整體比較</h2>
+  <div class="tablewrap"><table>
+    <tr><th>面向</th><th>現在（v1.0.13）</th><th>新流程</th><th>代價</th></tr>
+    <tr><td>誰聽懂用戶的話</td><td>AI 為主，但 AI 說的用途還要用寫死的詞表對到類別</td><td>AI 直接從後台的「類別清單」選，程式只檢查選項合不合法</td><td>類別清單要有人維護（後台可編輯）</td></tr>
+    <tr><td>規則的角色</td><td>約 590 行詞表和正規表示式，當備案也當對照</td><td>縮成「數字解析器」：預算、尺寸、重量、記憶體這類數字一律以程式算的為準。語意的備案改用後台可編輯的簡單詞表</td><td>要重寫備案；縮減前先用真實對話比對兩邊的結果</td></tr>
+    <tr><td>AI 失敗時</td><td>8 秒逾時、再試一次，最壞要等 26 秒（實測 18.2 秒）</td><td>3 秒上限、不重試，直接用備案</td><td>偶爾 AI 慢一點就聽不到細節，靠備案頂著</td></tr>
+    <tr><td>用戶看到東西的時間</td><td>全部算完才一次回傳（實測 3.3 秒）</td><td>程式結果（卡片、排名）先送，AI 回覆一個字一個字跟上</td><td>前後端都要支援串流</td></tr>
+    <tr><td>說過的話</td><td>AI 只看得到需求檔案，看不到前幾輪原話</td><td>AI 多看最近 3 輪對話，「那 5 萬呢？」才聽得懂</td><td>每次多送幾百個 tokens</td></tr>
+    <tr><td>查錯</td><td>只有總時間和 AI 時間；提示詞和 AI 原文沒存</td><td>每一步都計時、記輸入和輸出摘要；AI 原文存檔（去掉個資）</td><td>資料庫多一欄，量大後要定期清理</td></tr>
+    <tr><td>越用越聰明</td><td>聽不懂的詞進待處理，M 要自己判斷</td><td>AI 聽懂、但規則或類別對不上的說法自動進待處理，M 一鍵加進類別，同時存成測試案例</td><td>後台多一個頁面</td></tr>
+  </table></div>
+
+  <h2>五、建議的實作順序</h2>
+  <div class="plan">
+    <div><h4>第 1 批：先看得見（風險最低）</h4><ul><li><span class="fid">F7</span>每一步計時、AI 原文存檔</li><li>後台「一句話的旅程」直接讀這些資料</li><li>先量清楚，後面每一批改了多少才看得出來</li></ul></div>
+    <div><h4>第 2 批：少等一點</h4><ul><li><span class="fid">F3</span>AI 理解 3 秒上限、不重試</li><li><span class="fid">F4</span>卡片先送、回覆串流</li></ul></div>
+    <div><h4>第 3 批：聽得更準</h4><ul><li><span class="fid">F1</span>AI 直接選類別（後台類別清單）</li><li><span class="fid">F2</span>數字以程式解析為準</li><li><span class="fid">F5</span>AI 看最近 3 輪對話</li><li><span class="fid">F6</span>說過的不再問</li></ul></div>
+    <div><h4>第 4 批：越用越聰明</h4><ul><li><span class="fid">F8</span>新說法進待處理，一鍵加類別並存成測試</li><li>拿真實對話比對新舊結果，再決定寫死的詞表要縮減多少</li></ul></div>
+  </div>
+  <p class="note" style="margin-top:12px">每一項都加開關，可以新舊流程切換比較，符合「每個細節都有開關」。v1.0.14 正在另一個視窗進行，這份提案最快從下一版開始做，每一批一個版本。</p>
+
+  <h2>六、需要 M 決定的事</h2>
+  <ol class="qs">
+    <li><b>回覆用串流嗎？</b>用戶會看到字一個一個出現（像 ChatGPT）。好處是不用乾等；壞處是 AI 寫到一半被檢查擋下時，要把已出現的字換成模板句。</li>
+    <li><b>AI 理解的時間上限定幾秒？</b>DeepSeek 實測 1.9～2.4 秒，建議 3 秒。設太短，AI 常常來不及回答。</li>
+    <li><b>類別清單誰維護？</b>建議放後台，和「權重規則」同一頁：每個類別有名稱、說明、例句和對應的權重加減。</li>
+    <li><b>寫死的詞表要縮到多小？</b>建議第 4 批先用真實對話比對，再決定。在那之前保留現狀。</li>
+  </ol>
+
+  <footer>2026-11-05 ・ 依據 laptop-assistant-v1.0.13 原始碼與資料庫 laptop_assistant 的 31 輪紀錄 ・ 提案，尚未實作</footer>
+</div>
+
+<script>
+const MOD = {
+  web:{name:"使用者畫面", c:"var(--web)"}, api:{name:"API 伺服器", c:"var(--api)"}, nlu:{name:"理解與驗證（程式）", c:"var(--nlu)"},
+  ai:{name:"AI 模型", c:"var(--ai)"}, eng:{name:"推薦引擎", c:"var(--eng)"}, db:{name:"資料庫", c:"var(--db)"},
+};
+
+const PROBS = [
+  {id:"P1", t:"AI 聽懂了，最後還是被寫死的詞表卡住", d:"AI 說的用途要再用 rule.ts 的詞表對到「剪輯、遊戲、辦公學習…」。AI 回一段描述時，對不上就變成「其他」，不會加權重。結果 AI 的理解能力，被一份寫死的詞表限制住。", ev:"程式：rule.ts:590、understand.ts:101", fix:"F1"},
+  {id:"P2", t:"590 行寫死的規則，後台改不到", d:"規則是備案，但又長又難維護。M 想加一種說法，要改程式、發新版本。", ev:"程式：packages/nlu/src/rule.ts（591 行）", fix:"F2"},
+  {id:"P3", t:"AI 失敗時，用戶要等很久", d:"AI 理解逾時是 8 秒，失敗會再試一次，AI 回覆逾時是 10 秒，最壞要等 26 秒。", ev:"實測：「預算 4 萬，上課寫報告…」等了 18.2 秒，其中 18.1 秒在等 AI 失敗", fix:"F3"},
+  {id:"P4", t:"程式 0.06 秒就算完，卻要等 AI 寫完回覆才一起送出", d:"卡片和排名都是程式算的，不需要 AI，卻被 AI 寫回覆的時間綁住。", ev:"實測：總時間 3,317 ms，程式步驟只占 63 ms", fix:"F4"},
+  {id:"P5", t:"AI 看不到前幾輪說了什麼", d:"給 AI 的只有需求檔案和「上一題問什麼」，沒有前幾輪的原話。「那 5 萬呢？」「剛剛那台」這類說法容易聽錯。", ev:"程式：understand.ts:41 buildPrompt 的參數只有句子、需求檔案、軟體庫、上一題", fix:"F5"},
+  {id:"P6", t:"用戶說過的，系統還反問", d:"AI 漏掉「預算 7 萬」，系統就問「預算大概多少？」。用戶會覺得系統沒在聽，這正好違反「讓用戶感受到系統了解他」。", ev:"實測：對話 b9f1be23（v1.0.4 已補預算；但其他欄位漏掉時還是會反問）", fix:"F6"},
+  {id:"P7", t:"出錯時查不到原因", d:"每一步沒有各自計時；送給 AI 的提示詞和 AI 回的原文都沒存。AI 為什麼漏掉預算，事後查不到。", ev:"資料庫：runs 只有總時間 ms，llm_calls 只有時間和 tokens", fix:"F7"},
+];
+
+const STEPS = [
+  {phase:"① 收到這句話", rows:[[
+    {id:"recv", mod:"api", t:"收件、開始逐步記錄", s:"同一段對話上鎖，建立這一輪的紀錄本", tag:"chg", fix:["F7"],
+      plain:"店員收到紙條，先翻開一本新的紀錄本。之後每一步做了什麼、花多久，都寫進去。",
+      now:"只記開始和結束的總時間。", neo:"每一步都記開始、結束、輸入摘要、輸出摘要（trace spans）。",
+      sw:"trace.step_timing", est:"< 1 ms",
+      code:`const trace = startTrace(runId);
+const step = trace.step("nlu.model");   // 每一步這樣包
+...
+step.end({ input: 摘要, output: 摘要 });`}]]},
+  {rows:[[
+    {id:"ctx", mod:"db", t:"讀設定、對話狀態、最近 3 輪對話", s:"多帶前幾輪原話，AI 才聽得懂「那 5 萬呢？」", tag:"chg", fix:["F5"],
+      plain:"除了客戶資料夾（需求檔案），也把最近幾句對話一起拿出來，店員才知道「那台」是指哪台。",
+      now:"只帶需求檔案和上一題問什麼。", neo:"再帶最近 3 輪的用戶原話和系統回覆（輪數可在後台調）。",
+      sw:"nlu.history_turns（數字，0 = 關閉）", est:"約 5 ms（一次資料庫查詢）"}]]},
+
+  {phase:"② 聽懂（AI 和程式同時開工）", para:"↓ 兩件事同時做，不用排隊", rows:[[
+    {id:"ai", mod:"ai", t:"AI 理解（一次呼叫，3 秒上限）", s:"意圖＋需求＋原話證據，類別從清單裡選", tag:"chg", fix:["F1","F3"],
+      plain:"請 AI 一次回答所有問題：用戶是不是在找筆電、說了哪些需求、每項需求是哪句原話說的。用途這類需求不讓 AI 自由發揮，只能從後台的類別清單裡挑。3 秒沒回答就不等了。",
+      now:"AI 自由寫用途，再用寫死的詞表對；8 秒逾時，失敗再試一次。", neo:"提示詞附上後台的類別清單（名稱＋說明＋例句），AI 只能選清單裡的 id；3 秒上限、不重試。",
+      sw:"nlu.category_enum、nlu.timeout_ms、nlu.retry", est:"實測 1.9～2.4 秒（DeepSeek）",
+      code:`// AI 回的 JSON（範例）
+{ "intent": "find_laptop",
+  "needs": [
+    { "field": "purpose", "category": "video_edit", "evidence": "剪片" },
+    { "field": "software", "name": "Premiere Pro", "evidence": "常用 Premiere" },
+    { "field": "portability", "level": "high", "evidence": "每天背著走" },
+    { "field": "budget", "evidence": "預算 7 萬" }        // ← 只給原話，金額由程式算
+  ] }`},
+    {id:"num", mod:"nlu", t:"數字解析器（程式）", s:"預算、尺寸、重量、記憶體：程式自己從原話算", tag:"new", fix:["F2"],
+      plain:"數字最怕聽錯，而且預算是硬條件，所以數字一律由程式算。「7 萬」「七萬五」「35000 元」都由程式換成 70,000、75,000、35,000。AI 只要指出是哪句原話。",
+      now:"AI 自己寫金額，規則另外算一份，AI 漏掉時才用規則的。", neo:"數字一律以程式算的為準；AI 給的數字只拿來對照，兩邊不一樣就降低信心並記錄。",
+      sw:"nlu.number_authority", est:"< 1 ms",
+      code:`// 從現有 rule.ts 抽出數字的部分，約 150 行
+parseBudget("預算 7 萬")   → { max: 70000 }
+parseSize("14 吋以下")     → { mode: "max", inch: 14 }
+parseWeight("1.5 公斤內")  → 1.5`}]]},
+  {rows:[[
+    {id:"verify", mod:"nlu", t:"程式驗證 AI 的答案", s:"格式、類別合法、原話真的在句子裡、數字對得上", tag:"chg", fix:["F1","F2"],
+      plain:"店員檢查助理的筆記：選的類別存不存在？「原話」真的是用戶說的嗎？數字和程式算的一樣嗎？不合格的那一項就丟掉或降低信心，不會整份作廢。",
+      now:"已有部分檢查（原話不在句子裡會打折），但類別靠詞表對。", neo:"類別只檢查 id 在不在清單裡；任何一項不合格只影響那一項。",
+      sw:"nlu.verify_strict", est:"< 1 ms"}]]},
+  {rows:[[
+    {id:"fallback", mod:"nlu", t:"備案：AI 逾時或失敗時", s:"後台可編輯的簡單詞表＋數字解析器", tag:"chg", fix:["F2","F3"], fallback:true,
+      plain:"AI 3 秒沒回答，或回答格式不對，就改用後台詞表抓重點，數字照樣用數字解析器。對話不會中斷，用戶最多只多等 3 秒。",
+      now:"寫死的 590 行規則當備案；AI 失敗前要等 8～16 秒。", neo:"詞表在後台（類別清單的「例句」欄位直接當詞表）。原本的寫死規則先保留並加開關，等真實對話比對完再決定縮減多少。",
+      sw:"nlu.fallback_source（legacy / admin_lexicon）", est:"< 1 ms，但要先等 3 秒逾時"}]]},
+  {rows:[[
+    {id:"route", mod:"api", t:"意圖分流", s:"找筆電／問某台機型／對話控制／閒聊", fix:[],
+      plain:"判斷用戶是不是在找筆電。閒聊就客氣地拉回主題；說「上一步」「重來」就執行對話控制。",
+      now:"已有（v1.0.11），只是畫在理解之後。", neo:"不變，結果直接用第 3 步 AI 回的 intent。",
+      sw:"intent.router（已有）", est:"< 1 ms"}]]},
+
+  {phase:"③ 程式算推薦（和現在相同）", rows:[[
+    {id:"profile", mod:"eng", t:"更新需求檔案", s:"來源、信心、原話；只有明說的最低要求才是硬條件", fix:[],
+      plain:"把聽到的需求貼進資料夾，每項都記是誰聽到的（AI 或備案）、多有把握、用戶原話。",
+      now:"已有。", neo:"多記「AI 和數字解析器不一致」的標記，需求標籤上顯示「我猜的」，讓用戶一眼能改。",
+      sw:"show.req_uncertain", est:"< 1 ms"}]]},
+  {rows:[[
+    {id:"rank", mod:"eng", t:"權重 → 硬篩 → 評分 → 理由", s:"現在這段做得好，不改", fix:[],
+      plain:"這段就是產品核心：依這位用戶的權重替 371 台評分排名，理由也由程式算。現在的做法合理，不動。",
+      now:"已有，實測加起來不到 63 ms。", neo:"不變。類別清單的權重加減改由後台設定，取代現在 weight_rules 裡用中文名稱當 key 的寫法。",
+      sw:"（沿用現有開關）", est:"實測 < 63 ms（所有程式步驟合計）"}]]},
+  {rows:[[
+    {id:"decide", mod:"eng", t:"決定動作（說過的不再問）", s:"追問前先檢查：這題的答案是不是已經在原話裡", tag:"chg", fix:["F6"],
+      plain:"要追問「預算」之前，先檢查用戶的話裡有沒有出現金額。有的話代表剛才漏聽了：不要再問一次，改成直接採用，並在標籤上標「我從你的話裡補上的」。",
+      now:"需求檔案沒有就問，不管用戶有沒有講過。", neo:"出題前，用數字解析器和類別例句掃一次這輪和前幾輪的原話；有命中就補進需求，不出這題。",
+      sw:"followup.said_check", est:"< 5 ms"}]]},
+
+  {phase:"④ 說給用戶聽（先給結果，再補說明）", para:"↓ 卡片先送到畫面，AI 回覆隨後一個字一個字出現", rows:[[
+    {id:"cards", mod:"web", t:"先送卡片和排名", s:"程式結果算完就送，不等 AI", tag:"new", fix:["F4"],
+      plain:"需求標籤、台數、推薦清單、追問選項都是程式算的，算完立刻顯示。用戶不用盯著空白畫面等 AI 寫完。",
+      now:"全部算完，連 AI 回覆一起送，實測 3.3 秒才看到任何東西。", neo:"約 2 秒就看到卡片（AI 理解的時間加上程式時間）。",
+      sw:"reply.cards_first", est:"估算：送出後約 2.0 秒"},
+    {id:"reply", mod:"ai", t:"AI 寫回覆（串流）＋檢查", s:"一個字一個字出現；寫完再檢查，不合格換模板", tag:"chg", fix:["F4","F3"],
+      plain:"AI 用事實清單寫成自然的話，邊寫邊顯示。寫完程式檢查有沒有冒出清單上沒有的數字、機型或規格；不合格就換成固定句子。AI 2 秒內沒開始寫，就直接用固定句子。",
+      now:"等 AI 全部寫完才送；10 秒逾時。", neo:"串流顯示；首字 2 秒上限；檢查規則沿用現在的（reply.ts rejectReason）。",
+      sw:"reply.stream、reply.first_token_ms", est:"實測 AI 回覆 1.4～1.6 秒，串流後約 0.3 秒就開始出字（估算）"}]]},
+
+  {phase:"⑤ 歸檔與學習", rows:[[
+    {id:"save", mod:"db", t:"存檔：每一步的時間、AI 原文", s:"後台可以重看整輪，每一步都查得到", tag:"chg", fix:["F7"],
+      plain:"整本紀錄本歸檔。之後 AI 漏聽，打開那一輪就看得到當時送給 AI 什麼、AI 回了什麼、哪一步花了多久。",
+      now:"只存總時間、AI 時間和 tokens。", neo:"runs 多一欄 trace（每一步的時間與摘要）；llm_calls 多存提示詞和回覆原文，電話、email 這類個資先遮掉。",
+      sw:"trace.store_llm_raw", est:"約 5～10 ms"}]]},
+  {rows:[[
+    {id:"learn", mod:"db", t:"學習迴圈", s:"新說法進待處理 → M 一鍵加進類別 → 自動變成測試案例", tag:"new", fix:["F8"],
+      plain:"AI 聽懂了、但類別清單沒有的說法（例如「我是 YouTuber」），自動進後台待處理。M 一鍵加進某個類別的例句，這句話同時存成測試案例，以後改程式都會自動檢查還聽不聽得懂。",
+      now:"只有「聽不懂的詞」進待處理。", neo:"多收「AI 和備案判斷不同」「AI 選了其他」「用戶刪掉的需求標籤」三種，這三種最能看出哪裡聽錯。",
+      sw:"learn.pending_extra、learn.save_as_test", est:"背景執行，不影響用戶"}]]},
+];
+
+const FIX = {F1:"AI 直接選類別",F2:"數字以程式為準、詞表搬到後台",F3:"3 秒上限、不重試",F4:"卡片先送、回覆串流",F5:"AI 看最近 3 輪",F6:"說過的不再問",F7:"每步計時、AI 原文存檔",F8:"學習迴圈"};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $ = (id) => document.getElementById(id);
+const ALL = STEPS.flatMap((g) => g.rows.flat());
+let sel = "ai";
+
+$("probs").innerHTML = PROBS.map((p) => `<div class="prob"><h3><span class="pid">${p.id}</span>${p.t}</h3><div>${p.d}</div><div class="ev">證據：${p.ev}</div><div class="fix">怎麼改：<span class="fid">${p.fix}</span>${FIX[p.fix]}</div></div>`).join("")
+  + `<div class="prob" style="border-left-color:var(--new)"><h3><span class="fid">F8</span>額外：學習迴圈</h3><div>上面 7 點修好後，再讓系統把聽錯、聽不懂的說法自動收集起來給 M 處理，系統才會越用越準。</div></div>`;
+$("legend").innerHTML = Object.values(MOD).map((m) => `<span><i class="dot" style="background:${m.c}"></i>${m.name}</span>`).join("")
+  + `<span><span class="badge">新增</span> 新的一步</span><span><span class="badge chg">改動</span> 現在就有，做法改</span><span style="border-style:dashed">虛線＝只在 AI 失敗時走</span>`;
+
+function renderFlow() {
+  let n = 0;
+  $("flow").innerHTML = STEPS.map((g) => `${g.phase ? `<div class="phase">${g.phase}</div>` : ""}${g.para ? `<div class="para">${g.para}</div>` : ""}${g.rows.map((r) => `<div class="row${r.length > 1 ? " two" : ""}">${r.map((s) => { n++; return `<button class="step${s.fallback ? " fallback" : ""}" role="option" aria-selected="${s.id === sel}" data-id="${s.id}" style="--c:${MOD[s.mod].c}"><span class="num">${n}</span><span><span class="st-t">${s.t}</span>${s.tag ? `<span class="badge${s.tag === "chg" ? " chg" : ""}">${s.tag === "new" ? "新增" : "改動"}</span>` : ""}<br><span class="st-s">${s.s}</span></span></button>`; }).join("")}</div>`).join("")}`).join("");
+  $("flow").querySelectorAll(".step").forEach((b) => b.onclick = () => { sel = b.dataset.id; renderFlow(); renderDetail(); if (innerWidth < 860) $("detail").scrollIntoView({behavior:"smooth"}); });
+}
+function renderDetail() {
+  const i = ALL.findIndex((s) => s.id === sel), s = ALL[i], m = MOD[s.mod];
+  $("detail").style.setProperty("--c", m.c);
+  $("detail").innerHTML = `<span class="d-mod">${m.name}</span><h3>第 ${i + 1} 步　${s.t}</h3>
+    <div class="plain"><b>白話：</b>${s.plain}</div>
+    <dl class="kv"><dt>解決的問題</dt><dd>${s.fix.length ? s.fix.map((f) => `<span class="fid">${f}</span>${FIX[f]}`).join("　") : "沒有改動"}</dd>
+    <dt>開關</dt><dd><code>${esc(s.sw)}</code></dd><dt>時間</dt><dd>${esc(s.est)}</dd></dl>
+    <div class="cmp"><div class="now"><h5>現在</h5>${s.now}</div><div class="neo"><h5>新流程</h5>${s.neo}</div></div>
+    ${s.code ? `<pre>${esc(s.code)}</pre>` : ""}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button id="prev" style="flex:1;font:inherit;font-size:13.5px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer" ${i === 0 ? "disabled" : ""}>← 上一步</button>
+      <button id="next" style="flex:1;font:inherit;font-size:13.5px;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer" ${i === ALL.length - 1 ? "disabled" : ""}>下一步 →</button></div>`;
+  $("prev").onclick = () => { sel = ALL[i - 1].id; renderFlow(); renderDetail(); };
+  $("next").onclick = () => { sel = ALL[i + 1].id; renderFlow(); renderDetail(); };
+}
+
+/* 時間軸：現在＝實測，新流程＝估算 */
+const CASES = [
+  {title:"情況 A：AI 一切正常（實測對話 1e6d13e9）", max:4000,
+    now:[{a:0,b:1899,c:"var(--ai)",l:"AI 理解 1,899"},{a:1899,b:1962,c:"var(--eng)",l:""},{a:1962,b:3317,c:"var(--ai)",l:"AI 回覆 1,355"}], nowSee:3317, nowLabel:"3.3 秒後才一次出現",
+    neo:[{a:0,b:1899,c:"var(--ai)",l:"AI 理解 1,899"},{a:1899,b:1960,c:"var(--eng)",l:""},{a:1960,b:3320,c:"var(--ai)",l:"回覆串流中"}], neoSee:1960, neoLabel:"約 2.0 秒看到卡片，約 2.3 秒開始出字",
+    note:"總時間差不多，但用戶早 1.3 秒看到結果，而且字是一個一個出來，不是乾等。"},
+  {title:"情況 B：AI 失敗（實測對話 2671c248）", max:19000,
+    now:[{a:0,b:6803,c:"var(--bad)",l:"AI 理解失敗 6,803"},{a:6803,b:14090,c:"var(--bad)",l:"重試又失敗 7,287"},{a:14090,b:14140,c:"var(--eng)",l:""},{a:14140,b:18160,c:"var(--bad)",l:"回覆失敗 4,020"}], nowSee:18160, nowLabel:"18.2 秒",
+    neo:[{a:0,b:3000,c:"var(--bad)",l:"3 秒停止等待"},{a:3000,b:3060,c:"var(--eng)",l:""},{a:3060,b:5060,c:"var(--bad)",l:"2 秒沒出字→模板"}], neoSee:3060, neoLabel:"約 3.1 秒看到卡片，約 5.1 秒出現模板回覆",
+    note:"失敗時從 18 秒縮到約 5 秒。當時失敗的原因（DeepSeek 先思考把額度用完）v1.0.4 已修，但換別家模型、網路慢時還是會發生。"},
+];
+$("timeline").innerHTML = CASES.map((k) => {
+  const bar = (segs, see) => `<div class="track">${segs.map((s) => `<div class="seg" style="left:${s.a / k.max * 100}%;width:${(s.b - s.a) / k.max * 100}%;background:${s.c}">${(s.b - s.a) / k.max > 0.12 ? s.l : ""}</div>`).join("")}<div class="mark" style="left:${see / k.max * 100}%" title="用戶第一次看到東西"></div></div>`;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span>${(k.max * f / 1000).toFixed(k.max > 10000 ? 0 : 1)} 秒</span>`).join("");
+  return `<div class="tl"><h4>${k.title}</h4>
+    <div class="tlrow"><span>現在（實測）</span>${bar(k.now, k.nowSee)}</div>
+    <div class="tlrow"><span>新流程（估算）</span>${bar(k.neo, k.neoSee)}</div>
+    <div class="scale"><div></div><div>${ticks}</div></div>
+    <div class="tlnote">黑線＝用戶第一次看到東西。現在：${k.nowLabel}；新流程：${k.neoLabel}。<br>${k.note}</div></div>`;
+}).join("");
+
+renderFlow(); renderDetail();
+</script>
+</body>
+</html>
