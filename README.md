@@ -24,3 +24,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · system 0.0.5 完成報告 | https://mgitclau.github.io/mgitclau/laptop-system-v005-report.html | 2026-11-04 |
 | AI 筆電選購助手 · system 0.0.5 vs v1.0.8 程式碼比較報告 | https://mgitclau.github.io/mgitclau/laptop-v005-vs-v108-report.html | 2026-11-04 |
 | AI 筆電選購助手 · v1.0.8 功能搬遷評估 | https://mgitclau.github.io/mgitclau/laptop-v108-feature-port-report.html | 2026-11-04 |
+| AI 筆電選購助手 · 後台逐頁比對（v0.0.5 vs v1.0.8） | https://mgitclau.github.io/mgitclau/laptop-admin-module-compare.html | 2026-11-04 |

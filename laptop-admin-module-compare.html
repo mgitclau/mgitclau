@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>後台逐頁比對</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* 版面：每個模組一張「對照卡」——左 v0.0.5、右 v1.0.8 截圖並排，下面三行結論，最後是「我打算做」。 */
+:root{
+  --bg:#f3f5f4; --card:#ffffff; --ink:#1a2421; --mute:#5d6b66; --line:#dbe2df;
+  --a:#17785b; --a-bg:#e3f2ec;      /* v0.0.5 用綠（它後台的主色） */
+  --b:#2456b8; --b-bg:#e5ecfa;      /* v1.0.8 用藍（它後台的主色） */
+  --plan:#8a4b06; --plan-bg:#fff4e2;
+  --p1:#b3261e; --p1-bg:#fdeceb; --p2:#8a4b06; --p2-bg:#fff4e2; --p3:#56616c; --p3-bg:#eceff2;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --card:#1a2220; --ink:#e3ebe8; --mute:#9aa9a3; --line:#2b3633;
+  --a:#5fcfa6; --a-bg:#163029; --b:#8db2f5; --b-bg:#1a2740; --plan:#f2b766; --plan-bg:#33261a;
+  --p1:#ff8f86; --p1-bg:#3b1e1c; --p2:#f2b766; --p2-bg:#33261a; --p3:#aab4be; --p3-bg:#252d33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --card:#1a2220; --ink:#e3ebe8; --mute:#9aa9a3; --line:#2b3633;
+  --a:#5fcfa6; --a-bg:#163029; --b:#8db2f5; --b-bg:#1a2740; --plan:#f2b766; --plan-bg:#33261a;
+  --p1:#ff8f86; --p1-bg:#3b1e1c; --p2:#f2b766; --p2-bg:#33261a; --p3:#aab4be; --p3-bg:#252d33; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 var(--f-body)}
+.wrap{max-width:1120px;margin:0 auto;padding-block:36px 90px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{margin:0;line-height:1.35;text-wrap:balance}
+h1{font-size:clamp(26px,4.5vw,36px);font-weight:900}
+h2{font-size:21px;font-weight:900}
+h3{font-size:15px;font-weight:700}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:12.5px;background:var(--b-bg);padding:1px 5px;border-radius:4px}
+a{color:var(--b)}
+.sub{color:var(--mute)}
+.intro{display:flex;flex-direction:column;gap:10px}
+.intro p{max-width:70ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;color:var(--mute)}
+.va,.vb{font-weight:700;padding:1px 8px;border-radius:6px;font-size:12.5px;white-space:nowrap}
+.va{color:var(--a);background:var(--a-bg)} .vb{color:var(--b);background:var(--b-bg)}
+.pri{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p1{color:var(--p1);background:var(--p1-bg)} .p2{color:var(--p2);background:var(--p2-bg)} .p3{color:var(--p3);background:var(--p3-bg)}
+
+/* 目錄 */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.toc ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:4px 18px}
+.toc li{display:flex;gap:8px;align-items:center;font-size:14px;min-width:0}
+.toc li a{text-decoration:none;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc li a:hover{color:var(--b)}
+
+/* 模組卡 */
+.mod{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;scroll-margin-top:12px}
+.mod-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.mod-head h2{flex:1 1 auto}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pair.one{grid-template-columns:1fr}
+figure{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+figure a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;max-height:420px;background:var(--bg)}
+.pair.one figure a{max-height:520px}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:12.5px;color:var(--mute);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.none{border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:140px;color:var(--mute);font-size:14px;text-align:center;padding:16px}
+.notes{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:8px 14px;font-size:14.5px}
+.notes dt{font-weight:700;font-size:13.5px;padding-top:1px}
+.notes dt.ta{color:var(--a)} .notes dt.tb{color:var(--b)}
+.notes dd{margin:0;min-width:0}
+.notes ul{margin:0;padding-left:1.2em}
+.notes li+li{margin-top:2px}
+.plan{background:var(--plan-bg);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
+.plan b{color:var(--plan);font-size:13.5px;letter-spacing:.04em}
+.plan p{font-size:14.5px}
+@media (max-width:720px){.pair{grid-template-columns:1fr}.notes{grid-template-columns:1fr}.notes dt{margin-top:6px}.mod{padding:16px}}
+
+/* 總表 */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12.5px;color:var(--mute);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.keep{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.keep ul{margin:6px 0 0;padding-left:1.2em;font-size:14.5px}
+footer{font-size:13px;color:var(--mute)}
+a:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="sub">AI 筆電選購助手 · 2026-11-04</span>
+  <h1>後台逐頁比對：v0.0.5 哪裡好用，v1.0.8 打算怎麼補</h1>
+  <p>我把兩套系統都跑起來，登入後台一頁一頁打開截圖。每個模組都只回答三件事：<b>v0.0.5 這頁好用在哪</b>、<b>v1.0.8 現在長什麼樣</b>、<b>我打算在 v1.0.8 做什麼</b>。截圖點一下可以看大圖。</p>
+  <div class="legend">
+    <span><span class="va">v0.0.5</span> 左邊、綠色</span>
+    <span><span class="vb">v1.0.8</span> 右邊、藍色</span>
+    <span><span class="pri p1">先做</span> 找真實用戶測試前就需要</span>
+    <span><span class="pri p2">接著做</span> 第二批</span>
+    <span><span class="pri p3">之後 / 不做</span></span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目錄">
+  <h3>13 個模組</h3>
+  <ol id="toc"></ol>
+</nav>
+
+<section class="mod" id="m-conv-list">
+  <div class="mod-head"><h2>對話紀錄（列表）</h2><span class="va">A3 對話紀錄</span><span class="vb">對話</span><span class="pri p1">先做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-conv-list.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-conv-list.jpg" alt="v0.0.5 對話紀錄列表" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>篩選列＋結果徽章＋第一推薦</figcaption></figure>
+    <figure><a href="img/admin-compare/b-conv-list.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-conv-list.jpg" alt="v1.0.8 對話列表" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>只能搜標題</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>上方一排篩選：日期起訖、「近 1／7／30 天」快捷鍵、結果、差評、0 結果、標籤。</li>
+      <li>每列直接看到<b>結果徽章</b>（例如「追問中離開」）、<b>最後推薦的第一名</b>、回饋、標籤，不用點進去就知道這段對話順不順。</li>
+      <li>第一句話下面一行小字標出編號、使用者、輪數。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>只有標題搜尋。「用戶」欄是一長串 visitor 編號，佔掉一半寬度卻沒有資訊；看不出哪段對話有問題。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>列表欄位改成「時間｜第一句話（下面小字：輪數）｜結果徽章｜最後推薦第一名｜回饋｜標籤」，用戶編號縮成前 8 碼。上方加「近 1／7／30 天」＋結果＋標籤三個篩選，加分頁。結果徽章從每輪紀錄推出來：給了建議、還在追問、0 結果、模型失敗改用規則。</p></div>
+</section>
+
+<section class="mod" id="m-conv-detail">
+  <div class="mod-head"><h2>對話詳情</h2><span class="va">A3 對話詳情</span><span class="vb">對話詳情</span><span class="pri p1">先做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-conv-detail.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-conv-detail.jpg" alt="v0.0.5 對話詳情" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>左聊天重現、右逐輪說明</figcaption></figure>
+    <figure><a href="img/admin-compare/b-conv-detail.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-conv-detail.jpg" alt="v1.0.8 對話詳情" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>每輪一張長卡，8 輪約 5,800 像素長</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li><b>左右兩欄</b>：左邊是「使用者當時看到的樣子」，對話泡泡和卡片原樣重現；右邊用「第 1 輪／第 2 輪…」分頁，一次只看一輪：聽到什麼、權重變化、篩選、推薦了什麼、為什麼、前 10 名。</li>
+      <li>左邊每輪下面有「看這輪說明」，點了右邊就切到那一輪。</li>
+      <li>頂部一排<b>標籤按鈕</b>：好案例、識別錯誤、追問沒答、候選為 0、用戶不滿，點一下就貼上。找真實用戶測試時，這是整理對話最快的方式。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>資料其實比 v0.0.5 豐富（權重變化表、未套用的調整、追問決策表），但全部從上往下堆成一長條，看不到使用者實際看到的畫面。這段對話往下捲到第 6 輪，還能看到「未套用的調整：用戶已手動設定權重」，也就是上一份報告提到的「拖一次滑桿就不聽了」的問題。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>改成左右兩欄：左邊聊天重現（直接重用使用者端的訊息與卡片元件），右邊放輪次分頁，只顯示選中的那一輪，B 現有的各個表格放在右欄分區、預設收合。頂部加一排標籤按鈕（可在後台自訂文字）。</p></div>
+</section>
+
+<section class="mod" id="m-run">
+  <div class="mod-head"><h2>執行回放</h2><span class="va">B1 執行回放</span><span class="vb">沒有</span><span class="pri p1">先做（精簡版）</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-run-list.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-run-list.jpg" alt="v0.0.5 執行回放列表" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>列表：每輪一條彩色耗時縮略條</figcaption></figure>
+    <figure><a href="img/admin-compare/a-run-detail.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-run-detail.jpg" alt="v0.0.5 執行回放詳情" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>詳情：模型呼叫、瀑布圖、權重快照</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>列表每一輪有一條<b>彩色縮略條</b>（灰＝程式、金＝模型、藍＝讀資料庫、綠＝寫資料庫），一眼就看出時間幾乎都花在模型（金色）。</li>
+      <li>詳情頂部摘要：總耗時、模型呼叫幾次、token、成本。接著是<b>模型呼叫明細表</b>：用途、模型、耗時、輸入／輸出 token、狀態、提示詞版本。</li>
+      <li><b>權重快照</b>：帳本明細（哪句話讓哪一維加幾分），以及<b>前 5 名在各維度的貢獻表</b>，看得出「為什麼是它第一」。</li>
+      <li>沒量到的步驟老實標「未量測」，不估算。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>沒有這頁。每輪只記總毫秒數；每次模型呼叫的 token 和錯誤其實都已經存進資料庫，只是沒有畫面讀。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>不另開一頁，直接併進「對話詳情」右欄，每一輪加兩塊：①「這輪花了什麼」：模型呼叫明細表，加一條三段耗時條（理解、算分、寫回覆）；②「前 5 名各維度貢獻」：用現有的評分引擎重算，不用改資料表。完整瀑布圖先不做。</p></div>
+</section>
+
+<section class="mod" id="m-pending">
+  <div class="mod-head"><h2>待處理</h2><span class="va">P0 待處理</span><span class="vb">待處理</span><span class="pri p1">先做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-pending.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-pending.jpg" alt="v0.0.5 待處理" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>4 類分頁＋原話＋診斷＋動作按鈕</figcaption></figure>
+    <figure><a href="img/admin-compare/b-pending.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-pending.jpg" alt="v1.0.8 待處理" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>只收「沒資料的詞」一類</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>分頁籤直接寫數量：全部、差評、聽不懂的詞、0 結果、一直改需求、已處理。</li>
+      <li>每筆有<b>原話</b>和一句<b>診斷</b>（例如「『魔霸9』出現 2 次，模型回報聽不懂；如果是軟體，可一鍵建畫像草稿」）。</li>
+      <li>三個動作按鈕：看對話、建軟體草稿、處理完。側欄放在最上面，還有紅色數字徽章。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>只有「系統沒資料的詞」一類，狀態分頁（待處理／已處理／已忽略），沒有原話，也不能跳到對話。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>加類別：差評、0 結果、<b>模型失敗／逾時</b>（v0.0.5 的告警頁併進來，不另開頁）。每筆顯示原話、一句診斷、「看對話」按鈕，聽不懂的詞加「建軟體草稿」按鈕。側欄「待處理」加數字徽章。「一直改需求」放第二批。</p></div>
+</section>
+
+<section class="mod" id="m-models">
+  <div class="mod-head"><h2>模型與供應商</h2><span class="va">C4 模型與供應商</span><span class="vb">模型</span><span class="pri p2">接著做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-models.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-models.jpg" alt="v0.0.5 模型頁" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>誰在幹活、備用、用量、逐次明細</figcaption></figure>
+    <figure><a href="img/admin-compare/b-models.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-models.jpg" alt="v1.0.8 模型頁" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>一張乾淨的供應商表</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>頂部「<b>現在誰在幹活</b>」：需求理解、回覆生成各選一個模型，旁邊標可用與否。</li>
+      <li>「備用模型與逾時」：主模型失敗或超過 N 秒就換備用。</li>
+      <li><b>用量表</b>（近 1／7／30 天）：呼叫數、平均耗時、P95、錯誤率、輸入／輸出 token。</li>
+      <li><b>逐次呼叫明細</b>可依用途、狀態、日期篩選，有分頁；每列能點到對應的對話。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>供應商表很乾淨，內建 9 家、能測試連線、金鑰有加密，這部分比 v0.0.5 好。但看不到模型實際表現：工作台寫著「模型失敗 29 次、改用規則 13 次、平均回應 6.8 秒」，卻點不進去看是哪幾次、為什麼。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>保留 B 的供應商表，下方加兩塊：①「近 7 天用量」小表（呼叫數、平均、P95、失敗率、token）；②「逐次呼叫明細」可篩選失敗、可點到對話。編輯表單加「備用模型」下拉和「逾時秒數」。工作台的「模型失敗 29」改成可點，直接跳到篩好失敗的明細。單價和成本試算排到後面。</p></div>
+</section>
+
+<section class="mod" id="m-software">
+  <div class="mod-head"><h2>軟體庫</h2><span class="va">C1 軟體畫像庫</span><span class="vb">軟體庫</span><span class="pri p2">接著做（你上傳軟體表之前）</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-software.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-software.jpg" alt="v0.0.5 軟體畫像編輯" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>左清單右表單：別名表、官方需求、工作類型下拉</figcaption></figure>
+    <figure><a href="img/admin-compare/b-software.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-software.jpg" alt="v1.0.8 軟體編輯" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>用途要在一大塊 JSON 裡改</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li><b>左清單、右編輯</b>，切換軟體不用跳頁。</li>
+      <li>別名是一張表，每個別名可選「明確／模糊」，模糊的要填「要出現的上下文」和「出現就不算」（例如 max 遇到 Pro Max 不算）。</li>
+      <li>官方需求是小表格：最低／建議 × 記憶體／顯存／硬碟，加官網網址和核實日期。</li>
+      <li>每個工作類型用<b>下拉選單</b>選單核、多核、GPU、顯存、記憶體需求等級（0–3），跑分項目用打勾，完全不用碰程式語法。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>列表清楚，但編輯「用途、門檻與權重變化」要在一大塊 JSON 文字框裡改，漏一個逗號就存不了。你之後要自己輸入大量軟體資料，這是最大的障礙。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>把 JSON 框換成表單：每個用途一張小卡，裡面有名稱、硬門檻（記憶體／顯存）、風險門檻、七維加減分格子（沿用「閾值與權重」頁的格子樣式）、細項打勾。別名改成可增刪的列表。「明確／模糊」別名等軟體表進來時再加。</p></div>
+</section>
+
+<section class="mod" id="m-cards">
+  <div class="mod-head"><h2>卡片</h2><span class="va">C8 卡片管理</span><span class="vb">卡片</span><span class="pri p2">接著做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-cards.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-cards.jpg" alt="v0.0.5 卡片管理" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>依對話流程分頁＋7 天出現與點選率</figcaption></figure>
+    <figure><a href="img/admin-compare/b-card-edit.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-card-edit.jpg" alt="v1.0.8 卡片編輯" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>編輯頁：出題條件、選項加減分、選了剩幾台</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>列表多兩欄：<b>7 天出現次數、7 天點選率</b>。哪張卡常出現卻沒人點，一眼看出來。</li>
+      <li>優先級直接在列表上改，開關也在列表上。</li>
+      <li>分頁依對話流程排：基礎需求、追問、衝突／放寬、推薦、需求區。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>編輯頁比 v0.0.5 好很多：出題條件、每個選項寫入什麼需求、加減分、「對全部機型選了剩 N 台」，沒作用的選項還會標紅、標黃。缺的是「上線後這張卡表現如何」。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>保留 B 的編輯頁。列表加「7 天出現」「7 天點選率」「最常被選的選項」三欄（從每輪的追問決策紀錄算），優先度改成可直接在列表上修改。</p></div>
+</section>
+
+<section class="mod" id="m-flags">
+  <div class="mod-head"><h2>功能開關</h2><span class="va">D1 功能開關</span><span class="vb">功能開關</span><span class="pri p2">接著做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-flags.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-flags.jpg" alt="v0.0.5 功能開關" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>每個開關寫清楚「開會怎樣、關會怎樣」</figcaption></figure>
+    <figure><a href="img/admin-compare/b-flags.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-flags.jpg" alt="v1.0.8 功能開關" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>三欄緊湊格子，底部浮動儲存列</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>每個開關都寫「<b>開：…；關：…</b>」兩句，你找使用者測試時知道關掉會看到什麼。</li>
+      <li>數值設定旁邊直接標「範圍 1–20」，超出範圍存不進去。</li>
+      <li>頁頂有「恢復預設」；影響使用者畫面的開關有「使用者端」小標。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>版面比 v0.0.5 緊湊好掃，底部浮動的「目前沒有變更／儲存」列也很好。但說明只有一句，看不出關掉的後果；後端也不檢查數值範圍。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>保留 B 的三欄版面。每個開關說明加第二行「關掉時：…」，加「恢復預設」按鈕。數值範圍統一寫在共用定義裡，前端顯示、後端也檢查。</p></div>
+</section>
+
+<section class="mod" id="m-weights">
+  <div class="mod-head"><h2>權重設定</h2><span class="va">C6 權重中心</span><span class="vb">閾值與權重</span><span class="pri p2">接著做（跟權重帳本一起）</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-signals.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-signals.jpg" alt="v0.0.5 需求訊號表" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>需求訊號表：每列可開關，下面是強度係數與上限</figcaption></figure>
+    <figure><a href="img/admin-compare/b-tuning.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-tuning.jpg" alt="v1.0.8 閾值與權重" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>預設權重＋用途表＋便攜表，一長頁</figcaption></figure>
+  </div>
+  <div class="pair one">
+    <figure><a href="img/admin-compare/a-subweights.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-subweights.jpg" alt="v0.0.5 子權重" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>子權重分頁：參數在上、每種軟體工作的細項占比預覽在下</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>分成 6 個<b>分頁籤</b>（基準權重、需求訊號表、子權重、分數、軟體換算表、數值閾值），每頁都不長。</li>
+      <li><b>需求訊號表</b>：一列一個訊號（常帶出門、咖啡館、宿舍、要安靜、螢幕色彩好…）× 七維格子，每列前面有勾選框可單獨關掉。下面是強度係數（很在意 ×1.5）和三種上限。</li>
+      <li><b>子權重預覽表</b>：每種軟體工作（Photoshop 修圖、Premiere 剪 4K、3ds Max 渲染…）的單核／多核／GPU 占比並排，一眼比較。</li>
+      <li>每頁底部「<b>預覽影響</b>：最近 20 輪」按鈕，改完先看會不會讓推薦大換血。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>格子編輯方式和 v0.0.5 一樣直觀，「總和 100／100」綠標很好。但只有 5 個用途 × 3 段便攜，沒有場景（咖啡館、宿舍）和偏好（安靜、色準）；全部擠在一長頁。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>頁面改成分頁籤：權重規則｜閾值｜（之後的）分數設定。「用途對權重的影響」擴充成「需求訊號表」，加場景和偏好兩類，每列前面加開關。強度係數和上限放在表下方。「預覽影響」按鈕等你確認不算回歸流程後再加。子權重預覽表跟著軟體子權重一起做。</p></div>
+</section>
+
+<section class="mod" id="m-dashboard">
+  <div class="mod-head"><h2>總覽</h2><span class="va">A1 總覽</span><span class="vb">工作台</span><span class="pri p3">之後</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-overview.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-overview.jpg" alt="v0.0.5 總覽" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>時間切換＋「用戶走到哪一步」漏斗</figcaption></figure>
+    <figure><a href="img/admin-compare/b-dashboard.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-dashboard.jpg" alt="v1.0.8 工作台" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>10 個數字卡</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li>右上「1 天／7 天／30 天」切換。</li>
+      <li>「<b>用戶走到哪一步</b>」漏斗：打開頁面 → 發出第一句 → 需求不少於 2 條 → 候選收窄到 50 台內 → 收到推薦 → 點詳情 → 點購買。每一條都能點，跳到停在那一步的對話。</li>
+      <li>下方有最近對話列表，可以直接點進去。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>10 個數字卡，看得到總數，但看不出使用者卡在哪一步，數字也不能點。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>你先前決定後台首頁之後再做，所以排在後面。到時候加三樣：時間切換、漏斗（每條可點）、數字卡可點（例如「模型失敗」跳到模型明細）。</p></div>
+</section>
+
+<section class="mod" id="m-insights">
+  <div class="mod-head"><h2>需求洞察</h2><span class="va">A4 需求洞察</span><span class="vb">沒有</span><span class="pri p3">之後（有真實對話後）</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-insights.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-insights.jpg" alt="v0.0.5 需求洞察" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>用途 × 預算熱力圖、權重分布、沒認出的詞</figcaption></figure>
+    <div class="none">v1.0.8 沒有這頁</div>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li><b>用途 × 預算熱力圖</b>：格子越深代表越多人，點格子跳到那批對話。</li>
+      <li><b>權重分布</b>：每一維最後的權重範圍（箱形圖），可以拿來校準預設權重，正好對上「權重是核心」。</li>
+      <li>供需缺口、只差價格的機型、沒認出的詞、提到的軟體。</li></ul></dd>
+    <dt class="tb">值得注意</dt><dd>截圖裡 6 段對話全落在「沒說用途」那格，但使用者其實說了「剪 4K」「3ds Max」。v0.0.5 的分桶本身有問題，搬的時候不能照抄。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>等有一批真實對話再做精簡版，只放三塊：熱力圖（從最後一輪需求檔案分桶）、權重分布、提到的軟體。其餘先不做。</p></div>
+</section>
+
+<section class="mod" id="m-laptops">
+  <div class="mod-head"><h2>機型與資料品質</h2><span class="va">C3 數據維護＋C9 資料品質</span><span class="vb">機型</span><span class="pri p3">之後（跟清理後資料一起）</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-quality.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-quality.jpg" alt="v0.0.5 資料品質" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>品質摘要表＋異常清單</figcaption></figure>
+    <figure><a href="img/admin-compare/b-laptops.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-laptops.jpg" alt="v1.0.8 機型" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>兩步匯入＋列表上直接改價、上下架</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt class="ta">v0.0.5 好用</dt><dd><ul>
+      <li><b>品質摘要表</b>：每個欄位有幾台實測、幾台填補、幾台缺值，填補比例超過一半用紅字。</li>
+      <li><b>異常清單</b>：例如「沒有 NVIDIA 顯卡卻有 Octane 分數」，附建議處理方式。</li></ul></dd>
+    <dt class="tb">v1.0.8 現在</dt><dd>列表上直接改價格、上下架，CSV 先檢查再寫入，日常維護比 v0.0.5 順手。沒有品質資訊。</dd>
+  </dl>
+  <div class="plan"><b>我打算做</b><p>等清理後的 CSV 接線時，在機型頁最上面加品質摘要小表。異常清單之後再說。</p></div>
+</section>
+
+<section class="mod" id="m-others">
+  <div class="mod-head"><h2>其他頁：不搬或已夠用</h2><span class="pri p3">不做</span></div>
+  <div class="pair">
+    <figure><a href="img/admin-compare/a-rules.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/a-rules.jpg" alt="v0.0.5 規則" loading="lazy"></a><figcaption><span class="va">v0.0.5</span>C2 規則：狀態徽章值得借用</figcaption></figure>
+    <figure><a href="img/admin-compare/b-motion.jpg" target="_blank" rel="noopener"><img src="img/admin-compare/b-motion.jpg" alt="v1.0.8 動效參數" loading="lazy"></a><figcaption><span class="vb">v1.0.8</span>動效方案：B 獨有，比 v0.0.5 好</figcaption></figure>
+  </div>
+  <dl class="notes">
+    <dt>C2 規則</dt><dd>規則表不搬，B 的選題架構不同。只借一個點子：每條規則有「已生效／未實作／固定行為」徽章。B 的功能開關之後可以加「已接線」小標，由測試自動產生，不用手寫。</dd>
+    <dt>B2 日誌與告警</dt><dd>不另開頁。告警併進「待處理」，模型呼叫明細放進「模型」頁，變更日誌 B 已經有「稽核紀錄」。</dd>
+    <dt>C5 介面文案</dt><dd>B 的「首頁內容」已經夠用，勾選基礎卡的方式比 v0.0.5 直觀。不做。</dd>
+    <dt>A2 用戶、C7 管理員</dt><dd>測試期用不到，對話標籤就能分受試者。要找協作者進後台時再做管理員頁。</dd>
+  </dl>
+</section>
+
+<section class="tblwrap" aria-label="總表">
+  <table>
+    <thead><tr><th>順序</th><th>做什麼</th><th>在 v1.0.8 哪一頁</th><th>大小</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pri p1">先做</span></td><td>列表加結果徽章、第一推薦、篩選、分頁</td><td>對話</td><td>中</td></tr>
+      <tr><td><span class="pri p1">先做</span></td><td>詳情改左右兩欄（聊天重現＋輪次分頁）＋標籤按鈕</td><td>對話詳情</td><td>中</td></tr>
+      <tr><td><span class="pri p1">先做</span></td><td>每輪加模型呼叫明細、耗時條、前 5 名貢獻</td><td>對話詳情</td><td>小</td></tr>
+      <tr><td><span class="pri p1">先做</span></td><td>加差評、0 結果、模型失敗三類；原話、診斷、看對話按鈕；側欄徽章</td><td>待處理</td><td>中</td></tr>
+      <tr><td><span class="pri p2">接著做</span></td><td>近 7 天用量、逐次呼叫明細、備用模型、逾時秒數</td><td>模型</td><td>小～中</td></tr>
+      <tr><td><span class="pri p2">接著做</span></td><td>用途 JSON 改成表單、別名改列表</td><td>軟體庫</td><td>中</td></tr>
+      <tr><td><span class="pri p2">接著做</span></td><td>列表加 7 天出現、點選率、最常選項；優先度直接改</td><td>卡片</td><td>小</td></tr>
+      <tr><td><span class="pri p2">接著做</span></td><td>「關掉時」說明、恢復預設、數值範圍前後端檢查</td><td>功能開關</td><td>小</td></tr>
+      <tr><td><span class="pri p2">接著做</span></td><td>分頁籤、需求訊號表（場景／偏好＋每列開關）、強度與上限</td><td>閾值與權重</td><td>中</td></tr>
+      <tr><td><span class="pri p3">之後</span></td><td>時間切換、漏斗、數字可點</td><td>工作台</td><td>中</td></tr>
+      <tr><td><span class="pri p3">之後</span></td><td>熱力圖、權重分布、提到的軟體</td><td>新頁：需求洞察</td><td>中</td></tr>
+      <tr><td><span class="pri p3">之後</span></td><td>品質摘要表</td><td>機型</td><td>小</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="keep">
+  <h3>v1.0.8 已經比 v0.0.5 好、要保留的介面</h3>
+  <ul>
+    <li>每頁都有自己的網址，重新整理不會跳回首頁（v0.0.5 沒有網址）。</li>
+    <li>底部浮動的「目前沒有變更／儲存」列，改了什麼一目了然。</li>
+    <li>動效參數與候選機型顯示的「方案」：複製、預覽、套用，很適合做 A/B 測試。</li>
+    <li>卡片編輯頁：出題條件、選了剩幾台、無效選項標紅黃。</li>
+    <li>機型列表直接改價、上下架；CSV 先檢查再寫入。</li>
+    <li>模型頁的測試連線、內建供應商、金鑰加密；稽核紀錄。</li>
+  </ul>
+</section>
+
+<footer>做法：在本機同時啟動 system-v0.0.5（埠 8010）與 laptop-assistant-v1.0.8（埠 5173），用瀏覽器自動化登入兩邊後台，逐頁截圖後對照程式碼確認。兩邊的資料都是先前的測試對話，機型資料是模擬資料。</footer>
+</div>
+<script>
+const toc=document.getElementById("toc");
+document.querySelectorAll(".mod").forEach(m=>{const h=m.querySelector("h2").textContent;const p=m.querySelector(".pri");
+const li=document.createElement("li");li.innerHTML=`<span class="pri ${p.classList[1]}">${p.textContent.replace(/（.*）/,"")}</span><a href="#${m.id}">${h}</a>`;toc.appendChild(li);});
+</script>
+</body>
+</html>
