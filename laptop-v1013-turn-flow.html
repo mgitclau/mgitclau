@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一句話的旅程</title>
+<meta name="description" content="AI 筆電選購助手 v1.0.13：用戶送出一句話後，各模組依序做了什麼。點每一步可看模組、程式碼、輸入輸出與時間，資料來自資料庫的真實紀錄。">
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e2e0d8; --soft:#efede6;
+  --web:#3b6fd8; --api:#7a5af0; --nlu:#0f9d8a; --ai:#e0662c; --eng:#c2930a; --db:#5b6b7a;
+  --ok:#1f8f4e; --bad:#c43c3c; --warn:#b7791f; --code:#f3f2ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f;
+    --web:#7aa2ff; --api:#a993ff; --nlu:#3fd0ba; --ai:#ff9a62; --eng:#e8bf3c; --db:#9aaabb;
+    --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52; --code:#1a1a1e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f;
+  --web:#7aa2ff; --api:#a993ff; --nlu:#3fd0ba; --ai:#ff9a62; --eng:#e8bf3c; --db:#9aaabb;
+  --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52; --code:#1a1a1e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:820px}
+.note{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--muted);margin-bottom:18px}
+.note b{color:var(--ink)}
+.runs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:16px}
+.run{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.run:hover{border-color:var(--muted)}
+.run[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.run .q{font-weight:600;margin:4px 0}
+.run .m{font-size:12.5px;color:var(--muted)}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-right:4px;white-space:nowrap}
+.timebar{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+.timebar h3{margin:0 0 8px;font-size:15px}
+.bar{display:flex;height:30px;border-radius:7px;overflow:hidden;background:var(--soft)}
+.bar div{display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;cursor:pointer;min-width:4px}
+.bar div:hover{filter:brightness(1.1)}
+.barlegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.legend span{font-size:12.5px;padding:3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.flow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.phase{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;margin:14px 0 6px 4px}
+.phase:first-child{margin-top:0}
+.step{position:relative;display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;background:transparent;border:1.5px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:9px 12px;margin:0 0 14px;cursor:pointer}
+.step:not(:last-child)::after{content:"";position:absolute;left:30px;bottom:-15px;width:2px;height:14px;background:var(--line)}
+.step:hover{background:var(--soft)}
+.step[aria-selected="true"]{background:var(--soft);border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.step.absent{opacity:.55;border-style:dashed;border-left-style:solid}
+.num{width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.st-t{font-weight:600;font-size:14.5px}
+.st-s{font-size:12.5px;color:var(--muted);line-height:1.45}
+.ms{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;white-space:nowrap}
+.ms b{color:var(--ink);font-size:13px}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.d-mod{display:inline-block;font-size:12px;color:#fff;background:var(--c);padding:2px 10px;border-radius:99px;margin-bottom:6px}
+.detail h2{margin:2px 0 6px;font-size:20px}
+.plain{background:var(--soft);border-radius:9px;padding:10px 12px;margin:10px 0}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13.5px;margin:12px 0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.sec{margin-top:16px}
+.sec h4{margin:0 0 6px;font-size:13.5px;color:var(--muted);font-weight:700;letter-spacing:.5px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-word}
+.io{display:grid;grid-template-columns:1fr;gap:10px}
+.io .box{border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.io .box h5{margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--ok);font-weight:600}.down{color:var(--bad);font-weight:600}
+.okc{color:var(--ok);font-weight:600}.badc{color:var(--bad);font-weight:600}.warnc{color:var(--warn);font-weight:600}
+.callout{border-left:4px solid var(--warn);background:var(--soft);padding:9px 12px;border-radius:0 8px 8px 0;font-size:13.5px;margin-top:12px}
+.chips span{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:2px 8px;margin:2px 4px 2px 0;font-size:13px}
+.funnel{display:flex;flex-direction:column;gap:5px}
+.funnel div{display:flex;align-items:center;gap:8px;font-size:13px}
+.funnel i{display:block;height:16px;border-radius:4px}
+.navbtns{display:flex;gap:8px;margin-top:18px}
+.navbtns button{flex:1;font:inherit;font-size:13.5px;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px;cursor:pointer}
+.navbtns button:disabled{opacity:.4;cursor:default}
+footer{color:var(--muted);font-size:12.5px;margin-top:26px}
+@media (max-width:860px){
+  .main{grid-template-columns:1fr}
+  .detail{position:static;max-height:none}
+  .kv{grid-template-columns:80px 1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>一句話的旅程：用戶說完之後，系統做了什麼</h1>
+  <p class="sub">AI 筆電選購助手 v1.0.13。從用戶按下送出，到畫面出現回覆，中間經過 6 個模組、18 個步驟。點左邊任何一步，右邊會顯示：屬於哪個模組、跑了哪段程式、收到什麼、算出什麼、花多久。</p>
+
+  <div class="note">
+    <b>資料來源：</b>下面三段都是資料庫 <code>laptop_assistant</code> 裡的真實紀錄（<code>runs</code>、<code>messages</code>、<code>llm_calls</code> 三張表），產生於 2026-11-02，當時版本約 v1.0.3～v1.0.4。流程和程式碼以 v1.0.13 為準。<br>
+    <b>時間：</b>系統只存兩種時間：每一輪的總時間，以及每次呼叫 AI 的時間。其他步驟沒有各自計時，所以只能算「總時間 − AI 時間 = 所有程式步驟加起來」。<br>
+    <b>虛線框：</b>這一步是 v1.0.7 之後才加的，資料產生時還沒有，所以沒有紀錄。
+  </div>
+
+  <div class="runs" id="runs" role="group" aria-label="選擇一段真實對話"></div>
+
+  <div class="timebar">
+    <h3 id="tb-title">這一輪的時間花在哪裡</h3>
+    <div class="bar" id="bar"></div>
+    <div class="barlegend" id="barlegend"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="main">
+    <div class="flow" id="flow" role="listbox" aria-label="處理步驟"></div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </div>
+
+  <footer>資料讀取日期 2026-11-05 ・ 程式碼位置以 laptop-assistant-v1.0.13 為準 ・ 只讀取，沒有修改任何程式或資料</footer>
+</div>
+
+<script>
+/* ---------- 模組 ---------- */
+const MOD = {
+  web:{name:"使用者畫面（前端）", c:"var(--web)", desc:"用戶看到、點到的網頁"},
+  api:{name:"API 伺服器（總指揮）", c:"var(--api)", desc:"收到請求，依序叫每個模組做事"},
+  nlu:{name:"NLU 理解模組", c:"var(--nlu)", desc:"把一句話拆成需求，先用規則，再請 AI 幫忙"},
+  ai:{name:"AI 模型（DeepSeek）", c:"var(--ai)", desc:"外部的語言模型，只負責聽懂和說話"},
+  eng:{name:"推薦引擎", c:"var(--eng)", desc:"用程式算篩選、權重、分數、排名，推薦由這裡決定"},
+  db:{name:"資料庫（PostgreSQL）", c:"var(--db)", desc:"存機型、設定、對話紀錄"},
+};
+const DIM = {performance:"性能",display:"螢幕",portability:"便攜",battery:"續航",thermal:"散熱",noise:"安靜",expandability:"擴充"};
+const DEFAULT_W = {noise:6,battery:12,display:21,thermal:10,performance:33,portability:14,expandability:4};
+
+/* ---------- 三段真實資料（直接從資料庫讀出） ---------- */
+const RUNS = [
+{
+  key:"rec", title:"直接推薦", tone:"var(--ok)",
+  runId:"1e6d13e9-4579-4073-bc69-562eaa338933", conv:"db7064c6-2dea-401a-bbdf-0c570a19135c",
+  created:"2026-11-02 21:03:53", input:"剪片，常用 Premiere，每天背著走，預算 7 萬",
+  action:"recommend", ms:3317, formal:209, edge:14, out:148, replySource:"model",
+  firstTurn:true, manualWeights:false,
+  llm:[
+    {slot:"nlu",model:"deepseek-flash",ok:true,ms:1899,in:528,out:218,error:null},
+    {slot:"reply",model:"deepseek-flash",ok:true,ms:1355,in:523,out:131,error:null},
+  ],
+  nlu:{source:"model",error:null,unknown:[],compareIntent:false,
+    ops:[
+      {field:"software",label:"剪輯軟體",value:"Premiere Pro（4K 剪輯）",hard:false,evidence:"常用 Premiere",confidence:0.95,source:"nlu"},
+      {field:"purpose",label:"用途：剪輯",value:"剪輯",hard:false,evidence:"剪片",confidence:0.9,source:"nlu"},
+      {field:"portability",label:"便攜性",value:"high",hard:false,evidence:"每天背著走",confidence:0.85,source:"nlu"},
+      {field:"budget",label:"預算",value:"最多 70,000",hard:true,evidence:"預算 7 萬",confidence:0.95,source:"nlu"},
+    ],
+    weightSuggestion:{deltas:{performance:3,portability:2},reason:"剪輯需效能，每天攜帶需輕便",confidence:0.8}},
+  software:[{software:"Premiere Pro",usage:"4K 剪輯",riskText:"16 GB 記憶體可用但建議 32 GB；顯示記憶體不足會被排除"}],
+  trace:{rows:[
+    {dim:"portability",kind:"主動",before:14,after:17,delta:3,reasons:["便攜度：便攜性","語意判斷：剪輯需效能，每天攜帶需輕便"]},
+    {dim:"performance",kind:"主動",before:33,after:34,delta:1,reasons:["用途：剪輯","軟體畫像：Premiere Pro（4K 剪輯）","語意判斷：剪輯需效能，每天攜帶需輕便"]},
+    {dim:"noise",kind:"被動",before:6,after:4,delta:-2,reasons:["維持總和 100（因調整 螢幕、散熱、性能、續航）"]},
+    {dim:"expandability",kind:"被動",before:4,after:2,delta:-2,reasons:["維持總和 100（因調整 散熱、便攜）"]},
+  ],skipped:[]},
+  weights:{noise:4,battery:12,display:21,thermal:10,performance:34,portability:17,expandability:2},
+  top:[["260129A","機械革命翼龍15 Pro 2026",29500],["260329A","拯救者Y9000P定製版",58500],["SHDX0164","拯救者 Y7000X (2026) Ultra 7 251HX / RTX 5070 8GB / 16GB / 1TB",66100],["SHDX0250","戰神 T11 Pro (2026) i9-14900HX / RTX 5080 16GB / 32GB / 1TB",63000],["SHDX0006","ROG 魔霸9 (Strix 9 G16) (2025) RTX5070Ti",49500]],
+  edgeTop:[["SHDX0226","暗影騎士·擎7S (2025) Ultra 9 275HX / RTX 5080",74700],["SHDX0225","暗影騎士·擎7S (2025) Ultra 7 255HX / RTX 5080",74700],["SHDX0251","戰神 T11 Pro (300Hz版) (2026) i9-14900HX / RTX 5080",72000]],
+  hardNote:"預算上限 70,000，容許超出 max(70,000×8%, 2,000) = 5,600。所以 70,000 以內＝正式候選；70,001～75,600＝差一點；超過 75,600＝排除。Premiere 的「顯示記憶體下限」也會排除機型。",
+  followup:null,
+  cards:["requirements 需求卡（4 項）","software 軟體提醒卡（Premiere Pro）","count 台數卡（371 → 209）","recommend 推薦卡（前 5 名＋差一點 3 台）"],
+  reply:"依你的需求，最推薦機械革命翼龍15 Pro 2026，售價 29,500 元，螢幕、續航和便攜都優於同類機型。其次可考慮拯救者Y9000P定製版，續航和性能表現不錯，但價格 58,500 元高出不少；拯救者 Y7000X (2026) 性能與螢幕也強，售價 66,100 元。另外提醒，16 GB 記憶體雖可用，但建議直上 32 GB，顯示記憶體不足的機型則不建議。",
+  actionWhy:"需求檔案已有用途、預算、便攜、軟體四個基本欄位，沒有缺的要問，正式候選也大於 0 → 推薦。",
+  remarks:[],
+},
+{
+  key:"ask", title:"先追問", tone:"var(--warn)",
+  runId:"edee3aea-7248-4cc5-8419-041ab1d69050", conv:"b9f1be23-a25f-4b5f-8ffc-0a48d6d95db8",
+  created:"2026-11-02 21:01:37", input:"剪片，常用 Premiere，每天背著走，預算 7 萬",
+  action:"ask", ms:4066, formal:274, edge:0, out:97, replySource:"model",
+  firstTurn:true, manualWeights:false,
+  llm:[
+    {slot:"nlu",model:"deepseek-flash",ok:true,ms:2371,in:528,out:225,error:null},
+    {slot:"reply",model:"deepseek-flash",ok:true,ms:1635,in:177,out:50,error:null},
+  ],
+  nlu:{source:"model",error:null,unknown:[],compareIntent:false,
+    ops:[
+      {field:"software",label:"剪輯軟體",value:"Premiere Pro（4K 剪輯）",hard:false,evidence:"常用 Premiere",confidence:0.95,source:"nlu"},
+      {field:"purpose",label:"用途：剪輯",value:"剪輯",hard:false,evidence:"剪片",confidence:0.9,source:"nlu"},
+      {field:"portability",label:"攜帶性",value:"high",hard:false,evidence:"每天背著走",confidence:0.85,source:"nlu"},
+    ],
+    weightSuggestion:{deltas:{performance:3,portability:2},reason:"剪輯需求偏重效能，且每天背著走提高攜帶性權重",confidence:0.8}},
+  software:[{software:"Premiere Pro",usage:"4K 剪輯",riskText:"16 GB 記憶體可用但建議 32 GB；顯示記憶體不足會被排除"}],
+  trace:{rows:[
+    {dim:"portability",kind:"主動",before:14,after:17,delta:3,reasons:["便攜度：攜帶性","語意判斷：剪輯需求偏重效能，且每天背著走提高攜帶性權重"]},
+    {dim:"performance",kind:"主動",before:33,after:34,delta:1,reasons:["用途：剪輯","軟體畫像：Premiere Pro（4K 剪輯）","語意判斷：剪輯需求偏重效能，且每天背著走提高攜帶性權重"]},
+    {dim:"noise",kind:"被動",before:6,after:4,delta:-2,reasons:["維持總和 100（因調整 螢幕、散熱、性能、續航）"]},
+    {dim:"expandability",kind:"被動",before:4,after:2,delta:-2,reasons:["維持總和 100（因調整 散熱、便攜）"]},
+  ],skipped:[]},
+  weights:{noise:4,battery:12,display:21,thermal:10,performance:34,portability:17,expandability:2},
+  top:[["260129A","機械革命翼龍15 Pro 2026",29500],["260329A","拯救者Y9000P定製版",58500],["GJS0002","榮耀 MagicBook Pro 16 Ultra 9 285H",76500],["SHDX0136","拯救者 Y9000P 至尊版 (2026) RTX 5090 24GB / 64GB / 2TB",179100],["SHDX0137","拯救者 Y9000P 至尊版 (2026) RTX 5090 24GB / 64GB / 2TB",186700]],
+  edgeTop:[],
+  hardNote:"這次沒有預算條件（AI 漏掉了），所以只剩 Premiere 的軟體最低需求在篩：97 台因顯示記憶體不足被排除，沒有「差一點」。前 5 名裡出現 17～18 萬的機型，就是因為沒有預算上限。",
+  followup:{name:"預算",question:"預算大概多少？",why:"預算會直接決定候選範圍。",options:["3 萬以下","3–4.5 萬","4.5–7 萬","7 萬以上","不確定，你先幫我看"]},
+  cards:["requirements 需求卡（3 項，少了預算）","software 軟體提醒卡（Premiere Pro）","count 台數卡（371 → 274）","followup 追問卡：預算大概多少？"],
+  reply:"目前還沒有符合條件的機型，主要卡在顯示記憶體不足會被排除；16 GB 記憶體雖可用，但建議 32 GB。方便先說預算大概多少嗎？預算會直接決定候選範圍。",
+  actionWhy:"需求檔案缺「預算」，還沒到追問上限 → 追問。追問卡依優先度選出「預算」卡（優先度 400）。",
+  remarks:[
+    "AI 漏掉了「預算 7 萬」：用戶明明說了，系統還反問預算。v1.0.4 已修：規則聽得出預算、模型漏掉時，會自動補回。",
+    "AI 回覆說「還沒有符合條件的機型」，事實是有 274 台。原因是還在追問，給 AI 的事實裡沒有列機型，AI 誤會成找不到。v1.0.4 已修：偵測到這句話就改用固定文案。",
+  ],
+},
+{
+  key:"fail", title:"AI 失敗，改用備案", tone:"var(--bad)",
+  runId:"2671c248-f4e7-496d-897a-54f287c73b9a", conv:"079ee5c9-7d37-4c8c-a6e8-8096eb82a7bb",
+  created:"2026-11-02 19:11:31", input:"預算 4 萬，平常上課寫報告，每天要背去學校",
+  action:"ask", ms:18160, formal:155, edge:24, out:192, replySource:"template",
+  firstTurn:false, manualWeights:true,
+  llm:[
+    {slot:"nlu",model:"deepseek-flash",ok:false,ms:6803,in:554,out:1024,error:"模型輸出不合格"},
+    {slot:"nlu",model:"deepseek-flash",ok:false,ms:7287,in:577,out:1024,error:"模型輸出不合格"},
+    {slot:"reply",model:"deepseek-flash",ok:false,ms:4020,in:188,out:600,error:"模型回覆是空的"},
+  ],
+  nlu:{source:"rule",error:"模型輸出不合格",unknown:[],compareIntent:false,
+    ops:[
+      {field:"budget",label:"預算 4 萬以內",value:"最多 40,000",hard:true,evidence:"預算 4 萬",confidence:0.9,source:"rule"},
+      {field:"purpose",label:"用途：辦公學習",value:"辦公學習",hard:false,evidence:"上課",confidence:0.9,source:"rule"},
+      {field:"portability",label:"要輕便好帶",value:"high",hard:false,evidence:"每天要背",confidence:0.9,source:"rule"},
+    ],
+    weightSuggestion:null},
+  software:[],
+  trace:{rows:[],skipped:[
+    {dim:"noise",delta:2,why:"用戶已手動設定權重",source:"用途",detail:"辦公學習"},
+    {dim:"battery",delta:5,why:"用戶已手動設定權重",source:"用途",detail:"辦公學習"},
+    {dim:"portability",delta:4,why:"用戶已手動設定權重",source:"用途",detail:"辦公學習"},
+    {dim:"battery",delta:4,why:"用戶已手動設定權重",source:"便攜度",detail:"要輕便好帶"},
+    {dim:"portability",delta:10,why:"用戶已手動設定權重",source:"便攜度",detail:"要輕便好帶"},
+  ]},
+  weights:{noise:10,battery:12,display:22,thermal:10,performance:9,portability:22,expandability:15},
+  top:[["GJS0001","聯想 小新 Pro 16 GT AI 元啟版 2026 388H",13500],["BIBA0005","華碩a豆14 Air 2026",26600],["BIBA0001","華碩NUC15 Pro+",11600],["GJS0003","華碩 靈耀16 Air 2026 AI 9 H 465",31500],["SHDX0066","華碩a豆14 Air 2026 AI9/32+1T 聯名禮盒",31000]],
+  edgeTop:[],
+  hardNote:"預算上限 40,000，容許超出 max(40,000×8%, 2,000) = 3,200。40,000 以內＝正式候選（155 台）；40,001～43,200＝差一點（24 台）；超過 43,200＝排除（192 台）。",
+  followup:{name:"常用軟體",question:"有固定要用的專業軟體嗎？",why:"軟體會決定最低硬體需求。",options:["Photoshop","Illustrator","Premiere Pro","沒有特別的軟體"]},
+  cards:["requirements 需求卡（3 項，來源：規則）","count 台數卡（371 → 155）","followup 追問卡：有固定要用的專業軟體嗎？"],
+  reply:"目前有 155 台符合條件，另有 24 台略超出條件可以參考。有固定要用的專業軟體嗎？",
+  actionWhy:"需求檔案缺「軟體」，還沒到追問上限 → 追問「常用軟體」卡。",
+  remarks:[
+    "AI 理解試了兩次都失敗：輸出 tokens 剛好 1,024，等於額度上限。DeepSeek 預設會先「思考」，思考就把額度用完，正式內容是空的。v1.0.4 已修：關閉思考（開關 logic.model_thinking_off）。",
+    "雖然 AI 失敗，規則照樣聽出預算、用途、便攜，對話沒有中斷，只是多等了 18 秒。這就是「規則先跑、AI 失敗時當備案」的設計。",
+    "這位用戶進頁面時先手動調過權重（11/2 01:38），所以這輪用途、便攜帶來的權重調整全部跳過，權重維持用戶自己調的數字。",
+  ],
+},
+];
+
+/* ---------- 程式碼片段（節錄自 v1.0.13） ---------- */
+const CODE = {
+  send:`// apps/web 的 useAssistant：用戶按送出
+POST /api/conversations/:id/messages
+body: { text: "<用戶的話>" }`,
+  route:`// apps/api/src/routes-user.ts:103
+app.post("/api/conversations/:id/messages", turnLimit, async (req, reply) => {
+  ...
+  return runTurn(ctx, await conv(req, reply), { channel: "message", ...b });
+});
+
+// apps/api/src/turn.ts:227
+export async function runTurn(ctx, row, input) {
+  if (ctx.busy.has(row.id)) throw new HttpError(409, "上一句還在處理中");
+  ctx.busy.add(row.id);
+  try { return await turn(ctx, row, input); } finally { ctx.busy.delete(row.id); }
+}`,
+  config:`// apps/api/src/turn.ts:234
+const t0 = performance.now();          // ← 總時間從這裡開始算
+const runId = randomUUID();
+const cfg = await loadConfig(ctx.db);  // 開關、門檻、權重規則、題庫、軟體庫
+const state = hydrateState(withoutDelisted(ctx, structuredClone(row.state)));`,
+  rule:`// packages/nlu/src/understand.ts:209
+export async function understand(text, profile, library, deps, o) {
+  const p = deps.provider;
+  // 沒有設定模型就只用規則
+  if (!p || !text.trim()) return withIntent(safeRule(text, profile, library, expecting), text, lexicon);
+  ...
+// safeRule → packages/nlu/src/rule.ts：用詞表和正規表示式
+//   「預算 4 萬」→ budget  「上課」→ 辦公學習  「每天要背」→ 便攜 high`,
+  model:`// packages/nlu/src/understand.ts:217（節錄）
+const prompt = buildPrompt(deps.promptTemplate, text, profile, library, expecting);
+for (let attempt = 0; attempt < 2; attempt++) {         // 最多試 2 次
+  const r = await callModel(p, attempt ? prompt + RETRY_NOTE : prompt,
+                            { slot: "nlu", maxTokens: NLU_MAX_TOKENS });
+  try {
+    const parsed = parseModelJson(r.text);               // 必須是合格 JSON
+    ...
+    deps.log({ ...base, ...tokens, ok: true, error: null });
+    return result;
+  } catch {
+    error = r.truncated ? "模型輸出被截斷" : "模型輸出不合格";
+    deps.log({ ...base, ...tokens, ok: false, error });  // 寫進 llm_calls
+  }
+}
+// 兩次都失敗 → 退回規則結果
+return { ...withIntent(safeRule(text, profile, library, expecting), text, lexicon), error };`,
+  merge:`// packages/nlu/src/understand.ts:229
+const parsed = parseModelJson(r.text);
+const result = withIntent(
+  mergeRule(parsed, text, profile, library,
+            safeRule(text, profile, library, expecting), expecting),
+  text, lexicon, parsed);
+// mergeRule：模型的需求為主，規則聽到、模型漏掉的補回（例如預算）
+// toSuggestion：模型建議的權重調整，每項最多 ±5（門檻 nluDeltaCap）`,
+  intent:`// apps/api/src/turn.ts:257（v1.0.11 新增，開關 intent.router）
+if (router) {
+  routed = routeIntent(nlu, state, { flags, thresholds, intent, laptops, fresh });
+  unknown = routed.unknown;
+  ops = [...routed.controlOps, ...routed.ops, ...unknownReqs(nlu, unknown)];
+} else ops = [...nlu.ops, ...unknownReqs(nlu)];
+// 分辨：找筆電、閒聊、範圍外、上一步、重來…`,
+  profile:`// apps/api/src/turn.ts:279
+state.profile = applyOps(state.profile, ops, cfg.thresholds);
+
+// packages/engine/src/profile.ts:26
+export function applyOps(profile, ops, th) {
+  let next = [...profile];
+  for (const op of ops) {
+    if (op.op === "delete") { next = next.filter((r) => r.id !== op.id); continue; }
+    const req = stripEffect(normalizeHard(op.req, th));   // 信心不夠就不當硬條件
+    const same = next.findIndex((r) => r.id === req.id || ...);
+    if (same >= 0) next[same] = req; else next.push(req); // 同欄位就覆蓋
+  }
+  return next;
+}`,
+  software:`// apps/api/src/turn.ts:282
+const hits = softwareHits(state.profile, cfg.library);
+
+// packages/engine/src/profile.ts:41
+// 拿需求檔案裡的軟體，去後台「軟體庫」找對應的畫像：
+//   最低需求（記憶體、顯示記憶體）、權重加減、性能細項、風險提醒`,
+  weights:`// apps/api/src/turn.ts:283
+const w = resolveWeights(cfg, state, hits, skipped, input.manualDims ?? []);
+state.weights = w.weights;
+
+// packages/engine/src/profile.ts:54  每條需求變成一個「權重事件」
+if (r.field === "purpose" && rules.purpose[r.value]) ev.push({ source: "用途", deltas: rules.purpose[r.value] });
+if (r.field === "portability") ev.push({ source: "便攜度", deltas: rules.portability[r.value] });
+for (const h of hits) ev.push({ source: "軟體畫像", deltas: h.usage.weightDelta });
+
+// packages/engine/src/profile.ts:73  replayWeights
+// 從預設權重出發，所有事件先加總再縮放，讓總和維持 100
+// 用戶手動調過權重 → 全部跳過，記在 skipped`,
+  filter:`// packages/engine/src/filter.ts:12  每台機型跑一次
+if (flags["rule.budget"]) for (const { value: { min, max } } of pick(profile, "budget")) {
+  if (max !== undefined) {
+    const tol = Math.max(max * th.budgetTolPct, th.budgetTolAbs);   // 8% 或 2,000
+    if (lp.price > max + tol) out.push("PRICE_OVER");               // 排除
+    else if (lp.price > max)  edge.push("PRICE_NEAR");              // 差一點
+  }
+}
+...
+if (flags["rule.software_hard"]) for (const u of ctx.softwareUsages ?? []) {
+  if (u.hard.vram_gb && (!lp.gpu || (lp.vramGb ?? 0) < u.hard.vram_gb)) out.push("SOFTWARE_VRAM_LOW");
+}
+if (out.length)  return { status: 0 };    // 排除
+if (edge.length) return { status: 0.5 };  // 差一點
+return { status: 1 };                     // 正式候選`,
+  rank:`// packages/engine/src/rank.ts:55  buildSnapshot
+const rows = laptops.map((laptop) => {
+  const { status, reasons } = classify(laptop, profile, input);   // 上一步
+  const dims = dimScores(laptop.parts, subs);                     // 7 個維度各 0–100 分
+  const raw = productPower(dims, input.weights);                  // 加權平均
+  return { laptop, status, power: finalPower(raw, cut), ... };
+});
+formal.sort((a, b) => compare(a, b, sort));                       // 分數高的排前面
+
+// packages/engine/src/scoring.ts:66
+export function productPower(dims, weights) {
+  for (const k of DIM_KEYS) { num += dims[k] * weights[k]; den += weights[k]; }
+  return Math.round((num / den) * 10) / 10;
+}`,
+  reason:`// packages/engine/src/rank.ts:79（v1.0.8 新增）
+explainPool(reasonPool, input.weights, { flags, thresholds, usages, evidenceKeys });
+// packages/engine/src/reason.ts：
+//   優點 = 在候選中名次靠前、權重高的維度
+//   要接受的 = 軟體風險 > 重要但低於中位數 > 貢獻 ≤ −1
+//   versus = 第 1 名和第 2 名差在哪
+//   前兩名分差 < 1.5 → 反問「你比較在意哪個？」`,
+  decide:`// packages/engine/src/decide.ts:18
+export function decideAction(input) {
+  if (!input.profile.length) return "guide";    // 什麼都沒說 → 引導
+  if (input.formal === 0) return "relax";       // 0 台 → 建議放寬
+  if (input.compareIntent) return "compare";    // 想比較 → 對比表
+  const underCap = input.nAsk < limitOf(input.askMax) && ...;
+  const wants = input.canAsk ?? missingFields(input.profile).length > 0;
+  return wants && underCap ? "ask" : "recommend";
+}
+// v1.0.7 起：selectFollowup 會先模擬每張追問卡的「價值」，沒價值的不問`,
+  cards:`// apps/api/src/turn.ts:340（節錄）
+if (f["card.requirements"] && heard.length) cards.push({ type: "requirements", items: heard });
+if (f["card.software"] && hits.length)     cards.push({ type: "software", ... });
+if (f["card.count"] && state.profile.length) cards.push({ type: "count", from, to: formal, ... });
+if (followup)                               cards.push({ type: "followup", card: followup, ... });
+if (f["card.recommend"] && action === "recommend") cards.push({ type: "recommend", ids: top5, ... });
+// 同時整理 facts：要給 AI 寫回覆用的「事實清單」
+const facts = { action, formal, edge, top: 前 3 名, followup, softwareRisks, ... };`,
+  reply:`// packages/nlu/src/reply.ts:245
+export async function writeReply(f, deps, o) {
+  const template = { text: templateReply(f), source: "template" };  // 先準備好備案
+  if (!p) return template;
+  const prompt = deps.promptTemplate.replace(/\\{\\{facts\\}\\}/g, () => JSON.stringify(f));
+  r = await callModel(p, prompt, { slot: "reply", maxTokens: REPLY_MAX_TOKENS });
+  const text = r.text.trim();
+  // 檢查：有沒有編造數字、機型、規格，有沒有漏講要接受的缺點
+  const rejected = r.truncated ? "模型輸出被截斷" : rejectReason(text, f, o.numberCheck, ...);
+  deps.log({ ...base, ok: !rejected, ms: r.ms, ... });
+  return rejected ? template : { text, source: "model" };
+}`,
+  save:`// apps/api/src/turn.ts:398
+const ms = Math.round(performance.now() - t0);   // ← 總時間在這裡結束
+await ctx.db.transaction(async (tx) => {
+  await tx.update(schema.conversations).set({ state, title, updatedAt: new Date() });
+  await tx.insert(schema.runs).values({ id: runId, input, action, nlu, reply, formal, edge, out, ms, ... });
+  await tx.insert(schema.messages).values({ role: "user", text: input.text, runId });
+  await tx.insert(schema.messages).values({ role: "assistant", text: reply, cards, runId });
+  if (calls.length) await tx.insert(schema.llmCalls).values(calls.map((c) => ({ ...c, runId })));
+});`,
+  show:`// apps/api/src/turn.ts:429
+return { runId, action, reply, cards, conversation, snapshot, weightTrace, events };
+// 前端收到後：顯示回覆氣泡、需求標籤、卡片，右邊結果區換成新排名，
+// 動畫依 events 播放（v1.0.3 起）`,
+};
+
+/* ---------- 小工具 ---------- */
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const twd = (n) => "NT$ " + n.toLocaleString("en-US");
+const fmt = (n) => n.toLocaleString("en-US");
+const aiMs = (r, slot) => r.llm.filter((c) => c.slot === slot).reduce((a, c) => a + c.ms, 0);
+const progMs = (r) => r.ms - r.llm.reduce((a, c) => a + c.ms, 0);
+const reqTable = (ops) => `<table><tr><th>需求</th><th>值</th><th>聽到的原話</th><th>信心</th><th>硬條件</th></tr>${ops.map((o) => `<tr><td>${esc(o.label)}</td><td>${esc(o.value)}</td><td>「${esc(o.evidence)}」</td><td class="n">${o.confidence}</td><td>${o.hard ? "<b>是</b>" : "否"}</td></tr>`).join("")}</table>`;
+const wTable = (w, base) => `<table><tr><th>維度</th>${base ? "<th class='n'>原本</th>" : ""}<th class="n">權重</th></tr>${Object.keys(DIM).map((k) => `<tr><td>${DIM[k]}</td>${base ? `<td class="n">${base[k]}</td>` : ""}<td class="n">${base && base[k] !== w[k] ? `<span class="${w[k] > base[k] ? "up" : "down"}">${w[k]}</span>` : w[k]}</td></tr>`).join("")}</table>`;
+const llmTable = (calls) => `<table><tr><th>第幾次</th><th>模型</th><th class="n">時間</th><th class="n">送出 tokens</th><th class="n">收到 tokens</th><th>結果</th></tr>${calls.map((c, i) => `<tr><td>${i + 1}</td><td>${c.model}</td><td class="n">${fmt(c.ms)} ms</td><td class="n">${c.in}</td><td class="n">${c.out}</td><td>${c.ok ? '<span class="okc">成功</span>' : `<span class="badc">失敗：${esc(c.error)}</span>`}</td></tr>`).join("")}</table>`;
+const topTable = (rows) => `<table><tr><th>名次</th><th>機型</th><th class="n">售價</th></tr>${rows.map((t, i) => `<tr><td class="n">${i + 1}</td><td>${esc(t[1])} <span style="color:var(--muted);font-size:12px">${t[0]}</span></td><td class="n">${twd(t[2])}</td></tr>`).join("")}</table>`;
+const pre = (s) => `<pre>${esc(s)}</pre>`;
+
+/* ---------- 18 個步驟 ---------- */
+const STEPS = [
+  {phase:"① 收到這句話", id:"send", mod:"web", t:"用戶按下送出", s:"網頁把這句話寄給伺服器",
+    plain:"就像把一張寫了需求的紙條交給店員。網頁不做判斷，只負責把話送出去、等回覆。",
+    file:"apps/web（useAssistant）", code:"send",
+    input:(r) => `<b>用戶打的字：</b><br>「${esc(r.input)}」`,
+    output:(r) => `一個 HTTP 請求：<code>POST /api/conversations/${r.conv.slice(0, 8)}…/messages</code>`,
+    time:() => ({v:null, note:"前端時間沒有記錄"})},
+  {id:"route", mod:"api", t:"API 收件、上鎖", s:"確認同一段對話沒有正在處理的句子",
+    plain:"店員收到紙條，先確認你上一句還沒處理完的話，這句要先等等，避免兩句話打架。",
+    file:"apps/api/src/routes-user.ts:103 → turn.ts:227 runTurn", code:"route",
+    input:(r) => `對話編號 <code>${r.conv}</code><br>內容 <code>{ channel: "message", text: "${esc(r.input)}" }</code>`,
+    output:(r) => `這段對話標成「處理中」，交給 <code>turn()</code>。這輪編號 <code>${r.runId}</code>`,
+    time:() => ({v:null, note:"不在總時間內（計時從下一步開始）"})},
+  {id:"config", mod:"db", t:"讀設定和對話狀態", s:"從資料庫拿開關、權重規則、題庫、這段對話之前的狀態",
+    plain:"店員先翻出你的客戶資料夾（之前說過什麼），再拿出店裡今天的規則手冊（哪些功能開著、預設看重什麼）。",
+    file:"apps/api/src/turn.ts:234 loadConfig、hydrateState", code:"config",
+    input:() => `資料庫表 <code>settings</code>（flags、thresholds、weight_rules、default_weights…）和 <code>conversations.state</code>`,
+    output:(r) => `${r.firstTurn ? "這是這段對話的第一句，需求檔案是空的。" : "這段對話之前已有操作紀錄（用戶 11/2 01:38 手動調過權重、加過比較）。"}<br><br><b>系統預設權重</b>（總和 100）：${wTable(r.manualWeights ? r.weights : DEFAULT_W)}${r.manualWeights ? "<p>↑ 這是用戶自己調過的權重，不是預設值。</p>" : ""}`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+
+  {phase:"② 聽懂用戶說什麼", id:"rule", mod:"nlu", t:"規則理解", s:"用詞表和固定規則先抓一次",
+    plain:"店員先用經驗快速抓重點：聽到「萬」就是預算、聽到「背去學校」就是要輕。速度快、不會亂講，但說法太特別就聽不懂。",
+    file:"packages/nlu/src/understand.ts:209、rule.ts", code:"rule",
+    input:(r) => `「${esc(r.input)}」`,
+    output:(r) => r.nlu.source === "rule"
+      ? `<p class="okc">這一輪 AI 失敗，最後採用的就是規則的結果：</p>${reqTable(r.nlu.ops)}`
+      : `規則結果有算，但沒有單獨存下來。它會在第 6 步和 AI 的結果合併。`,
+    time:() => ({v:null, note:"沒有單獨計時，通常不到 1 ms"})},
+  {id:"model", mod:"ai", t:"AI 理解（呼叫模型）", s:"把句子、已知需求、軟體庫寫成提示詞，請 AI 回 JSON",
+    plain:"規則可能漏聽，所以再請一位「很會聽話的助理」（AI）也聽一次，並且要求它用固定格式回答。不合格就再試一次，兩次都不行就放棄、只用規則。",
+    file:"packages/nlu/src/understand.ts:217、provider.ts callModel", code:"model",
+    input:(r) => `提示詞：後台「提示詞」頁的 NLU 模板，填入用戶這句話、目前的需求檔案、軟體庫。<br>送出 <b>${r.llm.find((c) => c.slot === "nlu").in}</b> 個 tokens（提示詞全文沒有存）。`,
+    output:(r) => `${llmTable(r.llm.filter((c) => c.slot === "nlu"))}${r.nlu.error ? `<p class="badc">最後結果：${esc(r.nlu.error)} → 退回規則</p>` : `<p class="okc">回傳合格的 JSON，進入下一步合併。</p>`}`,
+    time:(r) => ({v:aiMs(r, "nlu"), note:`真實紀錄（llm_calls 表）${r.llm.filter((c) => c.slot === "nlu").length > 1 ? `，${r.llm.filter((c) => c.slot === "nlu").length} 次加總` : ""}`})},
+  {id:"merge", mod:"nlu", t:"合併成「聽到的需求」", s:"AI 為主、規則補漏；也收下 AI 的權重建議",
+    plain:"把店員和助理的筆記對一對：以助理的為主，店員有聽到、助理漏掉的補上。助理建議「性能要多看重一點」也記下，但每項最多 ±5。",
+    file:"packages/nlu/src/understand.ts:133 mergeRule", code:"merge",
+    input:() => `第 4 步規則結果 ＋ 第 5 步 AI 的 JSON`,
+    output:(r) => `<p>來源：<b>${r.nlu.source === "model" ? "AI 模型" : "規則（AI 失敗）"}</b></p>${reqTable(r.nlu.ops)}
+      ${r.nlu.weightSuggestion ? `<p><b>AI 的權重建議：</b>${Object.entries(r.nlu.weightSuggestion.deltas).map(([k, v]) => `${DIM[k]} +${v}`).join("、")}（理由：「${esc(r.nlu.weightSuggestion.reason)}」，信心 ${r.nlu.weightSuggestion.confidence}）</p>` : "<p>沒有權重建議（AI 失敗）。</p>"}
+      <p>聽不懂的詞：${r.nlu.unknown.length ? r.nlu.unknown.join("、") : "沒有"}　想比較：${r.nlu.compareIntent ? "是" : "否"}</p>`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"intent", mod:"api", t:"意圖分類", s:"分辨找筆電、閒聊、範圍外、上一步、重來", since:"v1.0.11",
+    plain:"判斷用戶是不是在找筆電。如果只是打招呼或問天氣，就不推薦，客氣地拉回主題。",
+    file:"apps/api/src/turn.ts:257、intent.ts routeIntent", code:"intent",
+    input:() => `第 6 步的結果`, output:() => `這筆資料產生時（11/2）還沒有這一步，所以沒有紀錄。`,
+    time:() => ({v:null, note:"當時沒有這一步"})},
+
+  {phase:"③ 程式算出推薦", id:"profile", mod:"eng", t:"更新需求檔案", s:"把聽到的需求寫進這段對話的需求清單",
+    plain:"把這次聽到的需求貼到你的客戶資料夾。同一類的會覆蓋（例如改預算），信心不夠的不會被當成「一定要」。",
+    file:"packages/engine/src/profile.ts:26 applyOps", code:"profile",
+    input:(r) => `${r.nlu.ops.length} 個 upsert 操作（新增或覆蓋）`,
+    output:(r) => `需求檔案現在有 ${r.nlu.ops.length} 項：<div class="chips">${r.nlu.ops.map((o) => `<span>${esc(o.label)}${o.hard ? "（硬條件）" : ""}</span>`).join("")}</div><p style="color:var(--muted);font-size:13px">只有預算是硬條件（真正的最低要求）；其他都只影響權重，不會把機型刷掉。</p>`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"software", mod:"eng", t:"查軟體畫像", s:"用戶提到的軟體需要什麼硬體",
+    plain:"用戶說用 Premiere，就去查「Premiere 做 4K 剪輯至少要多少記憶體、顯示卡」，再決定要加重哪些分數、提醒什麼風險。",
+    file:"packages/engine/src/profile.ts:41 softwareHits", code:"software",
+    input:(r) => `需求檔案裡的軟體：${r.software.length ? r.software.map((s) => s.software).join("、") : "沒有"}；後台軟體庫（Photoshop、Illustrator、Premiere Pro）`,
+    output:(r) => r.software.length ? r.software.map((s) => `<p><b>${s.software}</b>（${s.usage}）<br>風險提醒：${esc(s.riskText)}</p>`).join("") : `用戶沒提到軟體，這步沒有結果。`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"weights", mod:"eng", t:"算這位用戶的權重", s:"每條需求加減分，總和維持 100",
+    plain:"權重就是「這位用戶多在意每一項」。預設性能 33、螢幕 21…。剪片就把性能、螢幕加重；每天背就把便攜加重；加完再等比縮放，讓總和回到 100。",
+    file:"packages/engine/src/profile.ts:54、73 replayWeights；weights.ts", code:"weights",
+    input:(r) => `需求檔案 ${r.nlu.ops.length} 項 ＋ 軟體畫像 ＋ AI 的權重建議，從${r.manualWeights ? "用戶手動設定的" : "系統預設"}權重出發`,
+    output:(r) => r.trace.rows.length
+      ? `<table><tr><th>維度</th><th class="n">原本</th><th class="n">之後</th><th>為什麼</th></tr>${r.trace.rows.map((x) => `<tr><td>${DIM[x.dim]}<br><span style="font-size:11.5px;color:var(--muted)">${x.kind}</span></td><td class="n">${x.before}</td><td class="n"><span class="${x.delta > 0 ? "up" : "down"}">${x.after}</span></td><td>${x.reasons.map(esc).join("<br>")}</td></tr>`).join("")}</table>
+         <p style="font-size:13px;color:var(--muted)">「主動」＝需求直接造成的；「被動」＝為了讓總和維持 100 被擠下去的。</p><p><b>最後權重：</b></p>${wTable(r.weights, DEFAULT_W)}`
+      : `<p class="warnc">沒有任何權重改變：用戶手動調過權重，系統不覆蓋。</p><table><tr><th>想加的</th><th>來源</th><th class="n">加減</th><th>跳過原因</th></tr>${r.trace.skipped.map((x) => `<tr><td>${DIM[x.dim]}</td><td>${x.source}：${esc(x.detail)}</td><td class="n">+${x.delta}</td><td>${x.why}</td></tr>`).join("")}</table><p><b>維持的權重：</b></p>${wTable(r.weights)}`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"filter", mod:"eng", t:"硬篩：371 台逐台檢查", s:"只用硬條件分成正式候選、差一點、排除",
+    plain:"把店裡 371 台全部拿出來，用「一定要」的條件過一遍：超出預算太多的放旁邊，只超一點的另外列「差一點」，因為有些人願意多加一點錢。",
+    file:"packages/engine/src/filter.ts:12 classify", code:"filter",
+    input:() => `資料庫 <code>laptops</code> 表 371 台機型 ＋ 硬條件`,
+    output:(r) => {
+      const tot = r.formal + r.edge + r.out;
+      const row = (label, n, c) => `<div><span style="width:72px">${label}</span><i style="width:${Math.max(2, n / tot * 100) * 2.2}px;background:${c}"></i><b>${n}</b> 台</div>`;
+      return `<div class="funnel">${row("正式候選", r.formal, "var(--ok)")}${row("差一點", r.edge, "var(--warn)")}${row("排除", r.out, "var(--bad)")}</div><p style="font-size:13.5px">${esc(r.hardNote)}</p>`;
+    },
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"rank", mod:"eng", t:"評分排序", s:"每台 7 個維度分數 × 用戶權重 = 總分",
+    plain:"每台筆電在性能、螢幕、便攜等 7 項都有 0–100 分（來自實測資料）。用這位用戶的權重算加權平均，分數高的排前面。同一台筆電，給不同人分數會不一樣。",
+    file:"packages/engine/src/rank.ts:55 buildSnapshot；scoring.ts:66 productPower", code:"rank",
+    input:(r) => `${r.formal} 台正式候選 ＋ 第 10 步的權重`,
+    output:(r) => `<p><b>正式候選前 5 名</b>（runs.top_ids）：</p>${topTable(r.top)}${r.edgeTop.length ? `<p style="margin-top:10px"><b>差一點前 3 名：</b></p>${topTable(r.edgeTop)}` : ""}<p style="font-size:13px;color:var(--muted)">每台的分數當時沒有存下來，只存了名次。</p>`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"reason", mod:"eng", t:"產生推薦理由", s:"為什麼是它、要接受什麼、和第 2 名比", since:"v1.0.8",
+    plain:"用程式算出第 1 名在候選中哪幾項名次最前面、哪幾項比較弱，以及和第 2 名差在哪裡。理由是程式算的，不是 AI 編的。",
+    file:"packages/engine/src/reason.ts explainPool、versusOf", code:"reason",
+    input:() => `排序後的候選 ＋ 權重`, output:() => `這筆資料產生時（11/2）還沒有這一步，所以推薦卡沒有理由欄位。`,
+    time:() => ({v:null, note:"當時沒有這一步"})},
+  {id:"decide", mod:"eng", t:"決定這輪要做什麼", s:"推薦、追問、建議放寬，還是比較",
+    plain:"看資料夾還缺什麼：缺預算就先問預算；資料夠了就推薦；0 台就建議放寬條件。一次只問一題，最多問幾題由後台設定。",
+    file:"packages/engine/src/decide.ts:18 decideAction；select.ts selectFollowup", code:"decide",
+    input:(r) => `需求檔案、正式候選 ${r.formal} 台、已追問次數、題庫`,
+    output:(r) => `<p>決定：<b style="font-size:16px">${r.action === "recommend" ? "推薦（recommend）" : "追問（ask）"}</b></p><p>${esc(r.actionWhy)}</p>${r.followup ? `<div class="box" style="border:1px solid var(--line);border-radius:9px;padding:10px"><b>追問卡「${r.followup.name}」</b><br>問題：${esc(r.followup.question)}<br>為什麼問：${esc(r.followup.why)}<div class="chips" style="margin-top:6px">${r.followup.options.map((o) => `<span>${esc(o)}</span>`).join("")}</div></div>` : ""}<p style="font-size:13px;color:var(--muted)">追問價值紀錄（ask_trace）是 v1.0.7 才有的，這筆是空的。</p>`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+
+  {phase:"④ 說給用戶聽", id:"cards", mod:"api", t:"組裝卡片和事實清單", s:"程式決定要出哪些卡片，整理要給 AI 的事實",
+    plain:"把結果做成卡片（需求標籤、台數、推薦清單、追問選項），卡片內容直接用程式算的資料，不經過 AI。同時列一張「事實清單」，等一下 AI 只能照這張清單講話。",
+    file:"apps/api/src/turn.ts:340", code:"cards",
+    input:() => `第 8～15 步的所有結果 ＋ 卡片開關（card.*）`,
+    output:(r) => `<p>這輪產生 ${r.cards.length} 張卡片：</p><ol>${r.cards.map((c) => `<li>${esc(c)}</li>`).join("")}</ol>`,
+    time:() => ({v:null, note:"沒有單獨計時"})},
+  {id:"reply", mod:"ai", t:"AI 寫回覆＋檢查", s:"AI 把事實寫成自然的話，程式檢查有沒有亂講",
+    plain:"請 AI 把事實清單寫成像真人說的話。寫完程式會檢查：有沒有冒出清單上沒有的數字、機型、規格。不合格或 AI 沒回應，就改用事先準備好的固定句子。",
+    file:"packages/nlu/src/reply.ts:245 writeReply", code:"reply",
+    input:(r) => `事實清單（JSON）塞進回覆提示詞，送出 <b>${r.llm.find((c) => c.slot === "reply").in}</b> 個 tokens`,
+    output:(r) => `${llmTable(r.llm.filter((c) => c.slot === "reply"))}<p>最後使用：<b>${r.replySource === "model" ? '<span class="okc">AI 寫的</span>' : '<span class="warnc">固定模板（AI 失敗）</span>'}</b></p><div class="plain">${esc(r.reply)}</div>`,
+    time:(r) => ({v:aiMs(r, "reply"), note:"真實紀錄（llm_calls 表）"})},
+  {id:"save", mod:"db", t:"存進資料庫", s:"一次寫入：對話狀態、這一輪、兩則訊息、AI 呼叫紀錄",
+    plain:"把這輪的所有東西歸檔，之後後台才看得到「當時聽到什麼、怎麼算、回了什麼」。要嘛全部寫成功、要嘛全部不寫，不會只存一半。",
+    file:"apps/api/src/turn.ts:398、404 transaction", code:"save",
+    input:() => `整輪的結果`,
+    output:(r) => `<table><tr><th>表</th><th>寫了什麼</th></tr>
+      <tr><td>conversations</td><td>更新需求檔案、權重、追問狀態</td></tr>
+      <tr><td>runs</td><td>1 筆：action=${r.action}、formal=${r.formal}、edge=${r.edge}、out=${r.out}、<b>ms=${fmt(r.ms)}</b></td></tr>
+      <tr><td>messages</td><td>2 筆：用戶的話、系統回覆（含卡片）</td></tr>
+      <tr><td>llm_calls</td><td>${r.llm.length} 筆 AI 呼叫紀錄</td></tr></table>
+      <p>寫入時間：${r.created}（資料庫 created_at 原始時間）</p>`,
+    time:() => ({v:null, note:"總時間在寫入前就停止計算"})},
+  {id:"show", mod:"web", t:"畫面更新", s:"回覆氣泡、需求標籤、卡片、右邊排名一起換上",
+    plain:"用戶看到回覆、自己的需求被列成標籤（可以刪改）、推薦清單或追問選項。右邊的機型排名也跟著換。",
+    file:"apps/api/src/turn.ts:429 → apps/web", code:"show",
+    input:() => `API 回傳的 reply、cards、snapshot、weightTrace、events`,
+    output:(r) => `<div class="plain">${esc(r.reply)}</div><div class="chips">${r.cards.map((c) => `<span>${esc(c.split(" ")[0])}</span>`).join("")}</div>`,
+    time:() => ({v:null, note:"前端時間沒有記錄"})},
+];
+
+/* ---------- 畫面 ---------- */
+let cur = 0, sel = "send";
+const $ = (id) => document.getElementById(id);
+
+function renderRuns() {
+  $("runs").innerHTML = RUNS.map((r, i) => `<button class="run" aria-pressed="${i === cur}" data-i="${i}">
+    <span class="tag" style="color:${r.tone}">${r.title}</span><span class="tag" style="color:var(--muted)">${fmt(r.ms)} ms</span>
+    <div class="q">「${esc(r.input)}」</div>
+    <div class="m">${r.created} ・ 結果：${r.action === "recommend" ? "推薦" : "追問"} ・ 回覆：${r.replySource === "model" ? "AI" : "模板"}</div></button>`).join("");
+  $("runs").querySelectorAll(".run").forEach((b) => b.onclick = () => { cur = +b.dataset.i; renderAll(); });
+}
+
+function renderBar() {
+  const r = RUNS[cur];
+  const segs = [];
+  r.llm.forEach((c, i) => segs.push({ms:c.ms, c: c.ok ? "var(--ai)" : "var(--bad)", label:`AI ${c.slot === "nlu" ? "理解" : "回覆"}${r.llm.filter((x) => x.slot === c.slot).length > 1 ? " 第" + (r.llm.filter((x) => x.slot === c.slot).indexOf(c) + 1) + "次" : ""}${c.ok ? "" : "（失敗）"}`, step: c.slot === "nlu" ? "model" : "reply"}));
+  segs.splice(r.llm.filter((c) => c.slot === "nlu").length, 0, {ms:progMs(r), c:"var(--eng)", label:"所有程式步驟", step:"profile"});
+  $("tb-title").textContent = `這一輪總共 ${fmt(r.ms)} ms（${(r.ms / 1000).toFixed(1)} 秒），時間花在哪裡`;
+  $("bar").innerHTML = segs.map((s) => `<div style="flex:${Math.max(s.ms, r.ms * 0.012)};background:${s.c}" title="${s.label}：${fmt(s.ms)} ms" data-step="${s.step}">${s.ms / r.ms > 0.1 ? fmt(s.ms) + " ms" : ""}</div>`).join("");
+  $("bar").querySelectorAll("div").forEach((d) => d.onclick = () => { sel = d.dataset.step; renderFlow(); renderDetail(); });
+  $("barlegend").innerHTML = segs.map((s) => `<span><i class="dot" style="background:${s.c}"></i>${s.label} <b>${fmt(s.ms)} ms</b>${s.label === "所有程式步驟" ? "（推算：總時間 − AI 時間）" : ""}</span>`).join("")
+    + `<span>→ AI 占 <b>${Math.round((r.ms - progMs(r)) / r.ms * 100)}%</b>，程式只占 ${Math.round(progMs(r) / r.ms * 100)}%</span>`;
+}
+
+function renderLegend() {
+  $("legend").innerHTML = Object.values(MOD).map((m) => `<span title="${m.desc}"><i class="dot" style="background:${m.c}"></i>${m.name}</span>`).join("");
+}
+
+function renderFlow() {
+  const r = RUNS[cur];
+  $("flow").innerHTML = STEPS.map((s, i) => {
+    const t = s.time(r);
+    return `${s.phase ? `<div class="phase">${s.phase}</div>` : ""}<button class="step${s.since ? " absent" : ""}" role="option" aria-selected="${s.id === sel}" data-id="${s.id}" style="--c:${MOD[s.mod].c}">
+      <span class="num">${i + 1}</span>
+      <span><span class="st-t">${s.t}${s.since ? ` <span class="tag" style="color:var(--muted)">${s.since} 新增</span>` : ""}</span><br><span class="st-s">${MOD[s.mod].name}・${s.s}</span></span>
+      <span class="ms">${t.v !== null ? `<b>${fmt(t.v)}</b> ms` : "—"}</span></button>`;
+  }).join("");
+  $("flow").querySelectorAll(".step").forEach((b) => b.onclick = () => { sel = b.dataset.id; renderFlow(); renderDetail(); if (innerWidth < 860) $("detail").scrollIntoView({behavior:"smooth"}); });
+}
+
+function renderDetail() {
+  const r = RUNS[cur];
+  const i = STEPS.findIndex((s) => s.id === sel);
+  const s = STEPS[i], m = MOD[s.mod], t = s.time(r);
+  const remark = (s.id === "merge" && r.key === "ask") ? r.remarks[0] : (s.id === "reply" && r.key === "ask") ? r.remarks[1]
+    : (s.id === "model" && r.key === "fail") ? r.remarks[0] : (s.id === "merge" && r.key === "fail") ? r.remarks[1] : (s.id === "weights" && r.key === "fail") ? r.remarks[2] : null;
+  $("detail").style.setProperty("--c", m.c);
+  $("detail").innerHTML = `<span class="d-mod">${m.name}</span>
+    <h2>第 ${i + 1} 步　${s.t}</h2>
+    <div class="plain"><b>白話：</b>${s.plain}</div>
+    <dl class="kv">
+      <dt>模組</dt><dd>${m.name}：${m.desc}</dd>
+      <dt>程式位置</dt><dd><code>${esc(s.file)}</code></dd>
+      <dt>執行時間</dt><dd>${t.v !== null ? `<b>${fmt(t.v)} ms</b>` : "—"}　<span style="color:var(--muted)">${t.note}</span></dd>
+    </dl>
+    <div class="sec io">
+      <div class="box"><h5>收到什麼（初始）</h5>${s.input(r)}</div>
+      <div class="box"><h5>算出什麼（結果）</h5>${s.output(r)}</div>
+    </div>
+    ${remark ? `<div class="callout"><b>這筆資料看得出來的事：</b>${esc(remark)}</div>` : ""}
+    <div class="sec"><h4>執行的程式碼（節錄）</h4>${pre(CODE[s.code])}</div>
+    <div class="navbtns"><button id="prev" ${i === 0 ? "disabled" : ""}>← 上一步</button><button id="next" ${i === STEPS.length - 1 ? "disabled" : ""}>下一步 →</button></div>`;
+  $("prev").onclick = () => { sel = STEPS[i - 1].id; renderFlow(); renderDetail(); };
+  $("next").onclick = () => { sel = STEPS[i + 1].id; renderFlow(); renderDetail(); };
+}
+
+function renderAll() { renderRuns(); renderBar(); renderLegend(); renderFlow(); renderDetail(); }
+renderAll();
+</script>
+</body>
+</html>
