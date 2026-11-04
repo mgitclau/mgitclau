@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>兩套系統程式碼深度比較報告</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1f2328;--mute:#5c6470;--line:#e2e4e8;--acc:#0b6e4f;--acc2:#b35c00;--warn:#8a1c1c;--soft:#eef5f1;--soft2:#fff4e6;--soft3:#f3f0ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 12px;padding-top:8px;border-top:2px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:8px 0}
+.sub{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;color:var(--acc)}
+.kpi span{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px;margin:10px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{background:var(--soft);font-weight:600}
+tr:last-child td{border-bottom:0}
+.tblwrap{overflow-x:auto}
+code{font-family:var(--mono);font-size:13px;background:var(--soft3);padding:1px 5px;border-radius:4px}
+.ok{color:var(--acc);font-weight:600;white-space:nowrap}
+.part{color:var(--acc2);font-weight:600;white-space:nowrap}
+.bad{color:var(--warn);font-weight:600}
+.star{letter-spacing:1px;white-space:nowrap}
+.note{background:var(--soft);border-radius:10px;padding:10px 14px;margin:10px 0}
+.q{background:var(--soft2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.warnbox{background:#fbeeee;border:1px solid #e8c9c9;border-radius:10px;padding:10px 14px;margin:8px 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.toc a{text-decoration:none;color:var(--acc);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--card)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){h1{font-size:22px}.two{grid-template-columns:1fr}}
+ul,ol{padding-left:22px}
+li{margin:3px 0}
+.verdict{font-size:17px;padding:14px 18px;border-left:4px solid var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>兩套系統程式碼深度比較報告</h1>
+<p class="sub">2026-11-04 · A＝<code>system-v0.0.5/</code>（Python FastAPI 後端＋React 前端）· B＝<code>laptop-assistant-v1.0.8/</code>（TypeScript 全端 monorepo）· 目的：決定後續開發以哪一套為基底</p>
+
+<div class="toc">
+<a href="#s0">0 一頁結論</a><a href="#s1">1 審查方法</a><a href="#s2">2 規模與技術棧</a><a href="#s3">3 逐項比較</a><a href="#s4">4 各自最該先修的五件事</a><a href="#s5">5 建議</a><a href="#s6">附錄 原始數據</a>
+</div>
+
+<h2 id="s0">0. 一頁結論</h2>
+<div class="grid">
+<div class="kpi"><b>7 : 1</b><span>九個面向 B 勝七項、A 勝一項（功能完整度）、一項平手</span></div>
+<div class="kpi"><b>834＋243</b><span>A 的後端與前端測試全過</span></div>
+<div class="kpi"><b>681＋47</b><span>B 的單元／API 測試全過，另 47 個真瀏覽器測試全過</span></div>
+<div class="kpi"><b>117 ms → 14 ms</b><span>一輪對話中位數（A 假資料庫 vs B 真 PostgreSQL）</span></div>
+<div class="kpi"><b>130 vs 61</b><span>API 端點數，A 功能多一倍以上</span></div>
+</div>
+
+<div class="tblwrap"><table>
+<tr><th>面向</th><th>A system-v0.0.5</th><th>B laptop-assistant-v1.0.8</th><th>勝出</th></tr>
+<tr><td>程式碼品質</td><td class="star">★★☆☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>強健性（不容易壞、壞了能降級）</td><td class="star">★★★☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>相容性／可移植性</td><td><span class="star">★★★☆☆</span>（有 Windows 一鍵啟動）</td><td><span class="star">★★★☆☆</span>（目前只在 Mac 跑過）</td><td class="part">平手，方向不同</td></tr>
+<tr><td>架構設計</td><td class="star">★★☆☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>可維護性與可擴充性</td><td class="star">★★☆☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>效能</td><td class="star">★★☆☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>安全性</td><td class="star">★★☆☆☆</td><td class="star">★★★★☆</td><td class="ok">B</td></tr>
+<tr><td>功能完整度</td><td class="star">★★★★★</td><td class="star">★★★☆☆</td><td class="part">A（差距大）</td></tr>
+<tr><td>測試</td><td><span class="star">★★★☆☆</span>（量大但全繞過真資料庫、無瀏覽器測試）</td><td><span class="star">★★★★☆</span>（量較少但有真資料庫＋47 個真瀏覽器測試）</td><td class="ok">B</td></tr>
+</table></div>
+
+<div class="card verdict"><b>一句話結論</b>：B 是「地基好、房子小」，A 是「房子大、地基裂」。<br><b>建議</b>：以 <b>B（v1.0.8）為基底</b>繼續開發，把 A 的演算法與功能設計當成「規格來源」分批搬進 B。理由在第 5 節。</div>
+
+<p>這個結論對 M 的實際意義：A 多出來的功能是「已經想清楚、也寫成規格文件」的資產（<code>docs/v0.0.5-規格/</code> 約 4,800 行），搬進 B 是體力活；但 A 的結構問題（3,009 行的單一 API 檔、712 行的單一函式、前端關閉型別檢查、金鑰明文、沒有併發保護）是「越往上蓋越難拆」的負債。對一位需要靠 AI 協助頻繁修改程式的開發者來說，B 的每一次修改都有型別檢查、前後端共用契約與真瀏覽器測試在把關，出錯機率低很多。</p>
+
+<h2 id="s1">1. 我做了什麼（審查方法）</h2>
+<p>這份報告不是只讀文件，而是實際執行與量測：</p>
+<ol>
+<li><b>跑完兩邊全部測試</b>：A 後端 834 個、前端 243 個全過；B 單元與 API 測試 681 個全過，另外 47 個 Playwright 真瀏覽器測試也全過（2.5 分鐘）。</li>
+<li><b>型別檢查與正式建置</b>：兩邊 <code>tsc</code> 皆通過，B 另跑 <code>vite build</code> 取得真實打包尺寸。</li>
+<li><b>離線一輪對話效能基準</b>：同樣 5 句話 × 3 輪，不叫模型，量每輪耗時與回應大小。</li>
+<li><b>靜態量測</b>：檔案與函式長度、<code>any</code> 數量、裸例外、原始 SQL、<code>TODO</code>、死碼等。</li>
+<li><b>五位獨立審查員（子代理）逐檔閱讀</b>：A 後端、A 前端、B 後端、B 前端各一份深度審查，加上一份「功能完整度對照表」；每條發現都附檔名與行號。我再對其中最嚴重的指控親自開檔驗證（例如 A 的 <code>updated_at</code> 從未更新、事件端點不需登入即可寫庫，皆屬實）。</li>
+</ol>
+
+<h2 id="s2">2. 規模與技術棧</h2>
+<div class="tblwrap"><table>
+<tr><th></th><th>A system-v0.0.5</th><th>B laptop-assistant-v1.0.8</th></tr>
+<tr><td>語言</td><td>後端 Python 3.12、前端 TypeScript</td><td>全端 TypeScript</td></tr>
+<tr><td>框架</td><td>FastAPI＋SQLAlchemy＋PostgreSQL；React 19＋Vite 6</td><td>Fastify 5＋Drizzle＋PostgreSQL 16；React 19＋Vite 6</td></tr>
+<tr><td>程式碼量（不含測試）</td><td>後端約 23,900 行、前端約 11,200 行</td><td>約 11,300 行（含前後端與共用套件）</td></tr>
+<tr><td>測試程式碼量</td><td>約 12,000 行</td><td>約 6,300 行</td></tr>
+<tr><td>自動化測試</td><td>834 後端＋243 前端</td><td>681 單元/API＋47 真瀏覽器</td></tr>
+<tr><td>功能開關</td><td>286 個（含數值、列舉、範圍驗證）</td><td>89 個布林＋20 個數值閾值</td></tr>
+<tr><td>API 端點</td><td>130</td><td>61</td></tr>
+<tr><td>規格文件</td><td><code>docs/v0.0.5-規格/</code> 約 4,800 行</td><td><code>docs/</code> 約 270 行（API 規格＋交接文件）</td></tr>
+</table></div>
+<div class="note">看規模時要注意：A 的程式碼量是 B 的三倍，但其中相當比例是重複與歷史殘留（見 3.1）；B 行數少的另一個原因是「每行塞很多」，單行超過 160 字元的情況不少，這是 B 的可讀性負擔。</div>
+
+<h2 id="s3">3. 七個面向逐項比較</h2>
+
+<h3>3.1 程式碼品質 → <span class="ok">B 明顯較好</span></h3>
+<div class="two">
+<div class="card"><b>A 的問題集中在「越加越大、沒有回頭清理」</b>
+<ul>
+<li><code>backend/app/api.py</code> 一個檔 3,009 行、120 個函式、79 個端點；新功能已改放 <code>routers/</code>，舊檔沒拆。</li>
+<li><code>pipeline.py</code> 的 <code>_run_turn</code> 單一函式 <b>712 行</b>，是整套系統的心臟；超過 100 行的函式共 13 個。</li>
+<li>前端 <code>tsconfig.json</code> 寫著 <code>"strict": false</code>，等於關掉 TypeScript 最重要的保護；非測試程式碼裡 <code>any</code>（放棄型別）<b>超過 540 處</b>；<code>UserApp.tsx</code> 單一元件 860 行、42 個狀態變數。</li>
+<li>確認為不可達的死碼：後台約 300 行舊頁面、對話卡 5 個舊分支、永遠是空的 <code>SOFT_MAP</code>、兩個內容完全相同的端點。</li>
+<li>重複：「金額格式化」函式寫了 8 次，七維中文標籤表寫了 6 次且<b>互不一致</b>（同一畫面可能出現「螢幕」與「屏幕」、「擴充性」與「擴展性」）。</li>
+<li>註解大量引用內部工單編號（W1～W20、K1～K5、A7-4…），沒有規格文件在手讀不懂為什麼。</li>
+<li>兩邊都沒有 ESLint 之類的 lint 工具。</li>
+</ul></div>
+<div class="card"><b>B 的狀況</b>
+<ul>
+<li><code>strict</code> 與 <code>noUncheckedIndexedAccess</code> 全開，後端 <code>any</code> 為 <b>0</b>，前端非測試程式碼也接近 0；<code>console.log</code>、<code>TODO</code>、<code>@ts-ignore</code> 皆為 0。</li>
+<li>檔案都在 400 行以下，評分引擎每檔 50～180 行、職責單一。</li>
+<li>缺點：行寬過長（<code>routes-admin.ts</code> 最長一行 850 字元、<code>turn.ts</code> 有 33 行超過 160 字元）、<code>turn()</code> 單函式 167 行、Zod 驗證結構與手寫型別平行維護造成 36 處型別斷言、方案頁的增刪改程式在兩頁幾乎複製。</li>
+</ul></div>
+</div>
+
+<h3>3.2 強健性 → <span class="ok">B 較好</span>，但兩邊都有同一個前端競態</h3>
+<div class="warnbox"><b>兩邊共同的缺陷</b>：使用者送出一句話、在等待回覆期間切換到另一個對話，舊對話的回覆會寫進新對話的畫面。A 在 <code>UserApp.tsx</code> 的 <code>send()</code>、B 在 <code>useAssistant.ts</code> 的 <code>applyTurn()</code> 都沒有比對回應屬於哪個對話。</div>
+<div class="two">
+<div class="card"><b>A 獨有的問題</b>
+<ul>
+<li><b>同一對話沒有任何併發保護</b>：兩個請求同時進來會各自讀同一份需求檔案、後寫入者整份覆蓋，前一句話的需求會消失。</li>
+<li><b>確認的功能 bug</b>：<code>pipeline.py:1476</code> 寫著 <code>conv.updated_at = conv.updated_at</code>（等於沒更新），而且全專案沒有別處更新它。後果是 <code>expire_idle</code> 會在對話<b>建立 30 分鐘後</b>無條件把進行中的對話標成已結束，對話列表排序也是錯的。</li>
+<li>啟動時在模組載入階段就跑建表、補欄、種子、重算分數，任何一步失敗整個服務起不來；多 worker 會重複執行。</li>
+<li>52 處 <code>except Exception</code> 吞掉錯誤，全部後端只有 6 處有寫日誌；例如即時算分失敗會默默退回舊分數，前端看不出來。</li>
+<li>兩個端點直接吃任意字典（<code>payload: dict</code>）不驗證。</li>
+</ul></div>
+<div class="card"><b>B 的優點與缺口</b>
+<ul>
+<li>所有請求 body 用 Zod 驗證、錯誤格式統一為 <code>{ error: "中文訊息" }</code>；同一對話同時兩句話，第二句回 409（有測試）。</li>
+<li>模型失敗的降級鏈完整：規則抽取兜底、模型回覆要過六道事實核對（編造數字、外部網址、張冠李戴、漏講弱項…任一不過就退回模板句）、三個入口「永不丟錯」並有測試。</li>
+<li>缺口：前端<b>沒有錯誤邊界</b>（任何渲染例外都是白頁）；併發保護只存在單一行程的記憶體；啟動不檢查資料庫是否已升級，舊資料庫會在使用者講第一句話時才 500；後台設定寫入沒有數值範圍與 key 白名單。</li>
+</ul></div>
+</div>
+<p>A 的模型降級鏈同樣完整（主模型→備用模型→關鍵詞規則→模板句），這點兩邊都做得好。</p>
+
+<h3>3.3 相容性／可移植性 → <span class="part">平手，取向不同</span></h3>
+<div class="tblwrap"><table>
+<tr><th></th><th>A</th><th>B</th></tr>
+<tr><td>Windows</td><td>有 <code>一鍵啟動系統.bat</code>，會自動安裝 uv、下載 PostgreSQL、處理中文路徑</td><td>未實測；<code>.env</code> 自製解析器不處理 Windows 換行符號、檔案權限設定在 Windows 無效</td></tr>
+<tr><td>Mac</td><td>有文件、本次實測可跑</td><td>本階段目標平台，實測可跑</td></tr>
+<tr><td>Linux</td><td>README 承認未支援</td><td>應可跑但未實測</td></tr>
+<tr><td>資料庫依賴</td><td>深度依賴 PostgreSQL JSONB，但<b>測試全用 SQLite 模擬</b>，欄位長度、JSONB 運算子、交易隔離都驗不到</td><td>測試直接連真 PostgreSQL，CI 需要裝 PG</td></tr>
+<tr><td>相依版本</td><td><code>uv.lock</code> 鎖定；<code>requirements.txt</code> 只有下限</td><td>全部精確鎖版本（少數例外）</td></tr>
+<tr><td>手機版</td><td>三個斷點、底部分頁、安全區處理；後台最小寬度 1,280px 完全不響應</td><td>單一斷點；輸入框 15px 字級會讓 iPhone 聚焦時自動放大</td></tr>
+<tr><td>無障礙</td><td>55 處可點擊的 div 無鍵盤可達；對話框無焦點管理</td><td>抽屜有 <code>role="dialog"</code> 與 Escape，但無焦點陷阱</td></tr>
+</table></div>
+<p>A 在「交付給 Windows 使用者」上明顯領先，這是 B 目前沒有的；但 B 的 Node 單一語言環境比「Python＋Node 雙環境」更容易在任何平台複製。</p>
+
+<h3>3.4 架構設計 → <span class="ok">B 明顯較好</span></h3>
+<p><b>B 的依賴方向嚴格單向</b>：<code>contracts</code>（型別、預設值、驗證、開關清單）← <code>engine</code>（評分、權重、追問、理由，<b>零 I/O 純函式</b>）← <code>nlu</code>／<code>db</code> ← <code>api</code>；前端只依賴 <code>contracts</code>。意思是：前後端用的是<b>同一份</b>型別與驗證，後端改了欄位、前端編譯就會報錯；後台表單直接重用後端那份驗證函式。</p>
+<p><b>A 的分層是「路由直接操作資料庫 → pipeline 編排 → 純函式模組」</b>。純函式核心（權重推導、評分、理由）的紀律其實不錯，也能離線重現；但：</p>
+<ul>
+<li>前端型別全部手寫、與後端沒有任何共用，核心資料結構（機型、訊息、快照、卡片）在前端全是 <code>any</code>。</li>
+<li>靠 20 處「函式內延遲匯入」掩蓋 pipeline↔followup↔software_cards↔profile_view 之間的循環依賴。</li>
+<li>CSS 是用 Python 腳本機械式加前綴把兩個 demo 網頁的樣式硬合併，產生兩個 30KB 的單行檔，同一個選擇器散在 4～6 個檔案。</li>
+<li>前端沒有路由：對話 id 與後台頁碼都不在網址上，重新整理就回首頁。B 的對話 id 在網址上。</li>
+</ul>
+<div class="note"><b>兩邊都做得好的</b>：功能開關系統。A 的開關註冊表更強（型別、範圍、列舉、公開/私有區分、舊鍵遷移、每輪一次讀取），B 的開關較簡單但「加一行就出現在後台、每個開關都有『關掉就不渲染』的測試」。</div>
+
+<h3>3.5 可維護性與可擴充性 → <span class="ok">B 較好</span></h3>
+<div class="tblwrap"><table>
+<tr><th>要新增…</th><th>A 要改</th><th>B 要改</th></tr>
+<tr><td>一張追問卡</td><td>1～2 檔（或後台直接新增）</td><td>0～1 檔（後台直接新增，含出題條件與加減分）</td></tr>
+<tr><td>一個對話卡片</td><td>2～3 檔，有註冊表</td><td>3～4 檔，漏接會<b>編譯錯誤</b></td></tr>
+<tr><td>一個後台頁</td><td>1 檔＋2 行，有範本</td><td>後端 3 檔＋前端 1 頁</td></tr>
+<tr><td>一個開關</td><td>後端註冊＋前端呼叫點，前後端預設值各寫一份</td><td><code>flags.ts</code> 加一行</td></tr>
+<tr><td>一條需求訊號</td><td>0～2 檔（訊號表可後台改）</td><td>6～8 檔，沒有單一註冊處（B 的弱點）</td></tr>
+<tr><td>一個評分細項</td><td>至少 4 檔</td><td>2～4 檔</td></tr>
+</table></div>
+<p>B 的核心優勢是<b>改錯會被編譯器抓到</b>，A 的核心優勢是<b>開關與訊號表可以不改程式直接在後台調</b>。對未來「找真實使用者反覆調參數」的工作，A 的後台可調性更貼近需求，這部分值得搬進 B。</p>
+<p>文件方面 A 的規格文件豐富得多（4,800 行 vs 270 行），但 B 的交接文件每版都誠實記錄「決定、位置、如何測、尚未處理」，與程式碼核對一致。</p>
+
+<h3>3.6 效能 → <span class="ok">B 明顯較好</span></h3>
+<div class="tblwrap"><table>
+<tr><th>量測項目</th><th>A</th><th>B</th></tr>
+<tr><td>一輪對話（離線、不叫模型）中位數</td><td><b>117 ms</b>（且是用假資料庫、不含資料庫 I/O）</td><td><b>14 ms</b>（含真 PostgreSQL 讀寫）</td></tr>
+<tr><td>一輪回應大小</td><td>約 209 KB</td><td>約 438～569 KB</td></tr>
+<tr><td>前端打包</td><td>單一 674 KB JS（gzip 213 KB），<b>沒有任何拆分</b>，使用者端會把整個後台一起下載</td><td>拆成多塊，使用者端首次約 123 KB gzip，動畫程式只在開啟時才下載，後台另外一塊</td></tr>
+<tr><td>371 張機型卡</td><td>全量渲染、無 memo、每張卡各做一次線性搜尋（O(n²)），且每 700ms 一次的進度更新會讓全部卡片重繪</td><td>全量渲染、無 memo，但用 <code>content-visibility</code> 讓畫面外的卡不排版；手機上最長卡頓 123 ms</td></tr>
+<tr><td>後台查詢</td><td>總覽、統計等端點把七張表全部撈進 Python 再篩，對話列表迴圈內逐筆 count（最多約 1,200 次查詢）</td><td>無 N+1；但每輪對 <code>llm_calls</code> 做兩次無索引的 24 小時計數</td></tr>
+</table></div>
+<p>B 唯一輸的是回應大小：原因是對全部正式候選都產生完整理由文字，而前端只顯示前幾名。這是局部修補（只對前 10 名產生、其餘延後載入、開 gzip），預估可降到 60～80 KB。</p>
+
+<h3>3.7 功能完整度 → <span class="part">A 大幅領先</span></h3>
+<p>這是 A 唯一、但非常明確的優勢。以下只列「有程式實作、不是文件宣稱」的差異。</p>
+<div class="two">
+<div class="card"><b>A 有、B 沒有（或只有簡化版）</b>
+<ul>
+<li><b>評分核心</b>：三種正規化可切（全庫百分位／距第一名／p5–p95）、<b>逐分權重帳本</b>（每一分都記來源句、刪需求會退回）、13 列需求訊號表＋強度係數、<b>兩層子權重</b>（工作類型 × 等級 → 換算表）、同價位期望差性價比、平手門檻與決勝順序。B 的對應物各只有一種固定做法。</li>
+<li><b>軟體畫像 2.0</b>：13 套軟體（含 3ds Max、Blender、Maya、SketchUp、Rhino、Revit、C4D 等）、別名規則、消歧義追問卡、從提示建草稿。B 只有 3 套、1.0 結構。</li>
+<li><b>對話能力</b>：指名查詢「為什麼不是 X」「X 怎麼樣」、@ 兩台以上直接比較、「記下了」回顯卡可復原、不可能三角衝突卡、需求檔案的「拿掉會多幾台」與撤銷。</li>
+<li><b>後台</b>：5 種告警、執行回放（實測耗時、token、成本、權重快照、分數一致性）、需求洞察（用途×預算熱力圖、供需缺口）、待處理 4 類、規則引擎與接線狀態、資料品質三態與版本回滾、備用模型與成本試算、提示詞格式檢查、多管理員與強制改密碼、對話紀錄 13 個篩選條件＋分頁。</li>
+</ul></div>
+<div class="card"><b>B 有、A 沒有</b>
+<ul>
+<li>後台「動效方案」與「候選機型顯示方案」（多方案、預覽、套用才生效），這個「方案型設定」的模式乾淨可複製。</li>
+<li>9 家內建模型供應商＋取得模型清單。</li>
+<li>卡片頁可編輯出題條件與選項加減分，<code>/cards/check</code> 會把設定錯誤的選項標紅、無效的標黃。</li>
+<li>伺服器端機型排序與分頁、使用者可拖的性能子權重滑桿、每天背重機降分、「我怎麼判斷」展開。</li>
+<li>47 個 Playwright 真瀏覽器測試，含「內部術語不可外洩到使用者畫面」的自動守門。</li>
+</ul></div>
+</div>
+
+<h3>3.8 安全性 → <span class="ok">B 明顯較好</span>（補充面向）</h3>
+<div class="tblwrap"><table>
+<tr><th></th><th>A</th><th>B</th></tr>
+<tr><td>模型 API 金鑰</td><td><span class="bad">明文儲存</span>（欄位叫 <code>api_key_enc</code> 但沒有任何加密實作）</td><td>AES-256-GCM 加密，每筆獨立鹽值</td></tr>
+<tr><td>密碼</td><td>bcrypt（正確）</td><td>scrypt＋隨機鹽＋定時比較，帳號不存在時也燒一次雜湊</td></tr>
+<tr><td>登入狀態</td><td>JWT 放 cookie，<b>無法撤銷</b>，預設密鑰 <code>dev-secret</code> 沒有啟動檢查，cookie 沒有 <code>secure</code></td><td>伺服器端 session，資料庫只存雜湊</td></tr>
+<tr><td>速率限制</td><td>沒有</td><td>登入與對話有；權重、排除、對比等會跑完整運算的端點沒有</td></tr>
+<tr><td>未登入可寫入</td><td><code>/api/events</code> 任意 JSON 直接存庫</td><td>無</td></tr>
+<tr><td>模型網址</td><td>未限制</td><td>只擋非 https 與含帳密，內網位址仍放行</td></tr>
+</table></div>
+
+<h2 id="s4">4. 兩邊各自最該先修的五件事</h2>
+<div class="two">
+<div class="card"><b>若選 A 繼續</b>
+<ol>
+<li>金鑰明文儲存。</li>
+<li>同一對話無併發保護；<code>updated_at</code> 從不更新導致 30 分鐘自動結束對話。</li>
+<li>前端打開 <code>strict</code>、清掉 540 多處 <code>any</code>、刪除約 300 行死碼。</li>
+<li>拆分 3,009 行的 <code>api.py</code> 與 712 行的 <code>_run_turn</code>。</li>
+<li>補真實 PostgreSQL 測試與瀏覽器測試；修後台全表載入與 N+1。</li>
+</ol></div>
+<div class="card"><b>若選 B 繼續</b>
+<ol>
+<li>前端加錯誤邊界；修切換對話時的回應競態（A 也有）。</li>
+<li>啟動時檢查資料庫版本，不一致就拒絕啟動並提示執行 <code>pnpm setup</code>。</li>
+<li>後台設定寫入加 Zod 範圍與 key 白名單；把寫死的推薦係數（0.6／0.4／0.3／-1）搬進閾值頁。</li>
+<li>回應瘦身（只對前 K 名產生理由文字、開 gzip）；<code>llm_calls</code> 加索引。</li>
+<li>限流補齊、模型網址擋內網；視需要把併發鎖改為資料庫樂觀鎖。</li>
+</ol></div>
+</div>
+<p>B 的五件事都是幾十行的局部修補；A 的前四件是結構性工程。</p>
+
+<h2 id="s5">5. 建議：以 B（v1.0.8）為基底，把 A 當規格來源</h2>
+
+<h3>5.1 為什麼</h3>
+<ol>
+<li><b>修地基比搬功能貴</b>。A 的問題（單體檔案、關閉型別檢查、金鑰明文、無併發控制、無真資料庫測試）每一項都要大動，而且改的時候沒有型別與瀏覽器測試保護，很容易改壞。B 的問題多數在一個小版本內可修完。</li>
+<li><b>A 的功能領先是「可轉移的」</b>。A 多出來的東西，規格都寫在 <code>docs/v0.0.5-規格/</code>（K1 權重系統、K2 分數計算、K3 高級權重、K4 軟體畫像、K5 理由追問、A 後台、U 使用者端、開關總表），而且 A 的核心演算法是純函式、有黃金測試可當「對答案」的基準。搬進 B 時可以逐功能比對輸出。</li>
+<li><b>對開發新手更安全</b>。B 的每次修改都有 <code>strict</code> 型別檢查、前後端共用契約（後端改欄位前端立刻編譯錯）、真瀏覽器測試三層保護。A 的前端是 <code>strict: false</code>＋<code>any</code> 到處都是，改壞了要到執行時才知道。</li>
+<li><b>單一語言、單一工具鏈</b>。B 全部 TypeScript，一個 <code>pnpm</code> 指令跑完測試、型別檢查、建置；A 要同時維護 Python（uv）與 Node（npm）兩套環境，Mac 上還有「venv 跑到舊版直譯器」這類坑（README 已記錄）。</li>
+<li><b>效能底子好</b>。一輪 14 ms 對 117 ms、使用者端首次載入 123 KB 對 213 KB（gzip），之後再往上加功能有餘裕。</li>
+</ol>
+
+<h3>5.2 要誠實說的代價</h3>
+<ul>
+<li><b>功能要補很多版</b>。以 A 的功能清單估計，把評分核心（K1～K3）、軟體畫像 2.0（K4）、後台告警／資料品質／洞察／管理員管理、指名查詢與 @ 比較都搬過來，大約是 6～10 個小版本的工作量。</li>
+<li><b>Windows 一鍵啟動要重做</b>。A 的 <code>.bat</code> 與 PostgreSQL 自動下載邏輯在 B 不存在；若近期要交付 Windows 使用者，這是 B 的硬缺口。</li>
+<li><b>A 的後台可調性（訊號表、子權重表、正規化選項都能在後台改）是 B 目前沒有的</b>，而這正是「找真實使用者調參數」最需要的。建議列為搬遷的第一優先。</li>
+</ul>
+
+<h3>5.3 建議的搬遷順序（供下一步討論）</h3>
+<div class="tblwrap"><table>
+<tr><th>順序</th><th>搬什麼</th><th>理由</th></tr>
+<tr><td>1</td><td>先修 B 的五件事（第 4 節）</td><td>地基補強，之後每一步都站得穩</td></tr>
+<tr><td>2</td><td>K1 權重帳本＋訊號表＋強度係數（後台可編輯）</td><td>「程式決定事實、每一分有來源」是產品核心，也是後續理由、追問的基礎</td></tr>
+<tr><td>3</td><td>K2 三種正規化＋平手門檻＋同價位性價比</td><td>直接影響排序結果，且 A 有黃金測試可對答案</td></tr>
+<tr><td>4</td><td>K3 兩層子權重</td><td>性能維度的精細度</td></tr>
+<tr><td>5</td><td>K4 軟體畫像 2.0＋13 套軟體＋消歧義卡</td><td>設計類使用者的主要場景</td></tr>
+<tr><td>6</td><td>後台：告警、執行回放（token／成本）、資料品質三態、多管理員</td><td>上線前必要</td></tr>
+<tr><td>7</td><td>指名查詢、@ 比較、需求撤銷、「拿掉會多幾台」</td><td>對話體驗加分項</td></tr>
+<tr><td>8</td><td>Windows 一鍵啟動</td><td>交付需要時再做</td></tr>
+</table></div>
+
+<h3>5.4 什麼情況下應該反過來選 A</h3>
+<div class="q">只有一種：<b>近期（例如兩週內）必須把功能完整的版本交到 Windows 使用者手上做測試，而且暫時不打算再大改</b>。那麼 A 現成可用，但請至少先修金鑰明文與 <code>updated_at</code> 兩個 bug。若之後還要持續開發半年以上，仍建議回到 B。</div>
+
+<h2 id="s6">附錄：量測原始數據</h2>
+<div class="tblwrap"><table>
+<tr><th>項目</th><th>A</th><th>B</th></tr>
+<tr><td>後端測試</td><td>834 passed，24.7 秒（SQLite／假 DB）</td><td>82 API＋11 DB（真 PG）＋116 engine＋295 nlu，約 12 秒</td></tr>
+<tr><td>前端測試</td><td>243 passed，5 秒</td><td>177 passed，3 秒</td></tr>
+<tr><td>真瀏覽器測試</td><td>無</td><td>47 passed，2.5 分鐘（獨立 e2e 資料庫）</td></tr>
+<tr><td><code>tsc --noEmit</code></td><td>通過（但 <code>strict: false</code>）</td><td>全部套件通過（<code>strict</code>＋<code>noUncheckedIndexedAccess</code>）</td></tr>
+<tr><td>前端 <code>any</code>（非測試）</td><td>542～590 處</td><td>約 4 處（測試輔助）</td></tr>
+<tr><td>後端 <code>Any</code>／型別斷言</td><td><code>Any</code> 332 處、<code>type: ignore</code> 7 處</td><td><code>any</code> 0、<code>as</code> 斷言 36 處、非空斷言 81 處</td></tr>
+<tr><td>最長檔案</td><td><code>api.py</code> 3,009 行</td><td><code>rule.ts</code> 591 行</td></tr>
+<tr><td>最長函式</td><td><code>_run_turn</code> 712 行</td><td><code>createMotion</code> 301 行、<code>turn</code> 167 行</td></tr>
+<tr><td>超過 100 行的函式</td><td>13</td><td>11（多為路由註冊與頁面元件）</td></tr>
+<tr><td><code>except Exception</code>／空 catch</td><td>52／0</td><td>49 個 catch，0 個空 catch</td></tr>
+<tr><td>原始 SQL <code>text()</code></td><td>68 處</td><td>2 處（LIKE 跳脫）</td></tr>
+<tr><td>打包尺寸</td><td>674 KB JS＋97 KB CSS，單一檔</td><td>最大塊 227 KB，使用者端首載約 123 KB gzip</td></tr>
+<tr><td>一輪對話中位數</td><td>117 ms（假 DB）</td><td>14 ms（真 PG）</td></tr>
+<tr><td>一輪回應大小</td><td>209 KB</td><td>438 KB（空需求時 535 KB）</td></tr>
+<tr><td>API 端點</td><td>130</td><td>61</td></tr>
+<tr><td>功能開關</td><td>286（含 58 個有範圍驗證）</td><td>89＋20 閾值</td></tr>
+<tr><td>軟體庫</td><td>13 套</td><td>3 套</td></tr>
+<tr><td>機型資料</td><td>371 台、581 欄</td><td>371 台、581 欄</td></tr>
+<tr><td>規格文件</td><td>約 4,800 行</td><td>約 270 行</td></tr>
+</table></div>
+<p class="sub">審查依據：五份子代理審查報告（A 後端、A 前端、B 後端、B 前端、功能矩陣）之原文含逐條檔名與行號，如需可另存為附件。Markdown 原稿：<code>docs/兩套系統程式碼比較報告-2026-11-04.md</code>。</p>
+</div>
+</body>
+</html>
