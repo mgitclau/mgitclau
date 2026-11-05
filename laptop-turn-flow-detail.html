@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一句話的指令全紀錄</title>
+<meta name="description" content="AI 筆電選購助手 v1.0.16：用戶說一句話、調一次權重時，瀏覽器、伺服器、資料庫、AI 之間實際送出的每一條指令、SQL 與提示詞全文。">
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#fff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e2e0d8; --soft:#efede6; --code:#f3f2ee;
+  --web:#3b6fd8; --api:#7a5af0; --db:#2f8f6f; --ai:#e0662c;
+  --ok:#1f8f4e; --bad:#c43c3c; --warn:#b7791f;
+  --hl-tpl:transparent; --hl-text:#ffe2a8; --hl-prof:#cfe6ff; --hl-sw:#d9f2d9; --hl-facts:#f3dcff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f; --code:#1a1a1e;
+    --web:#7aa2ff; --api:#a993ff; --db:#4fc79c; --ai:#ff9a62; --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52;
+    --hl-text:#5c4513; --hl-prof:#173a5c; --hl-sw:#1d4a26; --hl-facts:#46225a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17171a; --panel:#202024; --ink:#ecebe6; --muted:#a19f97; --line:#34343a; --soft:#2a2a2f; --code:#1a1a1e;
+  --web:#7aa2ff; --api:#a993ff; --db:#4fc79c; --ai:#ff9a62; --ok:#4cc982; --bad:#ff7a7a; --warn:#e9ad52;
+  --hl-text:#5c4513; --hl-prof:#173a5c; --hl-sw:#1d4a26; --hl-facts:#46225a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:19px;margin:30px 0 10px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:900px}
+code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:1px 5px;border-radius:4px;word-break:break-all}
+.src{display:inline-block;font-size:11px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:4px;vertical-align:1px;white-space:nowrap}
+.src.real{background:var(--ok);color:#fff}.src.rerun{background:var(--api);color:#fff}.src.code{background:var(--muted);color:#fff}.src.rebuild{background:var(--warn);color:#fff}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:13.5px}
+.note li{margin:3px 0}
+.actors{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:14px 0}
+.actor{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.actor b{font-size:14.5px}
+.actor div{color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 10px}
+.tab{font:inherit;font-size:14px;padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);font-weight:600}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:13px}
+.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start}
+.seq{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 10px 14px}
+.lanes{display:grid;grid-template-columns:34px repeat(4,1fr);gap:0;position:sticky;top:0;background:var(--panel);z-index:2;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.lanes div{font-size:12px;font-weight:700;text-align:center;color:var(--c);padding:4px 2px}
+.phase{font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 4px 4px;letter-spacing:.5px}
+.srow{display:grid;grid-template-columns:34px repeat(4,1fr);align-items:center;min-height:40px;width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;position:relative;text-align:left;border-radius:8px}
+.srow:hover{background:var(--soft)}
+.srow[aria-selected="true"]{background:var(--soft);outline:2px solid var(--ink);outline-offset:-2px}
+.srow .n{font-size:11.5px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.srow .life{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.arrow{position:relative;height:30px;display:flex;align-items:center;z-index:1}
+.arrow .bar{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--c)}
+.arrow .head{position:absolute;top:50%;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;transform:translateY(-50%)}
+.arrow.r .head{right:-2px;border-left:9px solid var(--c)}
+.arrow.l .head{left:-2px;border-right:9px solid var(--c)}
+.arrow .lbl{position:relative;margin:0 auto;background:var(--panel);border:1px solid var(--c);color:var(--ink);font-size:12px;line-height:1.3;padding:2px 7px;border-radius:6px;max-width:94%;text-align:center}
+.self{margin:4px 6px;border:1.5px solid var(--c);border-radius:7px;background:var(--panel);font-size:12px;line-height:1.35;padding:4px 7px;position:relative;z-index:1}
+.dur{font-size:10.5px;color:var(--muted);display:block}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.detail h3{margin:0 0 6px;font-size:19px}
+.who{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.pill{display:inline-block;color:#fff;background:var(--c);border-radius:99px;padding:1px 10px;font-size:12px}
+.plain{background:var(--soft);border-radius:9px;padding:10px 12px;margin:8px 0;font-size:14px}
+.sec{margin-top:14px}
+.sec h4{margin:0 0 6px;font-size:13px;color:var(--muted);letter-spacing:.5px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-word;max-height:520px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.v{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.sqlcard{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:8px}
+.sqlcard .m{font-size:13.5px;margin-bottom:5px}
+.sqlcard .t{font-size:11px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
+.hl{border-radius:3px;padding:0 1px}
+.hl.text{background:var(--hl-text)}.hl.prof{background:var(--hl-prof)}.hl.sw{background:var(--hl-sw)}.hl.facts{background:var(--hl-facts)}
+.hlkey{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;margin-bottom:6px}
+.hlkey span{padding:1px 6px;border-radius:4px}
+.callout{border-left:4px solid var(--warn);background:var(--soft);padding:8px 12px;border-radius:0 8px 8px 0;font-size:13.5px;margin-top:12px}
+.nav{display:flex;gap:8px;margin-top:16px}
+.nav button{flex:1;font:inherit;font-size:13px;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px;cursor:pointer}
+.nav button:disabled{opacity:.4;cursor:default}
+.finds{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.find{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:10px;padding:12px 14px;font-size:14px}
+.find h3{margin:0 0 4px;font-size:15px}
+.find .ev{font-size:12.5px;color:var(--muted);margin-top:6px}
+footer{color:var(--muted);font-size:12.5px;margin-top:26px}
+@media (max-width:900px){
+  .main{grid-template-columns:1fr}
+  .detail{position:static;max-height:none}
+  .lanes div{font-size:10.5px}
+  .arrow .lbl,.self{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>一句話的指令全紀錄（v1.0.16）</h1>
+  <p class="sub">用戶說一句話、或調一次權重時，誰把什麼指令送給誰、那條指令是什麼意思、送給 AI 的提示詞全文長什麼樣子。點左邊任何一列，右邊會顯示指令原文和白話說明。</p>
+
+  <div class="note">
+    <b>資料從哪裡來</b>（每一塊資料前面都有標籤）
+    <ul>
+      <li><span class="src real">真實</span>資料庫裡的真實紀錄：「想買一台打遊戲的筆電，3 萬 5 左右」（2026-11-05 22:50，對話 9cd90b9a）和「手動調整權重」（2026-11-02 01:38，紀錄 bd2a282a）。時間、AI 回覆、權重變化、排名都是當時存下的。</li>
+      <li><span class="src rerun">重跑</span>SQL 原文、HTTP 請求、提示詞全文：資料庫不會記錄這些，所以我用 <b>v1.0.16 原始程式</b>在<b>暫時複製的資料庫</b>上重跑同一句話和同一組權重，把每一條送出去的指令攔下來。AI 用模擬回應，沒有連到 DeepSeek。重跑結果和真實紀錄一致：前 5 名機型相同、動作相同、AI 回覆同樣通過檢查。重跑完就刪掉複製的資料庫，原本的資料庫沒有任何改動。</li>
+      <li><span class="src rebuild">重建</span>當時沒存、由已存的結果推回來的內容，例如 AI 理解回傳的 JSON 原文。</li>
+      <li><span class="src code">程式</span>v1.0.16 原始碼的位置。</li>
+    </ul>
+    重跑的時間是在本機量的，而且 AI 是模擬回應，所以只拿來看「程式步驟大概花幾毫秒」。用戶實際等待的時間以「真實」為準。
+  </div>
+
+  <div class="actors" id="actors"></div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="stats" id="stats"></div>
+  <div class="main">
+    <div class="seq" id="seq"></div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </div>
+
+  <h2>看完這些指令，發現的 5 件事</h2>
+  <div class="finds" id="finds"></div>
+
+  <footer>2026-11-06 ・ 依據 laptop-assistant-v1.0.16 原始碼、資料庫 laptop_assistant 的真實紀錄，以及在暫時複製的資料庫上重跑擷取的指令 ・ 專案檔案與原資料庫都沒有修改</footer>
+</div>
+
+<script>
+const T = {"startup": [{"t": 64.04, "k": "sql", "q": "select b.oid, b.typarray from pg_catalog.pg_type a left join pg_catalog.pg_type b on b.oid = a.typelem where a.typcategory = 'A' group by b.oid, b.typarray order by b.oid", "p": []}, {"t": 66.8, "k": "sql", "q": "select \"id\", \"name\", \"brand\", \"price\", \"status\", \"raw\", \"created_at\", \"updated_at\" from \"laptops\" order by \"laptops\".\"id\" asc", "p": []}], "newConv": {"ms": 48.8, "ev": [{"t": 184.44, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 185.31, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 185.58, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 185.81, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 186.01, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 186.22, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 186.41, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 186.65, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 186.96, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 186.97, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 189.5, "k": "sql", "q": "insert into \"conversations\" (\"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\") values ($1, $2, $3, $4, default, default, default) returning \"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\"", "cols": [["id", "97ebf2be-ed9d-416e-a69f-b6c497978583"], ["owner", "visitor:e89af0ae-ecca-48cd-bab6-7e4030f9ec6f"], ["title", "新對話"], ["state", "{\"profile\":[],\"weights\":{\"noise\":6,\"battery\":12,\"display\":21,\"thermal\":10,\"performance\":33,\"portability\":14,\"expandability\":4},\"manualWeights\":null,\"perfSubs\":{\"cpu_single\":20,\"cpu_multi\":25,\"gpu\":35,\"memory\":10,\"storage\":10},\"manualPerfSubs\":null,\"weightSourc…（共 410 字）"], ["tags", "（default）"], ["created_at", "（default）"], ["updated_at", "（default）"]]}, {"t": 190.35, "k": "sql", "q": "insert into \"user_events\" (\"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, clock_timestamp()) returning \"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\"", "cols": [["id", "26489395-1dd0-4f01-98ab-da6cc3409aa2"], ["conversation_id", "97ebf2be-ed9d-416e-a69f-b6c497978583"], ["kind", "conversation_new"], ["source", "server"], ["laptop_id", null], ["laptop_name", null], ["data", "{}"], ["created_at", "（clock_timestamp(）"]]}, {"t": 191.86, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 192.08, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 192.29, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 192.49, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 192.67, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 192.85, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 193.03, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 193.22, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 193.52, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 193.53, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 199.83, "k": "sql", "q": "select \"id\", \"conversation_id\", \"role\", \"text\", \"cards\", \"run_id\", \"created_at\" from \"messages\" where \"messages\".\"conversation_id\" = $1 order by \"messages\".\"created_at\", \"messages\".\"id\"", "p": ["97ebf2be-ed9d-416e-a69f-b6c497978583"]}, {"t": 200.56, "k": "sql", "q": "select \"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\" from \"user_events\" where \"user_events\".\"conversation_id\" = $1 order by \"user_events\".\"created_at\" desc, \"user_events\".\"id\" desc limit $2", "p": ["97ebf2be-ed9d-416e-a69f-b6c497978583", 1000]}], "t0": 154.93}, "message": {"ms": 70.2, "ev": [{"t": 207.73, "k": "sql", "q": "select \"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\" from \"conversations\" where (\"conversations\".\"id\" = $1 and \"conversations\".\"owner\" = $2)", "p": ["97ebf2be-ed9d-416e-a69f-b6c497978583", "visitor:e89af0ae-ecca-48cd-bab6-7e4030f9ec6f"]}, {"t": 208.73, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 209, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 209.26, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 209.52, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 209.77, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 210.01, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 210.24, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 210.56, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 210.94, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 210.94, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 216.8, "k": "sql", "q": "select \"id\", \"slot\", \"version\", \"body\", \"active\", \"created_at\" from \"prompts\" where \"prompts\".\"slot\" = $1", "p": ["nlu"]}, {"t": 217.62, "k": "sql", "q": "select \"id\", \"name\", \"protocol\", \"base_url\", \"model\", \"slots\", \"enabled\", \"api_key_enc\", \"key_last4\", \"temperature\", \"updated_at\" from \"model_providers\" order by \"model_providers\".\"name\" asc", "p": []}, {"t": 218.24, "k": "sql", "q": "select count(*) from \"llm_calls\" where \"llm_calls\".\"created_at\" >= $1", "p": ["2026-11-04T18:36:28.710Z"]}, {"t": 243.58, "k": "http", "q": "POST https://api.deepseek.com/v1/chat/completions", "url": "https://api.deepseek.com/v1/chat/completions", "headers": {"content-type": "application/json", "authorization": "Bearer sk-****（已遮蔽）"}, "body": {"model": "deepseek-flash", "temperature": 0.2, "messages": [{"role": "user", "content": "（提示詞全文，見下方）"}], "max_tokens": 1024, "thinking": {"type": "disabled"}}, "prompt": "你是筆電選購助手的需求理解模組。只輸出 JSON，不要輸出其他文字。\n把用戶這句話變成結構化需求。不可回傳機型、分數或名次，不可編造軟體的硬體需求。全部金額都是新台幣。\n\n目前需求檔案：\n[]\n\n軟體目錄（軟體只能對應到這裡的名稱與用途；對不上就放進 unknown）：\n[{\"name\":\"Photoshop\",\"aliases\":[\"PS\",\"photoshop\",\"修圖軟體\"],\"usages\":[\"平面設計\"]},{\"name\":\"Illustrator\",\"aliases\":[\"illustrator\",\"Ai\",\"AI 軟體\"],\"usages\":[\"平面設計\"]},{\"name\":\"Premiere Pro\",\"aliases\":[\"PR\",\"premier pro\",\"premiere\",\"Premiere\"],\"usages\":[\"4K 剪輯\"]}]\n\n用戶這句話：\n想買一台打遊戲的筆電，3 萬 5 左右\n\n輸出形狀：\n{\"ops\":[{\"op\":\"add|delete\",\"id\":\"刪除時填需求 id\",\"field\":\"budget|size|weight_max|brand|os|ram_min|dgpu_required|refresh_min|purpose|portability|software|priority|other\",\"label\":\"給人看的短標籤\",\"value\":對應欄位的值,\"hard\":true或false,\"confidence\":0到1,\"evidence\":\"用戶原文片段\"}],\n\"weightSuggestion\":{\"deltas\":{\"performance\":3},\"confidence\":0到1,\"reason\":\"一句話\"}或null,\"compareIntent\":false,\"unknown\":[\"軟體目錄沒有的軟體名稱\"]}\n\nvalue 格式：budget {\"min\":數字,\"max\":數字}；size {\"mode\":\"around|max|min\",\"inch\":數字}；weight_max 公斤；brand {\"only\":[],\"no\":[]}；os \"windows|macos\"；ram_min GB；dgpu_required true；refresh_min Hz；purpose 為「辦公學習、設計、剪輯、遊戲、程式開發」或用戶原話；portability \"low|mid|high\"；software {\"name\":\"目錄名稱\",\"usage\":\"目錄用途\"}；priority 為 performance、display、portability、battery、thermal、noise、expandability 其中之一。\n只有用戶明說的最低需求才可把 hard 設為 true；「性能好」「不要太重」這類偏好一律 false。不要重複新增檔案裡已有的相同需求。", "resp": {"choices": [{"message": {"role": "assistant", "content": "{\"ops\":[{\"op\":\"add\",\"field\":\"budget\",\"label\":\"預算約 3 萬 5\",\"value\":{\"min\":30000,\"max\":40000},\"hard\":false,\"confidence\":0.9,\"evidence\":\"3 萬 5 左右\"},{\"op\":\"add\",\"field\":\"purpose\",\"label\":\"用途：遊戲\",\"value\":\"遊戲\",\"hard\":false,\"confidence\":0.95,\"evidence\":\"打遊戲的筆電\"}],\"weightSuggestion\":{\"deltas\":{\"performance\":3},\"confidence\":0.8,\"reason\":\"遊戲用途通常優先看重效能\"},\"compareIntent\":false,\"unknown\":[]}"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 526, "completion_tokens": 133}}}, {"t": 260.7, "k": "sql", "q": "select \"id\", \"slot\", \"version\", \"body\", \"active\", \"created_at\" from \"prompts\" where \"prompts\".\"slot\" = $1", "p": ["reply"]}, {"t": 261.3, "k": "sql", "q": "select \"id\", \"name\", \"protocol\", \"base_url\", \"model\", \"slots\", \"enabled\", \"api_key_enc\", \"key_last4\", \"temperature\", \"updated_at\" from \"model_providers\" order by \"model_providers\".\"name\" asc", "p": []}, {"t": 261.56, "k": "sql", "q": "select count(*) from \"llm_calls\" where \"llm_calls\".\"created_at\" >= $1", "p": ["2026-11-04T18:36:28.753Z"]}, {"t": 262.08, "k": "http", "q": "POST https://api.deepseek.com/v1/chat/completions", "url": "https://api.deepseek.com/v1/chat/completions", "headers": {"content-type": "application/json", "authorization": "Bearer sk-****（已遮蔽）"}, "body": {"model": "deepseek-flash", "temperature": 0.2, "messages": [{"role": "user", "content": "（提示詞全文，見下方）"}], "max_tokens": 600, "thinking": {"type": "disabled"}}, "prompt": "你是筆電選購助手。用繁體中文（台灣用語），把下面已算好的事實自然簡潔地告訴用戶。\n不可編造機型、數字、分數、名次或排除原因，不可提到事實裡沒有的數字。不要提到內部術語、規則或公式。\n寫 2 到 4 句。若有追問，最後一句帶出問題即可，不要列出選項。\n\n事實：\n{\"action\":\"recommend\",\"formal\":371,\"edge\":0,\"top\":[{\"name\":\"聯想 小新 Pro 16 GT AI 元啟版 2026 388H\",\"price\":13500,\"power\":79.5,\"reasons\":[\"續航 100 分，候選並列第 1 名，這項佔你的考量 10%\",\"性能 76 分，候選並列第 57 名，這項佔你的考量 39%\"],\"tradeoffs\":[\"散熱 77 分，低於候選中位數 80 分，而這項佔你的考量 12%\"],\"versus\":\"和第 2 名 聯想小新Pro 16 GT AI元啟版 比：贏在性能、安靜，輸在散熱，便宜 NT$ 44,500\"},{\"name\":\"聯想小新Pro 16 GT AI元啟版\",\"price\":58000,\"power\":78.5,\"reasons\":[\"續航 100 分，候選並列第 1 名，這項佔你的考量 10%\",\"性能 73 分，候選並列第 86 名，這項佔你的考量 39%\"],\"tradeoffs\":[],\"versus\":null},{\"name\":\"泰坦18 Ultra 2026 (Titan 18 HX) (2026) Intel Core Ultra 9 290HX Plus / RTX 5090 24GB (175W) / 96GB / 2TB\",\"price\":216000,\"power\":76.9,\"reasons\":[\"性能 94 分，候選第 1 名，這項佔你的考量 39%\",\"螢幕 88 分，候選並列第 10 名，這項佔你的考量 18%\"],\"tradeoffs\":[\"便攜 34 分，低於候選中位數 43 分，而這項佔你的考量 12%\"],\"versus\":null}],\"weightChanges\":[\"因為你提到「遊戲」，性能從 33% 調到 39%\"],\"preferenceAsk\":\"聯想 小新 Pro 16 GT AI 元啟版 2026 388H 和 聯想小新Pro 16 GT AI元啟版 只差 1 分：前者性能較好，後者散熱較好。你比較在乎哪一個？\",\"compareNames\":[],\"followup\":null,\"relaxLabels\":[],\"softwareRisks\":[],\"unknown\":[],\"skipNotes\":[]}", "resp": {"choices": [{"message": {"role": "assistant", "content": "依你的需求，最推薦聯想 小新 Pro 16 GT AI 元啟版 2026 388H，售價 13,500 元，續航在候選中並列第一，性能也有一定水準，只是散熱略低於候選中位數。第二名是聯想小新Pro 16 GT AI元啟版，兩者只差 1 分，前者性能較好、後者散熱較好。你比較在乎哪一個？"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 652, "completion_tokens": 106}}}, {"t": 264.25, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 264.69, "k": "sql", "q": "begin", "p": []}, {"t": 265.2, "k": "sql", "q": "update \"conversations\" set \"title\" = $1, \"state\" = $2, \"updated_at\" = $3 where \"conversations\".\"id\" = $4", "cols": [["title", "想買一台打遊戲的筆電，3 萬 5 左右"], ["state", "{\"lastAskedCard\":null,\"consecutiveAsk\":0,\"turnNo\":1,\"ignoredUntil\":{},\"ignoredCount\":{},\"notedSkips\":[],\"noMoreAsk\":false,\"askedPrefer\":[\"GJS0001|BIBA0002\"],\"undoStack\":[{\"profile\":[],\"weightEvents\":[],\"excludedIds\":[],\"noMoreAsk\":false}],\"nAsk\":0,\"profile\":[{…（共 411 字）"], ["updated_at", "2026-11-05T18:36:28.757Z"], ["id", "97ebf2be-ed9d-416e-a69f-b6c497978583"]]}, {"t": 266.76, "k": "sql", "q": "insert into \"runs\" (\"id\", \"conversation_id\", \"input\", \"channel\", \"action\", \"nlu\", \"reply\", \"reply_source\", \"formal\", \"edge\", \"out\", \"ms\", \"weight_trace\", \"profile\", \"weights\", \"top_ids\", \"ask_trace\", \"snapshot\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, default)", "cols": [["id", "d912970a-63a6-4bb0-8984-773485232f0d"], ["conversation_id", "97ebf2be-ed9d-416e-a69f-b6c497978583"], ["input", "想買一台打遊戲的筆電，3 萬 5 左右"], ["channel", "message"], ["action", "recommend"], ["nlu", "{\"ops\":[{\"op\":\"upsert\",\"req\":{\"id\":\"req_budget\",\"label\":\"預算約 3 萬 5\",\"hard\":false,\"confidence\":0.9,\"evidence\":\"3 萬 5 左右\",\"source\":\"nlu\",\"field\":\"budget\",\"value\":{\"min\":30000,\"max\":40000}}},{\"op\":\"upsert\",\"req\":{\"id\":\"req_purpose_遊戲\",\"label\":\"用途：遊戲\",\"hard\":false…（共 410 字）"], ["reply", "依你的需求，最推薦聯想 小新 Pro 16 GT AI 元啟版 2026 388H，售價 13,500 元，續航在候選中並列第一，性能也有一定水準，只是散熱略低於候選中位數。第二名是聯想小新Pro 16 GT AI元啟版，兩者只差 1 分，前者性能較好、後者散熱較好。你比較在乎哪一個？"], ["reply_source", "model"], ["formal", 371], ["edge", 0], ["out", 0], ["ms", 56], ["weight_trace", "{\"rows\":[{\"dim\":\"performance\",\"label\":\"性能\",\"before\":33,\"after\":39,\"delta\":6,\"kind\":\"主動\",\"reasons\":[\"用途：遊戲\",\"語意判斷：遊戲用途通常優先看重效能\"]},{\"dim\":\"thermal\",\"label\":\"散熱\",\"before\":10,\"after\":12,\"delta\":2,\"kind\":\"主動\",\"reasons\":[\"用途：遊戲\"]},{\"dim\":\"display\",\"label\":\"螢幕\",\"befo…（共 410 字）"], ["profile", "[{\"id\":\"req_budget\",\"label\":\"預算約 3 萬 5\",\"hard\":false,\"confidence\":0.9,\"evidence\":\"3 萬 5 左右\",\"source\":\"nlu\",\"field\":\"budget\",\"value\":{\"min\":30000,\"max\":40000}},{\"id\":\"req_purpose_遊戲\",\"label\":\"用途：遊戲\",\"hard\":false,\"confidence\":0.95,\"evidence\":\"打遊戲的筆電\",\"source\":\"n…（共 296 字）"], ["weights", "{\"performance\":39,\"display\":18,\"portability\":12,\"battery\":10,\"thermal\":12,\"noise\":5,\"expandability\":4}"], ["top_ids", "[\"GJS0001\",\"BIBA0002\",\"SHDX0254\",\"SHDX0136\",\"SHDX0135\"]"], ["ask_trace", null], ["snapshot", "{\"v\":1,\"total\":371,\"funnel\":[],\"formal\":[{\"id\":\"GJS0001\",\"power\":79.5,\"value\":97,\"heavyCut\":0,\"severity\":\"high\"},{\"id\":\"BIBA0002\",\"power\":78.5,\"value\":17,\"heavyCut\":0,\"severity\":\"low\"},{\"id\":\"SHDX0254\",\"power\":76.9,\"value\":0,\"heavyCut\":0,\"severity\":\"high\"},{\"i…（共 412 字）"], ["created_at", "（default）"]]}, {"t": 271.26, "k": "sql", "q": "insert into \"messages\" (\"id\", \"conversation_id\", \"role\", \"text\", \"cards\", \"run_id\", \"created_at\") values ($1, $2, $3, $4, default, $5, default)", "cols": [["id", "e49d4fb6-c0f8-4fdc-a438-be2ea8bf4643"], ["conversation_id", "97ebf2be-ed9d-416e-a69f-b6c497978583"], ["role", "user"], ["text", "想買一台打遊戲的筆電，3 萬 5 左右"], ["cards", "（default）"], ["run_id", "d912970a-63a6-4bb0-8984-773485232f0d"], ["created_at", "（default）"]]}, {"t": 271.84, "k": "sql", "q": "insert into \"messages\" (\"id\", \"conversation_id\", \"role\", \"text\", \"cards\", \"run_id\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7)", "cols": [["id", "116ed565-c055-4947-817f-3e7a8ba15759"], ["conversation_id", "97ebf2be-ed9d-416e-a69f-b6c497978583"], ["role", "assistant"], ["text", "依你的需求，最推薦聯想 小新 Pro 16 GT AI 元啟版 2026 388H，售價 13,500 元，續航在候選中並列第一，性能也有一定水準，只是散熱略低於候選中位數。第二名是聯想小新Pro 16 GT AI元啟版，兩者只差 1 分，前者性能較好、後者散熱較好。你比較在乎哪一個？"], ["cards", "[{\"type\":\"requirements\",\"items\":[{\"id\":\"req_budget\",\"label\":\"預算約 3 萬 5\",\"hard\":false,\"confidence\":0.9,\"evidence\":\"3 萬 5 左右\",\"source\":\"nlu\",\"field\":\"budget\",\"value\":{\"min\":30000,\"max\":40000}},{\"id\":\"req_purpose_遊戲\",\"label\":\"用途：遊戲\",\"hard\":false,\"confidence\":0.95…（共 411 字）"], ["run_id", "d912970a-63a6-4bb0-8984-773485232f0d"], ["created_at", "2026-11-05T18:36:28.764Z"]]}, {"t": 272.73, "k": "sql", "q": "insert into \"llm_calls\" (\"id\", \"run_id\", \"slot\", \"provider_id\", \"model\", \"ok\", \"ms\", \"input_tokens\", \"output_tokens\", \"error\", \"created_at\") values (default, $1, $2, $3, $4, $5, $6, $7, $8, $9, default), (default, $10, $11, $12, $13, $14, $15, $16, $17, $18, default)", "cols": null, "p": ["d912970a-63a6-4bb0-8984-773485232f0d", "nlu", "b50db3fe-cd4c-428f-912d-4ef3f88c4d3a", "deepseek-flash", true, 7, 526, 133, null, "d912970a-63a6-4bb0-8984-773485232f0d", "reply", "b50db3fe-cd4c-428f-912d-4ef3f88c4d3a", "deepseek-flash", true, 0, 652, 106, null]}, {"t": 273.84, "k": "sql", "q": "commit", "p": []}], "t0": 206.55}, "newConv2": {"ms": 13.6, "ev": [{"t": 278.22, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 278.55, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 278.81, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 279.06, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 279.3, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 279.54, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 279.77, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 280.03, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 280.41, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 280.41, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 281.1, "k": "sql", "q": "insert into \"conversations\" (\"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\") values ($1, $2, $3, $4, default, default, default) returning \"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\"", "cols": [["id", "a8c73d0b-277e-473f-9d21-861ab91df1fc"], ["owner", "visitor:e89af0ae-ecca-48cd-bab6-7e4030f9ec6f"], ["title", "新對話"], ["state", "{\"profile\":[],\"weights\":{\"noise\":6,\"battery\":12,\"display\":21,\"thermal\":10,\"performance\":33,\"portability\":14,\"expandability\":4},\"manualWeights\":null,\"perfSubs\":{\"cpu_single\":20,\"cpu_multi\":25,\"gpu\":35,\"memory\":10,\"storage\":10},\"manualPerfSubs\":null,\"weightSourc…（共 410 字）"], ["tags", "（default）"], ["created_at", "（default）"], ["updated_at", "（default）"]]}, {"t": 281.65, "k": "sql", "q": "insert into \"user_events\" (\"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, clock_timestamp()) returning \"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\"", "cols": [["id", "79d7dc45-cce9-447f-926e-90a17c2a47f0"], ["conversation_id", "a8c73d0b-277e-473f-9d21-861ab91df1fc"], ["kind", "conversation_new"], ["source", "server"], ["laptop_id", null], ["laptop_name", null], ["data", "{}"], ["created_at", "（clock_timestamp(）"]]}, {"t": 282.34, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 282.6, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 282.84, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 283.08, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 283.31, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 283.54, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 283.78, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 284.05, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 284.43, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 284.43, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 288.92, "k": "sql", "q": "select \"id\", \"conversation_id\", \"role\", \"text\", \"cards\", \"run_id\", \"created_at\" from \"messages\" where \"messages\".\"conversation_id\" = $1 order by \"messages\".\"created_at\", \"messages\".\"id\"", "p": ["a8c73d0b-277e-473f-9d21-861ab91df1fc"]}, {"t": 289.39, "k": "sql", "q": "select \"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\" from \"user_events\" where \"user_events\".\"conversation_id\" = $1 order by \"user_events\".\"created_at\" desc, \"user_events\".\"id\" desc limit $2", "p": ["a8c73d0b-277e-473f-9d21-861ab91df1fc", 1000]}], "t0": 277.65}, "weights": {"ms": 19.6, "ev": [{"t": 294.21, "k": "sql", "q": "select \"id\", \"owner\", \"title\", \"state\", \"tags\", \"created_at\", \"updated_at\" from \"conversations\" where (\"conversations\".\"id\" = $1 and \"conversations\".\"owner\" = $2)", "p": ["a8c73d0b-277e-473f-9d21-861ab91df1fc", "visitor:e89af0ae-ecca-48cd-bab6-7e4030f9ec6f"]}, {"t": 294.8, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["flags"]}, {"t": 294.94, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["thresholds"]}, {"t": 295.07, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["weight_rules"]}, {"t": 295.2, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["default_weights"]}, {"t": 295.32, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["home"]}, {"t": 295.55, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["motion"]}, {"t": 295.78, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 296.05, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["intent"]}, {"t": 296.42, "k": "sql", "q": "select \"id\", \"card\", \"updated_at\" from \"prompt_cards\"", "p": []}, {"t": 296.42, "k": "sql", "q": "select \"name\", \"profile\", \"updated_at\" from \"software\"", "p": []}, {"t": 305.75, "k": "sql", "q": "select \"key\", \"value\", \"updated_at\" from \"settings\" where \"settings\".\"key\" = $1", "p": ["display"]}, {"t": 306.2, "k": "sql", "q": "begin", "p": []}, {"t": 306.39, "k": "sql", "q": "update \"conversations\" set \"title\" = $1, \"state\" = $2, \"updated_at\" = $3 where \"conversations\".\"id\" = $4", "cols": [["title", "新對話"], ["state", "{\"lastAskedCard\":null,\"consecutiveAsk\":0,\"turnNo\":0,\"ignoredUntil\":{},\"ignoredCount\":{},\"notedSkips\":[],\"noMoreAsk\":false,\"askedPrefer\":[],\"undoStack\":[],\"nAsk\":0,\"profile\":[],\"weights\":{\"noise\":10,\"battery\":12,\"display\":22,\"thermal\":10,\"performance\":9,\"portab…（共 411 字）"], ["updated_at", "2026-11-05T18:36:28.798Z"], ["id", "a8c73d0b-277e-473f-9d21-861ab91df1fc"]]}, {"t": 307.35, "k": "sql", "q": "insert into \"runs\" (\"id\", \"conversation_id\", \"input\", \"channel\", \"action\", \"nlu\", \"reply\", \"reply_source\", \"formal\", \"edge\", \"out\", \"ms\", \"weight_trace\", \"profile\", \"weights\", \"top_ids\", \"ask_trace\", \"snapshot\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, default)", "cols": [["id", "c99aa4e4-af94-47b4-bb30-5f6cb637c8d1"], ["conversation_id", "a8c73d0b-277e-473f-9d21-861ab91df1fc"], ["input", "手動調整權重"], ["channel", "weights"], ["action", "guide"], ["nlu", null], ["reply", ""], ["reply_source", "template"], ["formal", 371], ["edge", 0], ["out", 0], ["ms", 11], ["weight_trace", "{\"rows\":[{\"dim\":\"performance\",\"label\":\"性能\",\"before\":33,\"after\":9,\"delta\":-24,\"kind\":\"手動\",\"reasons\":[\"用戶手動調整\"]},{\"dim\":\"expandability\",\"label\":\"擴充\",\"before\":4,\"after\":15,\"delta\":11,\"kind\":\"手動\",\"reasons\":[\"用戶手動調整\"]},{\"dim\":\"portability\",\"label\":\"便攜\",\"before\":14,…（共 410 字）"], ["profile", "[]"], ["weights", "{\"noise\":10,\"battery\":12,\"display\":22,\"thermal\":10,\"performance\":9,\"portability\":22,\"expandability\":15}"], ["top_ids", "[\"GJS0001\",\"BIBA0002\",\"SHDX0052\",\"BIBA0005\",\"SHDX0051\"]"], ["ask_trace", null], ["snapshot", "{\"v\":1,\"total\":371,\"funnel\":[],\"formal\":[{\"id\":\"GJS0001\",\"power\":79.9,\"value\":94,\"heavyCut\":0,\"severity\":\"high\"},{\"id\":\"BIBA0002\",\"power\":79.3,\"value\":18,\"heavyCut\":0,\"severity\":\"high\"},{\"id\":\"SHDX0052\",\"power\":77,\"value\":5,\"heavyCut\":0,\"severity\":\"high\"},{\"id…（共 412 字）"], ["created_at", "（default）"]]}, {"t": 310.39, "k": "sql", "q": "insert into \"user_events\" (\"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, clock_timestamp()) returning \"id\", \"conversation_id\", \"kind\", \"source\", \"laptop_id\", \"laptop_name\", \"data\", \"created_at\"", "cols": [["id", "47aa2731-ef0a-4a80-baa0-eddc890a611a"], ["conversation_id", "a8c73d0b-277e-473f-9d21-861ab91df1fc"], ["kind", "weights_apply"], ["source", "server"], ["laptop_id", null], ["laptop_name", null], ["data", "{\"before\":{\"noise\":6,\"battery\":12,\"display\":21,\"thermal\":10,\"performance\":33,\"portability\":14,\"expandability\":4},\"after\":{\"noise\":10,\"battery\":12,\"display\":22,\"thermal\":10,\"performance\":9,\"portability\":22,\"expandability\":15},\"keepOrder\":false,\"runId\":\"c99aa4e4…（共 290 字）"], ["created_at", "（clock_timestamp(）"]]}, {"t": 310.83, "k": "sql", "q": "commit", "p": []}], "t0": 293.87}, "msgResp": {"keys": ["runId", "action", "reply", "cards", "conversation", "snapshot", "weightTrace", "events", "userEvents"], "size": 559508, "action": "recommend", "reply": "依你的需求，最推薦聯想 小新 Pro 16 GT AI 元啟版 2026 388H，售價 13,500 元，續航在候選中並列第一，性能也有一定水準，只是散熱略低於候選中位數。第二名是聯想小新Pro 16 GT AI元啟版，兩者只差 1 分，前者性能較好、後者散熱較好。你比較在乎哪一個？", "cards": ["requirements", "count", "recommend", "ask_preference"]}, "wResp": {"size": 573302, "action": "guide", "reply": "", "cards": [], "trace": {"rows": [{"dim": "performance", "label": "性能", "before": 33, "after": 9, "delta": -24, "kind": "手動", "reasons": ["用戶手動調整"]}, {"dim": "expandability", "label": "擴充", "before": 4, "after": 15, "delta": 11, "kind": "手動", "reasons": ["用戶手動調整"]}, {"dim": "portability", "label": "便攜", "before": 14, "after": 22, "delta": 8, "kind": "手動", "reasons": ["用戶手動調整"]}, {"dim": "noise", "label": "安靜", "before": 6, "after": 10, "delta": 4, "kind": "手動", "reasons": ["用戶手動調整"]}, {"dim": "display", "label": "螢幕", "before": 21, "after": 22, "delta": 1, "kind": "手動", "reasons": ["用戶手動調整"]}], "skipped": []}, "top": ["GJS0001|聯想 小新 Pro 16 GT AI 元啟版 2026 388H|13500|79.9", "BIBA0002|聯想小新Pro 16 GT AI元啟版|58000|79.3", "SHDX0052|ProArt 創13 2026 (2026) 創13 2026 Max+395/128G|130500|77", "BIBA0005|華碩a豆14 Air 2026|26600|76.5", "SHDX0051|ProArt 創13 2026 (2026) 創13 2026 Max+395/64G|60700|75"], "ev": {"after": {"noise": 10, "battery": 12, "display": 22, "thermal": 10, "performance": 9, "portability": 22, "expandability": 15}, "runId": "c99aa4e4-af94-47b4-bb30-5f6cb637c8d1", "before": {"noise": 6, "battery": 12, "display": 21, "thermal": 10, "performance": 33, "portability": 14, "expandability": 4}, "keepOrder": false}}, "msgTop": ["GJS0001|聯想 小新 Pro 16 GT AI 元啟版 2026 388H|13500|79.5", "BIBA0002|聯想小新Pro 16 GT AI元啟版|58000|78.5", "SHDX0254|泰坦18 Ultra 2026 (Titan 18 HX) (2026) Intel Core Ultra 9 290HX Plus / RTX 5090 24GB (175W) / 96GB / 2TB|216000|76.9", "SHDX0136|拯救者 Y9000P 至尊版 (2026) Intel Core Ultra 9 290HX Plus / RTX 5090 24GB (175W) / 64GB / 2TB|179100|76.8", "SHDX0135|拯救者 Y9000P 至尊版 (2026) Intel Core Ultra 9 290HX Plus / RTX 5090 24GB (175W) / 64GB / 1TB|171000|75.6"]};
+const ACT = {
+  web:{name:"瀏覽器", c:"var(--web)", d:"用戶電腦上的 Chrome／Safari，跑 React 畫面", where:"用戶的電腦"},
+  api:{name:"API 伺服器", c:"var(--api)", d:"Node.js 程式（Fastify），負責所有判斷與計算", where:"本機 127.0.0.1:3100"},
+  db:{name:"資料庫", c:"var(--db)", d:"PostgreSQL 16，存設定、對話、紀錄", where:"本機 localhost:5432"},
+  ai:{name:"AI 模型", c:"var(--ai)", d:"DeepSeek（deepseek-flash），只負責聽懂和措辭", where:"網路上 api.deepseek.com"},
+};
+const LANES = ["web","api","db","ai"];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = (n) => Number(n).toLocaleString("en-US");
+const J = (o) => JSON.stringify(o, null, 2);
+
+/* ---------- 每一條 SQL 的白話 ---------- */
+const SETTING_MEANING = {
+  flags:"功能開關（158 個，例如要不要顯示分數、要不要用 AI 理解）",
+  thresholds:"門檻值（例如預算容許超出 8%、追問最多幾題、AI 權重建議信心要 0.75 以上）",
+  weight_rules:"權重規則（例如用途「遊戲」→ 性能 +10、散熱 +4）",
+  default_weights:"系統預設權重（性能 33、螢幕 21、便攜 14…）",
+  home:"首頁內容（範例句子、價格區間）",
+  motion:"動畫方案",
+  display:"候選機型顯示方案（結果區怎麼分組）",
+  intent:"意圖分類的詞表和固定文案（閒聊、範圍外怎麼回）",
+};
+function sqlMeaning(q, p) {
+  const s = q.toLowerCase();
+  if (s.startsWith("select") && s.includes('from "settings"')) return `去 <b>settings（設定表）</b>找 key 等於「${esc(p?.[0])}」的那一列，拿它的內容：${SETTING_MEANING[p?.[0]] ?? ""}。`;
+  if (s.includes('from "prompt_cards"')) return "把 <b>prompt_cards（追問題庫）</b>整張表讀出來，所有追問卡和選項都在這裡。";
+  if (s.includes('from "software"')) return "把 <b>software（軟體庫）</b>整張表讀出來：Photoshop、Illustrator、Premiere Pro 的硬體需求與權重加減。";
+  if (s.includes('from "conversations" where')) return "去 <b>conversations（對話表）</b>找這段對話，而且「擁有者」必須是送請求的這個人。找不到就回 404，別人的對話讀不到。";
+  if (s.includes('from "prompts"')) return `去 <b>prompts（提示詞表）</b>拿「${esc(p?.[0])}」用途的提示詞模板（程式會挑 active＝true 的那一份）。`;
+  if (s.includes('from "model_providers"')) return "讀 <b>model_providers（模型供應商表）</b>：網址、模型名稱、溫度，以及<b>加密過的 API 金鑰</b>。依名稱排序，挑第一個啟用、而且負責這個用途的。";
+  if (s.startsWith("select count(*)")) return `數一數 <b>llm_calls（AI 呼叫紀錄）</b>從 ${esc(p?.[0])}（24 小時前）到現在有幾筆。超過每日上限 5,000 次就不呼叫 AI，避免費用被刷爆。`;
+  if (s.includes('from "laptops"')) return "把 <b>laptops（機型表）</b>整張讀出來（371 台，每台約 380 欄實測資料），照 id 排序。";
+  if (s.includes('from "messages"')) return "讀這段對話的所有訊息，照時間排序（畫面要顯示對話內容）。";
+  if (s.includes('from "user_events"')) return "讀這段對話的用戶操作紀錄，最新的在前面，最多 1,000 筆（v1.0.16 新增）。";
+  if (s.includes("pg_catalog.pg_type")) return "資料庫驅動程式（postgres.js）自己發的：問資料庫有哪些「陣列型別」，之後才知道怎麼解讀回傳資料。和我們的程式無關，只在第一次連線時發一次。";
+  if (s === "begin") return "<b>開始交易</b>：接下來幾條寫入要嘛全部成功、要嘛全部取消，不會只寫一半。";
+  if (s === "commit") return "<b>確認交易</b>：上面的寫入正式生效。";
+  if (s.startsWith('update "conversations"')) return "<b>更新</b>這段對話：標題、整份對話狀態（需求檔案、權重、追問紀錄…）、更新時間。";
+  if (s.startsWith('insert into "conversations"')) return "<b>新增</b>一段對話：新 id、擁有者（訪客 id）、標題「新對話」、初始狀態（預設權重、空的需求檔案）。";
+  if (s.startsWith('insert into "runs"')) return "<b>新增</b>一筆「這一輪的紀錄」：輸入、AI 理解結果、回覆、台數、花了幾毫秒、權重變化、需求檔案、前 5 名、快照。後台的對話頁就是讀這張表。";
+  if (s.startsWith('insert into "messages"')) return "<b>新增</b>一則訊息（用戶說的話，或系統的回覆＋卡片），用 run_id 對到這一輪。";
+  if (s.startsWith('insert into "llm_calls"')) return "<b>新增</b> AI 呼叫紀錄：用途、模型、成功與否、毫秒、tokens。一次寫兩筆（理解＋回覆）。";
+  if (s.startsWith('insert into "user_events"')) return "<b>新增</b>一筆用戶操作事件（v1.0.16），時間用資料庫的 clock_timestamp()。";
+  return "";
+}
+function sqlCard(e, t0) {
+  const params = e.cols ? `<table><tr><th>欄位</th><th>寫入的值</th></tr>${e.cols.map(([c, v]) => `<tr><td>${esc(c)}</td><td class="v">${esc(typeof v === "string" ? v : JSON.stringify(v))}</td></tr>`).join("")}</table>`
+    : e.p && e.p.length ? `<div style="font-size:12px;margin-top:4px">參數：${e.p.map((v, i) => `<code>$${i + 1} = ${esc(typeof v === "string" ? v : JSON.stringify(v))}</code>`).join(" ")}</div>` : "";
+  return `<div class="sqlcard"><div class="m">${sqlMeaning(e.q, e.p)}</div><pre>${esc(e.q)}</pre>${params}<div class="t"><span class="src rerun">重跑</span>這一段開始後第 ${(e.t - t0).toFixed(1)} ms 送出</div></div>`;
+}
+
+/* ---------- 提示詞上色 ---------- */
+function colorPrompt(prompt, parts) {
+  // parts: [{text, cls}]，依出現位置包起來
+  let out = "", i = 0;
+  const hits = parts.map((p) => ({ ...p, at: prompt.indexOf(p.text) })).filter((p) => p.at >= 0 && p.text).sort((a, b) => a.at - b.at);
+  for (const h of hits) { if (h.at < i) continue; out += esc(prompt.slice(i, h.at)) + `<span class="hl ${h.cls}">${esc(h.text)}</span>`; i = h.at + h.text.length; }
+  return out + esc(prompt.slice(i));
+}
+
+/* ---------- 情境 ---------- */
+const M = T.message, NC = T.newConv, W = T.weights, NC2 = T.newConv2;
+const nluHttp = M.ev[14], repHttp = M.ev[18];
+const factsStr = repHttp.prompt.slice(repHttp.prompt.indexOf("事實：\n") + 4);
+const factsObj = JSON.parse(factsStr);
+const softwareStr = nluHttp.prompt.match(/\n(\[\{"name":"Photoshop".*\])\n/)[1];
+const t0M = T.message.t0, t0W = T.weights.t0, t0N = T.newConv.t0, t0N2 = T.newConv2.t0;
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const gap = (sc, a, b) => (sc.ev[b].t - sc.ev[a].t).toFixed(1);
+
+const REAL_TRACE = [["性能",33,39,"+6","主動","用途：遊戲；語意判斷：遊戲用途通常優先看重效能"],["散熱",10,12,"+2","主動","用途：遊戲"],["螢幕",21,18,"−3","被動","維持總和 100"],["便攜",14,12,"−2","被動","維持總和 100"],["續航",12,10,"−2","被動","維持總和 100"],["安靜",6,5,"−1","被動","維持總和 100"]];
+const traceTable = (rows) => `<table><tr><th>維度</th><th class="n">原本</th><th class="n">之後</th><th class="n">變化</th><th>為什麼</th></tr>${rows.map((r) => `<tr><td>${r[0]}${r[4] ? `<br><span style="font-size:11px;color:var(--muted)">${r[4]}</span>` : ""}</td><td class="n">${r[1]}</td><td class="n"><b>${r[2]}</b></td><td class="n">${r[3]}</td><td>${esc(r[5])}</td></tr>`).join("")}</table>`;
+const topTable = (rows) => `<table><tr><th>名次</th><th>機型</th><th class="n">售價</th><th class="n">總分</th></tr>${rows.map((s, i) => { const [id, name, price, power] = s.split("|"); return `<tr><td class="n">${i + 1}</td><td>${esc(name)} <span style="color:var(--muted);font-size:11px">${id}</span></td><td class="n">${fmt(price)}</td><td class="n">${power}</td></tr>`; }).join("")}</table>`;
+
+const SCEN = {
+  msg: {
+    tab:"A　用戶說一句話",
+    stats:[["用戶實際等待", "4,360 ms", "real"], ["AI 理解", "2,644 ms", "real"], ["AI 回覆", "1,627 ms", "real"], ["程式＋資料庫", "89 ms", "real"], ["SQL 指令", `${M.ev.filter((e) => e.k === "sql").length} 條（另開新對話 ${NC.ev.length} 條）`, "rerun"], ["送給 AI", "2 次 HTTPS", "rerun"]],
+    steps:[
+      {ph:"① 瀏覽器送出", from:"web", to:"web", t:"按下送出", s:"你的話先出現在畫面，輸入框鎖住",
+        plain:"按下送出後，瀏覽器先把你的話放進對話區（還沒問伺服器），再把輸入框鎖住，避免連按兩次。",
+        code:"apps/web/src/user/useAssistant.ts:166 send → pushUser",
+        body:() => `<pre>${esc(`send("想買一台打遊戲的筆電，3 萬 5 左右")
+  ├ pushUser(text)            // 先把你的話畫上去
+  └ run("turn", …)            // busy＝"turn"，輸入框與權重面板鎖住
+      └ ensureConversation()  // 還沒有對話？先開一段（下一步）`)}</pre>`},
+      {from:"web", to:"api", t:"POST /api/conversations", s:"第一句話才會有：先開一段新對話", lbl:"開新對話",
+        plain:"這是你在這段對話的第一句話，所以瀏覽器先請伺服器開一段新對話。如果你沒有登入，伺服器會發一張「訪客證」（cookie la_vid）給瀏覽器，之後靠它認出你。",
+        code:"apps/api/src/routes-user.ts POST /api/conversations；auth.ts:35 visitorId",
+        body:() => `<div class="sec"><h4>送出的 HTTP 請求 <span class="src rerun">重跑</span></h4><pre>POST /api/conversations HTTP/1.1
+Host: localhost:5173            ← 開發時先到 Vite，再轉給 127.0.0.1:3100
+Content-Type: application/json
+Cookie: （第一次來沒有）
+
+{}</pre></div>
+<div class="sec"><h4>伺服器回的重點</h4><pre>Set-Cookie: la_vid=e89af0ae-…; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000
+→ 訪客證，一年有效；HttpOnly 代表網頁上的 JavaScript 讀不到它
+
+{ "id": "97ebf2be-…", "title": "新對話", "messages": [], … }</pre></div>`},
+      {from:"api", to:"db", t:`開新對話的 ${NC.ev.length} 條 SQL`, s:"讀設定 → 新增對話 → 記一筆事件 → 再讀一次設定", lbl:`${NC.ev.length} 條 SQL`,
+        plain:"開新對話時，伺服器先讀設定（拿預設權重），寫入一段新對話，記一筆「開始新對話」事件。接著為了回傳對話內容，又把設定整組讀了一次。設定前後共讀了兩次，這是可以改進的地方（見最下方「發現」）。",
+        code:"routes-user.ts POST /api/conversations；context.ts:61 loadConfig；turn.ts conversationDetail",
+        body:() => NC.ev.map((e) => sqlCard(e, t0N)).join("")},
+      {from:"api", to:"web", t:"回傳新對話 id", s:"附上訪客證 cookie", lbl:"200 OK＋cookie",
+        plain:"瀏覽器拿到對話 id，接著才真正送出你的那句話。", code:"useAssistant.ts ensureConversation",
+        body:() => `<p><span class="src rerun">重跑</span>開新對話整段花 ${T.newConv.ms} ms（含伺服器處理與 ${NC.ev.length} 條 SQL）。</p>`},
+      {from:"web", to:"api", t:"POST …/messages", s:"真正送出你的話", lbl:"POST /messages",
+        plain:"瀏覽器把你的話包成 JSON 寄給伺服器，同時附上訪客證。伺服器從這裡開始處理。",
+        code:"apps/web/src/shared/api.ts api()；useAssistant.ts:172",
+        body:() => `<div class="sec"><h4>送出的 HTTP 請求 <span class="src rerun">重跑</span></h4><pre>POST /api/conversations/97ebf2be-…/messages HTTP/1.1
+Content-Type: application/json
+Cookie: la_vid=e89af0ae-…      ← 訪客證（credentials: "include" 會自動帶上）
+
+{"text":"想買一台打遊戲的筆電，3 萬 5 左右"}</pre></div>
+<div class="sec"><h4>瀏覽器端的程式 <span class="src code">程式</span></h4><pre>${esc(`fetch(\`/api\${path}\`, {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text }),
+})`)}</pre></div>`},
+
+      {ph:"② 伺服器收件與準備", from:"api", to:"api", t:"門口檢查", s:"速率限制、內容格式、有沒有怪字元",
+        plain:"伺服器先做三個檢查：① 同一個來源（IP）每分鐘最多 60 次；② 內容要符合格式（text 是 1～2,000 字）；③ 不能含 \\u0000 這類怪字元。任何一項不通過就直接回錯誤，不往下做。",
+        code:"apps/api/src/app.ts（rateLimit、preHandler）；routes-user.ts:103 SendMessageBody.parse",
+        body:() => `<pre>${esc(`SendMessageBody = z.object({
+  text: z.string().trim().min(1).max(2000),
+  cardId: z.string().optional(),     // 點追問卡選項時才有
+  optionId: z.string().optional(),
+})`)}</pre>`},
+      {from:"api", to:"db", t:"確認對話是你的", s:"1 條 SELECT", lbl:"SELECT conversations",
+        plain:"用對話 id 和你的訪客 id 一起查。兩個都對上才找得到，所以別人拿到網址也讀不到你的對話。你沒有登入，所以不用查 sessions（登入紀錄）表。",
+        code:"routes-user.ts conv()；auth.ts:27 currentUser（沒有 la_sid 就直接回 null，不查資料庫）",
+        body:() => sqlCard(M.ev[0], t0M)},
+      {from:"api", to:"api", t:"上鎖、開始計時", s:"同一段對話一次只處理一句",
+        plain:"把這段對話標成「處理中」：你如果在回覆出來前又送一句，會收到「上一句還在處理中」。計時器從這裡開始，最後存進 runs.ms 的 4,360 ms 就是從這裡算起。",
+        code:"apps/api/src/turn.ts runTurn → turn()：const t0 = performance.now()",
+        body:() => `<p><span class="src real">真實</span>這一輪 runs.ms = <b>4,360 ms</b>。</p>`},
+      {from:"api", to:"db", t:"讀設定（10 條 SELECT）", s:"開關、門檻、權重規則、題庫、軟體庫…", lbl:"10 條 SELECT",
+        plain:"每一句話都會把店裡的規則手冊整本重讀一次，所以你在後台改了開關，下一句話立刻生效。這 10 條是同時送出的（Promise.all），所以總共只花約 2 ms。",
+        code:"apps/api/src/context.ts:61 loadConfig",
+        body:() => range(1, 10).map((i) => sqlCard(M.ev[i], t0M)).join("")},
+      {from:"api", to:"api", t:"還原對話狀態、先算一次「之前」", s:"之後動畫要知道排名從哪裡變到哪裡",
+        plain:"把資料庫裡的對話狀態變回程式物件，補上舊版沒有的欄位。動畫開關開著時，會先用目前的狀態把 371 台排一次名，記住「說這句話之前」的樣子，之後動畫才知道誰往上、誰往下。機型資料在伺服器啟動時就已經讀進記憶體了（見情境 C），這裡不用再查資料庫。",
+        code:"turn.ts hydrateState、withoutDelisted、motionBefore",
+        body:() => `<p><span class="src rerun">重跑</span>讀完設定到下一條 SQL 之間約 ${gap(M, 10, 11)} ms，包含這一步。</p>`},
+
+      {ph:"③ 請 AI 聽懂這句話", from:"api", to:"db", t:"準備呼叫 AI（3 條 SELECT）", s:"拿提示詞模板、模型設定與金鑰、今天呼叫幾次了", lbl:"3 條 SELECT",
+        plain:"要呼叫 AI 之前，先拿三樣東西：① 後台「提示詞」頁存的理解用模板；② 用哪家模型、加密過的 API 金鑰；③ 24 小時內已經呼叫幾次，超過上限就不叫 AI，只用規則。",
+        code:"apps/api/src/context.ts:76 modelDeps",
+        body:() => range(11, 13).map((i) => sqlCard(M.ev[i], t0M)).join("")},
+      {from:"api", to:"api", t:"解開金鑰、組提示詞", s:"模板＋需求檔案＋軟體目錄＋你的話",
+        plain:"API 金鑰在資料庫裡是加密的（AES-256-GCM）。解密用的鑰匙由 .env 裡的 APP_SECRET 算出（scrypt，故意算得很慢），所以只在第一次算，之後放在記憶體。然後把模板裡的 {{profile}}、{{software}}、{{text}} 換成真正的內容，組成要寄給 AI 的提示詞。",
+        code:"packages/nlu/src/crypto.ts decryptSecret；understand.ts:41 buildPrompt",
+        body:() => `<pre>${esc(`buildPrompt(template, text, profile, library, expecting) =
+  fill(template, {
+    profile:   JSON.stringify(需求檔案),          // 第一句話，所以是 []
+    software:  JSON.stringify(軟體目錄),          // 3 個軟體的名稱、別名、用途
+    expecting: 上一題問什麼 ?? "無",
+    text:      用戶這句話,
+  })`)}</pre><p><span class="src rerun">重跑</span>從查完呼叫次數到 AI 請求送出約 ${gap(M, 13, 14)} ms，大多花在第一次解金鑰（scrypt）。</p>
+<div class="callout">模板裡沒有 <code>{{expecting}}</code>，所以「上一題問什麼」雖然有算，卻沒有送到 AI。原因見最下方「發現 1」。</div>`},
+      {from:"api", to:"ai", t:"HTTPS POST 給 DeepSeek（理解）", s:"提示詞全文在這一步", lbl:"POST /v1/chat/completions",
+        plain:"伺服器把提示詞寄到 DeepSeek。這是整個流程唯一離開你電腦、送到網路上的地方（另一次是寫回覆）。請求裡只有提示詞，不含你的 cookie 或對話 id。",
+        code:"packages/nlu/src/provider.ts callModel、buildRequest",
+        body:() => aiRequest(nluHttp, [{ text: "[]", cls: "prof" }, { text: softwareStr, cls: "sw" }, { text: "想買一台打遊戲的筆電，3 萬 5 左右", cls: "text" }],
+          [["prof", "目前需求檔案（第一句話，所以是空的）"], ["sw", "軟體目錄（後台軟體庫）"], ["text", "你說的話"]], "2,644", "526", "133")},
+      {from:"ai", to:"api", t:"AI 回傳理解結果", s:"只回 JSON", lbl:"200 OK（JSON）",
+        plain:"DeepSeek 回一包 JSON，裡面的 content 就是 AI 寫的需求清單。注意：AI 只負責把話拆成需求，不決定推薦哪台。",
+        code:"provider.ts readReply",
+        body:() => `<div class="sec"><h4>回傳內容 <span class="src rebuild">重建</span></h4><p style="font-size:13px;color:var(--muted)">AI 回的原文當時沒有存（見「發現 4」），下面是依資料庫存的理解結果還原的，格式和實際回應相同。</p><pre>${esc(J({ ...nluHttp.resp, choices: [{ ...nluHttp.resp.choices[0], message: { role: "assistant", content: JSON.parse(nluHttp.resp.choices[0].message.content) } }] }))}</pre></div>
+<p><span class="src real">真實</span>花 <b>2,644 ms</b>，送出 526 tokens、收到 133 tokens，成功。</p>`},
+      {from:"api", to:"api", t:"檢查並合併 AI 的答案", s:"格式檢查 → 規則備案 → 合併 → 原話檢查 → 意圖分類",
+        plain:"程式不會直接相信 AI：① 用 Zod 檢查 JSON 格式；② 規則也跑一次，當備案；③ 以 AI 為準，規則只補「AI 漏掉的預算」和「取消」；④ AI 說的原話如果在句子裡找不到，信心打折；⑤ 判斷意圖，這句是「requirement（在講需求）」，由規則判斷。",
+        code:"understand.ts:229 parseModelJson → mergeRule → toOps → withIntent；apps/api/src/intent.ts routeIntent",
+        body:() => `<div class="sec"><h4>合併後聽到的需求 <span class="src real">真實</span></h4><table><tr><th>需求</th><th>值</th><th>原話</th><th class="n">信心</th><th>硬條件</th></tr>
+<tr><td>預算約 3 萬 5</td><td class="v">{"min":30000,"max":40000}</td><td>「3 萬 5 左右」</td><td class="n">0.9</td><td>否</td></tr>
+<tr><td>用途：遊戲</td><td class="v">"遊戲"</td><td>「打遊戲的筆電」</td><td class="n">0.95</td><td>否</td></tr></table>
+<p>意圖：<code>{"intent":"requirement","source":"rule"}</code></p></div>
+<div class="callout">預算被判成「不是硬條件」（因為用戶說「左右」），所以完全不會篩掉任何機型。見「發現 3」。</div>`},
+      {ph:"④ 程式算推薦（都在記憶體裡算，不查資料庫）", from:"api", to:"api", t:"更新需求檔案、算權重", s:"性能 33 → 39",
+        plain:"把兩條需求寫進這段對話的需求檔案。AI 建議「性能 +3」，信心 0.8 高於門檻 0.75，所以採用。用途「遊戲」依權重規則加性能和散熱。全部加起來後等比縮放，讓總和回到 100。",
+        code:"turn.ts nluEvents、applyOps、resolveWeights；packages/engine/src/profile.ts replayWeights",
+        body:() => `<div class="sec"><h4>權重變化 <span class="src real">真實</span></h4>${traceTable(REAL_TRACE)}</div>`},
+      {from:"api", to:"api", t:"371 台逐台篩選、評分、排序", s:"所有候選都留下",
+        plain:"371 台機型早就在伺服器的記憶體裡。每台依硬條件分成「正式／差一點／排除」（這輪沒有硬條件，全部是正式），再用 7 個維度分數 × 你的權重算出總分，分數高的排前面。最後替第 1 名算出理由：優點、要接受的缺點，以及和第 2 名比的結果。",
+        code:"packages/engine/src/rank.ts buildSnapshot、filter.ts classify、scoring.ts productPower、reason.ts explainPool",
+        body:() => `<div class="sec"><h4>前 5 名 <span class="src real">真實</span>機型與順序 ／ <span class="src rerun">重跑</span>總分</h4>${topTable(T.msgTop)}</div>
+<p><span class="src rerun">重跑</span>從 AI 回來到下一條 SQL 約 ${gap(M, 14, 15)} ms，包含合併、權重、371 台評分排序、理由、決定動作。</p>`},
+      {from:"api", to:"api", t:"決定這輪做什麼", s:"前兩名只差 1 分 → 推薦＋反問",
+        plain:"第 1、2 名只差 1 分，小於門檻 1.5，代表兩台其實打平。這時與其硬選，不如問你比較在意哪一項。所以這輪是「推薦＋反問」，不出追問卡。",
+        code:"turn.ts preferenceAsk、decideAction",
+        body:() => `<pre>${esc(`preferenceAsk(第1名, reasonCloseGap=1.5)
+  → gap = 1 < 1.5，而且有贏有輸 → 反問
+action = "recommend"
+卡片：requirements（需求）、count（371 → 371）、recommend（前 5 名＋理由）、ask_preference（反問）`)}</pre>`},
+
+      {ph:"⑤ 請 AI 把結果說成人話", from:"api", to:"db", t:"再準備一次 AI（3 條 SELECT）", s:"這次拿「回覆」用的模板", lbl:"3 條 SELECT",
+        plain:"和第 11 步一樣，只是這次拿回覆用的模板。模型設定和呼叫次數又查了一次。",
+        code:"context.ts:76 modelDeps(ctx, \"reply\", …)",
+        body:() => range(15, 17).map((i) => sqlCard(M.ev[i], t0M)).join("")},
+      {from:"api", to:"ai", t:"HTTPS POST 給 DeepSeek（回覆）", s:"只給程式算好的「事實」", lbl:"POST /v1/chat/completions",
+        plain:"把程式算好的事實（前 3 名、價格、分數、優缺點、權重變化、反問句）塞進模板，請 AI 寫成 2～4 句人話。AI 看不到 371 台的資料，只看得到這份事實清單。",
+        code:"packages/nlu/src/reply.ts:245 writeReply",
+        body:() => aiRequest(repHttp, [{ text: factsStr, cls: "facts" }], [["facts", "程式算好的事實（facts）"]], "1,627", "652", "106") +
+          `<div class="sec"><h4>事實清單排版後（方便閱讀；實際送出的是上面那一行）</h4><pre>${esc(J(factsObj))}</pre></div>`},
+      {from:"ai", to:"api", t:"AI 回傳回覆文字", s:"", lbl:"200 OK（文字）",
+        plain:"AI 寫好的回覆。", code:"provider.ts readReply",
+        body:() => `<div class="sec"><h4>AI 的回覆 <span class="src real">真實</span></h4><div class="plain">${esc(T.msgResp.reply)}</div></div><p><span class="src real">真實</span>花 <b>1,627 ms</b>，送出 652 tokens、收到 106 tokens。</p>`},
+      {from:"api", to:"api", t:"檢查 AI 有沒有亂講", s:"通過 → 用 AI 的版本",
+        plain:"逐項檢查回覆：有沒有事實清單裡沒有的數字？有沒有冒出別的機型名稱？有沒有編造規格？要接受的缺點有沒有提到？任何一項不通過，就改用程式的固定句子。這輪全部通過。",
+        code:"reply.ts:232 rejectReason（hasForeignNumber、hasForeignEntity、hasForeignSpec、hasMismatchedNumber、missesTradeoff）",
+        body:() => `<pre>${esc(`回覆裡的數字：13,500 → 事實有 price 13500 ✓
+其他檢查：沒有陌生機型 ✓、沒有陌生規格 ✓、提到散熱這個要接受的缺點 ✓
+→ reply_source = "model"`)}</pre>`},
+
+      {ph:"⑥ 存檔並回給瀏覽器", from:"api", to:"db", t:"存檔（交易 7 條）", s:"BEGIN → 更新對話 → 新增紀錄、2 則訊息、AI 紀錄 → COMMIT", lbl:"8 條 SQL",
+        plain:"先讀一次顯示方案 id（存進快照），然後開一個交易，把這一輪的東西一次寫進 4 張表。快照約 35 KB，記下當時每台的分數和全部開關，後台重播才看得到當時的樣子。",
+        code:"turn.ts（ms 計算後）ctx.db.transaction(…)",
+        body:() => range(19, 26).map((i) => sqlCard(M.ev[i], t0M)).join("")},
+      {from:"api", to:"web", t:"回傳結果", s:`約 ${fmt(T.msgResp.size)} 字的 JSON`, lbl:"200 OK（JSON）",
+        plain:"伺服器把結果寄回瀏覽器，裡面有回覆文字、卡片、新的排名快照、權重變化、動畫事件。",
+        code:"turn.ts return { runId, action, reply, cards, conversation, snapshot, weightTrace, events, userEvents }",
+        body:() => `<pre>${esc(`HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "runId": "…",
+  "action": "${T.msgResp.action}",
+  "reply": "依你的需求，最推薦…",
+  "cards": ${JSON.stringify(T.msgResp.cards)},
+  "conversation": { 需求檔案、權重、對比清單… },
+  "snapshot": { 371 台的分組、順序、分數（精簡版） },
+  "weightTrace": { 權重變化表 },
+  "events": [ 動畫事件 ],
+  "userEvents": []
+}`)}</pre>`},
+      {from:"web", to:"web", t:"畫面更新", s:"先出回覆和卡片，動畫後換上新排名",
+        plain:"瀏覽器先把回覆、需求標籤、推薦卡顯示出來，再播動畫：不符合的變灰、名次換位，最後換上新排名。輸入框解鎖。",
+        code:"useAssistant.ts:61 applyTurn",
+        body:() => `<div class="plain">${esc(T.msgResp.reply)}</div>`},
+    ],
+  },
+
+  w: {
+    tab:"B　手動調整權重",
+    stats:[["用戶實際等待", "8 ms（伺服器內）", "real"], ["AI 呼叫", "0 次", "rerun"], ["SQL 指令", `${W.ev.filter((e) => e.k === "sql").length} 條（另開新對話 ${NC2.ev.length} 條）`, "rerun"], ["寫入的表", "conversations、runs、user_events", "rerun"]],
+    steps:[
+      {ph:"① 瀏覽器", from:"web", to:"web", t:"拖動權重滑桿", s:"只是草稿，什麼都還沒送",
+        plain:"打開權重面板拖滑桿時，只改瀏覽器裡的草稿，不會送出任何指令。按下「套用」才會送。v1.0.15 起，如果上一句還在回覆中，滑桿會鎖住。",
+        code:"apps/web/src/user/WeightPanel.tsx",
+        body:() => `<p><span class="src real">真實</span>這位用戶套用的權重：</p>${traceTable(T.wResp.trace.rows.map((r) => [r.label, r.before, r.after, (r.delta > 0 ? "+" : "−") + Math.abs(r.delta), r.kind, r.reasons.join("；")]))}`},
+      {from:"web", to:"api", t:"POST /api/conversations", s:"這位用戶一進首頁就先調權重，所以先開新對話", lbl:"開新對話",
+        plain:"真實紀錄裡，這位用戶還沒說話就先調了權重（11/2 01:38）。首頁也能調權重，第一次操作時才建立對話。流程和情境 A 的第 2～4 步相同。",
+        code:"useAssistant.ts withConversation → ensureConversation",
+        body:() => NC2.ev.map((e) => sqlCard(e, t0N2)).join("")},
+      {from:"web", to:"api", t:"POST …/weights", s:"送出 7 個權重數字", lbl:"POST /weights",
+        plain:"按下「套用」，瀏覽器把 7 個權重數字寄給伺服器。",
+        code:"useAssistant.ts:191 applyWeights",
+        body:() => `<div class="sec"><h4>送出的 HTTP 請求 <span class="src rerun">重跑</span>（數字是 <span class="src real">真實</span>）</h4><pre>POST /api/conversations/a8c73d0b-…/weights HTTP/1.1
+Content-Type: application/json
+Cookie: la_vid=e89af0ae-…
+
+${esc(JSON.stringify({ weights: T.wResp.ev.after }))}</pre></div>
+<p style="font-size:13px">還可以帶 <code>perfSubs</code>（性能細項：CPU 單核、多核、顯卡…）和 <code>keepOrder</code>（維持目前順序、只更新分數），這次都沒帶。</p>`},
+      {ph:"② 伺服器", from:"api", to:"db", t:"確認對話是你的", s:"1 條 SELECT", lbl:"SELECT conversations",
+        plain:"和情境 A 一樣，用對話 id＋訪客 id 查。", code:"routes-user.ts conv()",
+        body:() => sqlCard(W.ev[0], t0W)},
+      {from:"api", to:"api", t:"比對哪些維度變了", s:"性能、擴充、便攜、安靜、螢幕 5 項",
+        plain:"拿你送來的數字和對話裡目前的權重比，找出你動了哪幾項（manualDims），之後的權重變化表會把它們標成「手動」。再準備一個「改狀態」的動作：把你的數字存成 manualWeights。存了之後，系統不會再自動改你的權重。",
+        code:"routes-user.ts POST /weights：manualDims、mutate",
+        body:() => `<pre>${esc(`manualDims = ["display","portability","performance","noise","expandability"]
+mutate(s) {
+  s.manualWeights = 你送來的 7 個數字   // 之後用途、軟體帶來的權重調整都會跳過
+  s.holdOrder = keepOrder ?? false
+}
+runTurn(ctx, row, { channel: "weights", text: "手動調整權重", manualDims, mutate, userEvents })`)}</pre>`},
+      {from:"api", to:"db", t:"讀設定（10 條 SELECT）", s:"和說一句話時完全相同", lbl:"10 條 SELECT",
+        plain:"一樣把設定整組讀一次。", code:"context.ts:61 loadConfig",
+        body:() => range(1, 10).map((i) => sqlCard(W.ev[i], t0W)).join("")},
+      {from:"api", to:"api", t:"跳過：AI 理解、追問、AI 回覆", s:"「weights」是靜默管道",
+        plain:"調權重屬於「靜默管道」（另外三種是不考慮、加入對比、手動篩選）：不呼叫 AI 理解、不算一輪對話、不追問、不呼叫 AI 寫回覆，所以不用等 AI，幾毫秒就完成。",
+        code:"packages/contracts isSilentChannel；turn.ts：silent = true",
+        body:() => `<pre>${esc(`channel = "weights" → silent = true
+  ✗ understand()（AI 理解）          → 不呼叫
+  ✗ state.turnNo += 1                 → 不算一輪
+  ✗ settlePending / selectFollowup    → 不追問
+  ✗ writeReply()（AI 回覆）           → 不呼叫，reply = ""
+  ✓ input.mutate(state)               → 存下你的權重
+  ✓ resolveWeights / buildSnapshot    → 用新權重重新排名`)}</pre>`},
+      {from:"api", to:"api", t:"用你的權重重新評分 371 台", s:"手動權重優先",
+        plain:"因為有 manualWeights，權重直接用你的數字。371 台用新權重重算總分、重新排序（keepOrder 沒開，所以會換位）。需求檔案是空的，所以動作是 guide（引導），沒有回覆文字。",
+        code:"turn.ts resolveWeights（state.manualWeights ?? 計算值）；rank.ts buildSnapshot",
+        body:() => `<div class="sec"><h4>權重變化 <span class="src real">真實</span></h4>${traceTable(T.wResp.trace.rows.map((r) => [r.label, r.before, r.after, (r.delta > 0 ? "+" : "−") + Math.abs(r.delta), r.kind, r.reasons.join("；")]))}</div>
+<div class="sec"><h4>新的前 5 名 <span class="src real">真實</span>機型 ／ <span class="src rerun">重跑</span>總分</h4>${topTable(T.wResp.top)}</div>`},
+      {ph:"③ 存檔並回傳", from:"api", to:"db", t:"存檔（交易 5 條）", s:"更新對話、新增一輪紀錄、新增操作事件", lbl:"6 條 SQL",
+        plain:"和說一句話比，<b>沒有寫 messages</b>（對話區不多一則訊息），<b>也沒有寫 llm_calls</b>（沒呼叫 AI）。多寫一筆 user_events「weights_apply」，記下調整前後的權重。後台的時間軸就是讀這筆紀錄。",
+        code:"turn.ts transaction；apps/api/src/events.ts logUserEvents",
+        body:() => range(11, 16).map((i) => sqlCard(W.ev[i], t0W)).join("")},
+      {from:"api", to:"web", t:"回傳新排名", s:"沒有回覆文字", lbl:"200 OK（JSON）",
+        plain:"回傳新的排名快照、權重變化表和操作事件。reply 是空字串，cards 是空陣列。",
+        code:"turn.ts return",
+        body:() => `<pre>${esc(`{ "action": "${T.wResp.action}", "reply": "${T.wResp.reply}", "cards": ${JSON.stringify(T.wResp.cards)},
+  "snapshot": {…新排名…}, "weightTrace": {…}, "userEvents": [ { "kind": "weights_apply", … } ] }`)}</pre><p><span class="src rerun">重跑</span>整個請求 ${W.ms} ms；<span class="src real">真實</span>伺服器內 8 ms。</p>`},
+      {from:"web", to:"web", t:"結果區重新排序", s:"對話區不多訊息",
+        plain:"結果區的機型依新分數換位（有動畫），權重面板顯示新數字。對話區不會多一則回覆；後台開關 show.my_actions 開著時，會出現一行灰色小字「你調整了權重」（v1.0.16，預設關）。",
+        code:"useAssistant.ts applyTurn（reply 和 cards 都空，所以不加訊息）",
+        body:() => ""},
+    ],
+  },
+
+  boot: {
+    tab:"C　伺服器啟動時（只做一次）",
+    stats:[["SQL 指令", `${T.startup.filter((e) => e.k === "sql").length} 條`, "rerun"], ["讀進記憶體", "371 台機型", "rerun"]],
+    steps:[
+      {ph:"啟動", from:"api", to:"api", t:"讀 .env", s:"資料庫網址、APP_SECRET、管理員帳號",
+        plain:"伺服器啟動時讀專案根目錄的 .env：資料庫在哪、解 API 金鑰用的 APP_SECRET、後台管理員帳號。這些不會寫進程式碼，也不會送給 AI。",
+        code:"apps/api/src/server.ts", body:() => `<pre>DATABASE_URL=***
+APP_SECRET=***
+ADMIN_EMAIL=***
+ADMIN_PASSWORD=***</pre>`},
+      {from:"api", to:"db", t:"驅動程式的第一句", s:"問資料庫有哪些陣列型別", lbl:"SELECT pg_type",
+        plain:"不是我們的程式寫的，是資料庫驅動程式自動發的。", code:"postgres.js（套件）",
+        body:() => sqlCard(T.startup[0], T.startup[0].t)},
+      {from:"api", to:"db", t:"讀全部機型", s:"1 條 SELECT，371 台", lbl:"SELECT laptops",
+        plain:"把 371 台機型的所有實測資料一次讀出來。這是情境 A、B 都不用再查機型的原因。",
+        code:"apps/api/src/context.ts loadCatalog", body:() => sqlCard(T.startup[1], T.startup[0].t)},
+      {from:"api", to:"api", t:"換算分數、放進記憶體", s:"之後每一句話都直接用",
+        plain:"先算全部機型的分布（例如顯卡跑分最高、最低是多少），再把每台的實測數據換成 0～100 分，只留「販售中」的，放在記憶體的 ctx.catalog。後台修改機型或匯入新資料時，伺服器會自動重讀一次（routes-admin.ts）。",
+        code:"context.ts loadCatalog → computePopulation、rowToLaptop",
+        body:() => `<pre>${esc(`rows = SELECT * FROM laptops ORDER BY id
+pop = computePopulation(rows)        // 全部機型的分布
+for row of rows:
+  if row.status != "on_sale": skip
+  laptop = rowToLaptop(row, pop)     // 實測數據 → 7 個維度的分數
+ctx.catalog = { laptops, byId, raw }`)}</pre>`},
+      {from:"api", to:"api", t:"掛上路由、開始聽", s:"127.0.0.1:3100",
+        plain:"註冊 cookie、速率限制、錯誤處理、使用者端與後台的所有網址，然後在本機 3100 埠等待請求。開發時瀏覽器連 5173（Vite），/api 開頭的請求會轉給 3100。",
+        code:"apps/api/src/app.ts buildApp；apps/web/vite.config.ts proxy", body:() => ""},
+    ],
+  },
+};
+
+function aiRequest(h, parts, keys, ms, tin, tout) {
+  return `<div class="sec"><h4>HTTP 請求 <span class="src rerun">重跑</span></h4><pre>${esc(`${h.q} HTTP/1.1
+${Object.entries(h.headers).map(([k, v]) => `${k}: ${v}`).join("\n")}
+
+${J(h.body)}`)}</pre>
+<dl class="kv" style="margin-top:8px"><dt>model</dt><dd>後台「模型」頁設定的模型名稱</dd><dt>temperature</dt><dd>0.2：越低越不會亂發揮</dd><dt>max_tokens</dt><dd>最多回多少 tokens（理解 1,024、回覆 600），超過會被截斷</dd><dt>thinking</dt><dd>關閉 DeepSeek 的「思考」（v1.0.4 起，開關 logic.model_thinking_off），不然思考會把額度用光</dd><dt>authorization</dt><dd>API 金鑰，這裡已遮蔽</dd></dl></div>
+<div class="sec"><h4>提示詞全文（messages[0].content）<span class="src rerun">重跑</span></h4>
+<div class="hlkey"><span>無底色＝後台「提示詞」頁的固定模板</span>${keys.map(([c, l]) => `<span class="hl ${c}">${l}</span>`).join("")}</div>
+<pre>${colorPrompt(h.prompt, parts)}</pre><p style="font-size:12.5px;color:var(--muted)">共 ${fmt(h.prompt.length)} 字。<span class="src real">真實</span>當時花 ${ms} ms，送出 ${tin} tokens、收到 ${tout} tokens。</p></div>`;
+}
+
+/* ---------- 發現 ---------- */
+const FINDS = [
+  {t:"1. 資料庫裡生效的提示詞還是 11/1 的舊版", d:"程式碼裡的預設提示詞，v1.0.11 已經加了「上一題問什麼（{{expecting}}）」和「判斷意圖」兩段。但 pnpm setup 只在資料庫還沒有提示詞時才寫入，所以資料庫裡用的仍是 11/1 那份。結果是：用戶只回「4 萬」時，AI 不知道剛才在問預算；開關 intent.model 也沒有作用，因為 AI 根本沒被要求判斷意圖。", ev:"證據：prompts 表 created_at = 2026-11-01、沒有新版本；packages/contracts/src/defaults.ts:132、146；packages/db/src/seed.ts:22-23", fix:"建議：到後台「提示詞」頁換成新版，或讓 setup 提示有新版可以更新。"},
+  {t:"2. 每個請求都把設定整組重讀", d:"每次請求都讀 10 條設定。開新對話時讀了兩次（20 條），說一句話時「準備 AI」的 3 條又讀了兩次。每條只要零點幾毫秒，所以現在不影響速度；用戶變多以後，可以改成快取，後台一改設定就清掉快取。", ev:"證據：情境 A 第 3、9、11、19 步", fix:""},
+  {t:"3. 「3 萬 5 左右」完全沒有篩掉機型", d:"預算被判成「不是硬條件」，而現在不是硬條件的預算既不篩選、也不影響分數。結果第 1 名是 13,500 元，第 3 名是 216,000 元，和用戶說的 3 萬 5 差很遠。這和「讓用戶覺得系統懂他」的目標相反。", ev:"證據：runs 94c9b6d5：formal 371、out 0；前 5 名售價 13,500～216,000", fix:"建議：「左右」可以當成有寬一點容許範圍的硬條件，或讓預算進入評分。這需要你決定。"},
+  {t:"4. AI 回傳的原文沒有存", d:"llm_calls 只存時間和 tokens，提示詞和 AI 回的原文都沒存。這頁的提示詞是重跑才拿到的。之後 AI 聽錯時，無法回頭看它當時到底說了什麼。", ev:"證據：llm_calls 表欄位只有 slot、model、ok、ms、tokens、error", fix:"建議：這就是提案頁的 F7（每一步計時、AI 原文存檔）。"},
+  {t:"5. 用戶等的 4.4 秒裡，98% 在等 AI", d:"程式和資料庫加起來 89 ms，AI 理解 2.6 秒、AI 回覆 1.6 秒。調權重不呼叫 AI，所以只要 8 ms。要讓用戶感覺變快，重點在 AI 那兩段，例如先送卡片、回覆串流。", ev:"證據：runs.ms 4,360；llm_calls 2,644＋1,627", fix:"建議：提案頁的 F3、F4。"},
+];
+
+/* ---------- 繪製 ---------- */
+let cur = "msg", sel = 0;
+const $ = (id) => document.getElementById(id);
+$("actors").innerHTML = LANES.map((k) => `<div class="actor" style="--c:${ACT[k].c}"><b style="color:${ACT[k].c}">${ACT[k].name}</b>　<span style="font-size:12px">${ACT[k].where}</span><div>${ACT[k].d}</div></div>`).join("");
+$("finds").innerHTML = FINDS.map((f) => `<div class="find"><h3>${f.t}</h3><div>${esc(f.d)}</div><div class="ev">${esc(f.ev)}</div>${f.fix ? `<div style="margin-top:6px;font-size:13.5px">${esc(f.fix)}</div>` : ""}</div>`).join("");
+
+function renderTabs() {
+  $("tabs").innerHTML = Object.entries(SCEN).map(([k, s]) => `<button class="tab" role="tab" aria-selected="${k === cur}" data-k="${k}">${s.tab}</button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach((b) => b.onclick = () => { cur = b.dataset.k; sel = 0; render(); });
+  $("stats").innerHTML = SCEN[cur].stats.map(([l, v, s]) => `<div class="stat"><span class="src ${s}">${s === "real" ? "真實" : "重跑"}</span>${l}：<b>${v}</b></div>`).join("");
+}
+function renderSeq() {
+  const steps = SCEN[cur].steps;
+  const lifelines = LANES.map((_, i) => `<span class="life" style="left:calc(34px + (100% - 34px) * ${(i + 0.5) / 4})"></span>`).join("");
+  $("seq").innerHTML = `<div class="lanes"><div></div>${LANES.map((k) => `<div style="--c:${ACT[k].c}">${ACT[k].name}</div>`).join("")}</div>` + steps.map((s, i) => {
+    const a = LANES.indexOf(s.from), b = LANES.indexOf(s.to);
+    let cell;
+    if (a === b) cell = `<div class="self" style="grid-column:${a + 2};--c:${ACT[s.from].c}"><b>${esc(s.t)}</b><span class="dur">${esc(s.s)}</span></div>`;
+    else {
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      cell = `<div class="arrow ${b > a ? "r" : "l"}" style="grid-column:${lo + 2} / ${hi + 3};--c:${ACT[s.from].c};margin:0 calc((100% / ${hi - lo + 1}) / 2)"><span class="bar"></span><span class="head"></span><span class="lbl"><b>${esc(s.lbl ?? s.t)}</b>${s.s ? `<span class="dur">${esc(s.t === s.lbl ? s.s : s.t)}</span>` : ""}</span></div>`;
+    }
+    return `${s.ph ? `<div class="phase">${s.ph}</div>` : ""}<button class="srow" role="option" aria-selected="${i === sel}" data-i="${i}">${lifelines}<span class="n">${i + 1}</span>${cell}</button>`;
+  }).join("");
+  $("seq").querySelectorAll(".srow").forEach((r) => r.onclick = () => { sel = +r.dataset.i; renderSeq(); renderDetail(); if (innerWidth < 900) $("detail").scrollIntoView({ behavior: "smooth" }); });
+}
+function renderDetail() {
+  const steps = SCEN[cur].steps, s = steps[sel];
+  const from = ACT[s.from], to = ACT[s.to];
+  $("detail").innerHTML = `<div class="who"><span class="pill" style="--c:${from.c}">${from.name}</span>${s.from !== s.to ? `→ <span class="pill" style="--c:${to.c}">${to.name}</span>` : "<span style='color:var(--muted)'>自己處理</span>"}</div>
+    <h3>第 ${sel + 1} 步　${esc(s.t)}</h3>
+    <div class="plain"><b>白話：</b>${s.plain}</div>
+    <div style="font-size:12.5px"><span class="src code">程式</span><code>${esc(s.code)}</code></div>
+    <div class="sec">${s.body()}</div>
+    <div class="nav"><button id="prev" ${sel === 0 ? "disabled" : ""}>← 上一步</button><button id="next" ${sel === steps.length - 1 ? "disabled" : ""}>下一步 →</button></div>`;
+  $("prev").onclick = () => { sel--; renderSeq(); renderDetail(); };
+  $("next").onclick = () => { sel++; renderSeq(); renderDetail(); };
+}
+function render() { renderTabs(); renderSeq(); renderDetail(); }
+render();
+</script>
+</body>
+</html>
