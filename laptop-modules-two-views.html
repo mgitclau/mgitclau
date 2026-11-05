@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系統模組兩種看法</title>
+<meta name="description" content="AI 筆電選購助手 v1.0.17 的模組清單，用兩種不同邏輯整理：程式碼地圖與一句話的旅程。">
+<style>
+:root{
+  --bg:#f6f7f9;--card:#ffffff;--ink:#1c2430;--muted:#5d6b7c;--line:#dde3ea;
+  --a:#2b6cb0;--a-soft:#e6f0fb;--b:#2f855a;--b-soft:#e6f5ec;
+  --model:#b7791f;--model-soft:#fdf3dc;--prog:#4a5568;--prog-soft:#edf0f3;
+  --mark:#c53030;--mark-soft:#fde8e8;--side:#805ad5;--side-soft:#efe8fb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111518;--card:#1a2026;--ink:#e6ebf0;--muted:#9aa7b5;--line:#2c353f;
+    --a:#63a4e6;--a-soft:#1b2d40;--b:#68c48f;--b-soft:#17301f;
+    --model:#e2b14b;--model-soft:#3a2f12;--prog:#b5c0cc;--prog-soft:#242b33;
+    --mark:#f08080;--mark-soft:#3d1c1c;--side:#b794f4;--side-soft:#2a2040;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111518;--card:#1a2026;--ink:#e6ebf0;--muted:#9aa7b5;--line:#2c353f;
+  --a:#63a4e6;--a-soft:#1b2d40;--b:#68c48f;--b-soft:#17301f;
+  --model:#e2b14b;--model-soft:#3a2f12;--prog:#b5c0cc;--prog-soft:#242b33;
+  --mark:#f08080;--mark-soft:#3d1c1c;--side:#b794f4;--side-soft:#2a2040;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:24px;margin:0 0 6px}
+h2{font-size:19px;margin:0 0 4px}
+h3{font-size:16px;margin:0 0 6px}
+p{margin:6px 0}
+.lead{color:var(--muted);margin-bottom:18px}
+code{font:13px/1.4 ui-monospace,Menlo,monospace;background:var(--prog-soft);padding:1px 5px;border-radius:4px}
+.tabs{display:flex;gap:8px;margin:14px 0 20px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:999px;cursor:pointer;font-size:15px}
+.tab[aria-selected="true"]{border-color:transparent;color:#fff}
+.tab[data-v="a"][aria-selected="true"]{background:var(--a)}
+.tab[data-v="b"][aria-selected="true"]{background:var(--b)}
+.tab[data-v="c"][aria-selected="true"]{background:var(--ink)}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.head-a{border-left:6px solid var(--a)}.head-b{border-left:6px solid var(--b)}
+.hint{color:var(--muted);font-size:14px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;margin-right:4px;vertical-align:middle;white-space:nowrap}
+.t-prog{background:var(--prog-soft);color:var(--prog)}
+.t-model{background:var(--model-soft);color:var(--model)}
+.t-mark{background:var(--mark-soft);color:var(--mark);font-weight:600}
+.t-side{background:var(--side-soft);color:var(--side)}
+.t-a{background:var(--a-soft);color:var(--a)}
+.t-b{background:var(--b-soft);color:var(--b)}
+
+/* 方案 A：分層地圖 */
+.layer{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;position:relative}
+.layer>.lt{position:absolute;top:-11px;left:12px;background:var(--card);padding:0 8px;font-size:13px;color:var(--a);font-weight:600}
+.pkgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:6px}
+.pkg{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.pkg h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pkg h3 small{color:var(--muted);font-weight:400;font-size:12px;white-space:nowrap}
+.pkg ul{margin:4px 0 0;padding-left:0;list-style:none;font-size:13.5px}
+.pkg li{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:2px 0;border-top:1px solid var(--line)}
+.pkg li:first-child{border-top:0}
+.pkg li code{background:transparent;padding:0;color:var(--a)}
+.arrow{text-align:center;color:var(--muted);font-size:13px;margin:-2px 0}
+
+/* 方案 B：旅程 */
+.journey{display:grid;grid-template-columns:1fr;gap:0}
+.stop{display:grid;grid-template-columns:56px 1fr;gap:12px;position:relative;padding-bottom:14px}
+.stop::before{content:"";position:absolute;left:27px;top:52px;bottom:0;width:2px;background:var(--line)}
+.stop:last-child::before{display:none}
+.num{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--b-soft);color:var(--b);font-weight:700;font-size:18px;border:2px solid var(--b)}
+.stop.mark .num{background:var(--mark-soft);color:var(--mark);border-color:var(--mark)}
+.stop.rec .num{background:var(--prog-soft);color:var(--prog);border-color:var(--line);font-size:14px}
+.sbody{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stop.mark .sbody{border-color:var(--mark)}
+.io{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 16px;margin-top:8px;font-size:14px}
+.io div b{color:var(--muted);font-weight:600;font-size:12.5px;display:block}
+.swap{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--b-soft);font-size:14px}
+.stop.mark .swap{background:var(--mark-soft)}
+.branch{margin-left:68px;margin-bottom:14px;border-left:3px solid var(--side);background:var(--side-soft);border-radius:0 10px 10px 0;padding:8px 12px;font-size:14px}
+
+/* 比較 */
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg)}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px;font-size:13px}
+@media (max-width:640px){
+  .stop{grid-template-columns:44px 1fr;gap:8px}
+  .num{width:42px;height:42px;font-size:15px}
+  .stop::before{left:21px;top:44px}
+  .branch{margin-left:52px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>系統模組兩種看法</h1>
+<p class="lead">AI 筆電選購助手 v1.0.17（2026-11-06）。同一套程式碼，用兩種不同邏輯整理模組，讓你比較哪一種比較接近你要的答案。</p>
+
+<div class="tabs" role="tablist">
+  <button class="tab" data-v="a" role="tab" aria-selected="true">方案 A：程式碼地圖</button>
+  <button class="tab" data-v="b" role="tab" aria-selected="false">方案 B：一句話的旅程</button>
+  <button class="tab" data-v="c" role="tab" aria-selected="false">兩案比較</button>
+</div>
+
+<!-- ============ 方案 A ============ -->
+<section class="view on" id="view-a">
+<div class="card head-a">
+  <h2>方案 A：程式碼地圖</h2>
+  <p class="hint">邏輯：照資料夾與套件分層，上層呼叫下層。每個檔案就是一個模組，附上行數（不含測試）。適合回答「這段程式在哪裡、誰依賴誰」。</p>
+</div>
+
+<div class="layer"><span class="lt">第 1 層　畫面（apps/web）</span>
+<div class="pkgs">
+  <div class="pkg"><h3>使用者端 user/ <small>2,840 行</small></h3><ul>
+    <li><code>UserApp</code><span>整體版面、手機分頁</span></li>
+    <li><code>ChatPane／ChatCards</code><span>對話氣泡、追問卡、放寬卡、反問卡</span></li>
+    <li><code>Composer</code><span>輸入框</span></li>
+    <li><code>ResultsPane／LaptopCard</code><span>候選區、機型卡、分組</span></li>
+    <li><code>WeightPanel</code><span>權重抽屜、滑桿、帳本明細</span></li>
+    <li><code>ProfilePanel</code><span>需求標籤、修改刪除</span></li>
+    <li><code>CompareTable／Drawers</code><span>對比表、詳情、收藏、篩選</span></li>
+    <li><code>useAssistant</code><span>唯一打 API 的地方，管所有狀態</span></li>
+    <li><code>replay</code><span>後台重播用的「換駕駛」</span></li>
+    <li><code>motion/</code><span>GSAP 動畫播放</span></li>
+  </ul></div>
+  <div class="pkg"><h3>後台 admin/ <small>4,386 行</small></h3><ul>
+    <li><code>Conversations／Browse／Detail</code><span>對話列表、瀏覽模式、詳情</span></li>
+    <li><code>conversationParts／replayInput</code><span>分輪、操作區塊、重播資料</span></li>
+    <li><code>Laptops／Software／Cards</code><span>機型與資料品質、軟體畫像、卡片管理</span></li>
+    <li><code>Tuning</code><span>權重中心、門檻</span></li>
+    <li><code>Prompts／Models</code><span>提示詞版本、模型與供應商</span></li>
+    <li><code>IntentLexicon／IntentTexts</code><span>意圖詞表、旁路文案</span></li>
+    <li><code>Flags／Display／Motion／Home</code><span>功能開關、顯示方案、動效、首頁設定</span></li>
+    <li><code>Pending／Audit／Dashboard</code><span>待處理、稽核、總覽</span></li>
+  </ul></div>
+</div></div>
+<div class="arrow">▼ HTTP（/api/…）</div>
+
+<div class="layer"><span class="lt">第 2 層　伺服器（apps/api，2,079 行）</span>
+<div class="pkgs">
+  <div class="pkg"><h3>進出口</h3><ul>
+    <li><code>routes-user</code><span>使用者端 API：對話、機型、收藏、回饋、事件</span></li>
+    <li><code>routes-admin</code><span>後台 API：對話、機型、設定、開關、提示詞</span></li>
+    <li><code>auth</code><span>登入、Cookie、速率限制</span></li>
+    <li><code>app／server</code><span>Fastify 組裝、啟動</span></li>
+  </ul></div>
+  <div class="pkg"><h3>一輪對話</h3><ul>
+    <li><code>turn</code><span>runTurn：一句話進來到回覆出去的那條線</span></li>
+    <li><code>intent</code><span>意圖分流、對話控制、上一步</span></li>
+    <li><code>context</code><span>讀設定與開關、模型依賴、同一對話一次只跑一輪</span></li>
+  </ul></div>
+  <div class="pkg"><h3>紀錄與說明</h3><ul>
+    <li><code>events</code><span>用戶操作事件寫入與查詢</span></li>
+    <li><code>explain</code><span>後台白話摘要、需求差異、貢獻表</span></li>
+    <li><code>run-view</code><span>後台每輪畫面資料、當時與現在的差異</span></li>
+  </ul></div>
+</div></div>
+<div class="arrow">▼ 函式呼叫</div>
+
+<div class="layer"><span class="lt">第 3 層　核心邏輯（純函式，不碰資料庫）</span>
+<div class="pkgs">
+  <div class="pkg"><h3>packages/engine <small>1,245 行　程式決定</small></h3><ul>
+    <li><code>profile</code><span>需求檔案的新增修改刪除、權重重放</span></li>
+    <li><code>weights</code><span>權重調整、帳本、性能子權重</span></li>
+    <li><code>filter</code><span>硬條件篩選、排除原因</span></li>
+    <li><code>scoring／normalize</code><span>七維分數、細項分數、欄位對應</span></li>
+    <li><code>rank／value</code><span>加權總分、平手決勝、性價比</span></li>
+    <li><code>decide／select</code><span>推薦或追問、追問卡價值閘門</span></li>
+    <li><code>reason</code><span>優勢、要接受的、和第 2 名比</span></li>
+    <li><code>snapshot</code><span>每輪快照、重播與漂移</span></li>
+    <li><code>motion／money</code><span>動效事件、台灣金額解析</span></li>
+  </ul></div>
+  <div class="pkg"><h3>packages/nlu <small>1,625 行　模型相關</small></h3><ul>
+    <li><code>intent</code><span>規則判意圖（閒聊、指令、範圍外）</span></li>
+    <li><code>rule</code><span>規則詞表抽需求</span></li>
+    <li><code>understand</code><span>規則＋模型合併成需求結果</span></li>
+    <li><code>reply</code><span>模型措辭回覆、程式核對數字</span></li>
+    <li><code>provider</code><span>呼叫 DeepSeek 等供應商、關閉思考</span></li>
+    <li><code>crypto</code><span>API 金鑰加密</span></li>
+  </ul></div>
+</div></div>
+<div class="arrow">▼ 型別與資料</div>
+
+<div class="layer"><span class="lt">第 4 層　地基</span>
+<div class="pkgs">
+  <div class="pkg"><h3>packages/contracts <small>1,891 行　合約</small></h3><ul>
+    <li><code>domain</code><span>七維度、需求、權重、評分結果、動作類型</span></li>
+    <li><code>flags</code><span>158 個功能開關的註冊表</span></li>
+    <li><code>defaults</code><span>預設提示詞、預設門檻</span></li>
+    <li><code>cards／intent／events</code><span>追問題庫、意圖詞表、32 種事件</span></li>
+    <li><code>display／motion／api</code><span>顯示方案、動效方案、API 型別</span></li>
+  </ul></div>
+  <div class="pkg"><h3>packages/db <small>284 行　資料庫</small></h3><ul>
+    <li><code>schema</code><span>資料表：conversations、runs、messages、user_events、laptops…</span></li>
+    <li><code>laptops-import</code><span>匯入 382 欄機型 CSV</span></li>
+    <li><code>seed</code><span>初始設定、預設提示詞</span></li>
+    <li><code>client</code><span>PostgreSQL 連線</span></li>
+  </ul></div>
+</div></div>
+</section>
+
+<!-- ============ 方案 B ============ -->
+<section class="view" id="view-b">
+<div class="card head-b">
+  <h2>方案 B：一句話的旅程</h2>
+  <p class="hint">邏輯：跟著用戶那句話走，每一站是一個「可以整站換掉」的模組。每站寫進來什麼、出去什麼、現在由誰做、可以換成什麼方案。適合回答「流程切換架構要在哪裡切」。</p>
+  <div class="legend">
+    <span class="tag t-prog">程式做</span><span class="tag t-model">模型做</span><span class="tag t-side">分岔</span><span class="tag t-mark">你說要改的模組</span>
+  </div>
+</div>
+
+<div class="journey">
+
+<div class="stop mark">
+  <div class="num">0</div>
+  <div class="sbody">
+    <h3>整條線本身 <span class="tag t-mark">第一個要改的</span><span class="tag t-prog">程式做</span></h3>
+    <p>現在 1 到 9 站全部寫死在 <code>apps/api/src/turn.ts</code> 的 <code>runTurn</code> 裡，一條線走到底，只能用開關關掉某一站，不能換一條線。</p>
+    <div class="swap">改成可切換：把每一站變成同樣輸入輸出的插槽，流程本身變成一份「排法」（哪幾站、什麼順序、各站用哪個版本），後台選排法、每輪記下用的是哪一份，才能比較效果。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">1</div>
+  <div class="sbody">
+    <h3>意圖分類 <span class="tag t-prog">規則優先</span><span class="tag t-model">模型補判</span></h3>
+    <div class="io">
+      <div><b>進來</b>用戶原句、上一題問了什麼</div>
+      <div><b>出去</b>類別（需求句／對話控制／範圍外／閒聊／其他）、指令與對象</div>
+      <div><b>位置</b><code>nlu/intent.ts</code>、<code>api/intent.ts</code></div>
+    </div>
+    <div class="swap">可換：全規則、全模型、規則優先模型補判（現在）、模型優先規則把關。</div>
+  </div>
+</div>
+<div class="branch"><span class="tag t-side">分岔</span>對話控制（重來、上一步、刪條件、排除機型）直接改狀態再回主線；閒聊、範圍外、沒聽懂走旁路，跳到第 9 站回固定文案。按鈕操作（調權重、排除、對比、篩選）不經過 1 到 4 站，直接從第 5 站開始。</div>
+
+<div class="stop">
+  <div class="num">2</div>
+  <div class="sbody">
+    <h3>需求理解 <span class="tag t-prog">規則詞表</span><span class="tag t-model">模型抽取</span></h3>
+    <div class="io">
+      <div><b>進來</b>原句、目前需求檔案、追問上下文</div>
+      <div><b>出去</b>需求操作（新增／修改／刪除）、每項的原話與信心、聽不懂的詞</div>
+      <div><b>位置</b><code>nlu/rule.ts</code>、<code>nlu/understand.ts</code>、提示詞在後台</div>
+    </div>
+    <div class="swap">可換：模型直接從後台類別清單選（提案 F1）、數字一律程式解析（F2）、模型看最近 3 輪（F5）、3 秒上限不重試（F3）。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">3</div>
+  <div class="sbody">
+    <h3>需求檔案 <span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>需求操作</div>
+      <div><b>出去</b>更新後的需求清單，標好硬條件或偏好、來源、信心</div>
+      <div><b>位置</b><code>engine/profile.ts</code></div>
+    </div>
+    <div class="swap">可換：哪些欄位算硬條件、同一欄位重複出現時覆蓋還是累加。</div>
+  </div>
+</div>
+
+<div class="stop mark">
+  <div class="num">4</div>
+  <div class="sbody">
+    <h3>權重計算 <span class="tag t-mark">第二個要改的</span><span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>需求清單、後台基準權重、訊號表、用戶手動鎖住的維度</div>
+      <div><b>出去</b>七維權重（性能、螢幕、便攜、續航、散熱、安靜、擴充，總和 100）、性能子權重、權重帳本（每一分從哪句話來）</div>
+      <div><b>位置</b><code>engine/weights.ts</code>、<code>engine/profile.ts</code> 的重放、畫面在 <code>user/WeightPanel.tsx</code></div>
+    </div>
+    <div class="swap">可換：帳本制（現在）、舊的逐輪增減（<code>legacy_delta</code>）、模型直接給權重、問卷式。畫面可換：顯示帳本、只顯示結果、顯示每句話對權重的影響。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">5</div>
+  <div class="sbody">
+    <h3>硬條件篩選 <span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>全部機型、需求清單中的硬條件、預算</div>
+      <div><b>出去</b>正式候選、邊界候選、被排除的（各附原因）</div>
+      <div><b>位置</b><code>engine/filter.ts</code></div>
+    </div>
+    <div class="swap">可換：軟性預算要不要扣分（現在完全不處理）、邊界容忍幅度。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">6</div>
+  <div class="sbody">
+    <h3>評分排序 <span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>候選、七維權重、子權重、顯示方案</div>
+      <div><b>出去</b>每台的七維分數、總分、名次、性價比、平手標記</div>
+      <div><b>位置</b><code>engine/scoring.ts</code>、<code>engine/rank.ts</code>、<code>engine/value.ts</code></div>
+    </div>
+    <div class="swap">可換：正規化方式（全庫百分位／距第一名％／p5–p95）、平手門檻、性價比公式。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">7</div>
+  <div class="sbody">
+    <h3>決策 <span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>排名、需求缺口、追問次數、候選台數</div>
+      <div><b>出去</b>動作：推薦、追問（挑哪張卡）、反問（前兩名打平）、放寬（0 台）、引導</div>
+      <div><b>位置</b><code>engine/decide.ts</code>、<code>engine/select.ts</code></div>
+    </div>
+    <div class="swap">可換：價值閘門（現在：先模擬答案會不會改變前幾名）、固定題序、模型挑題、說過的不再問（F6）。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">8</div>
+  <div class="sbody">
+    <h3>理由產生 <span class="tag t-prog">程式做</span></h3>
+    <div class="io">
+      <div><b>進來</b>前幾名的分數拆解、權重、軟體風險線</div>
+      <div><b>出去</b>為什麼是它、要接受的、和第 2 名比、這輪權重為什麼變</div>
+      <div><b>位置</b><code>engine/reason.ts</code></div>
+    </div>
+    <div class="swap">可換：優勢挑法（權重 × 和中位數的差，現在）、條數、模型寫理由但程式核對。</div>
+  </div>
+</div>
+
+<div class="stop">
+  <div class="num">9</div>
+  <div class="sbody">
+    <h3>回覆措辭 <span class="tag t-model">模型潤飾</span><span class="tag t-prog">程式核對</span></h3>
+    <div class="io">
+      <div><b>進來</b>動作、理由、卡片、事實清單</div>
+      <div><b>出去</b>對話氣泡文字（數字對不上或漏講弱項就退回模板句）</div>
+      <div><b>位置</b><code>nlu/reply.ts</code></div>
+    </div>
+    <div class="swap">可換：模板句、模型措辭＋核對（現在）、卡片先送文字串流（F4）。</div>
+  </div>
+</div>
+
+<div class="stop rec">
+  <div class="num">收尾</div>
+  <div class="sbody">
+    <h3>紀錄，不做決定 <span class="tag t-prog">程式做</span></h3>
+    <p>寫 runs、messages；每輪快照（候選池＋當時全部開關）；用戶事件；動效事件；回傳 TurnResponse 給畫面。位置：<code>engine/snapshot.ts</code>、<code>api/events.ts</code>、<code>engine/motion.ts</code>。</p>
+    <div class="swap">流程切換架構要加的：這輪用的是哪一份排法、每站耗時、模型原文（F7）。</div>
+  </div>
+</div>
+
+</div>
+</section>
+
+<!-- ============ 比較 ============ -->
+<section class="view" id="view-c">
+<div class="card">
+  <h2>兩案比較</h2>
+  <table>
+    <tr><th style="width:18%"></th><th>方案 A：程式碼地圖</th><th>方案 B：一句話的旅程</th></tr>
+    <tr><td>切法</td><td>照資料夾與檔案</td><td>照資料在一輪裡的變化</td></tr>
+    <tr><td>模組數</td><td>7 個套件、約 60 個檔案</td><td>10 站＋1 個收尾</td></tr>
+    <tr><td>一個模組跨幾個檔案</td><td>不會，一檔一模組</td><td>會，例如「權重計算」橫跨 engine 兩個檔案和前端一個檔案</td></tr>
+    <tr><td>畫面算不算模組</td><td>算，獨立一層</td><td>只在和那一站綁在一起時出現（權重面板屬於第 4 站）</td></tr>
+    <tr><td>適合回答</td><td>要改哪個檔案、誰依賴誰、測試放哪</td><td>流程要在哪裡切、每站可以換什麼、按鈕操作從哪站進來</td></tr>
+    <tr><td>對「可切換流程」的幫助</td><td>看得到現在的線在 turn.ts，但看不到切點</td><td>每一站就是一個切點，插槽的輸入輸出已經寫出來</td></tr>
+  </table>
+  <p style="margin-top:12px">我的判斷：你接下來要做「流程可切換」和「權重模組可換」，方案 B 的站就是插槽清單；方案 A 留著當對照表，查檔案位置用。</p>
+</div>
+</section>
+
+</div>
+<script>
+(function(){
+  var tabs=document.querySelectorAll('.tab'),views={a:'view-a',b:'view-b',c:'view-c'};
+  function show(v){
+    tabs.forEach(function(t){t.setAttribute('aria-selected',t.dataset.v===v?'true':'false')});
+    Object.keys(views).forEach(function(k){document.getElementById(views[k]).classList.toggle('on',k===v)});
+    try{localStorage.setItem('modules-view',v)}catch(e){}
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.v)})});
+  var saved=null;try{saved=localStorage.getItem('modules-view')}catch(e){}
+  if(saved&&views[saved])show(saved);
+})();
+</script>
+</body>
+</html>
