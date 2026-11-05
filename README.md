@@ -31,3 +31,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · V3（v0.1.0）vs v1.0.14 程式碼深度比較 | https://mgitclau.github.io/mgitclau/laptop-v3-vs-v1014-report.html | 2026-11-06 |
 | AI 筆電選購助手 · 一句話的指令全紀錄（v1.0.16） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-detail.html | 2026-11-06 |
 | AI 筆電選購助手 · 系統模組兩種看法（v1.0.17） | https://mgitclau.github.io/mgitclau/laptop-modules-two-views.html | 2026-11-06 |
+| AI 筆電選購助手 · 一句話的旅程（v1.0.17，章節故事版） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-v1017.html | 2026-11-06 |
