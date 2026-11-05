@@ -28,3 +28,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 系統各部分優化清單（可選下一步） | https://mgitclau.github.io/mgitclau/laptop-parts-plan.html | 2026-11-04 |
 | AI 筆電選購助手 · 一句話的旅程（v1.0.13 處理流程） | https://mgitclau.github.io/mgitclau/laptop-v1013-turn-flow.html | 2026-11-05 |
 | AI 筆電選購助手 · 一句話流程改進提案 | https://mgitclau.github.io/mgitclau/laptop-turn-flow-proposal.html | 2026-11-05 |
+| AI 筆電選購助手 · V3（v0.1.0）vs v1.0.14 程式碼深度比較 | https://mgitclau.github.io/mgitclau/laptop-v3-vs-v1014-report.html | 2026-11-06 |

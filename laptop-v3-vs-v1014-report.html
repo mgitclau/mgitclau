@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V3 與 v1.0.14 比較</title>
+<meta name="description" content="AI 筆電選購助手：LaptopNewV3 v0.1.0 與 laptop-assistant v1.0.14 程式碼深度比較報告（純閱讀分析，8 個 agent、兩階段）">
+<style>
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --surface-2:#f0efeb; --text:#1d1d1b; --muted:#66655f; --border:#e2e0da;
+  --v3:#2f6fd6; --v3-soft:#e6eefb; --v1:#c2611a; --v1-soft:#fbeee4;
+  --good:#1f8a4c; --good-soft:#e3f4ea; --warn:#a86b00; --warn-soft:#fbf1dc; --bad:#c23a3a; --bad-soft:#f9e5e5; --none:#8b8a84; --none-soft:#ecebe7;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151514; --surface:#1e1e1c; --surface-2:#272725; --text:#ecebe6; --muted:#a3a29b; --border:#34332f;
+    --v3:#6c9cf0; --v3-soft:#1d2a40; --v1:#e8904d; --v1-soft:#3a2618;
+    --good:#4cc07f; --good-soft:#18301f; --warn:#e3a842; --warn-soft:#352a12; --bad:#ec6e6e; --bad-soft:#3a1c1c; --none:#8f8e88; --none-soft:#2b2b28;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151514; --surface:#1e1e1c; --surface-2:#272725; --text:#ecebe6; --muted:#a3a29b; --border:#34332f;
+  --v3:#6c9cf0; --v3-soft:#1d2a40; --v1:#e8904d; --v1-soft:#3a2618;
+  --good:#4cc07f; --good-soft:#18301f; --warn:#e3a842; --warn-soft:#352a12; --bad:#ec6e6e; --bad-soft:#3a1c1c; --none:#8f8e88; --none-soft:#2b2b28;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 16px 80px}
+header.top{margin-bottom:28px}
+.eyebrow{font-size:13px;color:var(--muted);letter-spacing:.04em}
+h1{font-size:30px;line-height:1.3;margin:6px 0 10px}
+h2{font-size:22px;margin:48px 0 14px;padding-top:8px}
+h3{font-size:17px;margin:0 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+nav.toc a{font-size:14px;color:var(--text);text-decoration:none;background:var(--surface);border:1px solid var(--border);padding:4px 12px;border-radius:999px}
+nav.toc a:hover{border-color:var(--v3)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:760px){.grid2,.grid3{grid-template-columns:1fr}h1{font-size:24px}}
+.verdict{border-left:5px solid var(--v3);background:var(--surface)}
+.verdict .big{font-size:20px;font-weight:700;margin-bottom:8px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-v3{background:var(--v3-soft);color:var(--v3)}
+.p-v1{background:var(--v1-soft);color:var(--v1)}
+.p-good{background:var(--good-soft);color:var(--good)}
+.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)}
+.p-none{background:var(--none-soft);color:var(--none)}
+.sys-name{font-weight:700}
+.sys-v3{color:var(--v3)} .sys-v1{color:var(--v1)}
+ul{margin:0;padding-left:20px} li{margin:4px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+/* score bars */
+.scores{display:flex;flex-direction:column;gap:14px}
+.srow{display:grid;grid-template-columns:150px 1fr 120px;gap:14px;align-items:center}
+.srow .lbl{font-weight:600}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px}
+.track{flex:1;height:10px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.fill{height:100%;border-radius:6px}
+.fill.v3{background:var(--v3)} .fill.v1{background:var(--v1)}
+.bar .num{width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.srow .win{text-align:right}
+.srow .why{grid-column:2/4;font-size:14px;color:var(--muted);margin-top:-6px}
+@media (max-width:640px){.srow{grid-template-columns:1fr}.srow .win{text-align:left}.srow .why{grid-column:auto;margin-top:0}}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:var(--surface-2);font-weight:600;position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+td.cat{color:var(--muted);white-space:nowrap}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.filters button{font:inherit;font-size:13px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:4px 12px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.analogy{font-size:15px;background:var(--surface-2);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+ol.port{padding-left:22px} ol.port li{margin:8px 0}
+.note{font-size:14px;background:var(--warn-soft);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+footer{margin-top:56px;font-size:13px;color:var(--muted);border-top:1px solid var(--border);padding-top:16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:var(--surface-2);padding:1px 5px;border-radius:5px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">AI 筆電選購助手 · 程式碼深度比較 · 2026-11-06</div>
+  <h1>該用哪一套系統繼續開發？<br><span class="sys-v3">V3（v0.1.0）</span> vs <span class="sys-v1">v1.0.14</span></h1>
+  <p class="muted">由 8 個 AI 分析員分兩階段完成：6 個分別深讀兩套系統的前端、後端、AI 推薦核心，1 個交叉比較評分，1 個回到程式碼反方驗證。全程只讀程式碼，沒有修改任何檔案，也沒有執行測試。</p>
+  <nav class="toc">
+    <a href="#verdict">結論</a><a href="#scores">七面向分數</a><a href="#profile">兩套系統的特色</a><a href="#verify">驗證結果</a><a href="#findings">重要發現</a><a href="#features">功能對照表</a><a href="#port">建議搬移</a><a href="#effort">補強工作量</a><a href="#decide">待你決定</a>
+  </nav>
+</header>
+
+<section id="verdict" class="card verdict">
+  <div class="big">建議：以 <span class="sys-v3">V3</span> 為主線，再把 <span class="sys-v1">v1.0.14</span> 的「推薦大腦」搬過來。</div>
+  <p>V3 的地基比較穩，包括安全性、資料可追溯、即時串流和程式寫法規範，長期擴充和上線比較放心。它缺的主要是推薦和 AI 的計算邏輯，而這些剛好是 v1.0.14 做得最好、也最容易搬的部分。</p>
+  <p><strong>但要坦白說：以今天實際推薦筆電好不好用來看，v1.0.14 比較好。</strong>如果只打算在自己的 Mac 上用、不上線，選 v1.0.14 也合理。</p>
+  <div class="grid3" style="margin-top:14px">
+    <div><div class="muted small">平均分數</div><div style="font-size:22px;font-weight:700"><span class="sys-v3">7.6</span> <span class="muted" style="font-size:15px">vs</span> <span class="sys-v1">7.1</span></div></div>
+    <div><div class="muted small">七面向勝出</div><div style="font-size:22px;font-weight:700"><span class="sys-v3">V3 5 項</span> · <span class="sys-v1">v1.0.14 2 項</span></div></div>
+    <div><div class="muted small">補強主要缺口的工作量</div><div style="font-size:22px;font-weight:700"><span class="sys-v3">中</span> <span class="muted" style="font-size:15px">vs</span> <span class="sys-v1">中～大</span></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>兩套系統基本資料</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 class="sys-v3">V3 · LaptopNewV3/v0.1.0</h3>
+      <dl class="kv">
+        <dt>技術</dt><dd>Next.js 16 單一應用，前後端在同一個專案</dd>
+        <dt>程式量</dt><dd>約 42,700 行（含測試）</dd>
+        <dt>AI</dt><dd>DeepSeek 負責理解需求和寫回覆，另有 RAG 文件知識庫</dd>
+        <dt>資料庫</dt><dd>PostgreSQL 15 以上（README 要求 16），10 支資料庫遷移</dd>
+        <dt>測試</dt><dd>單元、整合（接真資料庫）、端對端、無障礙檢查、AI 評測</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3 class="sys-v1">v1.0.14 · laptop-assistant-v1.0.14</h3>
+      <dl class="kv">
+        <dt>技術</dt><dd>多套件結構：Fastify 後端、Vite + React 前端，加上 4 個共用套件</dd>
+        <dt>程式量</dt><dd>約 24,200 行（含測試）</dd>
+        <dt>AI</dt><dd>以規則為主、模型為輔，可在後台切換多家模型</dd>
+        <dt>資料庫</dt><dd>PostgreSQL 12 以上，4 支資料庫遷移</dd>
+        <dt>測試</dt><dd>約 560 個單元／整合測試、129 個 API 測試、約 56 個端對端</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="scores">
+  <h2>七個面向的分數（滿分 10，已用同一套標準校準）</h2>
+  <div class="legend"><span><span class="dot" style="background:var(--v3)"></span>V3</span><span><span class="dot" style="background:var(--v1)"></span>v1.0.14</span></div>
+  <div class="card scores" id="scoreList"></div>
+</section>
+
+<section id="profile">
+  <h2>兩套系統的特色</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 class="sys-v3">V3</h3>
+      <div class="analogy">像一棟<strong>地基扎實</strong>，但<strong>「大腦」還不夠聰明</strong>的房子。</div>
+      <p><span class="pill p-good">優點</span></p>
+      <ul>
+        <li>登入和安全做得專業：密碼雜湊、防偽造請求、權限矩陣、稽核紀錄</li>
+        <li>AI 回覆一個字一個字即時顯示，可以中途停止，重試也不會重複送出</li>
+        <li>多人同時修改條件時不會互相覆蓋，從介面到資料庫都有版本檢查</li>
+        <li>有資料匯出、刪除帳號、備份還原演練、AI 評測</li>
+        <li>程式寫法整齊，有自動檢查工具，AI 助手比較好維護</li>
+      </ul>
+      <p style="margin-top:12px"><span class="pill p-bad">缺點（已驗證屬實）</span></p>
+      <ul>
+        <li>DeepSeek 一出錯，整輪對話直接失敗，沒有備援</li>
+        <li>AI 回覆裡的型號和價格不會和資料庫核對，可能講錯</li>
+        <li>「七千元」「1TB」「3 斤」會變成「待確認」，不會直接拿來篩選</li>
+        <li>說「很在意續航」「要能玩某款遊戲」，不會影響排名</li>
+        <li>價格標成人民幣，但資料其實是新台幣</li>
+        <li>後台看不到使用者的對話；推薦規則和 AI 設定在後台只能看、不能改</li>
+        <li>用的都是最新版技術，遇到問題時網路上能參考的資料少</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 class="sys-v1">v1.0.14</h3>
+      <div class="analogy">像一個<strong>「大腦」很聰明</strong>，但<strong>房子只適合自己住</strong>的原型。</div>
+      <p><span class="pill p-good">優點</span></p>
+      <ul>
+        <li>推薦排名主要由程式計算，AI 只能小幅微調，不會推薦不存在的機型</li>
+        <li>AI 寫完回覆後，會逐項核對數字、品牌、型號，不對就改用固定文案</li>
+        <li>AI 壞掉、逾時、額度用完，都會自動退回規則模式繼續運作</li>
+        <li>能理解「重來」「上一步」「別再問了」，會給推薦理由，會建議放寬條件</li>
+        <li>後台可以換模型、改提示詞、調權重、開關功能，還能逐輪重播使用者當時的畫面</li>
+        <li>價格是新台幣，免登入就能用</li>
+      </ul>
+      <p style="margin-top:12px"><span class="pill p-bad">缺點（已驗證屬實）</span></p>
+      <ul>
+        <li>只適合單機：防重複和限流都存在記憶體，一鍵啟動只能在 Mac 上用</li>
+        <li>沒有即時串流，最慢約 26 秒後整段回覆才一次出現</li>
+        <li>機型的 581 個欄位全塞在一個欄位裡，不好擴充和查詢</li>
+        <li>程式常把很多邏輯擠在一行，又沒有自動檢查工具，修改時容易出錯</li>
+        <li>「預算5萬 8核」會被解析成 58,000 元</li>
+        <li>資料缺漏的機型可能通過篩選，評分還會偏高</li>
+        <li>沒有資料匯出、刪除帳號、使用者管理</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="verify">
+  <h2>反方驗證：18 條關鍵結論的查核結果</h2>
+  <p class="muted small">第 2 階段的驗證員回到程式碼，試著推翻第 1 階段的說法。結果是 12 條屬實、5 條部分屬實、1 條不屬實。</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>系統</th><th>結論</th><th>判定</th><th>嚴重度</th></tr></thead>
+      <tbody id="verifyBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="findings">
+  <h2>需要你特別注意的發現</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>1. V3 的價格幣別標錯了 <span class="pill p-bad">高</span></h3>
+      <p>CSV 的價格欄位叫「測試時零售價(新台幣)」，但 V3 當初的設計決定是用人民幣，所以這些新台幣價格被標成 ¥，AI 的提示詞也寫「單位人民幣元」。</p>
+      <p>結果是台灣使用者說「預算 3 萬」時，系統會當成 ¥30,000。要修的話，資料、提示詞、評分、顯示四個地方都要改。這是你之前核准的決定，所以要由你決定要不要改成新台幣。</p>
+    </div>
+    <div class="card">
+      <h3>2. 筆電資料還不是正式資料 <span class="pill p-warn">上線前要處理</span></h3>
+      <p>兩套系統用的 371 台筆電資料檔<strong>完全一樣</strong>，所以這點不影響兩套系統的比較。</p>
+      <p>但所有購買連結和評測影片連結都是 <code>example.com</code> 佔位網址，另有 10 台註明「配置推測數據，僅用於數據庫測試」。真正上線前要換成真實資料。</p>
+    </div>
+    <div class="card">
+      <h3>3. 兩邊都沒有洩漏密碼或金鑰 <span class="pill p-good">安全</span></h3>
+      <p>兩套系統的本機都有金鑰設定檔，但都已設定不進入 git，版本紀錄裡也查不到。</p>
+    </div>
+    <div class="card">
+      <h3>4. 一條「高風險」結論被推翻 <span class="pill p-none">已更正</span></h3>
+      <p>第 1 階段說 v1.0.14 前端可能整頁白屏。驗證發現後端會自動補齊缺少的資料，實際上幾乎不會發生，所以嚴重度降為「低」。</p>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <h2>完整功能對照表</h2>
+  <p class="muted small">狀態說明：<span class="pill p-good">完整</span> 能正常使用 · <span class="pill p-warn">部分</span> 能用但缺東西 · <span class="pill p-bad">骨架</span> 只有外殼、實際沒作用 · <span class="pill p-none">無</span> 沒有這個功能</p>
+  <div class="filters" id="featFilters" role="group" aria-label="篩選功能類別"></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>功能</th><th class="sys-v3">V3</th><th class="sys-v1">v1.0.14</th></tr></thead>
+      <tbody id="featBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="port">
+  <h2>建議從 v1.0.14 搬到 V3 的功能（依優先順序）</h2>
+  <div class="card">
+    <ol class="port">
+      <li><strong>AI 出錯時自動退回備援</strong>，對話不會中斷。V3 其實已經有規則抽取和固定文案的程式，接上即可，工作量小。</li>
+      <li><strong>AI 回覆的防幻覺核對</strong>：數字、品牌、型號、價格張冠李戴、沒提到第一名、漏講缺點，任何一項不對就改用固定文案。</li>
+      <li><strong>中文數字與單位解析</strong>，讓「七千」「1TB」「3 斤」能直接拿來篩選。</li>
+      <li><strong>新台幣價格</strong>：需要你先決定是否推翻 V3 原本用人民幣的決策。</li>
+      <li><strong>讓「重視續航」「要能玩某款遊戲」真的影響排名</strong>。</li>
+      <li><strong>意圖判斷</strong>：「重來」「上一步」「別再問了」「刪掉某個條件」。</li>
+      <li><strong>推薦理由、打平時反問偏好、建議放寬條件、列出差一點符合的機型</strong>。</li>
+      <li><strong>分數回歸測試</strong>：用 371 台真實機型逐項比對分數，防止改壞。</li>
+      <li><strong>後台營運功能</strong>：換模型並加密存放金鑰、功能開關、提示詞版本、詞表、逐輪檢視和重播對話。</li>
+      <li>小而實用的功能：免登入試用、推薦回饋按鈕、個人顯示偏好。</li>
+    </ol>
+    <p class="note" style="margin-top:14px"><strong>不建議搬的：</strong>記憶體鎖和限流、把機型資料整包塞進一個欄位的做法、擠成一行的程式寫法、Mac 專用的啟動器。</p>
+  </div>
+</section>
+
+<section id="effort">
+  <h2>選擇各系統的風險與補強工作量</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 class="sys-v3">選 V3 · 工作量：中</h3>
+      <p><strong>最大風險：</strong>看起來很完整，但推薦核心比 v1.0.14 弱；用的是最新版框架，遇到冷門問題時參考資料少。</p>
+      <ul class="small">
+        <li><span class="pill p-good">小</span> 中文數字修正、AI 故障備援、簡體錯誤訊息改繁中、限流的 IP 設定</li>
+        <li><span class="pill p-warn">中</span> 偏好影響排名、人民幣改新台幣、移植防幻覺核對、後台對話檢視</li>
+        <li><span class="pill p-bad">中～大</span> 讓後台能調整規則、權重、提示詞和模型（做到 v1.0.14 的程度）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 class="sys-v1">選 v1.0.14 · 工作量：中～大</h3>
+      <p><strong>最大風險：</strong>推薦邏輯成熟，但地基是單機原型，要上線得重做很多底層。</p>
+      <ul class="small">
+        <li><span class="pill p-good">小</span> 補限流、改伺服器位址設定、加錯誤保護畫面、補索引和快取</li>
+        <li><span class="pill p-warn">中</span> 對話鎖改存資料庫、補程式寫法檢查並整理擠在一行的程式、隱私功能、使用者管理、跨平台啟動</li>
+        <li><span class="pill p-bad">大</span> 改成即時串流回覆（前後端對話流程都要改）、整理機型資料結構</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="decide">
+  <h2>接下來需要你決定</h2>
+  <div class="card">
+    <ol>
+      <li><strong>用哪一套當主線？</strong>建議 V3。如果只打算在自己的 Mac 上用，v1.0.14 也可以。</li>
+      <li><strong>如果選 V3，價格要不要改回新台幣？</strong>原始資料本來就是新台幣。</li>
+    </ol>
+    <p class="muted small" style="margin-top:10px">決定後，可以從「建議搬移」清單的第 1 到 3 項開始，這三項工作量最小，對推薦品質的提升最明顯。</p>
+  </div>
+</section>
+
+<footer>
+  分析方法：方案 B，共 8 個 AI 分析員，分兩階段進行。只讀程式碼，不執行、不修改。分數是 AI 依程式碼證據給的判斷，不是自動化量測。<br>
+  分析對象：<code>/Users/m/Desktop/LaptopNewV3/v0.1.0</code> 與 <code>/Users/m/Desktop/Laptopbuyingassisstant/laptop-assistant-v1.0.14</code>
+</footer>
+</div>
+
+<script>
+const SCORES=[
+ ["程式碼品質",8.0,7.0,"V3","V3 有自動檢查工具、寫法整齊；v1.0.14 沒有 lint，常把很多邏輯擠在一行"],
+ ["健壯性",8.0,7.0,"V3","V3 的安全和並行保護較完整；但 AI 壞掉時的備援，v1.0.14 明顯較好"],
+ ["相容性",6.5,7.0,"v1","v1.0.14 套件版本較主流、可換多家模型；V3 用最新版 Next 16，資料庫要 PG 15 以上"],
+ ["架構設計",8.5,8.0,"V3","V3 資料庫設計嚴謹、可追溯；v1.0.14 的「後台重播使用者畫面」設計很巧妙"],
+ ["維護性與擴充性",7.5,7.0,"V3","V3 對 AI 助手較好讀好改；但不寫程式就能在後台調整的範圍，v1.0.14 大勝"],
+ ["效能",7.0,6.0,"V3","V3 回覆即時串流；v1.0.14 沒有串流，最慢約 26 秒才出現"],
+ ["功能完整度",7.5,8.0,"v1","「聊天 → 推薦」核心流程 v1.0.14 較完整；帳號、隱私、匯入審核等平台功能 V3 較完整"],
+];
+const sl=document.getElementById('scoreList');
+SCORES.forEach(([n,a,b,w,why])=>{
+  const d=document.createElement('div');d.className='srow';
+  d.innerHTML=`<div class="lbl">${n}</div>
+  <div class="bars">
+    <div class="bar"><div class="track"><div class="fill v3" style="width:${a*10}%"></div></div><span class="num">${a.toFixed(1)}</span></div>
+    <div class="bar"><div class="track"><div class="fill v1" style="width:${b*10}%"></div></div><span class="num">${b.toFixed(1)}</span></div>
+  </div>
+  <div class="win"><span class="pill ${w==='V3'?'p-v3':'p-v1'}">${w==='V3'?'V3 勝':'v1.0.14 勝'}</span></div>
+  <div class="why">${why}</div>`;
+  sl.appendChild(d);
+});
+
+const VER=[
+ ["V3","「七千、1TB、3 斤」會被降為待確認、不參與篩選（介面有一鍵確認，不是悄悄消失）","屬實","中"],
+ ["V3","「重視項目」和軟體需求不影響排名權重","屬實","中"],
+ ["V3","DeepSeek 失敗時整輪報錯，沒有退回規則備援（只有自動重試 2 次）","屬實","中"],
+ ["V3","真正呼叫 DeepSeek 的程式沒有自動化測試","屬實","低"],
+ ["V3","AI 回覆裡的型號和價格不會和資料庫核對","屬實","中偏高"],
+ ["V3","沒設定代理時，所有訪客 IP 都是 unknown，訪客限流變成全站共用","部分屬實","中（部署時）"],
+ ["V3","資料庫需要 PostgreSQL 15 以上","屬實","低"],
+ ["V3","沒有自訂錯誤頁和 404 頁；深色模式從未生效","屬實","低"],
+ ["V3","價格用人民幣，但介面是台灣繁中","屬實","低至中（後經比對 CSV 為新台幣，升為高）"],
+ ["v1.0.14","沒有錯誤保護畫面；缺少資料會導致白屏","部分屬實","低（後端會補齊資料）"],
+ ["v1.0.14","「放寬條件」端點沒有限流，而且會呼叫 AI","屬實","中（僅本機）"],
+ ["v1.0.14","同一對話的鎖只存在記憶體，先讀後鎖有極小機率覆蓋","屬實","低"],
+ ["v1.0.14","伺服器寫死只聽本機；一鍵啟動只能在 Mac 上用","屬實","低"],
+ ["v1.0.14","AI 完全不碰排名；回覆有防幻覺核對","部分屬實","需更正：AI 能有限度微調權重"],
+ ["v1.0.14","「預算5萬 8核」被解析成 58,000 元","屬實","中"],
+ ["v1.0.14","資料缺漏的機型會通過篩選，評分可能偏高","部分屬實","中"],
+ ["v1.0.14","沒有即時串流；一輪最多 3 次 AI 呼叫依序執行","屬實","低至中"],
+ ["兩者","有金鑰或密碼被提交到 git","不屬實","無"],
+];
+const vcls={"屬實":"p-bad","部分屬實":"p-warn","不屬實":"p-good"};
+const vb=document.getElementById('verifyBody');
+VER.forEach((r,i)=>{
+  const tr=document.createElement('tr');
+  const sc=r[0]==="V3"?"p-v3":r[0]==="v1.0.14"?"p-v1":"p-none";
+  tr.innerHTML=`<td>${i+1}</td><td><span class="pill ${sc}">${r[0]}</span></td><td>${r[1]}</td><td><span class="pill ${vcls[r[2]]}">${r[2]}</span></td><td>${r[3]}</td>`;
+  vb.appendChild(tr);
+});
+
+// [類別, 功能, V3狀態, V3備註, v1狀態, v1備註]
+const F=[
+ ["使用者","訪客免登入使用","無","","完整",""],
+ ["使用者","註冊／登入／登出","完整","","完整",""],
+ ["使用者","改密碼／忘記密碼／裝置管理","無","","無",""],
+ ["使用者","帳號資料匯出／刪除帳號","完整","","無",""],
+ ["使用者","隱私說明頁","完整","","無",""],
+ ["使用者","首頁介紹／精選機型","完整","","完整","含範例句、基礎需求卡"],
+ ["對話","自然語言輸入（注音輸入不誤送、2000 字）","完整","","完整",""],
+ ["對話","回覆即時串流","完整","","無",""],
+ ["對話","停止／重試","完整","","部分","防重送，無停止"],
+ ["對話","多會話列表／切換／新建","完整","","完整",""],
+ ["對話","會話重新命名／刪除／封存","部分","無封存按鈕","無",""],
+ ["對話","對話歷史分頁載入","部分","只載 50 則","部分","列表 100 筆"],
+ ["AI 理解","AI 需求抽取＋伺服器驗證","完整","","完整",""],
+ ["AI 理解","規則式抽取（沒有 AI 也能用）","部分","只用在測試","完整",""],
+ ["AI 理解","AI 故障自動降級","骨架","","完整",""],
+ ["AI 理解","中文數字／單位（七千、1TB、3 斤）","部分","會被誤降為待確認","完整","「5萬 8核」小誤判"],
+ ["AI 理解","意圖判斷（重來／上一步／別再問）","無","","完整",""],
+ ["AI 理解","條件來源與信心（明確／推斷待確認）","完整","","完整",""],
+ ["AI 理解","「重視項目」影響排名","骨架","只顯示","完整",""],
+ ["AI 理解","軟體／遊戲需求影響推薦","骨架","只抽取","完整",""],
+ ["AI 理解","高價值追問","完整","","完整","含進度、跳過"],
+ ["AI 理解","打平時反問偏好","無","","完整",""],
+ ["AI 理解","推薦理由（優勢／取捨／和第 2 名比）","部分","AI 自由撰寫","完整","程式產生"],
+ ["AI 理解","回覆防幻覺核對","部分","只核對引用","完整",""],
+ ["AI 理解","放寬條件建議（0 台符合時）","無","","部分","只試單一條件"],
+ ["AI 理解","差一點符合的機型","骨架","刻意停用","完整",""],
+ ["AI 理解","RAG 知識庫檢索＋引用核驗","部分","純字詞比對","無","設計上不需要"],
+ ["AI 理解","AI 工具呼叫（唯讀、限次、逾時）","完整","","無","不需要"],
+ ["AI 理解","成本控制","完整","四層上限","部分","只有全站每日上限"],
+ ["AI 理解","多家模型切換、金鑰加密","部分","只有 DeepSeek","完整","OpenAI 相容＋Anthropic"],
+ ["AI 理解","真實模型評測","部分","18 例手動報告","無",""],
+ ["推薦結果","硬條件分組","完整","","完整","含排除原因"],
+ ["推薦結果","多面向評分＋用途權重","完整","六個面向","完整","七個面向"],
+ ["推薦結果","權重調整面板","完整","即時預覽","完整","自動平衡"],
+ ["推薦結果","手動編輯條件","完整","","完整",""],
+ ["推薦結果","候選清單分頁","部分","每組只顯示 50 台","完整",""],
+ ["推薦結果","目錄瀏覽／搜尋／排序","完整","","完整",""],
+ ["推薦結果","固定／排除／收藏","完整","","完整",""],
+ ["推薦結果","機型詳情（規格、實測、軟體適配）","完整","","完整","含購買／影片連結"],
+ ["推薦結果","2–4 台比較","完整","含跑分可比性提示","完整",""],
+ ["推薦結果","推薦回饋（有幫助／沒幫助）","無","","完整",""],
+ ["推薦結果","個人偏好設定（排序、版面、動畫）","無","","完整",""],
+ ["推薦結果","結果換位動畫","部分","","完整",""],
+ ["推薦結果","價格用新台幣","無","標成人民幣","完整",""],
+ ["推薦結果","手機版","部分","頂部列沒有手機版設計","完整",""],
+ ["推薦結果","深色模式","骨架","寫了但沒生效","無",""],
+ ["推薦結果","自訂 404／錯誤頁","無","","部分",""],
+ ["後台","管理員登入與權限","完整","多角色","完整","單一角色"],
+ ["後台","儀表板統計","部分","","完整",""],
+ ["後台","機型資料管理","部分","少數欄位","部分","改價、上下架"],
+ ["後台","CSV 匯入","完整","差異比對＋審核＋發布","完整","兩步預覽"],
+ ["後台","跑分資料管理","完整","","無",""],
+ ["後台","軟體需求庫","部分","無刪除","完整","要直接編輯 JSON"],
+ ["後台","推薦規則／權重／門檻調整","骨架","只能看","完整",""],
+ ["後台","功能開關","無","","完整",""],
+ ["後台","提示詞版本管理","無","","完整",""],
+ ["後台","模型設定／連線檢查","骨架","只能看","完整",""],
+ ["後台","意圖詞表／待處理詞","無","","完整",""],
+ ["後台","顯示方案／首頁內容／卡片／動效","無","","完整",""],
+ ["後台","RAG 文件管理","完整","","無",""],
+ ["後台","AI 評估報告","完整","唯讀","無",""],
+ ["後台","對話檢視／逐輪追蹤／重播","無","","完整",""],
+ ["後台","使用者與角色管理","部分","無停用","無",""],
+ ["後台","稽核紀錄","完整","","部分","固定 200 筆"],
+ ["維運","健康檢查","部分","不檢查資料庫","無",""],
+ ["維運","備份／還原演練","完整","","無",""],
+ ["維運","一鍵安裝啟動","部分","要手動步驟","完整","只限 Mac"],
+ ["維運","程式寫法檢查＋型別檢查","完整","","部分","只有型別檢查"],
+];
+const scls={"完整":"p-good","部分":"p-warn","骨架":"p-bad","無":"p-none"};
+const fb=document.getElementById('featBody');
+const cats=["全部",...new Set(F.map(r=>r[0]))];
+const ff=document.getElementById('featFilters');
+function cell(s,n){return `<span class="pill ${scls[s]}">${s}</span>${n?` <span class="muted small">${n}</span>`:''}`}
+function render(c){
+  fb.innerHTML='';
+  F.filter(r=>c==="全部"||r[0]===c).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="cat">${r[0]}</td><td>${r[1]}</td><td>${cell(r[2],r[3])}</td><td>${cell(r[4],r[5])}</td>`;
+    fb.appendChild(tr);
+  });
+  [...ff.children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===c));
+}
+cats.forEach(c=>{const b=document.createElement('button');b.type='button';b.textContent=c;b.dataset.c=c;b.onclick=()=>render(c);ff.appendChild(b)});
+render("全部");
+</script>
+</body>
+</html>
