@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>可切換模組總覽</title>
+<meta name="description" content="AI 筆電選購助手 v1.0.25：哪些模組已能切換、各模組的介面與資料契約、哪些切換最重要。">
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#ffffff; --ink:#1f2328; --muted:#5d6670; --line:#e2dfd6;
+  --accent:#2f6f9f; --accent-soft:#e4eef6;
+  --ok:#2e7d4f; --ok-soft:#e3f2e8; --no:#b4532a; --no-soft:#f8e6dc;
+  --code-bg:#f1efe8; --star:#c98a12;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181b; --panel:#1f2226; --ink:#e7e9ec; --muted:#9aa3ad; --line:#33373d;
+    --accent:#7fb3dd; --accent-soft:#1f3242;
+    --ok:#6cc290; --ok-soft:#1c3326; --no:#e8966f; --no-soft:#3a251b;
+    --code-bg:#2a2d32; --star:#e0b04a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181b; --panel:#1f2226; --ink:#e7e9ec; --muted:#9aa3ad; --line:#33373d;
+  --accent:#7fb3dd; --accent-soft:#1f3242;
+  --ok:#6cc290; --ok-soft:#1c3326; --no:#e8966f; --no-soft:#3a251b;
+  --code-bg:#2a2d32; --star:#e0b04a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 4px;line-height:1.3}
+h2{font-size:1.3rem;margin:48px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+h3{font-size:1.08rem;margin:28px 0 8px}
+p{margin:8px 0}
+.sub{color:var(--muted);margin:0 0 20px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:4px;word-break:break-word}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.tl{display:inline-block;font-size:.78rem;font-weight:600;padding:1px 8px;border-radius:999px;margin-right:6px;vertical-align:middle}
+.tl.ok{background:var(--ok-soft);color:var(--ok)}
+.tl.no{background:var(--no-soft);color:var(--no)}
+.tl.prog{background:var(--accent-soft);color:var(--accent)}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0}
+table{border-collapse:collapse;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.94rem}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{background:var(--code-bg);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td:first-child{white-space:nowrap;font-weight:600}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;overflow-x:auto}
+.diagram svg{display:block;min-width:720px;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.88rem;color:var(--muted);margin:8px 2px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block;border:1.5px solid}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr} h1{font-size:1.4rem}}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin:12px 0}
+.flow .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.flow .box b{display:block;margin-bottom:4px;color:var(--accent)}
+.flow .arr{align-self:center;color:var(--muted);font-size:1.3rem}
+@media (max-width:720px){.flow{grid-template-columns:1fr}.flow .arr{transform:rotate(90deg);justify-self:center}}
+.stars{color:var(--star);letter-spacing:1px;white-space:nowrap}
+.note{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.warn{border-left-color:var(--no);background:var(--no-soft)}
+ul{margin:6px 0;padding-left:1.3em}
+footer{color:var(--muted);font-size:.85rem;margin-top:48px}
+</style>
+</head>
+<body>
+<main>
+<h1>AI 筆電選購助手 · 可切換模組總覽（v1.0.25）</h1>
+<p class="sub">2026-11-07 · 依 <code>laptop-assistant-v1.0.25</code> 原始碼整理：哪些模組已經能切換、各模組的介面與資料契約、哪些切換最重要</p>
+
+<div class="note"><b>一句話：</b>「流程」與「右欄畫面」兩個程式型模組已經能完整切換；對推薦品質影響最大、卻還不能切換的是<b>排序／權重引擎</b>，左欄對話區也還沒插槽化。</div>
+
+<h2>一、整體地圖</h2>
+<div class="diagram" role="img" aria-label="可切換模組地圖">
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'PingFang TC','Noto Sans TC',sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  </defs>
+  <style>
+    .t{fill:var(--ink);font-size:15px}
+    .s{fill:var(--muted);font-size:12.5px}
+    .h{fill:var(--ink);font-size:16px;font-weight:700}
+    .fixed{fill:var(--panel);stroke:var(--muted);stroke-width:1.5}
+    .ok{fill:var(--ok-soft);stroke:var(--ok);stroke-width:2}
+    .no{fill:var(--no-soft);stroke:var(--no);stroke-width:2;stroke-dasharray:6 4}
+    .zone{fill:none;stroke:var(--line);stroke-width:1.5}
+    .ln{stroke:var(--muted);stroke-width:1.5;fill:none}
+    .adm{stroke:var(--accent);stroke-width:1.5;fill:none;stroke-dasharray:4 4}
+  </style>
+
+  <!-- zones -->
+  <rect class="zone" x="10" y="10" width="700" height="290" rx="12"/>
+  <text class="s" x="26" y="32">後端（apps/api）</text>
+  <rect class="zone" x="10" y="318" width="700" height="232" rx="12"/>
+  <text class="s" x="26" y="340">前端（apps/web）</text>
+
+  <!-- input -->
+  <rect class="fixed" x="30" y="48" width="150" height="54" rx="8"/>
+  <text class="t" x="105" y="72" text-anchor="middle">用戶一句話</text>
+  <text class="s" x="105" y="90" text-anchor="middle">POST /messages 等</text>
+  <path class="ln" d="M180 75 H228" marker-end="url(#ar)"/>
+
+  <!-- host -->
+  <rect class="fixed" x="232" y="48" width="200" height="54" rx="8"/>
+  <text class="t" x="332" y="72" text-anchor="middle">主機 turn.ts（固定）</text>
+  <text class="s" x="332" y="90" text-anchor="middle">上鎖・讀設定・存檔・動效</text>
+  <path class="ln" d="M332 102 V128" marker-end="url(#ar)"/>
+
+  <!-- turn scheme -->
+  <rect class="ok" x="40" y="132" width="420" height="78" rx="10"/>
+  <text class="h" x="58" y="157">① 流程方案</text>
+  <text class="t" x="58" y="180">baseline ／ single-call</text>
+  <text class="s" x="58" y="199">TurnScheme：SchemeContext 進 → SchemeOutcome 出</text>
+
+  <rect class="ok" x="480" y="132" width="210" height="36" rx="8"/>
+  <text class="t" x="494" y="155">①-a 提示詞版本</text>
+  <rect class="ok" x="480" y="174" width="210" height="36" rx="8"/>
+  <text class="t" x="494" y="197">①-b AI 供應商</text>
+  <path class="ln" d="M460 150 H476"/><path class="ln" d="M460 192 H476"/>
+
+  <path class="ln" d="M250 210 V230" marker-end="url(#ar)"/>
+  <rect class="no" x="40" y="234" width="420" height="52" rx="10"/>
+  <text class="h" x="58" y="258">排序／權重引擎</text>
+  <text class="s" x="58" y="277">packages/engine，只有一套，還不能切換</text>
+
+  <path class="ln" d="M250 286 V372" marker-end="url(#ar)"/>
+  <text class="s" x="258" y="330">SchemeOutcome（所有方案同一形狀）</text>
+
+  <!-- frontend -->
+  <rect class="no" x="40" y="376" width="180" height="70" rx="10"/>
+  <text class="h" x="58" y="402">左欄 對話區</text>
+  <text class="s" x="58" y="424">還沒插槽化</text>
+
+  <rect class="ok" x="240" y="376" width="300" height="70" rx="10"/>
+  <text class="h" x="258" y="402">② 候選池方案（右欄）</text>
+  <text class="t" x="258" y="428">classic ／ gallery</text>
+
+  <rect class="ok" x="240" y="462" width="300" height="70" rx="10"/>
+  <text class="h" x="258" y="488">③ 候選機型顯示方案</text>
+  <text class="s" x="258" y="510">已併入 classic 的專屬參數</text>
+  <path class="ln" d="M390 446 V458" marker-end="url(#ar)"/>
+
+  <rect class="ok" x="560" y="376" width="130" height="70" rx="10"/>
+  <text class="h" x="574" y="402">④ 動效方案</text>
+  <text class="s" x="574" y="424">動畫參數組</text>
+  <path class="ln" d="M540 411 H556" marker-end="url(#ar)"/>
+  <text class="s" x="560" y="470">依 data-motion</text>
+  <text class="s" x="560" y="487">標籤找元素</text>
+
+  <!-- admin -->
+  <rect class="fixed" x="740" y="48" width="205" height="484" rx="12"/>
+  <text class="h" x="842" y="78" text-anchor="middle">後台設定</text>
+  <text class="s" x="842" y="98" text-anchor="middle">選生效方案・全站套用</text>
+  <text class="s" x="756" y="160">settings.turn_scheme</text>
+  <text class="s" x="756" y="190">prompts／model_providers</text>
+  <text class="s" x="756" y="416">settings.pool_scheme</text>
+  <text class="s" x="756" y="500">settings.display</text>
+  <text class="s" x="756" y="446">settings.motion</text>
+  <path class="adm" d="M752 155 H462"/>
+  <path class="adm" d="M752 185 H692"/>
+  <path class="adm" d="M752 411 H692"/>
+  <path class="adm" d="M752 495 H542"/>
+</svg>
+</div>
+<div class="legend">
+  <span><i class="sw" style="background:var(--ok-soft);border-color:var(--ok)"></i>已可切換</span>
+  <span><i class="sw" style="background:var(--no-soft);border-color:var(--no);border-style:dashed"></i>還不能切換</span>
+  <span><i class="sw" style="background:var(--panel);border-color:var(--muted)"></i>固定（共用）</span>
+  <span style="color:var(--accent)">－ － 後台設定指向</span>
+</div>
+<p style="margin-top:12px">另外還有 <b>178 個功能開關</b>（<code>packages/contracts/src/flags.ts</code>，9 個群組），它們是開或關的細節，不算「可整套替換的模組」。</p>
+
+<h3>模組的兩種切換方式</h3>
+<div class="tablewrap"><table>
+<tr><th>種類</th><th>意思</th><th>包含</th></tr>
+<tr><td>程式型</td><td>換方案等於換一支程式，可以有完全不同的流程、畫面與互動</td><td>① 流程方案、② 候選池方案</td></tr>
+<tr><td>資料型</td><td>程式不變，只換一組參數</td><td>③ 顯示方案、④ 動效方案、①-a 提示詞、①-b 供應商</td></tr>
+</table></div>
+
+<h2>二、各模組的介面與資料契約</h2>
+
+<h3><span class="tl ok">已可切換</span>① 流程方案（後端，處理一句話）</h3>
+<div class="flow">
+  <div class="box"><b>輸入 SchemeContext</b>cfg 設定、state 對話狀態、input、model(step)、log、lap、deadlineAt／remainingMs()、runId</div>
+  <div class="arr">→</div>
+  <div class="box"><b>方案 run(sc)</b>自己決定呼叫 AI 幾次、什麼順序、出錯怎麼補救；不能碰資料庫</div>
+  <div class="arr">→</div>
+  <div class="box"><b>輸出 SchemeOutcome</b>action、reply、cards、snapshot、weightTrace、nlu、askTrace、unknown、unclear、followup、trace</div>
+</div>
+<div class="tablewrap"><table>
+<tr><th>項目</th><th>內容</th></tr>
+<tr><td>已登錄方案</td><td><code>baseline</code>：理解 1 次 → 意圖路由 → 需求與權重 → 排序 → 追問 → 回覆 1 次<br><code>single-call</code>：只呼叫 AI 1 次（理解＋回覆草稿一起做），AI 看得到前 5 名，不出追問卡</td></tr>
+<tr><td>介面 TurnScheme</td><td><code>id</code>、<code>name</code>、<code>desc</code>、<code>steps[]</code>、<code>run(sc)</code></td></tr>
+<tr><td>步驟 SchemeStep</td><td><code>id</code>（例如 understand）、<code>role</code>（nlu／reply）、<code>title</code>、<code>desc</code>、<code>vars</code>（提示詞變數）、<code>defaultPrompt</code></td></tr>
+<tr><td>輸入（主機 → 方案）</td><td><code>cfg</code>、<code>state</code>（已還原、已去掉下架機型，方案可直接改）、<code>input</code>、<code>model(step, enabled)</code>（取模型與提示詞，已帶好逾時）、<code>log</code>、<code>lap</code>、<code>deadlineAt</code>、<code>remainingMs()</code>、<code>runId</code>、<code>conversation</code></td></tr>
+<tr><td>輸出（方案 → 主機）</td><td><code>action</code>、<code>reply</code>、<code>replySource</code>（model／template）、<code>cards</code>、<code>snapshot</code>、<code>weightTrace</code>、<code>nlu</code>、<code>askTrace</code>、<code>unknown</code>、<code>unclear</code>、<code>followup</code>、<code>echoUserMessage</code>、<code>trace</code></td></tr>
+<tr><td>硬規定</td><td>方案不能 import 資料庫；所有存檔由主機做；私有狀態放 <code>state.ext[方案id]</code>；剩不到 1000 毫秒就不呼叫 AI，改走程式保底</td></tr>
+<tr><td>設定</td><td><code>settings.turn_scheme = { activeId }</code>，預設 <code>baseline</code>；找不到就退回 baseline</td></tr>
+<tr><td>紀錄（供比較）</td><td><code>runs.scheme_id</code>、各步耗時、<code>runs.trace</code>；<code>llm_calls</code> 記 scheme_id、step、attempt、prompt 原文、output 原文</td></tr>
+<tr><td>程式位置</td><td><code>apps/api/src/scheme.ts</code>、<code>apps/api/src/schemes/</code>、<code>packages/contracts/src/scheme.ts</code></td></tr>
+</table></div>
+
+<div class="grid2">
+<div class="card">
+<h3 style="margin-top:0"><span class="tl ok">已可切換</span>①-a 提示詞版本</h3>
+<ul>
+<li>資料表 <code>prompts</code>：<code>(scheme_id, slot＝步驟id, version)</code> 唯一，加上 <code>body</code>、<code>active</code></li>
+<li>每個方案、每個步驟各自有版本，可以單獨切換</li>
+<li>沒存過就用程式帶的 <code>defaultPrompt</code></li>
+</ul>
+</div>
+<div class="card">
+<h3 style="margin-top:0"><span class="tl ok">已可切換</span>①-b AI 供應商</h3>
+<ul>
+<li>資料表 <code>model_providers</code>：<code>slots: ("nlu"｜"reply")[]</code>、<code>enabled</code></li>
+<li>方案的每個步驟依宣告的 role 取「第一家啟用的」</li>
+<li>切換方式＝啟用／停用供應商</li>
+</ul>
+</div>
+</div>
+
+<h3><span class="tl ok">已可切換</span>② 候選池方案（前端，右欄結果區）</h3>
+<div class="flow">
+  <div class="box"><b>輸入 PoolInput（只讀）</b>mode、flags、params、snapshot、conversation、busy、byId、prefs、dims、decor、photoPool…</div>
+  <div class="arr">→</div>
+  <div class="box"><b>方案 Pane</b>整個右欄畫面；只用 usePool() 取資料，不能直接打 API</div>
+  <div class="arr">→</div>
+  <div class="box"><b>動作 PoolActions＋標籤</b>排除、對比、收藏、改需求、套權重…；貼 data-motion 標籤讓動效找到</div>
+</div>
+<div class="tablewrap"><table>
+<tr><th>項目</th><th>內容</th></tr>
+<tr><td>已登錄方案</td><td><code>classic</code>：原本的分組清單<br><code>gallery</code>：圖片卡＋特色短句、全螢幕對比頁＋自動圖表（雷達圖、長條圖）</td></tr>
+<tr><td>模組 PoolSchemeModule</td><td><code>id</code>、<code>name</code>、<code>desc</code>、<code>Pane</code>、<code>params</code>、可選 <code>Compare</code>（取代對比抽屜內容）、<code>compareFullscreen</code></td></tr>
+<tr><td>輸入（殼 → 方案）</td><td><code>mode</code>（live／replay）、<code>flags</code>、<code>params</code>、<code>snapshot</code>（formal／edge／out／total／funnel）、<code>conversation</code>、<code>busy</code>、<code>lastExcluded</code>、<code>favoriteIds</code>、<code>byId</code>、<code>prefs</code>、<code>dims</code>、<code>decor</code>（只有重播會給）、<code>photoPool</code>；另有 <code>on(flag)</code> 判斷開關</td></tr>
+<tr><td>動作（方案 → 狀態中心）</td><td><code>setExcluded</code>、<code>setCompared</code>、<code>clearCompare</code>、<code>setFavorite</code>、<code>editRequirement</code>、<code>removeRequirement</code>、<code>setFilter</code>、<code>applyWeights</code>、<code>resetWeights</code>、<code>track</code>、<code>listLaptops</code>、<code>getLaptop</code>、<code>getHome</code>（classic 專用）、<code>openDetail</code>、<code>openDrawer</code>、<code>toast</code>、<code>setPrefs</code></td></tr>
+<tr><td>參數 ParamSpec</td><td><code>defaults</code>、<code>normalize</code>（遇到任何輸入都不能丟錯）、<code>errors</code>（中文錯誤）、<code>form</code>（custom-display，或 number／boolean／text／select／multi 欄位自動產生表單）</td></tr>
+<tr><td>動效標籤約定</td><td><code>data-motion="card"</code>＋<code>data-laptop-id</code>、<code>count</code>、<code>body</code>、<code>power</code>、<code>rank</code>；需求標籤 <code>data-req-id</code></td></tr>
+<tr><td>設定</td><td><code>settings.pool_scheme = { activeId, params: { 方案id: 參數 } }</code>（classic 的參數仍存在 <code>settings.display</code>）</td></tr>
+<tr><td>紀錄與重播</td><td>每輪把方案 id（非 classic 時連同參數）寫進 <code>runs.snapshot</code>，後台重播時插回同一個方案</td></tr>
+<tr><td>隔離規則</td><td>方案不能 import <code>shared/api</code>、不能直接呼叫 <code>useApp()</code>、不能載入 gsap；最外層要有 <code>u-results</code>；方案出錯時退回 classic</td></tr>
+<tr><td>程式位置</td><td><code>apps/web/src/user/pools/</code>（contract.ts、index.ts、PoolHost.tsx、README.md）、<code>packages/contracts/src/pool.ts</code></td></tr>
+</table></div>
+
+<div class="grid2">
+<div class="card">
+<h3 style="margin-top:0"><span class="tl ok">已可切換</span>③ 候選機型顯示方案</h3>
+<p><code>DisplayScheme</code>：</p>
+<ul>
+<li><code>browse.grouped</code>、<code>browse.groups[]</code>（熱門／價格區間，各有 <code>preview</code> 台數）</li>
+<li><code>popularIds[]</code> 熱門機型順序</li>
+<li><code>results[]</code>：top／alts／rest／popular／edge／asked／out／excluded，每組有 <code>on</code>、<code>title</code>、<code>count</code></li>
+</ul>
+<p>存在 <code>settings.display = { activeId, schemes }</code>；現在是 classic 的專屬參數。</p>
+</div>
+<div class="card">
+<h3 style="margin-top:0"><span class="tl ok">已可切換</span>④ 動效方案</h3>
+<p><code>MotionScheme</code>：</p>
+<ul>
+<li><code>enabled</code>（關閉時完全不載入動畫程式）、<code>speed</code>、<code>autoOpenWeights</code></li>
+<li><code>steps</code>：10 段動畫，每段有 <code>on</code>／<code>duration</code>／<code>delay</code>／<code>stagger</code>／<code>ease</code></li>
+</ul>
+<p>存在 <code>settings.motion = { activeId, schemes }</code>；動畫事件 <code>MotionEvent</code> 由伺服器算，前端只播放。</p>
+</div>
+</div>
+
+<h3><span class="tl no">還不能切換</span>尚未模組化的部分</h3>
+<div class="tablewrap"><table>
+<tr><th>模組</th><th>現況</th></tr>
+<tr><td>排序／權重引擎</td><td><code>packages/engine</code> 是純函式但只有一套；<code>SchemeOutcome.snapshot</code> 已預留位置，之後可以在引擎前面加「排序方案」介面</td></tr>
+<tr><td>左欄對話區</td><td><code>ChatPane</code> 維持原樣；M 已決定之後照候選池的插槽機制做</td></tr>
+<tr><td>意圖分類</td><td>詞庫與文案（<code>settings.intent</code>）可以在後台改，但分類程式只有一套</td></tr>
+</table></div>
+
+<h2>三、哪些切換比較重要</h2>
+<div class="tablewrap"><table>
+<tr><th>排名</th><th>模組</th><th>重要性</th><th>原因</th></tr>
+<tr><td>1</td><td>① 流程方案（含提示詞）</td><td class="stars">★★★★★</td><td>直接決定「系統聽不聽得懂用戶」，也就是專案的唯一標準。紀錄已經存齊（提示詞、原文、耗時），可以並排比較。</td></tr>
+<tr><td>2</td><td>排序／權重引擎 <span class="tl no">未做</span></td><td class="stars">★★★★★</td><td>產品方向是「依每位用戶的權重排序是核心」，但目前只有一套，是最值得補上的下一個可切換模組。</td></tr>
+<tr><td>3</td><td>② 候選池方案</td><td class="stars">★★★★☆</td><td>用戶實際看到、實際操作的地方，最適合拿去找真實用戶做 A/B 測試。</td></tr>
+<tr><td>4</td><td>③ 顯示方案</td><td class="stars">★★☆☆☆</td><td>只能調分組與台數，已經併進 classic。</td></tr>
+<tr><td>5</td><td>④ 動效方案</td><td class="stars">★★☆☆☆</td><td>影響體驗的質感，不影響推薦對不對。</td></tr>
+<tr><td>6</td><td>①-b AI 供應商</td><td class="stars">★☆☆☆☆</td><td>M 之前已經定為「不重要」。</td></tr>
+</table></div>
+
+<div class="note warn"><b>已知限制：</b>single-call 方案還沒用真實模型驗收過；gallery 方案 371 台裡只有 5 台有真實圖片，其他機型借用這 5 張並標「示意圖」，只能用來測版面與互動。</div>
+
+<footer>資料來源：laptop-assistant-v1.0.25 原始碼與 docs/流程方案計畫、docs/候選池方案計畫。產生日期 2026-11-07。</footer>
+</main>
+</body>
+</html>
