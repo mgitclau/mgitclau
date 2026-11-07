@@ -33,3 +33,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 系統模組兩種看法（v1.0.17） | https://mgitclau.github.io/mgitclau/laptop-modules-two-views.html | 2026-11-06 |
 | AI 筆電選購助手 · 一句話的旅程（v1.0.17，章節故事版） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-v1017.html | 2026-11-06 |
 | AI 筆電選購助手 · 可切換模組總覽（v1.0.25） | https://mgitclau.github.io/mgitclau/laptop-switchable-modules-v1025.html | 2026-11-07 |
+| AI 筆電選購助手 · 一句話的並行地圖（v1.0.25） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-concurrency.html | 2026-11-07 |

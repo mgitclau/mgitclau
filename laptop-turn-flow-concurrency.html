@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一句話的並行地圖</title>
+<style>
+:root{
+  --bg:#f6f5f1;--panel:#fff;--ink:#1d1d1b;--muted:#6b6a64;--line:#dcdad2;--soft:#efede6;--code:#f1f0ec;
+  --seq:#6b6a64;--par:#2f6fd6;--join:#1f8f4e;--fire:#d0721f;--ai:#7a5af0;--db:#2f8f6f;--lock:#c43c3c;
+  --par-bg:#e9f0fc;--fire-bg:#fbf0e4;--ai-bg:#f0ecfd;--join-bg:#e6f4ec;--lock-bg:#fbeaea;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17171a;--panel:#212125;--ink:#ecebe6;--muted:#a19f97;--line:#38383e;--soft:#2a2a2f;--code:#1b1b1f;
+  --seq:#a19f97;--par:#7aa2ff;--join:#4cc982;--fire:#f0a35a;--ai:#a993ff;--db:#4fc79c;--lock:#ff7a7a;
+  --par-bg:#1c2740;--fire-bg:#3a2a18;--ai-bg:#2a2340;--join-bg:#173323;--lock-bg:#3a1e1e;
+}}
+:root[data-theme="dark"]{
+  --bg:#17171a;--panel:#212125;--ink:#ecebe6;--muted:#a19f97;--line:#38383e;--soft:#2a2a2f;--code:#1b1b1f;
+  --seq:#a19f97;--par:#7aa2ff;--join:#4cc982;--fire:#f0a35a;--ai:#a993ff;--db:#4fc79c;--lock:#ff7a7a;
+  --par-bg:#1c2740;--fire-bg:#3a2a18;--ai-bg:#2a2340;--join-bg:#173323;--lock-bg:#3a1e1e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:19px;margin:34px 0 8px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:880px}
+code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:1px 5px;border-radius:4px;word-break:break-all}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;margin:12px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;border:2px solid var(--c);background:var(--b,transparent)}
+.answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:14px 0}
+.ans{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:10px 14px;font-size:14px}
+.ans b{display:block;font-size:14.5px;margin-bottom:2px}
+.ans p{margin:0;color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
+.tab{font:inherit;font-size:14px;padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);font-weight:600}
+.main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.flow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px}
+.zone{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--muted);margin:6px 0 6px;display:flex;align-items:center;gap:8px}
+.zone::after{content:"";flex:1;height:1px;background:var(--line)}
+.node{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--c,var(--seq));border-radius:9px;padding:7px 11px;cursor:pointer;position:relative}
+.node:hover{background:var(--soft)}
+.node[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
+.node .t{font-weight:600;font-size:14px}
+.node .d{font-size:12.5px;color:var(--muted);display:block}
+.node .tag{position:absolute;top:-9px;right:8px;font-size:10.5px;font-weight:700;padding:0 6px;border-radius:4px;background:var(--c);color:var(--panel)}
+.k-seq{--c:var(--seq)}.k-db{--c:var(--db)}.k-ai{--c:var(--ai);background:var(--ai-bg)}.k-lock{--c:var(--lock);background:var(--lock-bg)}
+.k-join{--c:var(--join);background:var(--join-bg)}.k-fire{--c:var(--fire);background:var(--fire-bg);border-style:dashed}
+.arrow{height:22px;display:flex;justify-content:center;position:relative}
+.arrow::before{content:"";width:2px;background:var(--seq);height:100%}
+.arrow::after{content:"";position:absolute;bottom:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--seq)}
+.arrow.lbl span{position:absolute;left:calc(50% + 10px);top:2px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.par{border:2px solid var(--par);background:var(--par-bg);border-radius:11px;padding:0 10px 10px}
+.par .fork{font-size:12px;font-weight:700;color:var(--par);padding:6px 2px 6px;border-bottom:3px double var(--par);margin-bottom:8px}
+.par .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.par .items .node{--c:var(--par);padding:4px 8px}
+.par .items .node .t{font-size:12.5px;font-weight:500}
+.par .joinbar{margin-top:8px;border-top:3px double var(--join);padding-top:6px;font-size:12px;font-weight:700;color:var(--join)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.split .col{display:flex;flex-direction:column}
+.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.82fr);gap:10px;align-items:center}
+.side .fire-link{display:flex;align-items:center;gap:6px}
+.side .fire-link::before{content:"";width:16px;border-top:2px dashed var(--fire);flex:none}
+.branch{font-size:12px;color:var(--muted);margin:4px 0 0 4px}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.detail h3{margin:0 0 4px;font-size:17px}
+.detail .kind{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:5px;background:var(--c);color:var(--panel);margin-bottom:10px}
+.detail dl{display:grid;grid-template-columns:76px 1fr;gap:8px 10px;margin:10px 0 0;font-size:14px}
+.detail dt{color:var(--muted);font-weight:600}
+.detail dd{margin:0}
+.detail .empty{color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-size:12.5px}
+.tblwrap{overflow-x:auto}
+.finds{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.find{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--fire);border-radius:10px;padding:10px 14px;font-size:14px}
+.find b{display:block}
+.find p{margin:4px 0 0;color:var(--muted);font-size:13px}
+footer{color:var(--muted);font-size:12.5px;margin-top:28px}
+[hidden]{display:none!important}
+@media (max-width:900px){
+  .main{grid-template-columns:1fr}
+  .detail{position:static;max-height:none}
+  .split,.side{grid-template-columns:1fr}
+  .side .fire-link::before{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>一句話的並行地圖（v1.0.25）</h1>
+<p class="sub">用戶送出一句話之後，哪些工作同時跑、哪些丟出去不等、誰把結果交給誰、哪裡要等好幾個結果到齊才往下。全部依 <code>laptop-assistant-v1.0.25</code> 原始碼逐行確認。點任何一個方塊，右邊會顯示它在哪個檔案、交出什麼、等誰。</p>
+
+<div class="legend" aria-label="圖例">
+  <span><i class="sw" style="--c:var(--seq)"></i>串聯：做完才做下一步</span>
+  <span><i class="sw" style="--c:var(--par);--b:var(--par-bg)"></i>並行：同時發出</span>
+  <span><i class="sw" style="--c:var(--join);--b:var(--join-bg)"></i>匯合：等全部回來才往下</span>
+  <span><i class="sw" style="--c:var(--fire);--b:var(--fire-bg);border-style:dashed"></i>不等：丟出去就繼續</span>
+  <span><i class="sw" style="--c:var(--ai);--b:var(--ai-bg)"></i>AI 呼叫</span>
+  <span><i class="sw" style="--c:var(--db)"></i>資料庫</span>
+  <span><i class="sw" style="--c:var(--lock);--b:var(--lock-bg)"></i>上鎖</span>
+</div>
+
+<h2>先回答四個問題</h2>
+<div class="answers">
+  <div class="ans" style="--c:var(--par)"><b>哪些同時跑？</b><p>後端一輪裡只有兩處：讀 11 項設定、存快照前讀 2 項設定。兩次 AI 呼叫是一前一後，因為回覆要用排序結果、排序要用理解結果。</p></div>
+  <div class="ans" style="--c:var(--fire)"><b>哪些丟出去不等？</b><p>後端一個都沒有。前端有三件：記錄用戶操作、播動畫、載入動畫程式。收藏也不受「處理中」鎖的限制。</p></div>
+  <div class="ans" style="--c:var(--ink)"><b>結果交給誰？</b><p>理解交給意圖路由，意圖路由交給排序，排序結果交給追問、回覆、存檔、動畫四方。最後全部由主機一次存檔、一次回傳給前端。</p></div>
+  <div class="ans" style="--c:var(--join)"><b>哪裡等好幾個結果？</b><p>讀設定、存快照前讀設定、前端補抓缺的機型，這三處是真正的「同時發、一起收」。存檔交易和動畫換位是「依序到齊後統一處理」。</p></div>
+</div>
+
+<h2>流程圖</h2>
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-tab="whole">① 一句話全程</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="baseline">② 方案內部：基準方案</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="single">③ 方案內部：單次呼叫</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="front">④ 前端的非同步</button>
+</div>
+
+<div class="main">
+<div class="flow">
+
+<!-- ① 全程 -->
+<section data-panel="whole">
+  <div class="zone">前端・瀏覽器</div>
+  <div class="side">
+    <button class="node k-seq" data-id="f_push"><span class="t">用戶那句話先放上聊天畫面</span><span class="d">不等伺服器</span></button>
+    <div class="fire-link"><button class="node k-fire" data-id="f_track"><span class="tag">不等</span><span class="t">同時：用戶操作事件另外送</span><span class="d">失敗只印警告</span></button></div>
+  </div>
+  <div class="arrow"></div>
+  <button class="node k-lock" data-id="f_lock"><span class="tag">上鎖</span><span class="t">前端「處理中」鎖</span><span class="d">同一時間只准一個請求在飛</span></button>
+  <div class="arrow lbl"><span>還沒有對話？</span></div>
+  <button class="node k-db" data-id="f_newconv"><span class="t">先建立對話，等它回來</span><span class="d">已有對話就跳過</span></button>
+  <div class="arrow lbl"><span>一次 HTTP，整輪做完才回</span></div>
+
+  <div class="zone">後端・主機</div>
+  <button class="node k-lock" data-id="b_lock"><span class="tag">上鎖</span><span class="t">同一對話鎖</span><span class="d">同一段對話第二句直接回 409</span></button>
+  <div class="arrow"></div>
+  <div class="par">
+    <div class="fork">讀設定：11 個查詢同時發出</div>
+    <div class="items">
+      <button class="node" data-id="cfg_q"><span class="t">開關</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">門檻值</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">權重規則</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">預設權重</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">首頁設定</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">追問卡</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">軟體目錄</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">動效方案</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">顯示方案</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">意圖詞表</span></button>
+      <button class="node" data-id="cfg_q"><span class="t">生效方案</span></button>
+    </div>
+    <div class="joinbar">匯合：11 個全部回來才組成設定</div>
+  </div>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="b_state"><span class="t">還原對話狀態，記下動畫用的「之前」</span><span class="d">純計算</span></button>
+  <div class="arrow"></div>
+  <button class="node k-ai" data-id="b_scheme"><span class="t">交給方案處理：理解、排序、追問、回覆</span><span class="d">內部全部串聯，細節看分頁 ② ③</span></button>
+  <div class="arrow"></div>
+  <div class="par">
+    <div class="fork">存快照前：2 個查詢同時發出（開關開著才做）</div>
+    <div class="items">
+      <button class="node" data-id="snap_q"><span class="t">顯示方案</span></button>
+      <button class="node" data-id="snap_q"><span class="t">候選池方案</span></button>
+    </div>
+    <div class="joinbar">匯合：兩個都回來才組成每輪快照</div>
+  </div>
+  <div class="arrow"></div>
+  <button class="node k-join" data-id="b_tx"><span class="tag">匯合</span><span class="t">一個資料庫交易，依序寫 7 張表</span><span class="d">方案結果、快照、AI 紀錄、計時全部到齊才寫</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="b_motion"><span class="t">比對前後，算出動畫事件，回傳</span><span class="d">純計算</span></button>
+  <div class="arrow"></div>
+
+  <div class="zone">前端・瀏覽器</div>
+  <button class="node k-seq" data-id="f_apply"><span class="t">回覆與卡片先上畫面</span><span class="d">上一輪動畫還在播就先收尾</span></button>
+  <div class="arrow"></div>
+  <div class="side">
+    <button class="node k-seq" data-id="f_unlock"><span class="t">解除「處理中」鎖</span><span class="d">用戶可以送下一句</span></button>
+    <div class="fire-link"><button class="node k-fire" data-id="f_play"><span class="tag">不等</span><span class="t">動畫自己播</span><span class="d">播到換位那段才換候選池</span></button></div>
+  </div>
+</section>
+
+<!-- ② baseline -->
+<section data-panel="baseline" hidden>
+  <div class="zone">準備第 1 次 AI 呼叫</div>
+  <button class="node k-db" data-id="m_deps"><span class="t">查提示詞 → 查供應商 → 查今日用量</span><span class="d">三個查詢一個接一個</span></button>
+  <div class="arrow lbl"><span>剩餘時間不到 1 秒、沒供應商、超過上限 → 不給模型</span></div>
+  <button class="node k-ai" data-id="bl_und"><span class="tag">AI ①</span><span class="t">理解這句話</span><span class="d">最多等 8 秒，JSON 不合格再試 1 次</span></button>
+  <div class="split">
+    <div class="col"><div class="branch">成功</div><button class="node k-seq" data-id="bl_merge"><span class="t">這時才跑規則抽取，和模型結果合併</span></button></div>
+    <div class="col"><div class="branch">失敗或沒模型</div><button class="node k-seq" data-id="bl_rule"><span class="t">只用規則抽取</span></button></div>
+  </div>
+  <div class="arrow"></div>
+  <div class="zone">純程式，不碰網路</div>
+  <button class="node k-seq" data-id="bl_route"><span class="t">意圖路由 → 套用需求 → 算權重</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="bl_rank"><span class="t">全機型評分與排序</span><span class="d">結果交給追問、回覆、存檔、動畫四方</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="bl_ask"><span class="t">反問判定 → 選追問卡 → 決定動作</span><span class="d">每張卡每個選項模擬一次</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="bl_facts"><span class="t">組卡片、組回覆用的事實</span></button>
+  <div class="arrow"></div>
+  <div class="zone">準備第 2 次 AI 呼叫</div>
+  <button class="node k-db" data-id="m_deps"><span class="t">再查一次提示詞 → 供應商 → 今日用量</span></button>
+  <div class="arrow"></div>
+  <button class="node k-ai" data-id="bl_reply"><span class="tag">AI ②</span><span class="t">寫回覆</span><span class="d">最多等 10 秒，不重試</span></button>
+  <div class="split">
+    <div class="col"><div class="branch">通過數字核對</div><button class="node k-seq" data-id="bl_reply_ok"><span class="t">用模型回覆</span></button></div>
+    <div class="col"><div class="branch">失敗、沒過核對、沒模型</div><button class="node k-seq" data-id="bl_reply_tpl"><span class="t">用固定文案</span></button></div>
+  </div>
+  <div class="arrow"></div>
+  <button class="node k-join" data-id="bl_out"><span class="tag">交回</span><span class="t">整份結果交回主機</span></button>
+</section>
+
+<!-- ③ single-call -->
+<section data-panel="single" hidden>
+  <button class="node k-seq" data-id="sc_top"><span class="t">先用「這句話之前」的狀態排一次，取前 5 名</span><span class="d">開關關掉就不算</span></button>
+  <div class="arrow"></div>
+  <button class="node k-db" data-id="m_deps"><span class="t">查提示詞 → 查供應商 → 查今日用量</span></button>
+  <div class="arrow"></div>
+  <button class="node k-ai" data-id="sc_call"><span class="tag">AI 唯一一次</span><span class="t">理解這句話，同時寫回覆草稿</span><span class="d">不重試，失敗就用規則抽取</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="bl_route"><span class="t">意圖路由 → 套用需求 → 算權重</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="bl_rank"><span class="t">全機型評分與排序（第二次）</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="sc_act"><span class="t">決定動作，不出追問卡</span></button>
+  <div class="arrow"></div>
+  <button class="node k-seq" data-id="sc_draft"><span class="t">核對草稿</span><span class="d">只在推薦輪採用；沒過就用固定文案；不再呼叫 AI</span></button>
+  <div class="arrow"></div>
+  <button class="node k-join" data-id="bl_out"><span class="tag">交回</span><span class="t">整份結果交回主機</span></button>
+</section>
+
+<!-- ④ 前端 -->
+<section data-panel="front" hidden>
+  <div class="zone">動畫：一段接一段</div>
+  <button class="node k-seq" data-id="an_queue"><span class="t">動畫佇列</span><span class="d">需求飛入 → 權重抽屜開 → 權重滑動 → 抽屜關 → 數量 → 卡片變灰 → 換位 → 第一名亮起 → 追問卡</span></button>
+  <div class="arrow"></div>
+  <div class="par">
+    <div class="fork">同一段裡：多張卡片的動作同時播</div>
+    <div class="items">
+      <button class="node" data-id="an_jobs"><span class="t">卡片 1 移位</span></button>
+      <button class="node" data-id="an_jobs"><span class="t">卡片 2 移位</span></button>
+      <button class="node" data-id="an_jobs"><span class="t">分數跳動</span></button>
+      <button class="node" data-id="an_jobs"><span class="t">新卡淡入</span></button>
+    </div>
+    <div class="joinbar">匯合：這段全部播完才進下一段</div>
+  </div>
+  <div class="arrow"></div>
+  <button class="node k-lock" data-id="an_race"><span class="t">每一段都和「跳過」賽跑</span><span class="d">用戶點畫面或送下一句，就立刻收尾</span></button>
+  <div class="arrow"></div>
+  <button class="node k-fire" data-id="an_safety"><span class="tag">計時器</span><span class="t">20 秒保險</span><span class="d">動畫卡住也一定把結果放上畫面</span></button>
+
+  <div class="zone" style="margin-top:18px">其他丟出去不等的事</div>
+  <button class="node k-fire" data-id="f_track"><span class="tag">不等</span><span class="t">記錄用戶操作</span><span class="d">首頁時先暫存，建好對話再依序補送</span></button>
+  <div style="height:10px"></div>
+  <button class="node k-fire" data-id="an_import"><span class="tag">不等</span><span class="t">載入動畫程式</span><span class="d">載入前送出的那一輪不播動畫</span></button>
+  <div style="height:10px"></div>
+  <button class="node k-fire" data-id="f_fav"><span class="tag">不受鎖</span><span class="t">收藏</span><span class="d">可以和一輪同時進行</span></button>
+  <div style="height:10px"></div>
+  <div class="par">
+    <div class="fork">畫面缺機型資料時：每台各自查詢、同時發出</div>
+    <div class="items">
+      <button class="node" data-id="f_slots"><span class="t">機型 A</span></button>
+      <button class="node" data-id="f_slots"><span class="t">機型 B</span></button>
+      <button class="node" data-id="f_slots"><span class="t">機型 C</span></button>
+    </div>
+    <div class="joinbar">匯合：全部回來才一起放上畫面</div>
+  </div>
+</section>
+</div>
+
+<aside class="detail" id="detail" aria-live="polite">
+  <p class="empty">點左邊任何一個方塊，這裡會顯示它的位置、輸入、輸出和要等誰。</p>
+</aside>
+</div>
+
+<h2>每個結果交給誰</h2>
+<div class="tblwrap"><table>
+<thead><tr><th>誰產生</th><th>產生什麼</th><th>交給誰</th></tr></thead>
+<tbody>
+<tr><td>讀設定</td><td>整份設定</td><td>主機、方案、存檔、動畫事件全部共用</td></tr>
+<tr><td>理解（AI 或規則）</td><td>需求變更、意圖、權重建議</td><td>意圖路由與套用需求；也存進每輪紀錄</td></tr>
+<tr><td>套用需求與算權重</td><td>需求檔案、權重</td><td>全機型評分與排序</td></tr>
+<tr><td>評分與排序</td><td>候選池：符合、略超出、不符合</td><td>追問、決定動作、卡片、回覆事實、每輪快照、動畫事件、回傳前端</td></tr>
+<tr><td>寫回覆</td><td>回覆文字與來源</td><td>訊息表、每輪紀錄、回傳前端</td></tr>
+<tr><td>每次 AI 呼叫</td><td>呼叫紀錄</td><td>先放進記憶體，交易裡一次寫入 AI 呼叫紀錄表</td></tr>
+<tr><td>方案</td><td>整份結果</td><td>主機的存檔交易與回傳內容</td></tr>
+<tr><td>動畫的「之前」與「之後」</td><td>動畫事件</td><td>前端動畫規劃，再交給動畫佇列</td></tr>
+<tr><td>伺服器回傳</td><td>回覆、卡片、候選池、動畫事件</td><td>回覆與卡片立刻上畫面；候選池等動畫播到換位那段</td></tr>
+</tbody>
+</table></div>
+
+<h2>讀程式時看到的四件事</h2>
+<div class="finds">
+  <div class="find"><b>設定沒有快取</b><p>每一輪讀設定固定 11 次查詢，每次準備 AI 呼叫再 3 次。AI 開著時，基準方案一輪共 17 次，單次呼叫方案共 14 次。</p></div>
+  <div class="find"><b>時間預算只管「要不要再發」</b><p>剩下不到 1 秒就不發新呼叫，但已經發出去的不會被中斷。最壞還是會等滿 8 秒或 10 秒。</p></div>
+  <div class="find"><b>用戶關掉頁面，伺服器照樣做完</b><p>沒有取消機制。這一輪會照常呼叫 AI、存檔，只是沒人看到。</p></div>
+  <div class="find"><b>可以加速的地方</b><p>11 項設定可以快取；規則抽取可以和 AI 理解同時跑；兩次準備 AI 呼叫的 3 個查詢可以同時發。這些都只是觀察，還沒有改。</p></div>
+</div>
+
+<footer>2026-11-07 ・ 依據 <code>laptop-assistant-v1.0.25</code> 原始碼 ・ 只讀程式碼，專案檔案與資料庫都沒有修改 ・ 前一張圖《一句話的指令全紀錄》照 v1.0.16 畫，主線順序相同，這張補上並行、不等、匯合這一層。</footer>
+</div>
+
+<script>
+const K = {
+  seq:["串聯","var(--seq)"], par:["並行","var(--par)"], join:["匯合","var(--join)"], fire:["不等","var(--fire)"],
+  ai:["AI 呼叫","var(--ai)"], db:["資料庫","var(--db)"], lock:["上鎖","var(--lock)"]
+};
+const D = {
+  f_push:{k:"seq",t:"用戶那句話先放上聊天畫面",f:"apps/web/src/user/useAssistant.ts:166",in:"用戶打的字",out:"聊天畫面多一則用戶訊息",wait:"不等伺服器，按下送出就出現"},
+  f_track:{k:"fire",t:"用戶操作事件另外送",f:"apps/web/src/user/useAssistant.ts:129",in:"點了什麼、搜尋了什麼",out:"後端用戶事件表多一筆",wait:"不等。失敗只在主控台印警告，不影響對話。首頁還沒有對話時先暫存最多 50 筆，建好對話後依序補送，也不等（第 157 行）。"},
+  f_lock:{k:"lock",t:"前端「處理中」鎖",f:"apps/web/src/user/useAssistant.ts:79",in:"送出、放寬、調權重、排除、對比都會經過",out:"同一時間只有一個請求",wait:"上一個請求回來才解鎖。收藏不經過這把鎖。"},
+  f_newconv:{k:"db",t:"先建立對話",f:"apps/web/src/user/useAssistant.ts:146",in:"沒有對話 id",out:"新對話 id，網址換成 /c/對話 id",wait:"等它回來，才送這句話。兩個請求是一前一後，不是同時。"},
+  b_lock:{k:"lock",t:"同一對話鎖",f:"apps/api/src/turn.ts:69",in:"對話 id",out:"放行，或回 409「上一句還在處理中」",wait:"這一輪結束（成功或失敗）才解鎖。不同對話之間不互擋，可以同時跑。"},
+  cfg_q:{k:"par",t:"讀設定：11 個查詢同時發出",f:"apps/api/src/context.ts:108",in:"資料庫",out:"整份設定：開關、門檻、權重規則、追問卡、軟體目錄、動效、顯示、意圖詞表、生效方案…",wait:"匯合：11 個全部回來才往下。整輪裡最大的一處並行。每輪都重查，沒有快取。"},
+  b_state:{k:"seq",t:"還原狀態，記下動畫用的「之前」",f:"apps/api/src/turn.ts:88",in:"資料庫裡的對話狀態、設定",out:"這輪要改的狀態副本；動畫比對用的「之前」快照",wait:"純計算，不碰網路。"},
+  b_scheme:{k:"ai",t:"交給方案處理",f:"apps/api/src/turn.ts:113",in:"工具箱：設定、狀態、這句話、時間預算、取模型的函式",out:"整份結果：動作、回覆、卡片、候選池、理解結果、追蹤資料",wait:"主機等方案整個做完。方案內部全部串聯，見分頁 ② ③。主機不會中途打斷方案，只在回來後記這輪有沒有超時。"},
+  snap_q:{k:"par",t:"存快照前：2 個查詢同時發出",f:"apps/api/src/turn.ts:129",in:"資料庫",out:"每輪快照：當時的顯示方案、候選池方案、開關、門檻",wait:"匯合：兩個都回來才組成快照。開關「每輪快照」關掉就整段跳過。"},
+  b_tx:{k:"join",t:"一個資料庫交易，依序寫 7 張表",f:"apps/api/src/turn.ts:136",in:"方案結果、每輪快照、AI 呼叫紀錄、每步計時",out:"對話、用戶訊息、AI 訊息、AI 呼叫紀錄、待處理詞、每輪紀錄、用戶事件",wait:"這是「依序到齊」的匯合點：前面所有結果都在記憶體裡等著，最後一起寫。交易內一張接一張寫，任何一張失敗就全部回滾。"},
+  b_motion:{k:"seq",t:"算動畫事件，回傳",f:"apps/api/src/turn.ts:160",in:"動畫的「之前」、排序後的「之後」、開關",out:"動畫事件清單＋整份回傳內容",wait:"純計算。算完整個 HTTP 才回到前端。"},
+  f_apply:{k:"seq",t:"回覆與卡片先上畫面",f:"apps/web/src/user/useAssistant.ts:61",in:"伺服器回傳",out:"聊天畫面多一則 AI 回覆與卡片",wait:"先把上一輪還在播的動畫收尾。沒有動畫時，候選池也同時換掉。"},
+  f_unlock:{k:"seq",t:"解除「處理中」鎖",f:"apps/web/src/user/useAssistant.ts:88",in:"",out:"送出按鈕可以再按",wait:"不等動畫播完就解鎖。用戶在動畫中送下一句時，下一句回來會先把舊動畫收尾。"},
+  f_play:{k:"fire",t:"動畫自己播",f:"apps/web/src/user/useAssistant.ts:76",in:"動畫事件、換候選池的函式",out:"畫面上的動畫；播到換位那段才換候選池",wait:"不等。程式呼叫後立刻往下，動畫在背景一段接一段播。細節看分頁 ④。"},
+  m_deps:{k:"db",t:"準備 AI 呼叫：3 個查詢一個接一個",f:"apps/api/src/context.ts:129",in:"方案 id、步驟 id、角色",out:"提示詞、供應商與金鑰、逾時秒數；或「不給模型」",wait:"串聯：查提示詞 → 查供應商 → 查過去 24 小時的呼叫次數。剩餘時間不到 1 秒、沒有供應商、或超過每日上限，就回「不給模型」，方案走保底。主機入口在 apps/api/src/turn.ts:102。"},
+  bl_und:{k:"ai",t:"AI ①：理解這句話",f:"packages/nlu/src/understand.ts:230",in:"用戶這句話、目前需求、軟體目錄、上一題問的欄位",out:"需求變更、權重建議、意圖、聽不懂的詞",wait:"等模型回來。逾時取 8 秒與剩餘預算的較小者。JSON 不合格會帶提醒句再試 1 次；被截斷或逾時就不重試。呼叫處在 apps/api/src/schemes/baseline.ts:30。"},
+  bl_merge:{k:"seq",t:"跑規則抽取並合併",f:"packages/nlu/src/understand.ts:245",in:"模型結果、這句話",out:"合併後的理解結果",wait:"規則抽取不是和模型同時跑，是模型回來之後才算。規則判得準的部分（改口刪除、預算金額）蓋過模型。"},
+  bl_rule:{k:"seq",t:"只用規則抽取",f:"packages/nlu/src/understand.ts:264",in:"這句話",out:"規則抽出的理解結果",wait:"純程式，幾毫秒。"},
+  bl_route:{k:"seq",t:"意圖路由 → 套用需求 → 算權重",f:"apps/api/src/schemes/baseline.ts:35",in:"理解結果、目前狀態",out:"新的需求檔案與權重",wait:"純程式，一步接一步。"},
+  bl_rank:{k:"seq",t:"全機型評分與排序",f:"apps/api/src/schemes/baseline.ts:65",in:"需求檔案、權重、全部在售機型",out:"候選池：符合、略超出、不符合，各自排好",wait:"純 CPU。這份結果之後交給追問、回覆、存檔、動畫四方。"},
+  bl_ask:{k:"seq",t:"反問 → 選追問卡 → 決定動作",f:"apps/api/src/schemes/baseline.ts:96",in:"候選池、追問卡、追問次數",out:"這輪動作（推薦、追問、放寬、對比、引導…）與要出的追問卡",wait:"純 CPU。開了價值模擬時，每張卡每個選項各重算一次候選池，是程式部分最花時間的一步。"},
+  bl_facts:{k:"seq",t:"組卡片、組回覆用的事實",f:"apps/api/src/schemes/baseline.ts:147",in:"動作、候選池前 3 名、理由、權重變化",out:"卡片清單、回覆事實",wait:"純程式。"},
+  bl_reply:{k:"ai",t:"AI ②：寫回覆",f:"packages/nlu/src/reply.ts:267",in:"回覆事實（程式算好的數字與名稱）",out:"回覆文字",wait:"等模型回來。逾時取 10 秒與剩餘預算的較小者。不重試。呼叫處在 apps/api/src/schemes/baseline.ts:169。必須等 AI ① 和排序都做完，所以兩次 AI 無法同時發。"},
+  bl_reply_ok:{k:"seq",t:"用模型回覆",f:"packages/nlu/src/reply.ts:267",in:"模型文字",out:"回覆來源記為模型",wait:"數字核對與弱項核對都通過才用。"},
+  bl_reply_tpl:{k:"seq",t:"用固定文案",f:"packages/nlu/src/reply.ts",in:"回覆事實",out:"回覆來源記為固定文案",wait:"純程式。旁路閒聊、範圍外、沒聽懂的輪次一律走這裡，不呼叫 AI。"},
+  bl_out:{k:"join",t:"整份結果交回主機",f:"apps/api/src/scheme.ts",in:"",out:"動作、回覆、卡片、候選池、理解、權重追蹤、追問追蹤、追蹤資料",wait:"方案不碰資料庫，全部交給主機存。"},
+  sc_top:{k:"seq",t:"先排一次取前 5 名",f:"apps/api/src/schemes/single-call.ts:166",in:"這句話之前的狀態",out:"前 5 名的名稱與價格，放進提示詞",wait:"純 CPU。這一輪會排序兩次：這次給 AI 看，套用這句話之後再排一次給用戶看，兩次前幾名可能不同。"},
+  sc_call:{k:"ai",t:"AI 唯一一次：理解＋草稿",f:"apps/api/src/schemes/single-call.ts:170",in:"這句話、目前需求、軟體目錄、前 5 名",out:"理解結果＋回覆草稿",wait:"等模型回來，逾時 8 秒與剩餘預算取小。不重試，失敗就用規則抽取，也沒有草稿。"},
+  sc_act:{k:"seq",t:"決定動作，不出追問卡",f:"apps/api/src/schemes/single-call.ts",in:"候選池",out:"這輪動作",wait:"純程式。這套方案不追問，追問相關狀態不動。"},
+  sc_draft:{k:"seq",t:"核對草稿",f:"apps/api/src/schemes/single-call.ts:273",in:"草稿、回覆事實",out:"回覆文字",wait:"純程式。只在推薦輪採用；通過核對就當主體，程式再補開頭句、權重變化、弱項、風險；沒過就用固定文案。不再呼叫 AI。"},
+  an_queue:{k:"seq",t:"動畫佇列",f:"apps/web/src/user/motion/director.ts",in:"伺服器算好的動畫事件",out:"一段接一段的動畫",wait:"串聯：前一段播完才播下一段。候選池要等到「換位」那段才換，所以前面幾段播的時候畫面上還是舊結果。"},
+  an_jobs:{k:"par",t:"同一段裡同時播",f:"apps/web/src/user/motion/director.ts:265",in:"這段要動的每張卡片",out:"多個同時進行的動作",wait:"匯合：這段全部動作播完，才進下一段。"},
+  an_race:{k:"lock",t:"每一段都和「跳過」賽跑",f:"apps/web/src/user/motion/queue.ts:29",in:"這段動畫、跳過訊號",out:"先到的那個贏",wait:"用戶點畫面或下一輪回來時，跳過訊號先到，動畫立刻收尾，結果直接上畫面。單一段出錯也不會卡住後面。"},
+  an_safety:{k:"fire",t:"20 秒保險計時器",f:"apps/web/src/user/motion/director.ts:329",in:"",out:"時間到就強制收尾",wait:"獨立計時，不等動畫。動效方案設得越慢，保險時間越長。"},
+  an_import:{k:"fire",t:"載入動畫程式",f:"apps/web/src/user/motion/useMotion.ts:11",in:"動畫總開關",out:"動畫程式就緒",wait:"不等。總開關關掉連動畫函式庫都不下載；載入失敗就不播動畫，功能不受影響。"},
+  f_fav:{k:"fire",t:"收藏",f:"apps/web/src/user/useAssistant.ts:226",in:"機型 id",out:"收藏清單更新",wait:"不經過「處理中」鎖，可以和一輪同時進行。後端也不經過同一對話鎖。"},
+  f_slots:{k:"par",t:"補抓缺的機型資料",f:"apps/web/src/user/context.tsx:110",in:"畫面要顯示但手上沒有資料的機型",out:"這幾台的摘要",wait:"每台各自發一個查詢、同時發出。匯合：全部回來才一起放上畫面，查不到的那台略過。"}
+};
+const detail = document.getElementById("detail");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function show(id, btn){
+  const d = D[id]; if(!d) return;
+  document.querySelectorAll('.node[aria-pressed="true"]').forEach((n) => n.setAttribute("aria-pressed","false"));
+  document.querySelectorAll(`.node[data-id="${id}"]`).forEach((n) => { if(!n.closest("[hidden]")) n.setAttribute("aria-pressed","true"); });
+  const [label, color] = K[d.k];
+  detail.innerHTML = `<h3>${esc(d.t)}</h3><span class="kind" style="--c:${color}">${label}</span>
+    <dl><dt>程式位置</dt><dd><code>${esc(d.f)}</code></dd>
+    ${d.in ? `<dt>拿到什麼</dt><dd>${esc(d.in)}</dd>` : ""}
+    <dt>交出什麼</dt><dd>${esc(d.out)}</dd>
+    <dt>等誰</dt><dd>${esc(d.wait)}</dd></dl>`;
+  if (window.matchMedia("(max-width:900px)").matches && btn) detail.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+document.querySelectorAll(".node").forEach((n) => { n.setAttribute("aria-pressed","false"); n.addEventListener("click", () => show(n.dataset.id, n)); });
+document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+  document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t.dataset.tab; });
+  try { localStorage.setItem("concurrency-tab", t.dataset.tab); } catch (e) {}
+}));
+try { const saved = localStorage.getItem("concurrency-tab"); const t = saved && document.querySelector(`.tab[data-tab="${saved}"]`); if (t) t.click(); } catch (e) {}
+show("b_scheme");
+</script>
+</body>
+</html>
