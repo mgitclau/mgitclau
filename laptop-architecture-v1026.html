@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系統架構三層圖</title>
+<meta name="description" content="AI 筆電選購助手 v1.0.26 的系統架構：全景、四大塊放大、三個關鍵處放到最大。">
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#ffffff; --ink:#1d1f23; --muted:#5d6370; --line:#d9d6cc; --soft:#efede6;
+  --web:#2f6fdb; --web-bg:#e8f0fd;
+  --admin:#7a4cc7; --admin-bg:#f1eafb;
+  --api:#1f8a5b; --api-bg:#e5f5ec;
+  --db:#c26a12; --db-bg:#fcf0e2;
+  --ai:#c23d74; --ai-bg:#fbe8f0;
+  --flag:#5d6370; --flag-bg:#eceae3;
+  --accent:#1d1f23;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171b; --panel:#1e2127; --ink:#e9e8e4; --muted:#a1a6b0; --line:#343843; --soft:#252931;
+    --web:#7fa9f2; --web-bg:#1d2a40;
+    --admin:#b596ea; --admin-bg:#2b2240;
+    --api:#5fc796; --api-bg:#1a3328;
+    --db:#eba25a; --db-bg:#3a2a18;
+    --ai:#ec86b0; --ai-bg:#3b1f2c;
+    --flag:#a1a6b0; --flag-bg:#2a2d35;
+    --accent:#e9e8e4;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --panel:#1e2127; --ink:#e9e8e4; --muted:#a1a6b0; --line:#343843; --soft:#252931;
+  --web:#7fa9f2; --web-bg:#1d2a40;
+  --admin:#b596ea; --admin-bg:#2b2240;
+  --api:#5fc796; --api-bg:#1a3328;
+  --db:#eba25a; --db-bg:#3a2a18;
+  --ai:#ec86b0; --ai-bg:#3b1f2c;
+  --flag:#a1a6b0; --flag-bg:#2a2d35;
+  --accent:#e9e8e4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+a{color:inherit}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);padding:1px 5px;border-radius:4px;word-break:break-all}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header.top{padding:40px 0 20px}
+header.top h1{font-size:30px;line-height:1.3;margin:0 0 8px}
+header.top .sub{color:var(--muted);margin:0}
+nav.layers{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.layers .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:10px;padding-bottom:10px}
+nav.layers a{flex:none;text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:14px;white-space:nowrap}
+nav.layers a b{font-weight:700;margin-right:4px}
+section.layer{padding:36px 0 12px}
+.layer-tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin-bottom:6px}
+h2{font-size:26px;line-height:1.35;margin:0 0 6px}
+h3{font-size:20px;line-height:1.4;margin:0 0 4px}
+h4{font-size:16px;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 20px;max-width:760px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:0 0 20px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 0}
+.how div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.how b{display:block;font-size:15px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted);margin:14px 0 0}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--c)}
+
+/* 色塊 */
+.box{border:2px solid var(--c);background:var(--cb);border-radius:12px;padding:12px 14px;position:relative}
+.box .name{font-weight:700;color:var(--c);font-size:16px}
+.box .what{font-size:14px;margin:2px 0 0}
+.box .where{font-size:12px;color:var(--muted);margin-top:6px}
+.box .go{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:var(--c);text-decoration:none}
+.box .go:hover{text-decoration:underline}
+.c-web{--c:var(--web);--cb:var(--web-bg)}
+.c-admin{--c:var(--admin);--cb:var(--admin-bg)}
+.c-api{--c:var(--api);--cb:var(--api-bg)}
+.c-db{--c:var(--db);--cb:var(--db-bg)}
+.c-ai{--c:var(--ai);--cb:var(--ai-bg)}
+.c-flag{--c:var(--flag);--cb:var(--flag-bg)}
+.c-person{--c:var(--ink);--cb:var(--panel)}
+a.box{display:block;text-decoration:none;color:inherit;transition:transform .12s}
+a.box:hover{transform:translateY(-2px)}
+
+/* 第 1 層全景 */
+.l1{display:grid;grid-template-columns:150px 36px 1fr 36px 1.2fr 36px 1fr;grid-template-rows:auto 24px auto;gap:0;align-items:center}
+.l1 .arrow{text-align:center;color:var(--muted);font-size:22px;font-weight:700}
+.l1 .r1{grid-row:1}.l1 .r2{grid-row:3}
+.l1 .span{grid-row:1/4}
+.l1 .stack{display:flex;flex-direction:column;gap:14px;grid-row:1/4}
+.flagband{margin-top:16px;border:2px dashed var(--flag);background:var(--flag-bg);border-radius:12px;padding:10px 14px;font-size:14px}
+.flagband b{color:var(--flag)}
+.principle{border-left:4px solid var(--accent);padding:6px 0 6px 14px;margin:18px 0 0;font-size:15px}
+.runs-on{font-size:14px;color:var(--muted);margin-top:14px}
+
+/* 第 2 層 */
+.zoom-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.dot{width:14px;height:14px;border-radius:4px;background:var(--c);flex:none}
+.flow{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.flow .down{text-align:center;color:var(--muted);font-size:13px;padding:4px 0}
+.flow .down::before{content:"▼ ";font-size:11px}
+.row{display:grid;gap:12px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:repeat(3,1fr)}
+.row.c4{grid-template-columns:repeat(4,1fr)}
+.row.c5{grid-template-columns:repeat(5,1fr)}
+.mini{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
+.mini li{padding:3px 0;border-top:1px dashed color-mix(in srgb,var(--c) 30%,transparent)}
+.mini li:first-child{border-top:0}
+.mini b{color:var(--ink)}
+.chain{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chain span{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.chain i{font-style:normal;color:var(--muted);font-size:12px;align-self:center}
+.note{font-size:14px;background:var(--soft);border-radius:10px;padding:10px 14px;margin-top:14px}
+.note b{color:var(--ink)}
+.side-by{display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:start}
+.shell{border:2px dashed var(--web);border-radius:14px;padding:12px}
+.shell > .label{font-size:13px;font-weight:700;color:var(--web);margin-bottom:8px}
+
+/* 第 3 層：旅程 */
+.journey{counter-reset:st;list-style:none;margin:0;padding:0}
+.journey > li{position:relative;padding:0 0 18px 52px}
+.journey > li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;background:var(--c,var(--api));color:var(--bg);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+.journey > li::after{content:"";position:absolute;left:16px;top:36px;bottom:2px;width:2px;background:var(--line)}
+.journey > li:last-child::after{display:none}
+.journey .t{font-weight:700;font-size:16px}
+.journey .t small{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
+.journey p{margin:2px 0 0;font-size:14px}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px;border:1px solid var(--c);color:var(--c);background:var(--cb)}
+.branch{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.branch div{font-size:13px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel)}
+.branch b{display:block;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:700}
+.tbl{overflow-x:auto}
+.weights{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:10px 0 4px;border:1px solid var(--line)}
+.weights div{display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden}
+.wlabels{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.three div{border-radius:10px;padding:10px 12px;font-size:14px;border:2px solid var(--c);background:var(--cb)}
+.three b{display:block;color:var(--c)}
+.g-ok{--c:var(--api);--cb:var(--api-bg)}
+.g-edge{--c:var(--db);--cb:var(--db-bg)}
+.g-out{--c:var(--flag);--cb:var(--flag-bg)}
+.sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px;margin-top:8px}
+.sources div{font-size:13px;background:var(--soft);border-radius:8px;padding:6px 10px}
+.sources b{font-size:13px}
+details{margin-top:10px;font-size:14px}
+summary{cursor:pointer;color:var(--muted);font-weight:700}
+.toplink{display:inline-block;margin-top:8px;font-size:13px;color:var(--muted)}
+footer{padding:30px 0 50px;color:var(--muted);font-size:13px}
+.theme-btn{position:fixed;right:16px;bottom:16px;z-index:20;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer}
+
+@media (max-width:860px){
+  .l1{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+  .l1 .arrow{transform:rotate(90deg);height:24px;line-height:24px}
+  .l1 .stack{gap:8px}
+  .how{grid-template-columns:1fr}
+  .row.c3,.row.c4,.row.c5,.row.c2,.side-by,.three{grid-template-columns:1fr}
+  h2{font-size:22px}
+  header.top h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<header class="top wrap" id="top">
+  <h1>AI 筆電選購助手 · 系統架構三層圖</h1>
+  <p class="sub">依據版本 <b>v1.0.26</b>（2026-11-08），照程式碼整理。像看地圖一樣：先看全景，再點進去放大。</p>
+  <div class="how">
+    <div><b>第 1 層 · 全景</b>整個系統只有 6 塊：誰在用、用哪個畫面、背後誰在算、資料放哪。</div>
+    <div><b>第 2 層 · 放大四大塊</b>伺服器、前台、後台、資料庫各自裡面有什麼零件。</div>
+    <div><b>第 3 層 · 三個關鍵處</b>一句話怎麼被處理、推薦怎麼算、「方案」怎麼插拔。</div>
+  </div>
+  <div class="legend">
+    <span style="--c:var(--web)">前台（使用者看到的網頁）</span>
+    <span style="--c:var(--admin)">後台（M 的管理網頁）</span>
+    <span style="--c:var(--api)">伺服器（做決定的地方）</span>
+    <span style="--c:var(--db)">資料庫（存東西的地方）</span>
+    <span style="--c:var(--ai)">AI 模型（外部服務）</span>
+    <span style="--c:var(--flag)">功能開關</span>
+  </div>
+</header>
+
+<nav class="layers" aria-label="層級">
+  <div class="wrap">
+    <a href="#l1"><b>1</b>全景</a>
+    <a href="#l2-api"><b>2</b>伺服器</a>
+    <a href="#l2-web"><b>2</b>前台</a>
+    <a href="#l2-admin"><b>2</b>後台</a>
+    <a href="#l2-db"><b>2</b>資料庫與 AI</a>
+    <a href="#l3-turn"><b>3</b>一句話的旅程</a>
+    <a href="#l3-rank"><b>3</b>推薦怎麼算</a>
+    <a href="#l3-slots"><b>3</b>兩種方案插槽</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ═════════════ 第 1 層 ═════════════ -->
+<section class="layer" id="l1">
+  <span class="layer-tag">第 1 層 · 全景</span>
+  <h2>整個系統只有 6 塊</h2>
+  <p class="lead">使用者和 M 各自用一個網頁；兩個網頁都只跟「伺服器」說話；伺服器負責做所有決定，需要時去資料庫拿資料、請 AI 幫忙聽懂和說話。點任一塊可以放大看。</p>
+
+  <div class="card">
+    <div class="l1">
+      <div class="box c-person r1" style="grid-column:1"><div class="name">使用者</div><div class="what">想買筆電的人，可以不登入</div></div>
+      <div class="arrow r1" style="grid-column:2">→</div>
+      <a class="box c-web r1" style="grid-column:3" href="#l2-web"><div class="name">前台網頁</div><div class="what">左邊聊天、右邊看候選機型</div><div class="where"><code>apps/web/src/user</code></div><span class="go">放大看 ↓</span></a>
+
+      <div class="box c-person r2" style="grid-column:1"><div class="name">M（管理者）</div><div class="what">看對話、調規則、切方案</div></div>
+      <div class="arrow r2" style="grid-column:2">→</div>
+      <a class="box c-admin r2" style="grid-column:3" href="#l2-admin"><div class="name">後台網頁</div><div class="what">22 頁，分 5 大塊</div><div class="where"><code>apps/web/src/admin</code></div><span class="go">放大看 ↓</span></a>
+
+      <div class="arrow span" style="grid-column:4">→</div>
+      <a class="box c-api span" style="grid-column:5" href="#l2-api"><div class="name">伺服器 API</div><div class="what">收到每一句話、每一個按鈕，算出推薦、組好回覆、存紀錄。<b>所有決定都在這裡做。</b></div><div class="where"><code>apps/api</code> ＋ <code>packages/*</code></div><span class="go">放大看 ↓</span></a>
+      <div class="arrow span" style="grid-column:6">⇄</div>
+      <div class="stack" style="grid-column:7">
+        <a class="box c-db" href="#l2-db"><div class="name">資料庫</div><div class="what">371 台機型、對話、每輪紀錄、設定</div><div class="where">PostgreSQL · <code>packages/db</code></div><span class="go">放大看 ↓</span></a>
+        <a class="box c-ai" href="#l2-ai"><div class="name">AI 模型</div><div class="what">只做兩件事：聽懂這句話、把事實寫成人話</div><div class="where">例如 DeepSeek（後台可換）</div><span class="go">放大看 ↓</span></a>
+      </div>
+    </div>
+    <div class="flagband"><b>貫穿全部：179 個功能開關</b>　每個規則、卡片、顯示細節都能在後台開關，方便 M 找真實用戶比較。清單在 <code>packages/contracts/src/flags.ts</code>。</div>
+    <p class="principle"><b>一句話記住整個系統：</b>程式決定推薦，AI 只負責聽懂與表達。AI 掛掉時，系統會改用規則聽懂、用模板說話，照樣能推薦。</p>
+    <p class="runs-on">目前都在你的 Mac 上跑：雙擊 <code>啟動系統.command</code> → 前台 <code>localhost:5173</code>、後台 <code>localhost:5173/admin</code>、伺服器 <code>localhost:3100</code>、資料庫 <code>5432</code> 埠。</p>
+  </div>
+</section>
+
+<!-- ═════════════ 第 2 層：伺服器 ═════════════ -->
+<section class="layer c-api" id="l2-api">
+  <span class="layer-tag">第 2 層 · 放大伺服器</span>
+  <div class="zoom-head"><span class="dot"></span><h2>伺服器裡面：一個主機、可換的方案、兩個工具箱</h2></div>
+  <p class="lead">伺服器像一間廚房：<b>主機</b>是外場經理（接單、上菜、記帳，固定不變）；<b>流程方案</b>是可以換人的主廚（決定這道菜怎麼做）；<b>nlu</b> 和 <b>engine</b> 是主廚用的兩套工具。</p>
+
+  <div class="card">
+    <div class="flow">
+      <div class="box c-api">
+        <div class="name">① 入口（端點）</div>
+        <div class="what">前台和後台送來的每個請求，先到這裡檢查身分、限流、格式。</div>
+        <div class="row c2" style="margin-top:8px">
+          <div style="font-size:13px"><b>使用者端點 20 個</b>：開頁設定、對話、送一句話、改需求、放寬、調權重、收藏、回饋、操作事件… <br><code>routes-user.ts</code></div>
+          <div style="font-size:13px"><b>後台端點 45 個</b>：機型、軟體、卡片、開關、提示詞、方案切換、對話紀錄、重播… <br><code>routes-admin.ts</code></div>
+        </div>
+      </div>
+      <div class="down">需要「處理一輪」的請求（送一句話、調權重、排除機型…）交給主機</div>
+      <div class="box c-api">
+        <div class="name">② 主機 runTurn（固定不變，所有方案共用）</div>
+        <div class="what">負責雜事，不負責「怎麼理解、怎麼推薦」。</div>
+        <div class="chain"><span>上鎖：同一段對話一次只跑一輪</span><i>→</i><span>讀設定與開關</span><i>→</i><span>還原對話狀態</span><i>→</i><span>選出現在生效的方案</span><i>→</i><span>把工具箱交給方案</span><i>→</i><span>方案做完後一次存檔</span><i>→</i><span>算動效事件</span><i>→</i><span>回傳給前台</span></div>
+        <div class="where"><code>apps/api/src/turn.ts</code>　共用小工具在 <code>turn-common.ts</code></div>
+      </div>
+      <div class="down">主機每輪只跑「現在生效」的那一套方案</div>
+      <div class="box c-api">
+        <div class="name">③ 流程方案登錄表（可在後台切換）</div>
+        <div class="row c2" style="margin-top:8px">
+          <div class="box c-api" style="background:var(--panel)"><div class="name">baseline 基準方案（預設）</div><div class="what">AI 呼叫 2 次：先「理解」，最後「回覆」。中間的意圖、權重、排序、追問全由程式做。</div><div class="where"><code>schemes/baseline.ts</code></div></div>
+          <div class="box c-api" style="background:var(--panel)"><div class="name">single-call 一次呼叫</div><div class="what">AI 只呼叫 1 次：理解和回覆草稿一起做；不出追問卡；草稿要先過程式核對。</div><div class="where"><code>schemes/single-call.ts</code></div></div>
+        </div>
+        <div class="where" style="margin-top:8px">登錄表 <code>schemes/index.ts</code>：找不到方案時自動退回 baseline，不會整輪失敗。<a href="#l3-slots">插槽細節看第 3 層 →</a></div>
+      </div>
+      <div class="down">方案用這兩套工具箱做事</div>
+      <div class="row c2">
+        <div class="box c-ai">
+          <div class="name">④ nlu：聽懂與說話</div>
+          <div class="what">唯一會碰 AI 的地方。AI 失敗一定有規則保底。</div>
+          <ul class="mini">
+            <li><b>意圖分類</b>：這句是需求、對話控制（上一步、重來）、閒聊還是範圍外？用後台詞表比對 <code>intent.ts</code></li>
+            <li><b>規則抽取</b>：不靠 AI 也能抓出預算、尺寸、品牌、軟體 <code>rule.ts</code></li>
+            <li><b>AI 理解</b>：請 AI 把句子變成需求清單，最多試 2 次，失敗退回規則 <code>understand.ts</code></li>
+            <li><b>寫回覆＋核對</b>：AI 只能用程式給的事實寫；出現沒給的數字、規格、機型就退回模板 <code>reply.ts</code></li>
+            <li><b>連接供應商</b>：送出提示詞、計時、逾時、去金鑰 <code>provider.ts</code></li>
+          </ul>
+          <div class="where"><code>packages/nlu</code></div>
+        </div>
+        <div class="box c-api">
+          <div class="name">⑤ engine：篩選與排序（純計算）</div>
+          <div class="what">同樣的輸入永遠算出同樣的結果，不碰 AI、不碰資料庫。</div>
+          <ul class="mini">
+            <li><b>機型分數</b>：原始資料換算成 7 個維度的分數 <code>normalize.ts</code> <code>scoring.ts</code></li>
+            <li><b>需求檔案</b>：哪些算硬條件、套用增刪改 <code>profile.ts</code></li>
+            <li><b>權重</b>：各來源的加減分加總後縮放到 100 <code>weights.ts</code></li>
+            <li><b>篩選＋排序</b>：分成三組再排名 <code>filter.ts</code> <code>rank.ts</code></li>
+            <li><b>這輪做什麼</b>：追問、推薦、對比還是放寬 <code>decide.ts</code></li>
+            <li><b>選追問卡</b>：模擬每個答案會讓結果變多少 <code>select.ts</code> <code>value.ts</code></li>
+            <li><b>推薦理由</b>：優勢、要接受的、和第 2 名比 <code>reason.ts</code></li>
+            <li><b>快照與動效</b>：存下這輪結果、算畫面怎麼動 <code>snapshot.ts</code> <code>motion.ts</code></li>
+          </ul>
+          <div class="where"><code>packages/engine</code>　<a href="#l3-rank">怎麼算看第 3 層 →</a></div>
+        </div>
+      </div>
+      <div class="down">大家都依照同一本規格書</div>
+      <div class="row c2">
+        <div class="box c-flag"><div class="name">⑥ contracts：共同規格書</div><div class="what">前台、後台、伺服器共用的「資料長什麼樣子」、179 個開關、預設值。改一處，三邊一起檢查。</div><div class="where"><code>packages/contracts</code></div></div>
+        <div class="box c-api" style="background:var(--panel)"><div class="name">⑦ 批次重跑（不經網頁）</div><div class="what">同一批句子，用不同方案各跑一遍，輸出對照表給 M 比較。</div><div class="where"><code>apps/api/src/eval/rerun.ts</code></div></div>
+      </div>
+    </div>
+    <div class="note"><b>兩條硬規定：</b>(1) 方案不准自己存資料庫，全部交給主機存，所以每套方案的紀錄格式都一樣；(2) 所有方案都交回同一種形狀的結果，前台和後台不用為新方案改程式。</div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 2 層：前台 ═════════════ -->
+<section class="layer c-web" id="l2-web">
+  <span class="layer-tag">第 2 層 · 放大前台</span>
+  <div class="zoom-head"><span class="dot"></span><h2>前台裡面：一個殼、一個狀態中心、左右兩欄</h2></div>
+  <p class="lead">打開網頁時，殼先跟伺服器拿一次「開頁設定」（開關、首頁內容、生效的候選池方案）。之後所有資料都放在<b>狀態中心</b>，畫面只負責讀它、畫出來。</p>
+
+  <div class="card">
+    <div class="shell">
+      <div class="label">殼 UserApp　<code>UserApp.tsx</code>（開頁時呼叫 <code>/api/bootstrap</code>）</div>
+      <div class="box c-web" style="margin-bottom:12px">
+        <div class="name">狀態中心 useAssistant</div>
+        <div class="what">對話、訊息、候選快照、需求、權重、收藏、忙碌狀態都在這裡；所有會改資料的動作（送一句話、排除、調權重）也只從這裡打 API。</div>
+        <div class="where"><code>useAssistant.ts</code></div>
+      </div>
+      <div class="row c2">
+        <div class="box c-web" style="background:var(--panel)">
+          <div class="name">左欄：對話區 ChatPane</div>
+          <div class="what">訊息氣泡＋各種卡片：聽到的需求、軟體提醒、台數變化、追問卡、推薦卡、反問卡、對比卡、放寬建議。</div>
+          <div class="where"><code>ChatPane.tsx</code> <code>ChatCards.tsx</code></div>
+        </div>
+        <div class="box c-web" style="background:var(--panel)">
+          <div class="name">右欄：候選池插座 PoolHost</div>
+          <div class="what">依後台設定換整個右欄的畫法：</div>
+          <ul class="mini">
+            <li><b>classic 經典</b>：分組清單、分數條、「我怎麼判斷」</li>
+            <li><b>gallery 圖片</b>：圖片卡、全螢幕對比頁＋自動圖表</li>
+          </ul>
+          <div class="where"><code>pools/</code>　<a href="#l3-slots">插槽細節 →</a></div>
+        </div>
+      </div>
+      <div class="row c3" style="margin-top:12px">
+        <div class="box c-web" style="background:var(--panel)"><div class="name">側欄與抽屜</div><div class="what">對話列表；收藏、對比、權重、篩選、設定、登入、機型詳情 7 種抽屜</div><div class="where"><code>Sidebar.tsx</code> <code>Drawers.tsx</code></div></div>
+        <div class="box c-web" style="background:var(--panel)"><div class="name">共用元件</div><div class="what">機型卡、對比表、權重面板、需求標籤；兩欄都能借用</div><div class="where"><code>LaptopCard.tsx</code> 等</div></div>
+        <div class="box c-web" style="background:var(--panel)"><div class="name">動效層（GSAP）</div><div class="what">伺服器算好「哪些東西變了」，這裡照著播：卡片換位、分數跳動、需求飛到右欄</div><div class="where"><code>motion/</code></div></div>
+      </div>
+    </div>
+    <div class="note"><b>重播用的也是同一套畫面：</b>後台看對話紀錄時，把「當時的資料」塞進同一個殼（換駕駛），畫出來就是用戶當時看到的樣子，連當時用的候選池方案都一樣。<code>replay.tsx</code></div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 2 層：後台 ═════════════ -->
+<section class="layer c-admin" id="l2-admin">
+  <span class="layer-tag">第 2 層 · 放大後台</span>
+  <div class="zoom-head"><span class="dot"></span><h2>後台裡面：照你定的 5 大塊排列，共 22 頁</h2></div>
+  <p class="lead">順序就是工作順序：每天從看對話開始 → 調最核心的權重 → 改用戶看到的畫面 → 照一句話的處理順序調流程 → 最後是基礎資料。每頁底部都有「本頁相關開關」。</p>
+
+  <div class="card">
+    <div class="row c5">
+      <div class="box c-admin"><div class="name">1 對話檢視</div><div class="what">每天的起點</div>
+        <ul class="mini"><li><b>總覽</b>：數字格可點進明細</li><li><b>對話紀錄</b>：逐輪看、重播當時畫面</li><li><b>待處理</b>：聽不懂的句子、沒資料的詞</li></ul></div>
+      <div class="box c-admin"><div class="name">2 權重設計</div><div class="what">系統最核心</div>
+        <ul class="mini"><li><b>權重總覽</b>：權重怎麼算出來的 5 步、9 種來源</li><li><b>權重規則</b>：各需求加減多少分</li></ul></div>
+      <div class="box c-admin"><div class="name">3 用戶介面</div><div class="what">用戶看到什麼</div>
+        <ul class="mini"><li><b>首頁內容</b></li><li><b>卡片</b>（追問卡）</li><li><b>候選池方案</b>：classic／gallery 切換</li><li><b>候選機型顯示</b>（舊頁，預設隱藏）</li><li><b>動效</b></li></ul></div>
+      <div class="box c-admin"><div class="name">4 回覆流程</div><div class="what">照一句話的處理順序</div>
+        <ul class="mini"><li><b>流程方案</b>：baseline／single-call</li><li><b>提示詞</b>：依方案分組、有版本</li><li><b>意圖詞表</b></li><li><b>旁路文案</b>：閒聊、範圍外怎麼回</li><li><b>篩選規則</b></li><li><b>推薦理由</b></li><li><b>追問策略</b></li></ul></div>
+      <div class="box c-admin"><div class="name">5 系統基礎</div><div class="what">底層資料與設定</div>
+        <ul class="mini"><li><b>機型資料庫</b></li><li><b>軟體庫</b></li><li><b>AI 模型</b>：供應商、金鑰、測試</li><li><b>功能開關</b>：179 個總表</li><li><b>稽核紀錄</b>：誰改了什麼</li></ul></div>
+    </div>
+    <div class="note"><b>後台怎麼影響前台？</b>後台改的東西大多存進資料庫的 <code>settings</code> 表；伺服器每一輪開始都重新讀一次，所以改完下一句話就生效，不用重新啟動。側欄定義在 <code>apps/web/src/admin/nav.ts</code>。</div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 2 層：資料庫與 AI ═════════════ -->
+<section class="layer c-db" id="l2-db">
+  <span class="layer-tag">第 2 層 · 放大資料庫與 AI</span>
+  <div class="zoom-head"><span class="dot"></span><h2>資料庫裡面：17 張表，分 4 群</h2></div>
+  <p class="lead">把資料庫想成 4 個櫃子。只有伺服器能打開這些櫃子；前台和後台都要透過伺服器拿。</p>
+
+  <div class="card">
+    <div class="row c4">
+      <div class="box c-db"><div class="name">機型與知識</div><ul class="mini">
+        <li><b>laptops</b>：371 台機型，每台完整保存 581 欄原始資料，分數由引擎即時重算</li>
+        <li><b>software</b>：軟體庫（Photoshop 等需要什麼規格）</li>
+        <li><b>prompt_cards</b>：追問卡</li></ul></div>
+      <div class="box c-db"><div class="name">使用者</div><ul class="mini">
+        <li><b>users</b>：帳號（訪客不用註冊）</li>
+        <li><b>sessions</b>：登入狀態（只存雜湊）</li>
+        <li><b>favorites</b>：收藏</li>
+        <li><b>feedback</b>：每輪有沒有幫助</li></ul></div>
+      <div class="box c-db"><div class="name">對話與每輪紀錄</div><ul class="mini">
+        <li><b>conversations</b>：對話＋目前狀態（需求、權重…）</li>
+        <li><b>messages</b>：訊息與卡片</li>
+        <li><b>runs</b>：每一輪的完整紀錄：用了哪個方案、各步耗時、候選快照</li>
+        <li><b>llm_calls</b>：每次 AI 呼叫的提示詞與原文</li>
+        <li><b>user_events</b>：用戶點了什麼</li>
+        <li><b>pending_items</b>：待處理</li></ul></div>
+      <div class="box c-db"><div class="name">設定</div><ul class="mini">
+        <li><b>settings</b>：開關、門檻值、權重規則、首頁、生效的流程方案與候選池方案…</li>
+        <li><b>prompts</b>：提示詞（依方案＋步驟分版本）</li>
+        <li><b>model_providers</b>：AI 供應商（金鑰加密存）</li>
+        <li><b>audit_log</b>：後台修改紀錄</li></ul></div>
+    </div>
+    <div class="where" style="margin-top:10px">定義在 <code>packages/db/src/schema.ts</code>；機型資料從 <code>data/laptops.csv</code> 匯入。</div>
+  </div>
+
+  <div class="card c-ai" id="l2-ai">
+    <div class="zoom-head"><span class="dot"></span><h3>AI 模型：只有兩種角色</h3></div>
+    <div class="row c2" style="margin-top:8px">
+      <div class="box c-ai"><div class="name">理解角色（nlu）</div><div class="what">把用戶的話變成需求清單、意圖、權重建議。輸出必須是 JSON，不合格就重試或改用規則。</div></div>
+      <div class="box c-ai"><div class="name">回覆角色（reply）</div><div class="what">拿程式算好的事實寫成一段話。數字、規格、機型名都會被核對，亂寫就換成模板句。</div></div>
+    </div>
+    <div class="note">後台「AI 模型」頁可以設定多家供應商，每個角色取第一家啟用的。每一輪有<b>整輪時間預算</b>：時間快用完就不再呼叫 AI，直接走程式保底，用戶不會一直等。</div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 3 層：一句話的旅程 ═════════════ -->
+<section class="layer c-api" id="l3-turn">
+  <span class="layer-tag">第 3 層 · 放到最大</span>
+  <h2>一句話在伺服器裡的旅程（基準方案）</h2>
+  <p class="lead">例子：用戶打「我想要輕一點、預算三萬，主要修圖」。下面每一步的名字，就是後台「對話紀錄」每輪耗時裡看到的名字。</p>
+
+  <div class="card">
+    <ol class="journey">
+      <li><div class="t">讀設定<span class="pill c-api">主機</span></div><p>上鎖這段對話、讀開關與門檻值、還原上一輪的狀態、選出現在生效的方案、開始計算整輪時間預算。</p></li>
+      <li style="--c:var(--ai)"><div class="t">理解<span class="pill c-ai">AI 第 1 次</span><small>understand</small></div><p>先用規則抓一遍，再請 AI 理解；兩邊合併成需求：重量（偏好）、預算 NT$30,000（硬條件）、用途修圖、軟體 Photoshop。AI 失敗就只用規則的結果。</p></li>
+      <li><div class="t">意圖路由<span class="pill c-api">程式</span></div><p>判斷這句話屬於哪一類，決定要不要走推薦主線：</p>
+        <div class="branch"><div><b>需求句</b>照常往下走</div><div><b>對話控制</b>上一步、重來、不要這台</div><div><b>閒聊／範圍外</b>只回一句，拉回主題</div><div><b>聽不懂</b>記到「待處理」</div></div></li>
+      <li><div class="t">需求與權重<span class="pill c-api">程式</span></div><p>把新需求套進需求檔案；依各種來源算出這位用戶的 7 維權重（例如修圖會讓效能、螢幕加分）。</p></li>
+      <li><div class="t">排序<span class="pill c-api">程式</span></div><p>371 台全部過一次：先分組、再評分排名、再產生每台的理由。<a href="#l3-rank">怎麼算 →</a></p></li>
+      <li><div class="t">追問<span class="pill c-api">程式</span></div><p>決定這輪要做什麼：</p>
+        <div class="branch"><div><b>反問</b>前兩名幾乎打平時，問你比較在意哪邊</div><div><b>追問卡</b>模擬每個答案能讓結果變多少，值得才問</div><div><b>推薦</b>問夠了或沒有值得問的</div><div><b>放寬</b>沒有任何一台符合時</div></div></li>
+      <li style="--c:var(--ai)"><div class="t">回覆<span class="pill c-ai">AI 第 2 次</span><small>reply</small></div><p>程式先組好卡片和「事實清單」（前 3 名、理由、權重變化），AI 只能根據這份清單寫；寫出清單外的數字或規格就退回模板句。</p></li>
+      <li><div class="t">存檔<span class="pill c-db">主機 → 資料庫</span></div><p>一次寫完：對話狀態、訊息、這輪紀錄（runs）、AI 呼叫原文、待處理、用戶操作。任何一項失敗就全部不存。</p></li>
+      <li style="--c:var(--web)"><div class="t">回到前台<span class="pill c-web">主機 → 前台</span></div><p>附上動效事件（哪些卡片換位、哪些分數變了），前台狀態中心更新，左右兩欄一起重畫。</p></li>
+    </ol>
+    <div class="row c2">
+      <div class="note" style="margin:0"><b>按鈕操作走「安靜通道」：</b>調權重、排除機型、加入對比、手動篩選，也走同一個主機，但不呼叫 AI、不追問、不算一輪對話，只重算候選。</div>
+      <div class="note" style="margin:0"><b>換成 single-call 方案時：</b>第 2 步改成「理解與草稿」一次做完，跳過第 6 步的追問卡，第 7 步不再呼叫 AI，改用核對過的草稿。</div>
+    </div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 3 層：推薦怎麼算 ═════════════ -->
+<section class="layer c-api" id="l3-rank">
+  <span class="layer-tag">第 3 層 · 放到最大</span>
+  <h2>推薦怎麼算出來：硬條件篩、權重排</h2>
+  <p class="lead">核心原則：<b>只有真正的最低需求才會把機型刷掉，其他偏好都只影響排名。</b>全部在 <code>packages/engine</code>，是純計算。</p>
+
+  <div class="card">
+    <h4>步驟 1 · 每台機型先變成 7 個分數（0–100）</h4>
+    <p style="font-size:14px;margin:0">從 581 欄原始資料換算：效能、螢幕、便攜、續航、散熱、噪音、擴充。效能再細分 CPU 單核、多核、GPU、記憶體、儲存。</p>
+
+    <h4 style="margin-top:18px">步驟 2 · 算出這位用戶的權重（總和永遠是 100）</h4>
+    <p style="font-size:14px;margin:0">從基準權重出發：</p>
+    <div class="weights" aria-label="基準權重">
+      <div style="flex:33;background:#2f6fdb">效能 33</div>
+      <div style="flex:21;background:#1f8a5b">螢幕 21</div>
+      <div style="flex:14;background:#c26a12">便攜 14</div>
+      <div style="flex:12;background:#7a4cc7">續航 12</div>
+      <div style="flex:10;background:#c23d74">散熱 10</div>
+      <div style="flex:6;background:#5d6370">6</div>
+      <div style="flex:4;background:#8a8f99">4</div>
+    </div>
+    <div class="wlabels"><span>噪音 6</span><span>擴充 4</span><span>（後台可改基準值）</span></div>
+    <p style="font-size:14px;margin:10px 0 0">再把 9 種來源的加減分<b>先全部加總，再一次縮放回 100</b>（所以需求先講後講結果都一樣）：</p>
+    <div class="sources">
+      <div><b>基準</b>：預設比例</div><div><b>用途</b>：修圖、遊戲…</div><div><b>便攜度</b>：常帶出門</div>
+      <div><b>重視項目</b>：用戶說在意的</div><div><b>軟體畫像</b>：Photoshop 需要什麼</div><div><b>卡片選項</b>：追問卡的答案</div>
+      <div><b>AI 語意</b>：AI 建議的微調（有上限）</div><div><b>手動滑桿</b>：用戶自己調（優先）</div><div><b>反問卡答案</b>：二選一的偏好</div>
+    </div>
+
+    <h4 style="margin-top:18px">步驟 3 · 用硬條件把 371 台分成三組</h4>
+    <p style="font-size:14px;margin:0">只看 9 條最低需求：預算、尺寸、重量上限、品牌、作業系統、記憶體、獨立顯卡、螢幕更新率、軟體最低規格（每條都有開關，部分有容忍值）：</p>
+    <div class="three">
+      <div class="g-ok"><b>正式候選</b>全部符合，會被推薦</div>
+      <div class="g-edge"><b>邊界候選</b>差一點（例如超預算一點點），標出來讓你參考</div>
+      <div class="g-out"><b>不符合</b>記下原因（例如「超過預算」），可放寬</div>
+    </div>
+
+    <h4 style="margin-top:18px">步驟 4 · 評分排名</h4>
+    <p style="font-size:14px;margin:0">總分 ＝ 7 個分數 × 你的權重的加權平均；用戶說每天要背時，超過重量線的機型會被扣分。分數高的在前，同分便宜的在前。</p>
+
+    <h4 style="margin-top:18px">步驟 5 · 產生理由</h4>
+    <p style="font-size:14px;margin:0">程式從分數比較中找出「為什麼是它」「你要接受的缺點」「和第 2 名比」。AI 只能改寫這些句子，不能新增事實。</p>
+
+    <div class="note">後台對應位置：權重設計 → 權重總覽／權重規則；回覆流程 → 篩選規則／推薦理由。</div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+<!-- ═════════════ 第 3 層：兩種方案插槽 ═════════════ -->
+<section class="layer c-api" id="l3-slots">
+  <span class="layer-tag">第 3 層 · 放到最大</span>
+  <h2>兩種「方案插槽」：換一支程式，就換一種做法</h2>
+  <p class="lead">像插座：插座的形狀固定（交什麼進去、拿什麼出來），插頭（方案）可以隨便換。所以 M 可以設計很多套方案，用同樣的用戶去比較，而系統其他部分不用改。</p>
+
+  <div class="card">
+    <div class="row c2" style="margin-bottom:16px">
+      <div class="box c-api"><div class="name">流程方案（伺服器）</div><div class="what">決定「一句話怎麼處理」：AI 叫幾次、什麼順序、出錯怎麼補。</div>
+        <div class="chain"><span>主機</span><i>→ 工具箱 →</i><span>baseline／single-call</span><i>→ 同一種結果 →</i><span>主機存檔</span></div></div>
+      <div class="box c-web"><div class="name">候選池方案（前台右欄）</div><div class="what">決定「候選機型怎麼呈現」：版型、互動、對比頁。</div>
+        <div class="chain"><span>狀態中心</span><i>→ 插座 →</i><span>classic／gallery</span><i>→</i><span>畫出整個右欄</span></div></div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th></th><th>流程方案</th><th>候選池方案</th></tr></thead>
+        <tbody>
+          <tr><th>插在哪</th><td>伺服器主機的中段</td><td>前台右欄</td></tr>
+          <tr><th>目前有哪些</th><td>baseline 基準（預設）、single-call 一次呼叫</td><td>classic 經典（預設）、gallery 圖片</td></tr>
+          <tr><th>登錄表</th><td><code>apps/api/src/schemes/index.ts</code></td><td><code>apps/web/src/user/pools/index.ts</code></td></tr>
+          <tr><th>交給方案的東西</th><td>設定與開關、對話狀態、這句話、AI 呼叫器（自動記錄）、計時器、剩餘時間</td><td>開關、方案參數、候選快照、需求與權重、收藏，以及排除、對比等動作</td></tr>
+          <tr><th>方案交回什麼</th><td>同一種形狀的結果：動作、回覆、卡片、候選快照、權重變化</td><td>整個右欄的畫面（也可以換掉對比抽屜的內容）</td></tr>
+          <tr><th>不能做的事</th><td>不能自己存資料庫</td><td>不能自己改資料，只能呼叫插座給的動作；不能自訂動法，貼上約定的標籤就會照既有方式動</td></tr>
+          <tr><th>在哪切換</th><td>後台 → 回覆流程 → 流程方案（全站生效）</td><td>後台 → 用戶介面 → 候選池方案（全站生效）</td></tr>
+          <tr><th>出錯時</th><td>找不到方案 → 退回 baseline</td><td>方案出錯 → 改畫 classic → 再出錯顯示一行字</td></tr>
+          <tr><th>怎麼比較</th><td>每輪記下方案 id、提示詞、AI 原文、耗時；可批次重跑</td><td>每輪快照記下當時的方案，重播時用當時的方案畫</td></tr>
+          <tr><th>加新方案</th><td>新增一個方案檔，登錄進表</td><td>新增一個方案資料夾，登錄進表（規範在 <code>pools/README.md</code>）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">之後如果要讓「對話區」也能換方案，會照同樣的插座方式做；排序引擎目前固定一套，計畫中也保留了加插座的空間。</div>
+  </div>
+  <a class="toplink" href="#l1">↑ 回到全景</a>
+</section>
+
+</main>
+
+<footer class="wrap">
+  依據 <code>laptop-assistant-v1.0.26</code> 的程式碼整理：<code>apps/api/src/turn.ts</code>、<code>scheme.ts</code>、<code>schemes/*</code>、<code>packages/engine</code>、<code>packages/nlu</code>、<code>packages/db/src/schema.ts</code>、<code>apps/web/src/user/UserApp.tsx</code>、<code>pools/</code>、<code>admin/nav.ts</code>。整理日期 2026-11-08。
+</footer>
+
+<button class="theme-btn" type="button" id="themeBtn">切換深淺色</button>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var s=localStorage.getItem('arch-theme'); if(s) root.setAttribute('data-theme',s);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    var dark=cur? cur==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next=dark?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('arch-theme',next);}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
