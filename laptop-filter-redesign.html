@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<title>篩選改版提案</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="AI 筆電選購助手用戶端篩選的三種新設計與一個可疊加功能，用 370 台在售機型即時試算。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 版面：說明在上 → 黏頂方案列 → 舞台（說明欄＋可操作的裝置框）→ 共通改進、比較、建議、開關草案。
+   色票沿用用戶端 user.css；產品不做深色模式，這頁刻意只做淺色，所有顏色都明確指定。 */
+:root{
+  color-scheme: light;
+  --ink:#17201c; --ink-2:#55625c; --ink-3:#86918b;
+  --paper:#f5f7f5; --bg:#eef1ee; --surface:#ffffff; --line:#dbe2dd; --line-2:#eef1ee;
+  --accent:#17725a; --accent-soft:#e3f1ec; --accent-deep:#0e4d3c;
+  --warn:#a65f00; --warn-soft:#fdf1dc; --bad:#b3362b; --bad-soft:#fbe9e7; --soft:#f4f6f4;
+  --frame:#1a2420;
+  --f-text:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-display:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font:15px/1.7 var(--f-text);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,h4,p,ul,ol{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:48px 96px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:44px}
+
+/* ── 文件區 ── */
+.eyebrow{font:500 12px/1.5 var(--f-mono);letter-spacing:.04em;color:var(--ink-3)}
+.doc-head{display:flex;flex-direction:column;gap:14px;max-width:780px}
+h1{font:900 clamp(34px,5.4vw,52px)/1.12 var(--f-display);letter-spacing:.02em;text-wrap:balance}
+.lede{font-size:17px;color:var(--ink-2);max-width:60ch}
+h2{font:700 22px/1.35 var(--f-display);text-wrap:balance}
+.sec-title{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.sec-title p{color:var(--ink-2);max-width:66ch}
+.probs{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px 28px}
+.probs li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.probs li::before{content:"✗";grid-row:1 / span 2;color:var(--bad);font-weight:700}
+.probs b{font-weight:700}
+.probs span{color:var(--ink-2);font-size:14px;grid-column:2}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding-block:10px;background:var(--paper);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid transparent;background:none;border-radius:9px;padding:6px 12px;display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--ink-2)}
+.tab:hover{background:var(--bg)}
+.tab[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:0 1px 2px rgba(23,32,28,.07)}
+.lt{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;border-radius:5px;background:var(--ink-3);color:#fff;font:600 12px/1 var(--f-mono)}
+.tab[aria-selected="true"] .lt{background:var(--accent)}
+.grow{flex:1}
+.dsw{display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;user-select:none;position:relative}
+.dsw input{position:absolute;opacity:0;width:1px;height:1px}
+.dsw .sw{width:36px;height:20px;border-radius:99px;background:#c9d2cc;position:relative;transition:background .2s;flex:none}
+.dsw .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.dsw input:checked + .sw{background:var(--accent)}
+.dsw input:checked + .sw::after{transform:translateX(16px)}
+.dsw input:focus-visible + .sw{outline:2px solid var(--accent);outline-offset:2px}
+.dsw .lt{background:var(--ink)}
+.devs{display:inline-flex;background:var(--bg);border-radius:9px;padding:3px}
+.devs button{border:0;background:none;border-radius:7px;padding:4px 12px;font-size:14px;color:var(--ink-2)}
+.devs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(23,32,28,.1)}
+
+.stage{display:grid;gap:28px}
+.stage.phone{grid-template-columns:minmax(0,1fr) auto;align-items:start}
+.copy{display:grid;gap:18px 44px;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.stage.phone .copy{grid-template-columns:1fr}
+.kv{display:flex;flex-direction:column;gap:10px;min-width:0}
+.copy h3{font:700 26px/1.3 var(--f-display);display:flex;align-items:center;gap:10px}
+.copy h3 .lt{width:30px;height:30px;font-size:16px;border-radius:7px;background:var(--accent)}
+.copy .sub{color:var(--ink-2);max-width:62ch}
+.kv-k{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);margin-top:4px}
+ul.dot{list-style:none;padding:0;display:flex;flex-direction:column;gap:5px}
+ul.dot li{position:relative;padding-left:16px;font-size:14.5px}
+ul.dot li::before{content:"";position:absolute;left:2px;top:.75em;width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+ul.pros li::before{background:var(--accent)}
+ul.cons li::before{background:var(--warn)}
+.dnote{font-size:14px;padding:10px 12px;border-radius:8px;background:var(--accent-soft);color:var(--accent-deep)}
+.dnote.off{background:var(--bg);color:var(--ink-2)}
+.build{font-size:14px;color:var(--ink-2)}
+.build b{color:var(--ink)}
+.reset{align-self:flex-start;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;font-size:13.5px;color:var(--ink-2)}
+.reset:hover{border-color:var(--accent);color:var(--accent)}
+.frame-wrap{overflow-x:auto;padding:4px 2px 12px;min-width:0}
+.stage.phone .frame-wrap{display:flex;justify-content:center}
+
+.device{display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.device.desktop{min-width:980px;height:660px;border-radius:12px;border:1px solid var(--line);box-shadow:0 18px 40px -18px rgba(23,32,28,.35)}
+.device.phone{width:min(390px,100%);height:790px;border-radius:46px;border:11px solid var(--frame);box-shadow:0 24px 48px -20px rgba(23,32,28,.45)}
+.chrome{height:34px;flex:none;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--bg);border-bottom:1px solid var(--line)}
+.chrome i{width:10px;height:10px;border-radius:50%;background:#cfd7d2}
+.chrome span{margin-left:14px;font:500 12px/1.6 var(--f-mono);color:var(--ink-3);background:var(--surface);padding:1px 12px;border-radius:6px}
+.ph-status{height:36px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:4px 26px 0;font-size:13px;font-weight:600;background:var(--surface)}
+.ph-top{flex:none;display:flex;align-items:center;gap:8px;padding:4px 14px 8px;background:var(--surface);border-bottom:1px solid var(--line)}
+.ph-top b{font-size:14px;flex:1}
+.seg2{display:inline-flex;background:var(--bg);border-radius:8px;padding:2px;font-size:12.5px}
+.seg2 span{padding:2px 12px;border-radius:6px;color:var(--ink-2)}
+.seg2 .on{background:var(--surface);color:var(--ink);font-weight:600}
+
+.common{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px 30px}
+.common li{display:flex;flex-direction:column;gap:4px}
+.common b{font-size:15.5px}
+.common span{color:var(--ink-2);font-size:14px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+tr:last-child th,tr:last-child td{border-bottom:0}
+thead th{font-size:13px;color:var(--ink-2);background:var(--soft);font-weight:700;white-space:nowrap}
+tbody th{font-weight:600;white-space:nowrap}
+.col-rec{background:#f1f8f5}
+thead .col-rec{background:var(--accent-soft);color:var(--accent-deep)}
+.ok{color:var(--accent);font-weight:700}
+.no{color:var(--bad);font-weight:700}
+.mid{color:var(--warn);font-weight:700}
+.rec{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px 44px;align-items:start}
+.rec-big{font:700 26px/1.35 var(--f-display);text-wrap:balance;margin-bottom:14px}
+.rec-big em{font-style:normal;color:var(--accent)}
+.reply{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.reply b{font-size:15.5px}
+.reply p{color:var(--ink-2);font-size:14px}
+.say{display:flex;flex-wrap:wrap;gap:8px}
+.say span{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px;padding:5px 12px;font-size:14px}
+code{font:500 12.5px var(--f-mono);background:var(--bg);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.foot{font-size:13px;color:var(--ink-3);max-width:80ch;display:flex;flex-direction:column;gap:4px}
+
+/* ── 原型（沿用用戶端 .u- 的長相） ── */
+.proto{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg);font-size:14px;line-height:1.55;position:relative}
+.app{flex:1;min-height:0;display:flex;position:relative}
+.chat{width:280px;flex:none;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.chat-h{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:90%;padding:8px 12px;font-size:13.5px}
+.msg.a{background:var(--soft);border-radius:12px 12px 12px 4px}
+.msg.u{align-self:flex-end;background:var(--accent);color:#fff;border-radius:12px 12px 4px 12px}
+.composer{margin:12px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink-3);font-size:13px}
+.res{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.res-head{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.rh-l{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.rh-l b{font-size:15px}
+.rh-l small{color:var(--accent);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rh-l small:empty{display:none}
+.sel{border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:var(--surface);font-size:13px;max-width:132px}
+.fbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;font-weight:600;font-size:13px;display:inline-flex;gap:6px;align-items:center;flex:none}
+.fbtn:hover{border-color:var(--accent);color:var(--accent)}
+.fbtn em{font-style:normal;background:var(--accent);color:#fff;border-radius:99px;padding:0 6px;font-size:11px;min-width:18px;text-align:center;line-height:18px}
+.fbtn em:empty{display:none}
+.wbtn{flex:none;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:4px 10px;font-weight:600;font-size:13px}
+
+.abar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line);align-items:center}
+.ab-k{font-size:12.5px;color:var(--ink-2)}
+.tag{font-size:12.5px;padding:1px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.ac{display:inline-flex;align-items:center;gap:5px;padding:1px 2px 1px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent-deep);border:1px solid var(--accent);font-size:12.5px}
+.ac.soft{background:var(--surface);border-style:dashed}
+.ac small{font-size:11px;color:var(--accent);font-weight:600}
+.ac em,.pill em{font-style:normal;font-size:10.5px;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 4px;font-weight:500}
+.ac button{border:0;background:none;width:20px;height:20px;border-radius:50%;font-size:10px;color:var(--accent-deep);display:grid;place-items:center}
+.ac button:hover{background:rgba(23,114,90,.14)}
+.clr{border:0;background:none;color:var(--ink-2);font-size:12.5px;text-decoration:underline;text-underline-offset:3px;flex:none;padding:2px 4px}
+.empty{color:var(--ink-3);font-size:12.5px}
+
+.list{flex:1;min-height:0;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.card{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:4px 10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.rk{font:600 12px/21px var(--f-mono);color:var(--ink-3)}
+.cm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp{color:var(--ink-2);font-size:12.5px}
+.hits{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.hit{font-size:11.5px;padding:0 6px;border-radius:5px}
+.hit.y{background:var(--accent-soft);color:var(--accent-deep)}
+.hit.n{background:var(--soft);color:var(--ink-3)}
+.cp{display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap}
+.cp b{font-size:14px}
+.cp small{font-size:11px;color:var(--ink-3)}
+.scb{width:64px;height:4px;border-radius:2px;background:var(--line-2);position:relative;overflow:hidden}
+.scb i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:2px}
+.more{border:1px dashed var(--line);background:var(--surface);border-radius:10px;padding:9px;font-weight:600;font-size:13px;color:var(--accent)}
+.more span{color:var(--ink-3);font-weight:400}
+.zero{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.zero b{font-size:15px}
+.zero p{color:var(--ink-2);font-size:13px}
+.zr{display:flex;flex-direction:column;gap:6px}
+.zr button{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent-deep);border-radius:8px;padding:7px 12px;text-align:left;font-weight:600;font-size:13px;display:flex;justify-content:space-between;gap:10px}
+.zr button em{font-style:normal;white-space:nowrap}
+
+.scrim{position:absolute;inset:0;background:rgba(20,33,28,.16);z-index:4}
+.scrim.clear{background:transparent}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:372px;max-width:100%;background:var(--surface);border-left:1px solid var(--line);box-shadow:-14px 0 32px -18px rgba(20,33,28,.4);display:flex;flex-direction:column;z-index:5}
+.drawer.enter{animation:din .22s ease-out}
+@keyframes din{from{transform:translateX(28px);opacity:.3}}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 11px 16px;border-bottom:1px solid var(--line);flex:none}
+.dh b{font-size:15px}
+.x{border:0;background:none;width:28px;height:28px;border-radius:6px;color:var(--ink-2);display:grid;place-items:center;flex:none}
+.x:hover{background:var(--bg)}
+.x.sm{width:22px;height:22px;font-size:11px}
+.db{flex:1;min-height:0;overflow:auto;padding:14px 16px 18px;display:flex;flex-direction:column;gap:20px}
+.df{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line);background:var(--surface);flex:none}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;font-size:13.5px}
+.primary{flex:1;border:0;background:var(--accent);color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13.5px}
+.note{font-size:13px;color:var(--ink-2)}
+.nsec{display:flex;flex-direction:column;gap:6px}
+.nsec h4{font-size:13px;font-weight:600;color:var(--ink-2)}
+
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec-h{display:flex;align-items:center;gap:6px;min-height:24px;flex-wrap:wrap}
+.sec-h h4{font-size:13.5px;font-weight:700}
+.sec-h small{color:var(--ink-3);font-size:12px}
+.src{font-size:10.5px;padding:0 5px;border-radius:4px;background:var(--warn-soft);color:var(--warn)}
+.mseg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:none}
+.mseg button{border:0;background:var(--surface);font-size:11.5px;padding:2px 8px;color:var(--ink-2);white-space:nowrap}
+.mseg button + button{border-left:1px solid var(--line)}
+.mseg button[data-m="hard"][aria-pressed="true"]{background:var(--accent);color:#fff}
+.mseg button[data-m="soft"][aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.lnk{border:0;background:none;color:var(--ink-2);font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{flex:none;white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;font-size:13px;display:inline-flex;gap:5px;align-items:baseline}
+.chip em{font-style:normal;font-size:11px;color:var(--ink-3)}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.on,.chip.on:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.on em{color:rgba(255,255,255,.82)}
+.chip.zero{color:var(--ink-3);border-style:dashed}
+.lv{font-size:13.5px;font-weight:600}
+.lv span{color:var(--ink-3);font-weight:400}
+.hist{display:flex;align-items:flex-end;gap:1px;height:40px;padding:0 9px;border-bottom:1px solid var(--line)}
+.hist i{flex:1;background:#d5ddd8;border-radius:1px 1px 0 0}
+.hist i.on{background:var(--accent)}
+.rgw{position:relative;height:22px}
+.trk{position:absolute;left:9px;right:9px;top:9px;height:4px;border-radius:2px}
+.rg{-webkit-appearance:none;appearance:none;position:absolute;inset:0;width:100%;height:22px;margin:0;background:transparent;pointer-events:none}
+.rg::-webkit-slider-runnable-track{height:22px;background:transparent;border:0}
+.rg::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;width:18px;height:18px;margin-top:2px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 3px rgba(20,33,28,.3);cursor:grab}
+.rg::-moz-range-track{height:22px;background:transparent;border:0}
+.rg::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 3px rgba(20,33,28,.3);cursor:grab}
+.rg:focus-visible{outline:none}
+.rg:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--accent-soft),0 0 0 6px var(--accent)}
+.rg:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px var(--accent-soft),0 0 0 6px var(--accent)}
+.ticks{position:relative;height:16px;margin:0 9px;font-size:11px;color:var(--ink-3);line-height:16px}
+.ticks span{position:absolute;top:0;white-space:nowrap}
+.brands{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+.br{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:13px;padding:3px 0;min-width:0}
+.br > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.br em{font-style:normal;font-size:11px;color:var(--ink-3);margin-left:4px}
+.bseg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:none}
+.bseg button{border:0;background:var(--surface);font-size:11.5px;padding:1px 6px;color:var(--ink-2)}
+.bseg button + button{border-left:1px solid var(--line)}
+.bseg button[data-m="only"][aria-pressed="true"]{background:var(--accent);color:#fff}
+.bseg button[data-m="no"][aria-pressed="true"]{background:var(--bad);color:#fff}
+.advt{display:flex;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:8px 12px;text-align:left}
+.advt b{font-size:13.5px;flex:none}
+.advt small{color:var(--ink-3);font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advt em{font-style:normal;background:var(--accent);color:#fff;border-radius:99px;padding:0 6px;font-size:11px;line-height:18px}
+.advt em:empty{display:none}
+.car{font-size:10px;color:var(--ink-3)}
+
+.pbar{background:var(--surface);border-bottom:1px solid var(--line);padding:8px 0;position:relative;z-index:7}
+.pscroll{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:0 16px}
+.pscroll::-webkit-scrollbar{display:none}
+.pill{flex:none;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:99px;background:var(--surface);font-size:13px;white-space:nowrap}
+.pill > button{border:0;background:none;padding:4px 12px;border-radius:99px;display:inline-flex;gap:5px;align-items:center}
+.pill:hover{border-color:var(--accent)}
+.pill.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep);font-weight:600}
+.pill.on > button:first-child{padding-right:2px}
+.pill.soft{border-style:dashed;background:var(--surface)}
+.pill small{font-size:11px;color:var(--accent);font-weight:600}
+.pill .px{padding:0;width:22px;height:22px;margin-right:3px;font-size:10px;display:grid;place-items:center}
+.pill .px:hover{background:rgba(23,114,90,.14)}
+.pill.open{box-shadow:0 0 0 2px var(--accent)}
+.pop{position:absolute;z-index:6;width:340px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px -14px rgba(20,33,28,.4);display:flex;flex-direction:column;overflow:hidden}
+.pop.enter{animation:pin .16s ease-out}
+@keyframes pin{from{transform:translateY(-6px);opacity:0}}
+
+.cs{display:flex;flex-direction:column;gap:16px}
+.sits{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+.sit{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 9px;text-align:left;display:flex;flex-direction:column;gap:1px}
+.sit:hover{border-color:var(--accent)}
+.sit b{font-size:13px}
+.sit small{font-size:11px;color:var(--ink-3);line-height:1.4}
+.sit.on{border-color:var(--accent);background:var(--accent-soft)}
+.sit.on small{color:var(--accent-deep)}
+.sit em{font-style:normal;font-size:10.5px;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 5px;align-self:flex-start;margin-top:3px}
+.ct{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:7px;background:var(--soft)}
+.ct h4{font-size:14px}
+.ct-k{font-size:11.5px;font-weight:700;color:var(--ink-3);letter-spacing:.03em;margin-top:4px}
+.ct ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+.ti{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 6px 6px 9px;align-items:center}
+.ti.soft{border-style:dashed;border-color:#b9c6bf}
+.tl{font-weight:600;font-size:13px}
+.tw{font-size:11.5px;color:var(--ink-3);grid-column:1}
+.ta{grid-column:2;grid-row:1 / span 2;display:flex;align-items:center;gap:2px}
+.none{font-size:12px;color:var(--ink-3)}
+.wl li{display:grid;grid-template-columns:5.6em minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12.5px}
+.wbar{position:relative;height:6px;background:var(--line);border-radius:3px}
+.wbar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.wbar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px}
+.wv{font:500 11.5px var(--f-mono);color:var(--ink-2)}
+
+/* 手機版 */
+.phone .res-head{padding:8px 12px;gap:6px}
+.phone .list{padding:10px 12px}
+.phone .abar{padding:8px 12px}
+.phone .pscroll{padding:0 12px}
+.phone .sel{max-width:108px}
+.phone .card{grid-template-columns:18px minmax(0,1fr) auto;gap:3px 8px;padding:9px 10px}
+.phone .scrim{background:rgba(20,33,28,.38)}
+.phone .pbar{z-index:auto}
+.phone .drawer{top:auto;left:0;width:auto;height:93%;border-left:0;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px -10px rgba(20,33,28,.4)}
+.phone .drawer.enter,.phone .pop.enter{animation:sin .24s ease-out}
+@keyframes sin{from{transform:translateY(48px);opacity:.3}}
+.phone .pop{left:0 !important;right:0;bottom:0;top:auto !important;width:auto;max-height:82% !important;border-radius:16px 16px 0 0;border-bottom:0}
+.phone .dh::before,.phone .pop::before{content:"";position:absolute;left:50%;top:5px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#cfd7d2}
+.phone .dh{position:relative;padding-top:15px}
+.phone .pop{padding-top:12px}
+
+@media (max-width: 900px){
+  .copy{grid-template-columns:1fr}
+  .stage.phone{grid-template-columns:1fr}
+  .rec{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <p class="eyebrow">AI 筆電選購助手 · 用戶端篩選 · 2026-11-11 · 以 v1.0.44 為基準</p>
+  <h1>篩選改版提案</h1>
+  <p class="lede">現在的篩選是一排固定按鈕。下面放了三種新設計（A、B、C）和一個可以疊在上面的功能（D），每一種都能直接操作。台數用系統裡 370 台在售機型的資料即時計算。</p>
+</header>
+
+<section aria-labelledby="h-prob">
+  <div class="sec-title"><h2 id="h-prob">現在的篩選哪裡不好用</h2></div>
+  <ul class="probs">
+    <li><b>只能點固定按鈕</b><span>價格只有「7 千／1 萬／1.5 萬以內、1.5 萬以上」，選不到「1 萬到 1.5 萬」。</span></li>
+    <li><b>同一類只能選一個</b><span>選了華碩再點宏碁，華碩會被換掉；也沒辦法說「不要微星」。</span></li>
+    <li><b>點之前看不到台數</b><span>一點下去可能只剩 0 台，也不知道是哪個條件造成的。</span></li>
+    <li><b>能篩的項目太少</b><span>只有價格、尺寸、品牌、顯卡、重量。系統已經支援記憶體、更新率和欄位目錄，抽屜裡都沒放。</span></li>
+    <li><b>全部都是「一定要」</b><span>「最好是 OLED」也會直接刷掉其他機型，沒辦法只讓它排前面。</span></li>
+  </ul>
+</section>
+
+<nav class="bar" aria-label="方案切換">
+  <div class="tabs" role="tablist" aria-label="方案">
+    <button class="tab" role="tab" id="tab-NOW" data-tab="NOW" aria-selected="false" aria-controls="stage">現在</button>
+    <button class="tab" role="tab" id="tab-A" data-tab="A" aria-selected="true" aria-controls="stage"><span class="lt">A</span>改良抽屜</button>
+    <button class="tab" role="tab" id="tab-B" data-tab="B" aria-selected="false" aria-controls="stage"><span class="lt">B</span>篩選列</button>
+    <button class="tab" role="tab" id="tab-C" data-tab="C" aria-selected="false" aria-controls="stage"><span class="lt">C</span>用途導向</button>
+  </div>
+  <span class="grow"></span>
+  <label class="dsw" for="d-toggle"><input type="checkbox" id="d-toggle"><span class="sw" aria-hidden="true"></span><span class="lt">D</span>一定要／最好有</label>
+  <div class="devs" role="group" aria-label="裝置">
+    <button type="button" data-dev="desktop" aria-pressed="true">電腦版</button>
+    <button type="button" data-dev="phone" aria-pressed="false">手機版</button>
+  </div>
+</nav>
+
+<section class="stage desktop" id="stage" role="tabpanel" aria-live="off">
+  <div class="copy" id="copy"></div>
+  <div class="frame-wrap"><div class="device desktop" id="device"></div></div>
+</section>
+
+<section aria-labelledby="h-common">
+  <div class="sec-title"><h2 id="h-common">不管選哪個，這四件事都會做</h2><p>上面 A、B、C 都已經包含這四項，可以在原型裡試到。</p></div>
+  <ul class="common">
+    <li><b>選項旁標出台數</b><span>點之前就知道會剩幾台；0 台的選項變成虛線，提醒你點了會沒結果。</span></li>
+    <li><b>0 台時建議放寬哪個條件</b><span>列出「拿掉哪一個條件會有幾台」，按一下就放寬，不用自己猜。</span></li>
+    <li><b>目前條件一直看得到</b><span>條件排在結果上方，按 ✕ 就拿掉。從對話來的條件標「對話」，用戶知道系統聽到了什麼。</span></li>
+    <li><b>和對話是同一份需求</b><span>篩選寫進的需求和打字說的是同一份，助手下一句話會知道。現在就是這樣，改版保留。</span></li>
+  </ul>
+</section>
+
+<section aria-labelledby="h-cmp">
+  <div class="sec-title"><h2 id="h-cmp">四種做法並排比較</h2><p>D 可以疊在 A 或 B 上；C 本身就用到 D 的「最好有」。</p></div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th scope="col"></th><th scope="col">現在</th><th scope="col">A 改良抽屜</th><th scope="col" class="col-rec">B 篩選列（建議）</th><th scope="col">C 用途導向</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">自己拉範圍</th><td><span class="no">✗</span> 固定按鈕</td><td><span class="ok">✓</span> 滑桿＋價格分布</td><td class="col-rec"><span class="ok">✓</span> 同 A</td><td><span class="ok">✓</span> 在「進階」裡</td></tr>
+        <tr><th scope="row">多選、排除品牌</th><td><span class="no">✗</span></td><td><span class="ok">✓</span></td><td class="col-rec"><span class="ok">✓</span></td><td><span class="ok">✓</span> 在「進階」裡</td></tr>
+        <tr><th scope="row">點之前看到台數</th><td><span class="no">✗</span></td><td><span class="ok">✓</span></td><td class="col-rec"><span class="ok">✓</span></td><td><span class="ok">✓</span></td></tr>
+        <tr><th scope="row">邊篩邊看結果</th><td><span class="mid">△</span> 抽屜蓋住一半</td><td><span class="mid">△</span> 抽屜蓋住一半</td><td class="col-rec"><span class="ok">✓</span> 小面板，結果在背後即時變</td><td><span class="mid">△</span> 同 A</td></tr>
+        <tr><th scope="row">新手不用懂規格</th><td><span class="mid">△</span></td><td><span class="no">✗</span></td><td class="col-rec"><span class="no">✗</span></td><td><span class="ok">✓</span> 選用途就好</td></tr>
+        <tr><th scope="row">手機上好不好用</th><td><span class="mid">△</span></td><td><span class="mid">△</span> 全螢幕，篩時看不到結果</td><td class="col-rec"><span class="ok">✓</span> 左右滑、下方升起</td><td><span class="mid">△</span> 全螢幕</td></tr>
+        <tr><th scope="row">符合「權重是核心」</th><td><span class="no">✗</span> 全部硬篩</td><td><span class="mid">△</span> 加 D 後 <span class="ok">✓</span></td><td class="col-rec"><span class="mid">△</span> 加 D 後 <span class="ok">✓</span></td><td><span class="ok">✓</span> 用途變成排序偏好</td></tr>
+        <tr><th scope="row">工作量</th><td>—</td><td>小</td><td class="col-rec">中</td><td>大</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="h-rec" class="rec">
+  <div>
+    <h2 id="h-rec" class="sec-title">我的建議</h2>
+    <p class="rec-big">先做 <em>B＋D</em>，C 放下一步。</p>
+    <ul class="dot pros">
+      <li>B 讓用戶邊篩邊看，台數變化最直覺，手機上也最順手。B 的小面板就是 A 的區塊，做好 B 等於 A 也做好了，開關可以隨時切回 A 給真實用戶比較。</li>
+      <li>D 符合你定的方向：只有真正的最低需求才刷掉機型，其他用「最好有」讓符合的排前面。</li>
+      <li>C 最能讓用戶覺得「系統懂我」，但用途怎麼換算成權重和條件，要和後台的權重規則一起設計，也需要真實用戶的資料來校準。建議等 B＋D 上線、收到資料後再做。</li>
+    </ul>
+  </div>
+  <div class="reply">
+    <b>回我一句話就可以</b>
+    <div class="say"><span>B＋D</span><span>A，不要 D</span><span>C 先做</span></div>
+    <p>也可以直接說哪個細節要改。選定後我會從 v1.0.44 複製出 v1.0.45 開始做，動手前會再跟你確認一次細節。</p>
+  </div>
+</section>
+
+<section aria-labelledby="h-flags">
+  <div class="sec-title"><h2 id="h-flags">開關草案</h2><p>照專案規則，每個細節都能在後台開關，方便你找真實用戶做比較。現有的 <code>show.filter_drawer</code> 保留，用來整個關掉篩選；正式名稱會照系統現有的命名習慣調整。</p></div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th scope="col">開關</th><th scope="col">控制什麼</th><th scope="col">預設</th></tr></thead>
+      <tbody>
+        <tr><td><code>filter.style</code></td><td>篩選樣式：現在／A 改良抽屜／B 篩選列／C 用途導向</td><td>你選的那個</td></tr>
+        <tr><td><code>filter.counts</code></td><td>選項旁顯示台數</td><td>開</td></tr>
+        <tr><td><code>filter.price_histogram</code></td><td>價格滑桿上方的分布圖</td><td>開</td></tr>
+        <tr><td><code>filter.brand_exclude</code></td><td>品牌可以「排除」</td><td>開</td></tr>
+        <tr><td><code>filter.advanced</code></td><td>進階條件：記憶體、硬碟、更新率、面板、續航、噪音、遊戲效能</td><td>開</td></tr>
+        <tr><td><code>filter.soft_mode</code></td><td>D：每個條件可切「一定要／最好有」</td><td>開</td></tr>
+        <tr><td><code>filter.zero_rescue</code></td><td>0 台時建議放寬哪個條件</td><td>開</td></tr>
+        <tr><td><code>filter.source_tag</code></td><td>標出從對話來的條件</td><td>開</td></tr>
+        <tr><td><code>filter.situation_infer</code></td><td>C：從對話預先帶入用途（標「對話推斷」）</td><td>開</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>資料：v1.0.44 <code>data/laptops-seed.json</code> 的 370 台在售機型（這份資料本身是測試用的推測數據）。只讀取，沒有修改。</p>
+  <p>原型裡的「綜合分」是示意：用顯卡、處理器、續航、輕巧、安靜、螢幕、價格七項簡單加權，不是系統真正的權重分數。「現在」分頁的「吋左右」用 ±1 吋示意。</p>
+</footer>
+
+</div>
+
+<script>
+(() => {
+'use strict';
+const RAW = [["機械革命翼龍15 Pro 2026","機械革命",6549,15.0,2.0,32,1024,"RTX 5060",300,13.0,12298,26184,"IPS",50.0],["拯救者Y9000P定製版","聯想",12999,16.0,2.04,32,1024,"RTX 5070",240,15.2,17513,29804,"Mini LED",56.0],["聯想小新Pro 16 GT AI元啟版","聯想",12899,16.0,1.78,32,1024,"",120,27.5,17656,25980,"OLED",46.0],["華碩天選Air 2026","華碩",3214,14.0,1.5,64,1024,"",160,12.0,17800,24599,"IPS",47.0],["華碩a豆14 Air 2026","華碩",5900,14.0,0.99,32,1024,"",120,16.5,12637,33888,"OLED",41.4],["聯想 小新 Pro 16 GT AI 元啟版 2026 388H","聯想",12899,16.0,1.72,32,1024,"",120,27.5,14207,32609,"OLED",41.5],["榮耀 MagicBook Pro 16 Ultra 9 285H","榮耀",16997,16.0,1.86,32,1024,"RTX 5070",165,11.0,12917,21649,"IPS",53.2],["華碩 靈耀16 Air 2026 AI 9 H 465","華碩",6999,16.0,1.5,32,1024,"",120,12.5,4187,28376,"OLED",41.4],["聯想 小新Pro 14 GT Ultra 5 338H","聯想",5555,14.0,1.39,32,1024,"",120,10.0,5190,18586,"OLED",40.8],["ROG 槍神9","華碩",27999,16.0,2.43,32,2048,"RTX 5090",240,11.0,21626,32677,"Mini LED",58.0],["ROG 槍神9","華碩",22999,16.0,2.43,32,2048,"RTX 5080",240,11.0,19199,34718,"Mini LED",58.0],["ROG 槍神9 Plus","華碩",31999,18.0,2.99,32,2048,"RTX 5090",240,11.0,23113,32053,"Mini LED",58.0],["ROG 槍神9 Plus","華碩",23999,18.0,2.99,32,2048,"RTX 5080",240,11.0,20247,33472,"Mini LED",58.0],["ROG 槍神9 Plus","華碩",19999,18.0,2.99,32,1024,"RTX 5080",240,11.0,20139,32633,"Mini LED",58.0],["ROG 魔霸9","華碩",10999,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,15556,39908,"IPS",56.6],["ROG 魔霸9","華碩",8999,16.0,2.43,16,1024,"RTX 5070",240,11.0,13428,40039,"IPS",54.8],["ROG 魔霸9","華碩",8999,16.0,2.43,16,1024,"RTX 5060",240,11.0,11249,38548,"IPS",54.4],["ROG 魔霸新銳","華碩",10799,16.0,2.43,16,1024,"RTX 5070 Ti",165,11.0,15580,28742,"IPS",53.1],["ROG 魔霸新銳","華碩",7799,16.0,2.43,16,1024,"RTX 5060",165,11.0,10988,28785,"IPS",51.9],["ROG 魔霸新銳","華碩",8499,16.0,2.43,16,1024,"RTX 5060",165,11.0,11295,29627,"IPS",54.6],["ROG 幻X 2025","華碩",11999,13.4,2.15,32,1024,"",180,6.7,14053,26064,"IPS",40.6],["ROG 幻X 2025","華碩",12999,13.4,2.15,32,1024,"",180,6.7,15693,29933,"IPS",40.8],["ROG 幻X 2025","華碩",14999,13.4,2.15,64,1024,"",180,6.7,14816,29301,"IPS",40.6],["ROG 幻X 2025","華碩",18999,13.4,2.15,128,1024,"",180,6.7,15446,27035,"IPS",40.6],["ROG 幻14 Air 2025","華碩",18999,14.0,2.15,32,1024,"RTX 5080",120,6.7,18570,17376,"OLED",53.8],["ROG 幻14 Air 2025","華碩",14999,14.0,2.15,32,1024,"RTX 5070 Ti",120,6.7,15612,16872,"OLED",53.8],["ROG 幻14 Air 2025","華碩",12999,14.0,2.15,32,1024,"RTX 5070",120,6.7,13821,17324,"OLED",53.1],["ROG 幻14 Air 2025","華碩",11999,14.0,2.15,32,1024,"RTX 5060",120,6.7,11395,18475,"OLED",51.7],["ROG 幻16 Air 2025","華碩",19999,16.0,2.43,32,1024,"RTX 5080",240,11.0,19410,23992,"OLED",54.8],["ROG 幻16 Air 2025","華碩",15999,16.0,2.43,32,1024,"RTX 5070 Ti",240,11.0,15129,22353,"OLED",55.1],["ROG 幻16 Air 2025","華碩",14599,16.0,2.43,32,1024,"RTX 5070",240,11.0,14214,22624,"OLED",54.2],["ROG 幻16 Air 2025","華碩",13599,16.0,2.43,32,1024,"RTX 5060",240,11.0,11765,22719,"OLED",54.4],["華碩天選7 Pro 酷睿版","華碩",7989,16.0,2.43,16,512,"RTX 5060",300,11.0,11030,30110,"IPS",54.1],["華碩天選7 Pro 酷睿版","華碩",8499,16.0,2.43,16,1024,"RTX 5060",300,11.0,11782,30883,"IPS",54.0],["華碩天選7 Pro 酷睿版","華碩",11499,16.0,2.43,16,1024,"RTX 5070",300,11.0,13311,29402,"IPS",53.9],["華碩天選7 Pro 酷睿版","華碩",9999,16.0,2.43,16,1024,"RTX 5060",300,11.0,11596,36577,"IPS",55.7],["華碩天選7 Pro 酷睿版","華碩",12499,16.0,2.43,32,1024,"RTX 5060",300,11.0,10987,35803,"IPS",55.5],["華碩天選7 Pro 酷睿版","華碩",10999,16.0,2.43,16,1024,"RTX 5070",300,11.0,13252,36487,"IPS",54.8],["華碩天選7 Pro 酷睿版","華碩",13499,16.0,2.43,32,1024,"RTX 5070",300,11.0,13844,34986,"IPS",55.2],["華碩天選7 Pro 銳龍版","華碩",9299,16.0,2.43,16,1024,"RTX 5060",300,11.0,11866,36941,"IPS",55.8],["華碩天選7 Pro 銳龍版","華碩",9499,16.0,2.43,16,1024,"RTX 5060",300,11.0,11450,38472,"IPS",55.1],["華碩天選7 Pro 銳龍版","華碩",10499,16.0,2.43,16,1024,"RTX 5070",300,11.0,13999,39467,"IPS",55.7],["華碩天選7 Pro Max 銳龍版","華碩",9999,18.0,2.99,16,1024,"RTX 5060",300,11.0,11151,40581,"IPS",54.8],["華碩天選7 Pro Max 銳龍版","華碩",11999,18.0,2.99,32,1024,"RTX 5060",300,11.0,11141,37175,"IPS",54.5],["華碩天選7 Pro Max 銳龍版","華碩",10999,18.0,2.99,16,1024,"RTX 5070",300,11.0,13827,37847,"IPS",54.8],["華碩天選7 Pro Max 銳龍版","華碩",12999,18.0,2.99,32,1024,"RTX 5070",300,11.0,13762,40340,"IPS",55.3],["華碩天選7 Pro Max 銳龍版","華碩",14999,18.0,2.99,32,1024,"RTX 5070 Ti",300,11.0,16366,38871,"IPS",56.8],["華碩天選7 基礎版","華碩",6799,16.0,2.43,16,512,"RTX 5050",165,11.0,8144,17378,"OLED",49.9],["華碩天選7 基礎版","華碩",7479,16.0,2.43,16,1024,"RTX 5050",165,11.0,8603,16669,"OLED",50.0],["華碩天選7 基礎版","華碩",7224,16.0,2.43,16,512,"RTX 5060",165,11.0,11820,16401,"OLED",51.9],["華碩天選7 基礎版","華碩",7904,16.0,2.43,16,1024,"RTX 5060",165,11.0,11151,17460,"OLED",51.5],["華碩天選Air 2026","華碩",8499,14.0,2.15,32,1024,"",165,6.7,15642,26378,"IPS",42.9],["華碩天選Air 2026","華碩",10499,14.0,2.15,64,1024,"",165,6.7,16187,24573,"IPS",42.8],["華碩天選Air 2026","華碩",9199,14.0,2.15,32,1024,"RTX 5060",165,6.7,11198,30091,"IPS",52.7],["華碩天選Air 2026","華碩",9499,14.0,2.15,32,1024,"RTX 5060",165,6.7,11117,29862,"IPS",52.8],["ProArt 創16 2025","華碩",29999,16.0,2.43,64,4096,"RTX 5090",120,11.0,20178,17433,"OLED",53.0],["ProArt 創16 2025","華碩",25999,16.0,2.43,64,4096,"RTX 5080",120,11.0,18686,17561,"OLED",52.4],["ProArt 創16 2025","華碩",16999,16.0,2.43,64,2048,"RTX 5070",120,11.0,12767,16510,"OLED",50.0],["ProArt 創16 2025","華碩",16499,16.0,2.43,64,2048,"RTX 5060",120,11.0,10950,16752,"OLED",49.3],["ProArt 創13 2026","華碩",13499,13.3,1.24,64,1024,"",60,10.0,15591,28090,"OLED",40.9],["ProArt 創13 2026","華碩",28999,13.3,1.24,128,1024,"",60,10.0,15281,29630,"OLED",40.3],["華碩靈耀14 AI超輕薄本 2025","華碩",5999,14.0,1.38,32,1024,"",120,10.0,4940,20365,"OLED",41.1],["華碩靈耀14 雙屏 2025","華碩",12999,14.0,1.38,32,1024,"",120,10.0,4963,20320,"OLED",41.0],["華碩靈耀14 雙屏 2025","華碩",14999,14.0,1.38,32,2048,"",120,10.0,4804,20611,"OLED",40.9],["華碩靈耀14 雙屏 2026","華碩",14999,14.0,1.38,32,1024,"",120,10.0,4880,29686,"OLED",41.6],["華碩靈耀14 雙屏 2026","華碩",16999,14.0,1.38,32,2048,"",120,10.0,5141,28851,"OLED",41.8],["華碩靈耀16 Air 2025","華碩",7999,16.0,1.78,32,1024,"",120,12.5,4967,10899,"OLED",39.3],["華碩無畏Pro14 2025","華碩",4879,14.0,1.38,32,1024,"",60,10.0,4857,9305,"IPS",39.2],["華碩無畏Pro16 2025","華碩",4479,16.0,1.78,16,1024,"",144,12.5,2991,15157,"IPS",38.8],["華碩無畏Pro16 2025","華碩",5119,16.0,1.78,32,1024,"",144,12.5,4785,8800,"IPS",38.7],["華碩無畏Pro16 2025","華碩",5839,16.0,1.78,32,1024,"",144,12.5,5117,17079,"IPS",39.7],["華碩無畏Pro14 2026 銳龍版","華碩",5779,14.0,1.38,32,1024,"",120,10.0,4226,27942,"OLED",39.0],["華碩無畏Pro16 2026 銳龍版","華碩",5949,16.0,1.78,32,1024,"",165,12.5,4099,27741,"OLED",38.9],["華碩a豆14 Air 2026","華碩",6034,14.0,1.38,32,1024,"",120,10.0,4348,26894,"OLED",40.6],["華碩a豆14 Air 2026","華碩",6884,14.0,1.38,32,1024,"",120,10.0,4352,26851,"OLED",40.4],["天選7 Pro 酷睿版","華碩",7989,16.0,2.43,16,512,"RTX 5060",300,11.0,11313,28927,"IPS",54.4],["天選7 Pro 酷睿版","華碩",8799,16.0,2.43,16,1024,"RTX 5060",300,11.0,11205,29836,"IPS",54.4],["天選7 Pro 酷睿版","華碩",9999,16.0,2.43,16,1024,"RTX 5060",300,11.0,11139,36458,"IPS",55.4],["天選7 Pro 酷睿版","華碩",12499,16.0,2.43,32,1024,"RTX 5060",300,11.0,12010,38628,"IPS",55.7],["天選7 Pro 酷睿版","華碩",10999,16.0,2.43,16,1024,"RTX 5070",300,11.0,13787,37255,"IPS",54.9],["天選7 Pro 酷睿版","華碩",13499,16.0,2.43,32,1024,"RTX 5070",300,11.0,13629,35699,"IPS",55.3],["OMEN暗影精靈11 標準版","惠普",5999,16.0,2.43,16,1024,"RTX 5050",240,11.0,8532,24506,"IPS",52.6],["OMEN暗影精靈11 標準版","惠普",6319,16.0,2.43,16,1024,"RTX 5060",240,11.0,10716,24475,"IPS",54.0],["OMEN暗影精靈11 標準版","惠普",6959,16.0,2.43,16,1024,"RTX 5070",240,11.0,13049,26401,"IPS",54.6],["OMEN暗影精靈11 標準版","惠普",6719,16.0,2.43,16,1024,"RTX 5060",240,11.0,11648,34164,"IPS",55.2],["OMEN暗影精靈11 標準版","惠普",7119,16.0,2.43,32,1024,"RTX 5060",240,11.0,10892,32582,"IPS",55.0],["OMEN暗影精靈11 標準版","惠普",7999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13705,34257,"IPS",55.8],["OMEN暗影精靈11 銳龍版","惠普",6319,16.0,2.43,16,1024,"RTX 5060",240,11.0,10933,27382,"IPS",53.9],["OMEN暗影精靈11 銳龍版","惠普",6719,16.0,2.43,32,1024,"RTX 5060",240,11.0,10847,28584,"IPS",53.8],["OMEN暗影精靈11 銳龍版","惠普",7199,16.0,2.43,16,1024,"RTX 5070",240,11.0,13473,29902,"IPS",54.8],["OMEN暗影精靈11 銳龍版","惠普",7599,16.0,2.43,32,1024,"RTX 5070",240,11.0,13337,29214,"IPS",54.7],["OMEN暗影精靈11 英雄聯盟典藏版","惠普",8999,16.0,2.43,32,1024,"RTX 5060",240,11.0,11404,25631,"IPS",53.3],["OMEN暗影精靈11 英雄聯盟典藏版","惠普",9999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13346,25692,"IPS",54.4],["OMEN暗影精靈11 樂享版","惠普",7099,16.0,2.43,16,512,"RTX 5050",240,11.0,8262,24513,"IPS",52.0],["OMEN暗影精靈11 樂享版","惠普",5173,16.0,2.43,16,512,"RTX 4060",240,11.0,10503,26189,"IPS",52.9],["OMEN暗影精靈11 SLIM","惠普",12499,14.0,2.15,32,1024,"RTX 5060",120,6.7,10873,19423,"OLED",51.1],["OMEN暗影精靈11 SLIM","惠普",13999,14.0,2.15,32,1024,"RTX 5070",120,6.7,13112,22412,"OLED",51.4],["OMEN暗影精靈11 SLIM","惠普",16499,14.0,2.15,64,2048,"RTX 5070",120,6.7,13085,21908,"OLED",51.5],["OMEN暗影精靈MAX 16","惠普",8499,16.0,2.43,16,1024,"RTX 5060",240,11.0,11650,31119,"IPS",54.0],["OMEN暗影精靈MAX 16","惠普",8999,16.0,2.43,32,1024,"RTX 5060",240,11.0,11890,29883,"IPS",54.0],["OMEN暗影精靈MAX 16","惠普",16999,16.0,2.43,32,1024,"RTX 5080",240,11.0,18880,34248,"IPS",58.0],["OMEN暗影精靈MAX 16","惠普",33799,16.0,2.43,32,1024,"RTX 5090",240,11.0,21976,34975,"IPS",58.0],["HyperX暗影精靈PRO 16","惠普",9443,16.0,2.43,16,1024,"RTX 5060",240,11.0,11615,30515,"IPS",53.5],["HyperX暗影精靈PRO 16","惠普",11433,16.0,2.43,16,1024,"RTX 5060",240,11.0,10918,30369,"IPS",51.3],["HyperX暗影精靈PRO 16","惠普",11931,16.0,2.43,16,1024,"RTX 5060",240,11.0,11392,38040,"IPS",54.2],["HyperX暗影精靈PRO 16","惠普",23373,16.0,2.43,32,1024,"RTX 5080",240,11.0,19093,36326,"IPS",58.0],["HyperX暗影精靈PRO 16","惠普",9487,16.0,2.43,16,1024,"RTX 5060",240,11.0,10850,36801,"IPS",54.5],["惠普戰66 2026酷睿版","惠普",5999,14.0,1.38,16,512,"",120,10.0,2525,13489,"IPS",38.5],["惠普戰66 2026酷睿版","惠普",5999,14.0,1.38,16,512,"",120,10.0,2531,15048,"IPS",38.6],["惠普戰66 2026酷睿版","惠普",6999,14.0,1.38,16,1024,"",120,10.0,2493,18239,"IPS",38.6],["惠普戰66 2025京東促銷款","惠普",4735,14.0,1.38,16,1024,"",60,10.0,2527,15847,"IPS",38.6],["惠普戰66 2025京東促銷款","惠普",7299,14.0,1.38,16,1024,"",60,10.0,2440,14856,"IPS",38.6],["惠普戰X 2025酷睿Ultra","惠普",7649,14.0,1.38,32,1024,"",120,10.0,5137,12023,"IPS",37.6],["惠普戰X 2025酷睿Ultra","惠普",10499,14.0,1.38,32,1024,"",120,10.0,4929,16606,"IPS",38.9],["惠普戰X Ultra 2025款","惠普",13999,14.0,1.38,32,1024,"",120,10.0,4851,12012,"OLED",37.6],["惠普戰X 2026酷睿Ultra","惠普",14999,14.0,1.38,32,1024,"",120,10.0,5157,25468,"IPS",39.3],["惠普戰X 2026酷睿Ultra","惠普",13299,14.0,1.38,64,1024,"",120,10.0,4851,26435,"IPS",39.4],["惠普戰X Pro 2026","惠普",23699,14.0,1.38,64,1024,"",120,10.0,4865,24177,"OLED",39.5],["惠普戰99 2025/2026移動工作站","惠普",15999,16.0,2.43,64,2048,"RTX 5060",120,11.0,11142,18608,"IPS",51.8],["惠普戰99 2025/2026移動工作站","惠普",11489,16.0,2.43,32,1024,"RTX 5060",120,11.0,11192,22557,"IPS",51.7],["惠普戰99 2025/2026移動工作站","惠普",16998,16.0,2.43,64,2048,"RTX 5060",120,11.0,11096,23223,"IPS",51.8],["惠普戰99 2025/2026移動工作站","惠普",7399,16.0,1.78,16,1024,"",120,12.5,2511,20374,"IPS",39.2],["惠普戰99 2025/2026移動工作站","惠普",15899,16.0,2.43,16,1024,"RTX 5060",120,11.0,10844,19407,"IPS",51.3],["惠普戰99 2025/2026移動工作站","惠普",9199,16.0,1.78,64,2048,"",120,12.5,2477,14387,"IPS",38.8],["惠普星Book Pro 14 2025款","惠普",5199,14.0,1.38,16,512,"",120,10.0,5114,12569,"OLED",38.7],["惠普星Book Pro 14 2025款","惠普",5299,14.0,1.38,16,1024,"",120,10.0,5150,12901,"OLED",38.8],["惠普星Book Pro 14 2025款","惠普",7699,14.0,1.38,32,1024,"",120,10.0,4971,13468,"OLED",38.8],["惠普星Book Pro 14 2025款","惠普",7099,14.0,1.38,16,2048,"",120,10.0,5086,13518,"OLED",38.9],["惠普星Book Pro 14 2025款","惠普",7799,14.0,1.38,32,1024,"",120,10.0,5043,17246,"OLED",39.3],["惠普星Book Pro 16 2025款","惠普",4000,16.0,1.78,16,1024,"",240,12.5,5141,17704,"IPS",39.5],["惠普星Book Pro 16 2025款","惠普",6999,16.0,1.78,32,1024,"",240,12.5,4900,17669,"IPS",39.5],["惠普星Book Pro 16 2026款","惠普",7649,16.0,1.78,32,1024,"",240,12.5,10195,22337,"IPS",39.7],["惠普星Book 16/Pro 16 2025 酷睿200H","惠普",5299,16.0,1.78,16,512,"",120,12.5,2393,12300,"IPS",39.0],["惠普星Book 16/Pro 16 2025 酷睿200H","惠普",6699,16.0,1.78,32,1024,"",120,12.5,2610,17274,"IPS",39.1],["HP Envy x360 14 2024/2025款","惠普",10199,14.0,1.38,32,2048,"",120,10.0,4960,10383,"OLED",39.3],["HP Envy x360 14 2024/2025款","惠普",9199,14.0,1.38,32,1024,"",120,10.0,5159,10572,"OLED",39.3],["HP Envy x360 14 2024/2025款","惠普",7799,14.0,1.38,16,1024,"",120,10.0,4950,9044,"OLED",39.3],["HP Envy x360 14 2024/2025款","惠普",6949,14.0,1.38,16,1024,"",120,10.0,2565,7266,"OLED",39.3],["HP Envy x360 14 2024/2025款","惠普",7949,14.0,1.38,16,2048,"",120,10.0,2417,7370,"OLED",39.3],["HP Envy x360 14 2024/2025款","惠普",13178,14.0,1.38,16,1024,"",120,10.0,2974,16084,"OLED",40.4],["HP Envy x360 14 2024/2025款","惠普",6399,14.0,1.38,16,1024,"",120,10.0,2938,9790,"OLED",40.4],["HP Envy x360 16 2024/2025款","惠普",7699,16.0,1.78,16,1024,"",120,12.5,2581,16133,"OLED",40.3],["拯救者 Y9000P 至尊版","聯想",20999,16.0,2.43,64,1024,"RTX 5070 Ti",240,11.0,16146,37747,"OLED",57.4],["拯救者 Y9000P 至尊版","聯想",37999,16.0,2.43,64,1024,"RTX 5090",240,11.0,21987,35395,"OLED",58.0],["拯救者 Y9000P 至尊版","聯想",39792,16.0,2.43,64,2048,"RTX 5090",240,11.0,22931,38727,"OLED",58.0],["拯救者 Y9000P 至尊版","聯想",41499,16.0,2.43,64,2048,"RTX 5090",240,11.0,21734,36372,"OLED",58.0],["拯救者 Y9000P","聯想",11999,16.0,2.43,16,1024,"RTX 5060",240,11.0,11144,38788,"OLED",54.9],["拯救者 Y9000P","聯想",15499,16.0,2.43,16,1024,"RTX 5060",240,11.0,11061,36775,"OLED",54.9],["拯救者 Y9000P","聯想",13499,16.0,2.43,32,1024,"RTX 5060",240,11.0,11299,36615,"OLED",54.9],["拯救者 Y9000P","聯想",9499,16.0,2.43,16,1024,"RTX 5060",240,11.0,11702,32626,"OLED",55.2],["拯救者 Y9000P","聯想",11434,16.0,2.43,16,1024,"RTX 5060",240,11.0,10789,33323,"OLED",55.2],["拯救者 Y9000P","聯想",10799,16.0,2.43,32,1024,"RTX 5060",240,11.0,10780,34425,"OLED",54.5],["拯救者 Y9000P","聯想",16299,16.0,2.43,16,1024,"RTX 5070",240,11.0,13531,33977,"OLED",55.7],["拯救者 Y9000P","聯想",14733,16.0,2.43,32,1024,"RTX 5070",240,11.0,13873,35437,"OLED",55.8],["拯救者 Y9000P","聯想",23998,16.0,2.43,64,1024,"RTX 5070",240,11.0,13771,32814,"OLED",55.1],["拯救者 Y7000P","聯想",8159,16.0,2.43,16,1024,"RTX 5060",240,11.0,10879,24743,"IPS",53.9],["拯救者 Y7000P","聯想",9459,16.0,2.43,32,1024,"RTX 5060",240,11.0,11097,25024,"IPS",53.6],["拯救者 Y7000P","聯想",8899,16.0,2.43,16,1024,"RTX 5060",240,11.0,10707,32813,"IPS",55.2],["拯救者 Y7000P","聯想",10199,16.0,2.43,32,1024,"RTX 5060",240,11.0,11462,34924,"IPS",54.4],["拯救者 Y7000P","聯想",10199,16.0,2.43,32,1024,"RTX 5060",240,11.0,11477,29129,"IPS",53.8],["拯救者 Y7000P","聯想",8499,16.0,2.43,16,1024,"RTX 5060",240,11.0,11569,29589,"IPS",53.6],["拯救者 Y7000P","聯想",9999,16.0,2.43,32,1024,"RTX 5060",240,11.0,11347,31155,"IPS",53.8],["拯救者 Y7000P","聯想",13499,16.0,2.43,16,1024,"RTX 5070",240,11.0,13127,29290,"IPS",54.0],["拯救者 R9000P","聯想",10399,16.0,2.43,32,1024,"RTX 5060",240,11.0,11612,37658,"OLED",54.9],["拯救者 R9000P","聯想",11999,16.0,2.43,32,1024,"RTX 5070",240,11.0,12826,39814,"OLED",54.9],["拯救者 R9000P","聯想",12499,16.0,2.43,32,1024,"RTX 5070",240,11.0,13184,38080,"OLED",54.9],["拯救者 R9000P","聯想",8899,16.0,2.43,16,1024,"RTX 5060",240,11.0,11321,27190,"OLED",53.8],["拯救者 R9000P","聯想",9799,16.0,2.43,16,1024,"RTX 5060",240,11.0,10808,28226,"OLED",53.8],["拯救者 R9000P","聯想",10199,16.0,2.43,32,1024,"RTX 5060",240,11.0,10794,29512,"OLED",53.7],["拯救者 R7000P","聯想",7819,16.0,2.43,16,1024,"RTX 5060",165,11.0,11614,28447,"IPS",51.1],["拯救者 Y7000X","聯想",8499,15.3,2.23,16,1024,"RTX 5060",165,6.7,11486,30383,"OLED",54.0],["拯救者 Y7000X","聯想",9999,15.3,2.23,32,1024,"RTX 5060",165,6.7,11211,31014,"OLED",53.5],["拯救者 Y7000X","聯想",14699,15.3,2.23,16,1024,"RTX 5070",165,6.7,13989,30965,"OLED",54.1],["拯救者 R7000X","聯想",15299,15.3,2.23,16,1024,"RTX 5060",165,6.7,11417,21606,"OLED",51.2],["拯救者 Y9000X","聯想",12999,16.0,2.43,32,1024,"RTX 5060",240,11.0,11135,33901,"OLED",54.9],["拯救者 Y9000X","聯想",12999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13384,33605,"OLED",55.4],["ZERO 18 Pro","雷神",25000,18.0,2.99,64,2048,"RTX 5090",240,11.0,22943,32393,"IPS",58.0],["ZERO 18 Pro","雷神",18000,18.0,2.99,32,1024,"RTX 5080",240,11.0,20075,32221,"IPS",58.0],["ZERO 18 Pro","雷神",14999,18.0,2.99,32,1024,"RTX 5070 Ti",240,11.0,16063,28976,"IPS",55.9],["ZERO 16 Pro","雷神",16000,16.0,2.43,32,1024,"RTX 5080",360,11.0,18878,33926,"IPS",58.0],["ZERO 16 Pro","雷神",12000,16.0,2.43,32,1024,"RTX 5070 Ti",360,11.0,16075,29419,"IPS",56.4],["ZERO 18","雷神",12000,18.0,2.99,32,1024,"RTX 5070",240,11.0,13897,35696,"IPS",55.8],["ZERO 16","雷神",10000,16.0,2.43,32,1024,"RTX 5070",240,11.0,13837,34386,"IPS",55.8],["ZERO 16","雷神",9999,16.0,2.43,16,1024,"RTX 5060",240,11.0,11201,35363,"IPS",55.0],["ZERO Air 15","雷神",13000,15.0,2.15,32,1024,"RTX 5070",165,6.7,12800,32220,"IPS",51.9],["ZERO Air 15","雷神",14999,15.0,2.15,32,1024,"RTX 5060",165,6.7,10856,16484,"IPS",50.4],["911X17","雷神",9999,17.3,2.79,16,1024,"RTX 5060",240,11.0,11682,16438,"IPS",51.3],["911X 獵荒者","雷神",6000,16.0,2.43,16,512,"RTX 4060",165,11.0,9941,16968,"IPS",51.0],["獵刃16","雷神",15000,16.0,2.43,16,1024,"RTX 5080",300,11.0,19554,32626,"IPS",55.0],["獵刃S Ultra","雷神",14999,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,16447,17696,"IPS",53.4],["獵刃","雷神",12999,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,15205,32041,"IPS",53.4],["獵刃","雷神",12000,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,15530,34182,"IPS",56.9],["獵刃16","雷神",9999,16.0,2.43,16,1024,"RTX 5070",300,11.0,13993,32126,"IPS",51.8],["獵刃S","雷神",9299,16.0,2.43,16,1024,"RTX 5070",240,11.0,13710,23160,"IPS",51.6],["獵刃S","雷神",9299,16.0,2.43,16,1024,"RTX 5070",240,11.0,13310,17233,"IPS",51.8],["獵刃16","雷神",9299,16.0,2.43,16,1024,"RTX 5070",300,11.0,13719,24142,"IPS",51.7],["獵刃S Ultra","雷神",9999,16.0,2.43,16,1024,"RTX 5070",240,11.0,13479,16813,"IPS",51.7],["獵刃S","雷神",9999,16.0,2.43,16,1024,"RTX 5060",240,11.0,11086,25036,"IPS",51.1],["獵刃S","雷神",10199,16.0,2.43,16,1024,"RTX 5060",180,11.0,11016,22698,"IPS",51.1],["獵刃S超競版","雷神",10299,16.0,2.43,16,1024,"RTX 5060",300,11.0,11018,32120,"IPS",51.3],["獵刃超競版 RZ16","雷神",10299,16.0,2.43,16,1024,"RTX 5060",240,11.0,11219,28279,"IPS",54.0],["獵刃15","雷神",7000,15.6,2.32,16,1024,"RTX 5060",165,6.7,10797,24059,"IPS",50.8],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4060",240,11.0,9885,24083,"IPS",53.6],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4070",240,11.0,12248,25218,"IPS",54.2],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4060",240,11.0,9746,35582,"IPS",53.6],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4070",240,11.0,11967,34884,"IPS",55.4],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4060",240,11.0,10289,32513,"IPS",50.7],["獵刃16","雷神",6000,16.0,2.43,16,512,"RTX 4070",240,11.0,11793,31041,"IPS",51.8],["REDMI Book 14 2025","小米",2999,14.0,1.38,16,512,"",120,10.0,2599,17210,"IPS",39.0],["REDMI Book 14 2025","小米",3599,14.0,1.38,16,512,"",120,10.0,2606,17016,"IPS",39.1],["REDMI Book 14 2025","小米",3399,14.0,1.38,32,512,"",120,10.0,2396,16404,"IPS",39.1],["REDMI Book 16 2025","小米",3509,16.0,1.78,16,512,"",120,12.5,2500,12125,"IPS",39.1],["REDMI Book 16 2025","小米",2638,16.0,1.78,16,512,"",120,12.5,2605,17798,"IPS",39.1],["REDMI Book Pro 14 2025","小米",5241,14.0,1.38,32,1024,"",120,10.0,5169,12398,"IPS",38.8],["REDMI Book Pro 14 2025","小米",5354,14.0,1.38,32,1024,"",120,10.0,4871,18514,"IPS",39.5],["REDMI Book Pro 16 2025","小米",4478,16.0,1.78,32,1024,"",120,12.5,5008,12476,"IPS",39.1],["REDMI Book Pro 16 2025","小米",5798,16.0,1.78,32,1024,"",120,12.5,5128,12683,"IPS",39.1],["REDMI Book 2026","小米",5499,14.0,1.38,16,512,"",120,10.0,2550,16679,"IPS",38.9],["REDMI Book Pro 14 2026","小米",5949,14.0,1.38,24,1024,"",120,10.0,2466,12540,"IPS",38.8],["REDMI Book Pro 14 2026","小米",7999,14.0,1.38,32,1024,"",120,10.0,2588,19456,"IPS",39.5],["REDMI Book Pro 14 2026","小米",9499,14.0,1.38,32,1024,"",120,10.0,10082,22281,"IPS",39.4],["REDMI Book Pro 16 2026","小米",6119,16.0,1.78,24,1024,"",165,12.5,2526,13318,"IPS",38.9],["REDMI Book Pro 16 2026","小米",8199,16.0,1.78,32,1024,"",165,12.5,2567,19816,"IPS",39.4],["REDMI Book Pro 16 2026","小米",9699,16.0,1.78,32,1024,"",165,12.5,9853,22402,"IPS",39.8],["Xiaomi Book Pro 14 2026","小米",8499,14.6,1.5,24,1024,"",120,10.0,2611,12981,"OLED",38.8],["Xiaomi Book Pro 14 2026","小米",9699,14.6,1.5,32,1024,"",120,10.0,2388,17970,"OLED",39.7],["Xiaomi Book Pro 14 2026","小米",10499,14.6,1.5,32,1024,"",120,10.0,10519,23912,"OLED",39.7],["Predator Helios Neo 16S AI","宏碁",21299,16.0,2.43,32,2048,"RTX 5060",240,11.0,11157,28378,"OLED",53.3],["Predator Helios Neo 16S AI","宏碁",23699,16.0,2.43,32,2048,"RTX 5070 Ti",240,11.0,16422,33174,"OLED",56.9],["Predator Helios Neo 16S AI","宏碁",20199,16.0,2.43,64,2048,"RTX 5070",165,11.0,12859,33192,"OLED",52.5],["Predator Helios 18P AI","宏碁",32000,18.0,2.99,192,6144,"RTX 5090",240,11.0,22755,34053,"Mini LED",58.0],["暗影騎士·龍7","宏碁",5839,16.0,2.43,16,1024,"RTX 5060",240,11.0,11500,22152,"IPS",50.9],["暗影騎士·擎7 Pro","宏碁",17999,18.0,2.99,128,4096,"RTX 5080",240,11.0,19679,33849,"IPS",58.0],["暗影騎士·擎7S","宏碁",16599,16.0,2.43,32,1024,"RTX 5080",240,11.0,19821,30364,"IPS",57.3],["暗影騎士·擎7S","宏碁",16599,16.0,2.43,32,1024,"RTX 5080",240,11.0,19515,34351,"IPS",58.0],["暗影騎士·擎7","宏碁",11000,16.0,2.43,16,1024,"RTX 5070",240,11.0,12864,25032,"IPS",54.2],["暗影騎士·擎6","宏碁",5460,16.0,2.43,16,1024,"RTX 4060",240,11.0,10142,25279,"IPS",53.6],["Nitro V 16 AI","宏碁",17899,16.0,2.43,32,2048,"RTX 5070",180,11.0,13559,24641,"IPS",52.0],["Nitro V 16S AI","宏碁",19299,16.0,2.43,32,2048,"RTX 5070",180,11.0,12637,26220,"IPS",52.1],["非凡 Swift Go AI","宏碁",12999,14.0,1.38,32,1024,"",120,10.0,5093,22953,"OLED",41.0],["Swift 16 AI","宏碁",6599,16.0,1.78,32,1024,"",120,12.5,4819,10750,"OLED",39.3],["Swift Air 16","宏碁",7299,16.0,1.78,32,1024,"",120,12.5,4960,14965,"OLED",40.6],["Aspire 14 AI","宏碁",4300,14.0,1.38,16,512,"",120,10.0,5182,9557,"IPS",37.7],["Aspire 16 AI","宏碁",8000,16.0,1.78,16,512,"",120,12.5,1682,10666,"IPS",39.0],["Aspire 16 AI","宏碁",8000,16.0,1.78,16,512,"",120,12.5,2912,14470,"IPS",39.1],["Aspire Lite 16","宏碁",5000,16.0,1.78,16,1024,"",120,12.5,5131,17443,"IPS",38.9],["戰神 S8","神舟",4999,15.6,2.32,16,1024,"RTX 5060",165,6.7,11185,15651,"IPS",51.4],["戰神 S8","神舟",5899,15.6,2.32,16,1024,"RTX 5070",165,6.7,13490,16141,"IPS",52.1],["戰神 S9","神舟",7500,15.6,2.32,16,1024,"RTX 5070",165,6.7,13707,15690,"IPS",52.1],["戰神 Z8 D42","神舟",4239,15.6,2.32,16,512,"RTX 4060",144,6.7,10582,12281,"IPS",50.9],["戰神 Z8 D63","神舟",7399,15.6,2.32,16,512,"RTX 4060",165,6.7,10295,16641,"IPS",50.9],["戰神 T8 Pro","神舟",5599,16.0,2.43,16,1024,"RTX 5060",180,11.0,11670,30747,"IPS",53.6],["戰神 T8 Plus","神舟",7999,16.0,2.43,16,1024,"RTX 5060",180,11.0,11088,17314,"IPS",51.2],["戰神 T8 Plus","神舟",8499,16.0,2.43,16,1024,"RTX 5060",180,11.0,10746,31123,"IPS",53.7],["戰神 T8 Plus","神舟",7649,16.0,2.43,16,1024,"RTX 5060",180,11.0,10786,34263,"IPS",55.2],["戰神 T9 Pro","神舟",6799,16.0,2.43,16,1024,"RTX 5070",180,11.0,13048,30500,"IPS",54.6],["戰神 T10 Pro","神舟",7899,16.0,2.43,32,1024,"RTX 5070 Ti",300,11.0,16208,30168,"IPS",55.7],["戰神 T10 Pro","神舟",10499,16.0,2.43,16,1024,"RTX 5070 Ti",300,11.0,15550,34919,"IPS",56.9],["戰神 T11 Pro","神舟",13999,16.0,2.43,32,1024,"RTX 5080",240,11.0,19416,35961,"IPS",58.0],["戰神 T11 Pro","神舟",15999,16.0,2.43,32,1024,"RTX 5080",300,11.0,19133,34810,"IPS",58.0],["戰神 T12 Pro","神舟",17999,16.0,2.43,32,1024,"RTX 5090",240,11.0,23445,36086,"IPS",58.0],["戰神 K6T7X-2026S1","神舟",8899,16.0,2.43,16,1024,"RTX 5060",240,11.0,11502,29950,"IPS",53.7],["泰坦18 Ultra 2026","微星",47999,18.0,2.99,96,2048,"RTX 5090",240,11.0,23432,37480,"Mini LED",58.0],["泰坦18 Max 2026","微星",30999,18.0,2.99,32,2048,"RTX 5080",120,11.0,19781,38030,"Mini LED",58.0],["泰坦18 Ultra AI 2025","微星",45000,18.0,2.99,64,6144,"RTX 5090",240,11.0,23233,32245,"Mini LED",58.0],["泰坦18 Pro AI 2025","微星",36999,18.0,2.99,64,4096,"RTX 5090",240,11.0,21732,32272,"Mini LED",58.0],["泰坦18 Pro 銳龍版 2025","微星",32999,18.0,2.99,64,2048,"RTX 5080",240,11.0,19497,37074,"Mini LED",58.0],["泰坦18 Pro 銳龍版 2025","微星",32999,18.0,2.99,64,2048,"RTX 5090",240,11.0,22202,35197,"Mini LED",58.0],["絕影18 2025","微星",26999,18.0,2.99,64,2048,"RTX 5080",120,11.0,18106,32884,"Mini LED",56.1],["絕影18 2025","微星",26999,18.0,2.99,64,2048,"RTX 5090",120,11.0,20264,34537,"Mini LED",57.1],["絕影16 2025","微星",15000,16.0,2.43,32,1024,"RTX 5070",240,11.0,12140,34712,"IPS",53.6],["絕影16 2025","微星",15000,16.0,2.43,32,1024,"RTX 5080",240,11.0,18449,32568,"IPS",56.1],["Katana 17 HX B14WFK","微星",7000,17.3,2.79,16,512,"RTX 5060",144,11.0,11246,24399,"IPS",53.3],["Katana 17 HX B14WFK","微星",7000,17.3,2.79,16,512,"RTX 5070",144,11.0,13610,26289,"IPS",54.0],["Katana 15","微星",6000,15.6,2.32,16,512,"RTX 4050",144,6.7,7712,17319,"IPS",50.1],["Katana 15","微星",6000,15.6,2.32,16,512,"RTX 4060",144,6.7,10151,16022,"IPS",50.8],["Cyborg 15 B2295","微星",6800,15.6,2.32,16,512,"RTX 5060",144,6.7,10700,13125,"IPS",51.2],["Cyborg 14","微星",7800,14.0,2.15,32,512,"RTX 4060",144,6.7,10359,15821,"IPS",51.0],["尊爵14 AI+ 2026","微星",9999,14.0,2.15,32,1024,"",120,6.7,10070,24516,"OLED",39.0],["尊爵14 AI+ 2026","微星",9999,14.0,2.15,32,1024,"",120,6.7,9898,32900,"OLED",40.2],["尊爵14 Flip AI+ 2026","微星",10999,14.0,2.15,32,1024,"",120,6.7,4850,26060,"OLED",39.7],["尊爵16 Flip AI+ 2026","微星",8199,16.0,2.43,32,1024,"",240,11.0,4871,31994,"OLED",39.8],["尊爵13 AI+ 2026","微星",7499,13.0,2.15,32,1024,"",165,6.7,4913,16718,"OLED",38.8],["蛟龍 K16 Pro","機械革命",6300,16.0,2.43,16,512,"RTX 5060",180,11.0,10742,16849,"IPS",51.1],["蛟龍 K16 Pro","機械革命",8500,16.0,2.43,32,1024,"RTX 5070 Ti",300,11.0,15807,17962,"IPS",53.3],["極光 X 潮玩版","機械革命",7224,16.0,2.43,16,1024,"RTX 5060",240,11.0,11281,18184,"IPS",51.2],["極光 X 潮玩版","機械革命",10499,16.0,2.43,16,1024,"RTX 5070",240,11.0,12871,18081,"IPS",51.8],["極光 X","機械革命",7999,16.0,2.43,16,512,"RTX 5060",180,11.0,11276,23815,"IPS",51.1],["極光 X","機械革命",7999,16.0,2.43,16,512,"RTX 5060",180,11.0,11215,20793,"IPS",51.2],["極光 S","機械革命",5400,15.6,2.32,16,512,"RTX 5050",165,6.7,8371,21572,"IPS",49.8],["曠世 X","機械革命",7564,16.0,2.43,16,512,"RTX 5060",240,11.0,10865,26729,"IPS",54.0],["曠世 G16 Pro","機械革命",6000,16.0,2.43,16,512,"RTX 4060",165,11.0,10546,25027,"IPS",50.7],["曠世 G16 Pro","機械革命",6000,16.0,2.43,16,512,"RTX 5060",165,11.0,10774,30507,"IPS",51.2],["耀世16 Ultra","機械革命",25000,16.0,2.43,32,2048,"RTX 5090",240,11.0,22015,35369,"OLED",58.0],["耀世16 Ultra","機械革命",12000,16.0,2.43,32,1024,"RTX 5070 Ti",300,11.0,15427,33766,"IPS",57.5],["蒼龍18 Pro","機械革命",15000,18.0,2.99,64,2048,"RTX 5080",180,11.0,19716,36449,"IPS",58.0],["蒼龍18 Pro","機械革命",15000,18.0,2.99,64,2048,"RTX 5090",180,11.0,22706,38598,"IPS",58.0],["蒼龍18 Pro","機械革命",15000,18.0,2.99,64,2048,"RTX 5070 Ti",180,11.0,15179,38655,"IPS",57.1],["蒼龍16 Ultra","機械革命",13000,16.0,2.43,64,2048,"RTX 5080",300,11.0,20248,17494,"IPS",54.7],["蒼龍16 Ultra","機械革命",13000,16.0,2.43,64,2048,"RTX 5090",300,11.0,22909,17669,"IPS",55.5],["暗影精靈 11 SLIM","惠普",12499,14.0,2.15,32,1024,"RTX 5060",120,6.7,10363,18616,"OLED",51.0],["暗影精靈 11 SLIM","惠普",12699,14.0,2.15,32,1024,"RTX 5060",120,6.7,10826,18538,"OLED",51.0],["暗影精靈 11 SLIM","惠普",13999,14.0,2.15,32,1024,"RTX 5070",120,6.7,12888,22670,"OLED",51.5],["暗影精靈 11 SLIM","惠普",14199,14.0,2.15,32,1024,"RTX 5070",120,6.7,12941,22929,"OLED",51.5],["暗影精靈 11 SLIM","惠普",16499,14.0,2.15,64,2048,"RTX 5070",120,6.7,12014,23798,"OLED",51.5],["暗影精靈 11 SLIM","惠普",16699,14.0,2.15,64,2048,"RTX 5070",120,6.7,12444,22555,"OLED",51.5],["暗影精靈 11","惠普",5999,16.0,2.43,16,1024,"RTX 5050",240,11.0,8232,25501,"IPS",52.5],["暗影精靈 11","惠普",6319,16.0,2.43,16,1024,"RTX 5060",240,11.0,10962,25058,"IPS",53.3],["暗影精靈 11","惠普",6959,16.0,2.43,16,1024,"RTX 5070",240,11.0,13400,25377,"IPS",54.5],["暗影精靈 11","惠普",6719,16.0,2.43,16,1024,"RTX 5060",240,11.0,11183,33811,"IPS",54.6],["暗影精靈 11","惠普",7119,16.0,2.43,32,1024,"RTX 5060",240,11.0,11362,33237,"IPS",54.3],["暗影精靈 11","惠普",7999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13024,35700,"IPS",55.4],["曙光15 2025","機械師",8008,15.6,2.32,16,512,"RTX 4060",144,6.7,10378,30979,"IPS",50.9],["曙光15 2025","機械師",8008,15.6,2.32,16,512,"RTX 5060",144,6.7,10768,36178,"IPS",54.5],["曙光16S","機械師",10445,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,15272,30072,"IPS",53.3],["曙光16S","機械師",5539,16.0,2.43,16,1024,"RTX 5060",300,11.0,10804,33507,"IPS",54.2],["曙光16S","機械師",8199,16.0,2.43,16,1024,"RTX 5060",240,11.0,10946,31968,"IPS",51.3],["曙光16S","機械師",9000,16.0,2.43,16,1024,"RTX 5070",240,11.0,13403,32726,"IPS",51.7],["曙光16S","機械師",11000,16.0,2.43,16,1024,"RTX 5070 Ti",240,11.0,16268,29808,"IPS",53.5],["曙光16S Ultra 星釉白","機械師",9446,16.0,2.43,32,1024,"",240,11.0,5216,16372,"IPS",38.8],["曙光16S Ultra 星釉白","機械師",9446,16.0,2.43,32,1024,"RTX 獨顯",240,11.0,2502,17861,"IPS",38.7],["曙光16 Pro","機械師",20000,16.0,2.43,32,1024,"RTX 5090",300,11.0,22593,35326,"IPS",58.0],["曙光16 Pro","機械師",12000,16.0,2.43,32,1024,"RTX 5070 Ti",300,11.0,15414,29235,"IPS",55.6],["曙光16 Pro","機械師",13999,16.0,2.43,32,1024,"RTX 5080",300,11.0,19299,33353,"IPS",58.0],["曙光18 Pro 2025","機械師",15000,18.0,2.99,64,2048,"RTX 5070 Ti",240,11.0,15326,35388,"IPS",57.0],["曙光18 Pro 2025","機械師",15000,18.0,2.99,64,2048,"RTX 5080",240,11.0,19894,34433,"IPS",58.0],["曙光18 Pro 2025","機械師",15000,18.0,2.99,64,2048,"RTX 5090",240,11.0,23079,33791,"IPS",58.0],["蛟龍16 Pro 2025款","機械革命",7499,16.0,2.43,16,1024,"RTX 5060",300,11.0,11273,29453,"IPS",53.7],["蛟龍16 Pro 2025款","機械革命",19399,16.0,2.43,32,1024,"RTX 5060",300,11.0,11014,28374,"IPS",53.6],["蛟龍16 Pro 2025款","機械革命",6799,16.0,2.43,16,1024,"RTX 5060",300,11.0,10902,36482,"IPS",54.6],["蛟龍16 Pro 2025款","機械革命",5995,16.0,2.43,16,1024,"RTX 5060",300,11.0,10742,20383,"IPS",51.2],["蛟龍16Z Pro","機械革命",8999,16.0,2.43,16,1024,"RTX 5060",240,11.0,10887,29503,"IPS",51.3],["耀世15 Pro","機械革命",6159,15.3,2.23,16,1024,"RTX 5060",165,6.7,11096,20513,"IPS",51.4],["翼龍16X","機械革命",6239,16.0,2.43,16,1024,"RTX 5060",240,11.0,10979,20016,"IPS",51.1],["星耀14","機械革命",5599,14.0,2.15,32,1024,"",165,6.7,2402,19289,"IPS",39.4],["戰神 Z8","神舟",4239,15.6,2.32,16,512,"RTX 4050",144,6.7,8035,12198,"IPS",49.7],["戰神 Z8","神舟",4999,15.6,2.32,16,512,"RTX 4060",144,6.7,10454,14685,"IPS",50.7],["戰神 S8","神舟",5499,15.6,2.32,16,512,"RTX 4060",144,6.7,9987,16876,"IPS",50.9],["戰神 T8","神舟",6999,16.0,2.43,16,1024,"RTX 5060",165,11.0,11004,25065,"IPS",53.3],["戰神 T8","神舟",7999,16.0,2.43,16,1024,"RTX 5060",165,11.0,10988,32707,"IPS",54.9],["戰神 T9","神舟",9999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13718,36129,"IPS",55.2],["戰神 T10 Pro","神舟",11999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13875,28902,"IPS",53.8],["戰神 T12 Pro","神舟",17999,16.0,2.43,32,2048,"RTX 5080",240,11.0,18977,33400,"IPS",58.0],["掠奪者 Helios Neo 16S AI","宏碁",9999,16.0,2.43,16,1024,"RTX 5060",165,11.0,11603,29100,"OLED",53.2],["掠奪者 Helios Neo 16S AI","宏碁",14999,16.0,2.43,32,1024,"RTX 5070 Ti",165,11.0,15628,33176,"OLED",57.3],["掠奪者 Helios Neo 16S AI","宏碁",16999,16.0,2.43,32,2048,"RTX 5070 Ti",165,11.0,15122,31042,"OLED",56.7],["掠奪者 Helios Neo 16S AI","宏碁",12999,16.0,2.43,32,1024,"RTX 5070",165,11.0,12828,33002,"OLED",53.1],["掠奪者 Helios Neo 16S AI","宏碁",15999,16.0,2.43,64,2048,"RTX 5070",165,11.0,13855,33389,"OLED",53.0],["暗影騎士·擎 Neo","宏碁",7904,16.0,2.43,16,1024,"RTX 5060",300,11.0,10884,24538,"IPS",53.8],["暗影騎士·擎 Neo","宏碁",8999,16.0,2.43,16,1024,"RTX 5060",300,11.0,10872,25292,"IPS",53.8],["泰坦 18 Ultra AI","微星",28999,18.0,2.99,64,2048,"RTX 5080",120,11.0,19802,33452,"Mini LED",58.0],["泰坦 18 Ultra AI","微星",41999,18.0,2.99,64,6144,"RTX 5090",120,11.0,22076,34137,"Mini LED",58.0],["泰坦 18 Ultra AI","微星",41999,18.0,2.99,64,4096,"RTX 5090",120,11.0,22347,32085,"Mini LED",58.0],["泰坦 18 Pro","微星",28999,18.0,2.99,32,2048,"RTX 5080",240,11.0,18670,34375,"IPS",58.0],["泰坦 18 Pro","微星",15999,18.0,2.99,32,1024,"RTX 5080",240,11.0,19043,33690,"IPS",58.0],["絕影 16 AI","微星",18699,16.0,2.43,32,1024,"RTX 5070",240,11.0,13526,23320,"OLED",52.5],["獵刃S 2025款","雷神",20899,16.0,2.43,16,1024,"RTX 5060",240,11.0,10861,29692,"IPS",50.8],["獵刃S 2025款","雷神",5359,16.0,2.43,16,1024,"RTX 5060",240,11.0,11312,22667,"IPS",50.9],["獵刃S 2025款","雷神",19199,16.0,2.43,16,1024,"RTX 5070",240,11.0,13075,23107,"IPS",51.6],["獵刃S 2025款","雷神",8999,16.0,2.43,16,1024,"RTX 5060",240,11.0,11696,30454,"IPS",53.4],["獵刃16 2025款","雷神",11999,16.0,2.43,32,1024,"RTX 5080",300,11.0,19335,31416,"IPS",54.9],["aibook 14 Air","雷神",3659,14.0,2.15,16,512,"",165,6.7,2222,14991,"IPS",40.3],["Dell Pro 13 Premium","戴爾",16739,13.3,1.24,32,1024,"",120,10.0,5214,12326,"IPS",37.7],["Dell Pro 14 Premium","戴爾",12488,14.0,1.38,32,1024,"",120,10.0,4409,12556,"OLED",37.6],["Dell Pro 14 Premium","戴爾",20900,14.0,1.38,32,1024,"",120,10.0,10272,25245,"OLED",39.2],["Dell Pro Max 14 Premium","戴爾",31799,14.0,2.15,32,1024,"RTX PRO 2000",165,6.7,10613,22373,"IPS",49.9],["曙光15 2025款","機械師",7499,15.6,2.32,16,1024,"RTX 5060",165,6.7,10925,24801,"IPS",53.3],["曙光15 2025款","機械師",8499,15.6,2.32,16,1024,"RTX 5060",165,6.7,11584,34850,"IPS",55.0],["曙光16 2025款","機械師",9999,16.0,2.43,32,1024,"RTX 5070",240,11.0,13120,35979,"IPS",54.9],["曙光16 Ultra 2025款","機械師",14999,16.0,2.43,32,2048,"RTX 5080",240,11.0,19828,32411,"IPS",58.0]];
+const L = RAW.map(r => ({ name:r[0], brand:r[1], price:r[2], size:r[3], weight:r[4], ram:r[5], ssd:r[6], gpu:r[7], hz:r[8], batt:r[9], ts:r[10], r23:r[11], panel:r[12], noise:r[13] }));
+
+/* ── 小工具 ── */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const clone = v => JSON.parse(JSON.stringify(v));
+const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+
+/* ── 示意分數：七個維度 0～1 ── */
+const rng = k => { let a = Infinity, b = -Infinity; for (const l of L) { a = Math.min(a, l[k]); b = Math.max(b, l[k]); } return [a, b]; };
+const nz = (v, [a, b]) => (v - a) / ((b - a) || 1);
+const RG = { ts:rng('ts'), r23:rng('r23'), batt:rng('batt'), weight:rng('weight'), noise:rng('noise'), hz:rng('hz'), price:rng('price') };
+const LP = [Math.log(RG.price[0]), Math.log(RG.price[1])];
+for (const l of L) {
+  l.x = { gpu:nz(l.ts, RG.ts), cpu:nz(l.r23, RG.r23), batt:nz(l.batt, RG.batt), light:1 - nz(l.weight, RG.weight), quiet:1 - nz(l.noise, RG.noise),
+    screen:(l.panel === 'OLED' ? 1 : l.panel === 'Mini LED' ? .9 : .45) * .7 + nz(l.hz, RG.hz) * .3, value:1 - nz(Math.log(l.price), LP) };
+}
+const DIM = { gpu:'顯卡效能', cpu:'處理器效能', batt:'續航', light:'輕巧', quiet:'安靜', screen:'螢幕', value:'價格划算' };
+const BASEW = { gpu:14, cpu:14, batt:14, light:14, quiet:10, screen:14, value:20 };
+
+/* ── 篩選群組 ── */
+const NAME = { price:'價格', size:'尺寸', weight:'重量', brand:'品牌', gpu:'顯卡', ts:'遊戲效能', ram:'記憶體', ssd:'硬碟', hz:'更新率', panel:'面板', batt:'續航', noise:'滿載噪音' };
+const BASIC = ['price', 'size', 'weight', 'brand', 'gpu'];
+const ADV = ['ram', 'ssd', 'hz', 'panel', 'batt', 'noise', 'ts'];
+const ORDER = [...BASIC, ...ADV];
+const SIZES = [['s', '13–14 吋', l => l.size < 14.95], ['m', '15–16 吋', l => l.size >= 14.95 && l.size < 16.95], ['l', '17–18 吋', l => l.size >= 16.95]];
+const T = {
+  price:(l, v) => l.price >= v[0] && l.price <= v[1],
+  size:(l, v) => v.some(k => SIZES.find(s => s[0] === k)[2](l)),
+  weight:(l, v) => l.weight <= v + 1e-9,
+  brand:(l, v) => { const o = [], n = []; for (const b in v) (v[b] === 'only' ? o : n).push(b); return (!o.length || o.includes(l.brand)) && !n.includes(l.brand); },
+  gpu:(l, v) => v === 'yes' ? !!l.gpu : v === 'no' ? !l.gpu : true,
+  ts:(l, v) => l.ts >= v, ram:(l, v) => l.ram >= v, ssd:(l, v) => l.ssd >= v, hz:(l, v) => l.hz >= v,
+  panel:(l, v) => v.includes(l.panel), batt:(l, v) => l.batt >= v, noise:(l, v) => l.noise <= v + 1e-9,
+  around:(l, v) => Math.abs(l.size - v) <= 1,
+};
+const DEF = () => ({ price:[2000, 48000], size:[], weight:3, brand:{}, gpu:'any', ts:0, ram:0, ssd:0, hz:0, panel:[], batt:0, noise:58 });
+const D0 = DEF();
+const active = (g, v) => JSON.stringify(v) !== JSON.stringify(D0[g]);
+const TS_HINT = [[4900, '內顯等級'], [8300, '約 RTX 5050'], [10300, '約 RTX 4060'], [11100, '約 RTX 5060'], [13400, '約 RTX 5070'], [15600, '約 RTX 5070 Ti'], [19400, '約 RTX 5080'], [Infinity, '約 RTX 5090']];
+const tsHint = v => TS_HINT.find(([t]) => v <= t)[1];
+const LABEL = {
+  price:v => v[0] <= 2000 ? `NT$ ${fmt(v[1])} 以內` : v[1] >= 48000 ? `NT$ ${fmt(v[0])} 以上` : `NT$ ${fmt(v[0])}–${fmt(v[1])}`,
+  size:v => SIZES.filter(s => v.includes(s[0])).map(s => s[1]).join('、'),
+  weight:v => `${v.toFixed(1)} kg 以內`,
+  brand:v => { const o = [], n = []; for (const b in v) (v[b] === 'only' ? o : n).push(b); return [o.length ? `只看${o.join('、')}` : '', n.length ? `不要${n.join('、')}` : ''].filter(Boolean).join('，'); },
+  gpu:v => v === 'yes' ? '要獨立顯卡' : '不要獨立顯卡',
+  ts:v => `遊戲效能 ${fmt(v)} 分以上`,
+  ram:v => `記憶體 ${v}GB 以上`, ssd:v => `硬碟 ${v / 1024}TB 以上`, hz:v => `${v}Hz 以上`,
+  panel:v => `${v.join('／')} 面板`, batt:v => `續航 ${v} 小時以上`, noise:v => `滿載噪音 ${v} dB 以下`,
+};
+const MULTI = { size:SIZES.map(s => [s[0], s[1]]), panel:[['IPS', 'IPS'], ['OLED', 'OLED'], ['Mini LED', 'Mini LED']] };
+const ONE = {
+  gpu:[['any', '不限'], ['yes', '要獨顯'], ['no', '不要獨顯']],
+  ram:[[0, '不限'], [32, '32GB 以上'], [64, '64GB 以上']],
+  ssd:[[0, '不限'], [1024, '1TB 以上'], [2048, '2TB 以上']],
+  hz:[[0, '不限'], [120, '120Hz 以上'], [165, '165Hz 以上'], [240, '240Hz 以上']],
+};
+const SL = {
+  weight:{ min:1, max:3, step:.1, dir:'max', ticks:[[1, '1 kg'], [1.5, '1.5'], [2, '2'], [2.5, '2.5'], [3, '不限']] },
+  batt:{ min:0, max:20, step:1, dir:'min', ticks:[[0, '不限'], [5, '5'], [10, '10'], [15, '15'], [20, '20 小時']] },
+  noise:{ min:38, max:58, step:1, dir:'max', ticks:[[38, '38 dB'], [43, '43'], [48, '48'], [53, '53'], [58, '不限']] },
+  ts:{ min:0, max:23000, step:500, dir:'min', ticks:[[0, '不限'], [4900, '內顯'], [11100, '5060'], [15600, '5070 Ti'], [22500, '5090']] },
+};
+const LIVE = {
+  weight:v => v >= 3 ? '不限' : `${v.toFixed(1)} kg 以內`,
+  batt:v => v <= 0 ? '不限' : `${v} 小時以上`,
+  noise:v => v >= 58 ? '不限' : `${v} dB 以下`,
+  ts:v => v <= 0 ? '不限' : `${fmt(v)} 分以上（${tsHint(v)}）`,
+};
+const SEC_HINT = { ts:'3DMark Time Spy', noise:'雙烤滿載', batt:'實測' };
+
+/* 價格滑桿的刻度：2 萬以下每 500、3 萬以下每 1,000、再往上每 2,000（資料集中在低價，這樣左邊比較好拉） */
+const PS = [];
+for (let p = 2000; p <= 20000; p += 500) PS.push(p);
+for (let p = 21000; p <= 30000; p += 1000) PS.push(p);
+for (let p = 32000; p <= 48000; p += 2000) PS.push(p);
+const pIdx = p => Math.max(0, PS.indexOf(p));
+const pBin = p => { for (let i = PS.length - 2; i >= 0; i--) if (p >= PS[i]) return i; return 0; };
+const QUICK = [[2000, 10000, '1 萬內'], [2000, 15000, '1.5 萬內'], [10000, 20000, '1～2 萬'], [2000, 48000, '不限']];
+
+const BC = {}; L.forEach(l => { BC[l.brand] = (BC[l.brand] || 0) + 1; });
+const BRANDS = Object.keys(BC).sort((a, b) => BC[b] - BC[a]);
+
+/* ── C：用途 → 最好有＋排序偏好 ── */
+const CMAP = {
+  uses:{
+    '文書上課':{ desc:'更重視續航', w:{ batt:8, light:4 }, soft:{ batt:10 } },
+    '寫程式':{ desc:'更重視處理器', w:{ cpu:10 }, soft:{ ram:32 } },
+    '剪片修圖':{ desc:'處理器＋螢幕', w:{ cpu:10, screen:8 }, soft:{ ram:32, panel:['OLED', 'Mini LED'] } },
+    '打 3A 遊戲':{ desc:'更重視顯卡效能', w:{ gpu:22 }, soft:{ hz:165 } },
+    '繪圖設計':{ desc:'更重視螢幕', w:{ screen:14 }, soft:{ panel:['OLED', 'Mini LED'] } },
+  },
+  carry:{
+    '幾乎不帶':{ desc:'重量不影響', w:{}, soft:{} },
+    '偶爾帶出門':{ desc:'2.3 kg 內優先', w:{ light:6 }, soft:{ weight:2.3 } },
+    '每天背著走':{ desc:'1.8 kg 內優先', w:{ light:16, batt:6 }, soft:{ weight:1.8 } },
+  },
+  care:{
+    '安靜':{ desc:'45 dB 內優先', w:{ quiet:14 }, soft:{ noise:45 } },
+    '續航久':{ desc:'12 小時以上優先', w:{ batt:14 }, soft:{ batt:12 } },
+    '螢幕好':{ desc:'OLED／Mini LED 優先', w:{ screen:10 }, soft:{ panel:['OLED', 'Mini LED'] } },
+  },
+};
+const STRICT = { weight:Math.min, noise:Math.min, batt:Math.max, ram:Math.max, hz:Math.max };
+function deriveC(c) {
+  const f = {}, why = {}, w = { ...BASEW };
+  const add = name => {
+    const o = CMAP.uses[name] || CMAP.carry[name] || CMAP.care[name];
+    for (const k in o.w) w[k] += o.w[k];
+    for (const g in o.soft) {
+      if (c.dmode[g] === 'off') continue;
+      const v = o.soft[g];
+      if (g in f) { f[g] = STRICT[g] ? STRICT[g](f[g], v) : v; why[g].push(name); } else { f[g] = clone(v); why[g] = [name]; }
+    }
+  };
+  c.uses.forEach(add); if (c.carry) add(c.carry); c.care.forEach(add);
+  const whyText = {};
+  for (const g in why) whyText[g] = why[g].map(n => `「${n}」${c.inferred[n] ? '（對話推斷）' : ''}`).join('、');
+  return { f, why:whyText, w };
+}
+
+/* ── 現在（v1.0.44）的抽屜 ── */
+const NOW_B = [['b7', '7 千以內', [2000, 7000]], ['b10', '1 萬以內', [2000, 10000]], ['b15', '1.5 萬以內', [2000, 15000]], ['b15u', '1.5 萬以上', [15000, 48000]]];
+
+/* ── 狀態 ── */
+const freshT = () => ({ f:Object.assign(DEF(), { price:[2000, 15000] }), mode:{}, src:{ price:1 }, adv:false });
+const freshC = () => ({ uses:['打 3A 遊戲'], carry:'每天背著走', care:[], inferred:{ '打 3A 遊戲':1, '每天背著走':1 }, dmode:{} });
+const freshNow = () => ({ budget:'b15', size:null, brand:null, dgpu:false, wmax:null });
+const narrow = window.matchMedia('(max-width: 760px)').matches;
+const S = { tab:'A', dev:narrow ? 'phone' : 'desktop', d:false, open:'drawer', enter:true, sort:'score', shown:12,
+  t:{ A:freshT(), B:freshT(), C:freshT() }, c:freshC(), now:freshNow() };
+
+function condsOf(tab) {
+  if (tab === 'NOW') return nowConds();
+  const t = S.t[tab], softOK = S.d || tab === 'C', out = [];
+  for (const g of ORDER) {
+    const v = t.f[g]; if (!active(g, v)) continue;
+    out.push({ g, v, label:LABEL[g](v), mode:softOK && t.mode[g] === 'soft' ? 'soft' : 'hard', src:!!t.src[g] });
+  }
+  if (tab === 'C') {
+    const d = deriveC(S.c);
+    for (const g of ORDER) {
+      if (!(g in d.f) || out.some(c => c.g === g)) continue;
+      out.push({ g, v:d.f[g], label:LABEL[g](d.f[g]), mode:S.c.dmode[g] === 'hard' ? 'hard' : 'soft', why:d.why[g], derived:true });
+    }
+  }
+  return out;
+}
+function nowConds() {
+  const n = S.now, o = [];
+  if (n.budget) { const b = NOW_B.find(x => x[0] === n.budget); o.push({ g:'price', v:b[2], label:'預算 ' + b[1], mode:'hard' }); }
+  if (n.size) o.push({ g:'around', v:n.size, label:`${n.size} 吋左右`, mode:'hard' });
+  if (n.brand) o.push({ g:'brand', v:{ [n.brand]:'only' }, label:'品牌：' + n.brand, mode:'hard' });
+  if (n.dgpu) o.push({ g:'gpu', v:'yes', label:'要獨立顯卡', mode:'hard' });
+  if (n.wmax) o.push({ g:'weight', v:n.wmax, label:`重量 ${n.wmax} 公斤以內`, mode:'hard' });
+  return o;
+}
+const weightsOf = tab => tab === 'C' ? deriveC(S.c).w : BASEW;
+const modeOf = (tab, g) => (S.d || tab === 'C') && S.t[tab].mode[g] === 'soft' ? 'soft' : 'hard';
+
+function evaluate(conds, w) {
+  const hard = conds.filter(c => c.mode === 'hard'), soft = conds.filter(c => c.mode === 'soft');
+  const sw = sum(w), res = [];
+  for (const l of L) {
+    if (!hard.every(c => T[c.g](l, c.v))) continue;
+    let s = 0; for (const k in w) s += w[k] * l.x[k]; s = s / sw * 100;
+    const hits = soft.map(c => T[c.g](l, c.v));
+    res.push({ l, hits, base:s, sc:s + hits.filter(Boolean).length * 6 });
+  }
+  const by = { score:(a, b) => b.sc - a.sc, price:(a, b) => a.l.price - b.l.price, weight:(a, b) => a.l.weight - b.l.weight, gpu:(a, b) => b.l.ts - a.l.ts };
+  res.sort(by[S.sort]);
+  return { res, soft };
+}
+function countPass(conds, except, extra) {
+  const hard = conds.filter(c => c.mode === 'hard' && c.g !== except);
+  let n = 0;
+  for (const l of L) if (hard.every(c => T[c.g](l, c.v)) && (!extra || T[extra.g](l, extra.v))) n++;
+  return n;
+}
+
+/* ── 區塊 ── */
+const trkStyle = (a, b) => `background:linear-gradient(to right,#d5ddd8 ${a}%,var(--accent) ${a}%,var(--accent) ${b}%,#d5ddd8 ${b}%)`;
+const ticksHTML = arr => `<div class="ticks" aria-hidden="true">${arr.map(([p, t]) => `<span style="left:${p}%;transform:translateX(${p <= 0 ? 0 : p >= 92 ? -100 : -50}%)">${t}</span>`).join('')}</div>`;
+const suffix = (tab, g) => modeOf(tab, g) === 'soft' ? ' 台符合' : ' 台';
+
+function secHead(tab, g) {
+  const t = S.t[tab], on = active(g, t.f[g]), m = t.mode[g] === 'soft' ? 'soft' : 'hard';
+  const label = tab === 'C' && g === 'price' ? '預算' : NAME[g];
+  const showMode = S.d || tab === 'C';
+  return `<div class="sec-h"><h4>${label}</h4>${SEC_HINT[g] ? `<small>${SEC_HINT[g]}</small>` : ''}${t.src[g] && on ? '<span class="src">來自對話</span>' : ''}<span class="grow"></span>`
+    + (showMode ? `<span class="mseg" role="group" aria-label="${label}的重要程度"><button data-act="mode" data-g="${g}" data-m="hard" aria-pressed="${m === 'hard'}">一定要</button><button data-act="mode" data-g="${g}" data-m="soft" aria-pressed="${m === 'soft'}">最好有</button></span>` : '')
+    + (on ? `<button class="lnk" data-act="rm" data-g="${g}">清除</button>` : '') + '</div>';
+}
+const chipB = (g, k, txt, n, on) => `<button class="chip${on ? ' on' : ''}${!n && !on ? ' zero' : ''}" data-act="chip" data-g="${g}" data-v='${JSON.stringify(k)}' aria-pressed="${on}">${txt}<em>${n}</em></button>`;
+
+function priceLive(tab, conds) {
+  const v = S.t[tab].f.price, on = active('price', v);
+  const n = countPass(conds, 'price', on ? { g:'price', v } : null);
+  const txt = !on ? '不限' : `NT$ ${fmt(v[0])} – ${v[1] >= 48000 ? '不限' : 'NT$ ' + fmt(v[1])}`;
+  return `${txt} <span>· ${n}${suffix(tab, 'price')}</span>`;
+}
+function priceBody(tab, conds) {
+  const v = S.t[tab].f.price, lo = pIdx(v[0]), hi = pIdx(v[1]), N = PS.length - 1;
+  const others = conds.filter(c => c.mode === 'hard' && c.g !== 'price');
+  const bins = new Array(N).fill(0);
+  for (const l of L) if (others.every(c => T[c.g](l, c.v))) bins[pBin(l.price)]++;
+  const mx = Math.max(1, ...bins);
+  const bars = bins.map((n, i) => `<i class="${i >= lo && i < hi ? 'on' : ''}" style="height:${n ? Math.max(5, n / mx * 100) : 0}%" title="NT$ ${fmt(PS[i])}–${fmt(PS[i + 1])}：${n} 台"></i>`).join('');
+  const ticks = [[0, '2 千'], [pIdx(10000), '1 萬'], [pIdx(20000), '2 萬'], [pIdx(30000), '3 萬'], [N, '4.8 萬']].map(([i, t]) => [i / N * 100, t]);
+  return `<div class="lv" data-lv>${priceLive(tab, conds)}</div>
+    <div class="hist" aria-hidden="true">${bars}</div>
+    <div class="rgw"><div class="trk" style="${trkStyle(lo / N * 100, hi / N * 100)}"></div>
+      <input class="rg" type="range" id="${tab}-price-lo" min="0" max="${N}" step="1" value="${lo}" data-range="price-lo" aria-label="價格下限">
+      <input class="rg" type="range" id="${tab}-price-hi" min="0" max="${N}" step="1" value="${hi}" data-range="price-hi" aria-label="價格上限"></div>
+    ${ticksHTML(ticks)}
+    <div class="chips">${QUICK.map(([a, b, txt]) => `<button class="chip${v[0] === a && v[1] === b ? ' on' : ''}" data-act="pq" data-v="${a},${b}">${txt}</button>`).join('')}</div>`;
+}
+function sliderLive(tab, g, conds) {
+  const v = S.t[tab].f[g], on = active(g, v);
+  const n = countPass(conds, g, on ? { g, v } : null);
+  return `${LIVE[g](v)} <span>· ${n}${suffix(tab, g)}</span>`;
+}
+function sliderBody(tab, g, conds) {
+  const c = SL[g], v = S.t[tab].f[g], p = (v - c.min) / (c.max - c.min) * 100;
+  return `<div class="lv" data-lv>${sliderLive(tab, g, conds)}</div>
+    <div class="rgw"><div class="trk" style="${c.dir === 'max' ? trkStyle(0, p) : trkStyle(p, 100)}"></div><input class="rg" type="range" id="${tab}-${g}" min="${c.min}" max="${c.max}" step="${c.step}" value="${v}" data-range="${g}" aria-label="${NAME[g]}"></div>
+    ${ticksHTML(c.ticks.map(([x, t]) => [(x - c.min) / (c.max - c.min) * 100, t]))}`;
+}
+function secHTML(tab, g, conds) {
+  const v = S.t[tab].f[g];
+  const cnt = cand => countPass(conds, g, cand === null ? null : { g, v:cand });
+  let body = '';
+  if (g === 'price') body = priceBody(tab, conds);
+  else if (SL[g]) body = sliderBody(tab, g, conds);
+  else if (g === 'brand') body = `<div class="brands">${BRANDS.map(b => { const m = v[b]; return `<div class="br"><span>${b}<em>${cnt({ [b]:'only' })}</em></span><span class="bseg" role="group" aria-label="${b}"><button data-act="brand" data-b="${b}" data-m="only" aria-pressed="${m === 'only'}">只看</button><button data-act="brand" data-b="${b}" data-m="no" aria-pressed="${m === 'no'}">排除</button></span></div>`; }).join('')}</div>`;
+  else if (MULTI[g]) body = `<div class="chips">${MULTI[g].map(([k, txt]) => chipB(g, k, txt, cnt([k]), v.includes(k))).join('')}</div>`;
+  else if (ONE[g]) body = `<div class="chips">${ONE[g].map(([k, txt]) => chipB(g, k, txt, cnt(k === D0[g] ? null : k), v === k)).join('')}</div>`;
+  return `<div class="sec" data-sec="${g}">${secHead(tab, g)}${body}</div>`;
+}
+function liveUpdate(el, tab, g, conds) {
+  const h = el.querySelector('.sec-h'); if (h) h.outerHTML = secHead(tab, g);
+  const lv = el.querySelector('[data-lv]');
+  if (g === 'price') {
+    lv.innerHTML = priceLive(tab, conds);
+    const v = S.t[tab].f.price, lo = pIdx(v[0]), hi = pIdx(v[1]), N = PS.length - 1;
+    el.querySelectorAll('.hist i').forEach((b, i) => b.classList.toggle('on', i >= lo && i < hi));
+    el.querySelector('.trk').setAttribute('style', trkStyle(lo / N * 100, hi / N * 100));
+    el.querySelectorAll('[data-act="pq"]').forEach(b => { const [a, c] = b.dataset.v.split(',').map(Number); b.classList.toggle('on', v[0] === a && v[1] === c); });
+  } else {
+    lv.innerHTML = sliderLive(tab, g, conds);
+    const c = SL[g], v = S.t[tab].f[g], p = (v - c.min) / (c.max - c.min) * 100;
+    el.querySelector('.trk').setAttribute('style', c.dir === 'max' ? trkStyle(0, p) : trkStyle(p, 100));
+  }
+}
+
+/* ── 結果區 ── */
+const acHTML = c => `<span class="ac ${c.mode}">${c.mode === 'soft' ? '<small>最好有</small>' : ''}${esc(c.label)}${c.src ? '<em>對話</em>' : ''}${c.derived ? '<em>用途</em>' : ''}<button data-act="${c.derived ? 'rmd' : 'rm'}" data-g="${c.g}" aria-label="拿掉 ${esc(c.label)}">✕</button></span>`;
+function barHTML(tab, conds) {
+  if (tab === 'NOW') return conds.length ? `<div class="abar"><span class="ab-k">你的需求：</span>${conds.map(c => `<span class="tag">${esc(c.label)}</span>`).join('')}</div>` : '';
+  if (tab === 'B') return pillsHTML(conds);
+  if (!conds.length) return '<div class="abar"><span class="empty">還沒有條件。按「篩選」開始。</span></div>';
+  return `<div class="abar">${conds.map(acHTML).join('')}<button class="clr" data-act="clear">清除全部</button></div>`;
+}
+function pillsHTML(conds) {
+  const open = S.open && S.open.startsWith('pill:') ? S.open.slice(5) : null;
+  const by = Object.fromEntries(conds.map(c => [c.g, c]));
+  const pill = g => {
+    const c = by[g], o = open === g ? ' open' : '';
+    if (!c) return `<span class="pill${o}" data-pill="${g}"><button data-act="pill" data-g="${g}" aria-expanded="${open === g}">${NAME[g]}<span class="car">▾</span></button></span>`;
+    return `<span class="pill on ${c.mode}${o}" data-pill="${g}"><button data-act="pill" data-g="${g}" aria-expanded="${open === g}">${c.mode === 'soft' ? '<small>最好有</small>' : ''}${esc(c.label)}${c.src ? '<em>對話</em>' : ''}</button><button class="px" data-act="rm" data-g="${g}" aria-label="拿掉 ${esc(c.label)}">✕</button></span>`;
+  };
+  const advOn = conds.filter(c => ADV.includes(c.g));
+  return `<div class="pbar"><div class="pscroll">${BASIC.map(pill).join('')}`
+    + `<span class="pill${open === 'more' ? ' open' : ''}" data-pill="more"><button data-act="pill" data-g="more" aria-expanded="${open === 'more'}">更多${advOn.length ? ` · ${advOn.length}` : ''}<span class="car">▾</span></button></span>`
+    + advOn.map(c => pill(c.g)).join('')
+    + (conds.length ? '<button class="clr" data-act="clear">清除全部</button>' : '') + '</div></div>';
+}
+function cardHTML(r, i, soft) {
+  const l = r.l;
+  const hits = soft.length ? `<span class="hits">${soft.map((c, j) => `<span class="hit ${r.hits[j] ? 'y' : 'n'}">${r.hits[j] ? '✓' : '✗'} ${esc(c.label)}</span>`).join('')}</span>` : '';
+  return `<article class="card"><span class="rk">${i + 1}</span><div class="cm"><b class="nm" title="${esc(l.name)}">${esc(l.name)}</b><span class="sp">${esc(l.brand)} · ${l.size} 吋 · ${l.weight.toFixed(2)} kg · ${esc(l.gpu || '內顯')} · ${l.ram}GB · ${l.hz}Hz · ${l.panel}</span>${hits}</div><div class="cp"><b>NT$ ${fmt(l.price)}</b><span class="scb"><i style="width:${Math.round(r.base)}%"></i></span><small>綜合 ${Math.round(r.base)}</small></div></article>`;
+}
+function zeroHTML(conds) {
+  if (S.tab === 'NOW') return '<div class="zero"><b>沒有符合條件的機型</b></div>';
+  const opts = conds.filter(c => c.mode === 'hard').map(c => ({ c, n:countPass(conds, c.g) })).filter(o => o.n > 0).sort((a, b) => b.n - a.n).slice(0, 3);
+  return `<div class="zero"><b>沒有同時符合這些條件的機型</b><p>放寬其中一個就有：</p><div class="zr">${opts.map(o => `<button data-act="${o.c.derived ? 'rmd' : 'rm'}" data-g="${o.c.g}">拿掉「${esc(o.c.label)}」<em>→ ${o.n} 台</em></button>`).join('')}</div>`
+    + ((S.d || S.tab === 'C') ? '<p>也可以把條件改成「最好有」：不會刷掉機型，符合的排前面。</p>' : '') + '</div>';
+}
+function listHTML(ev, conds) {
+  if (!ev.res.length) return zeroHTML(conds);
+  const rest = ev.res.length - S.shown;
+  return ev.res.slice(0, S.shown).map((r, i) => cardHTML(r, i, ev.soft)).join('')
+    + (rest > 0 ? `<button class="more" data-act="more">再顯示 ${Math.min(12, rest)} 台 <span>（還有 ${rest} 台）</span></button>` : '');
+}
+function nowDrawerHTML() {
+  const n = S.now;
+  const chip = (on, act, v, txt) => `<button class="chip${on ? ' on' : ''}" data-act="${act}" data-v="${v}" aria-pressed="${on}">${txt}</button>`;
+  return `<p class="note">點選後立刻寫進你的需求，和打字說的是同一份。</p>
+    <div class="nsec"><h4>價格</h4><div class="chips">${NOW_B.map(([k, t]) => chip(n.budget === k, 'nb', k, t)).join('')}</div></div>
+    <div class="nsec"><h4>尺寸</h4><div class="chips">${[14, 15, 16, 18].map(i => chip(n.size === i, 'ns', i, `${i} 吋左右`)).join('')}</div></div>
+    <div class="nsec"><h4>品牌</h4><div class="chips">${BRANDS.map(b => chip(n.brand === b, 'nbr', b, b)).join('')}</div></div>
+    <div class="nsec"><h4>顯卡</h4><div class="chips">${chip(n.dgpu, 'ng', 1, '要獨立顯卡')}</div></div>
+    <div class="nsec"><h4>重量上限</h4><div class="chips">${[1.5, 2, 2.5].map(w => chip(n.wmax === w, 'nw', w, `${w} 公斤以內`)).join('')}</div></div>`;
+}
+
+/* ── C 的兩塊 ── */
+function csHTML() {
+  const c = S.c;
+  const grp = (title, hint, key, multi) => `<div class="sec"><div class="sec-h"><h4>${title}</h4>${hint ? `<small>${hint}</small>` : ''}</div><div class="sits">${Object.entries(CMAP[key]).map(([k, o]) => {
+    const on = multi ? c[key].includes(k) : c[key] === k;
+    return `<button class="sit${on ? ' on' : ''}" data-act="sit" data-k="${key}" data-v="${k}" aria-pressed="${on}"><b>${k}</b><small>${o.desc}</small>${on && c.inferred[k] ? '<em>對話推斷</em>' : ''}</button>`;
+  }).join('')}</div></div>`;
+  return grp('主要拿來做什麼', '可多選', 'uses', true) + grp('多常帶出門', '', 'carry', false) + grp('還在意什麼', '可多選', 'care', true);
+}
+function ctHTML(conds, w) {
+  const row = c => {
+    const n = countPass(conds, c.g, { g:c.g, v:c.v }), act = c.derived ? 'dmode' : 'mode';
+    const from = c.derived ? '因為' + c.why : c.src ? '來自對話' : '你在進階裡設定的';
+    return `<li class="ti ${c.mode}"><span class="tl">${esc(c.label)}</span><span class="tw">${from} · ${n} 台符合</span><span class="ta"><span class="mseg" role="group" aria-label="${esc(c.label)}的重要程度"><button data-act="${act}" data-g="${c.g}" data-m="hard" aria-pressed="${c.mode === 'hard'}">一定要</button><button data-act="${act}" data-g="${c.g}" data-m="soft" aria-pressed="${c.mode === 'soft'}">最好有</button></span><button class="x sm" data-act="${c.derived ? 'rmd' : 'rm'}" data-g="${c.g}" aria-label="拿掉 ${esc(c.label)}">✕</button></span></li>`;
+  };
+  const hard = conds.filter(c => c.mode === 'hard'), soft = conds.filter(c => c.mode === 'soft');
+  const sb = sum(BASEW), sn = sum(w);
+  const ups = Object.keys(w).filter(k => w[k] > BASEW[k]).sort((a, b) => w[b] - w[a]);
+  const wl = ups.map(k => { const b = Math.round(BASEW[k] / sb * 100), n = Math.round(w[k] / sn * 100);
+    return `<li><span>${DIM[k]}</span><span class="wbar"><i style="width:${Math.min(100, n * 2)}%"></i><b style="left:${Math.min(99, b * 2)}%"></b></span><span class="wv">${b}% → ${n}%</span></li>`; }).join('');
+  return `<div class="ct"><h4>系統這樣理解你</h4>
+    <p class="ct-k">一定要 · 不符合的會被刷掉</p><ul>${hard.map(row).join('') || '<li class="none">沒有。只有你明說的條件（例如預算）才會放這裡。</li>'}</ul>
+    <p class="ct-k">最好有 · 不刷掉，符合的排前面</p><ul>${soft.map(row).join('') || '<li class="none">還沒有。選上面的用途就會出現。</li>'}</ul>
+    <p class="ct-k">排序更重視 · 黑線是原本的比重，會同步到權重面板</p><ul class="wl">${wl || '<li class="none">還沒有。</li>'}</ul></div>`;
+}
+
+/* ── 畫面 ── */
+const dev = $('#device'), stage = $('#stage'), copy = $('#copy');
+const SORTS = [['score', '綜合分（示意）'], ['price', '價格低到高'], ['weight', '重量輕到重'], ['gpu', '遊戲效能高到低']];
+const chatHTML = () => `<aside class="chat" aria-label="對話"><div class="chat-h"><span class="logo">筆</span>筆電選購助手</div><div class="msgs">
+  <p class="msg a">嗨！想找什麼樣的筆電？說說預算和用途就好。</p>
+  <p class="msg u">預算 1.5 萬以內，常帶去學校，偶爾打遊戲</p>
+  <p class="msg a">好，先用「1.5 萬以內」幫你篩。常帶出門的話，重量大概要在幾公斤以內？</p></div>
+  <div class="composer">輸入訊息…</div></aside>`;
+function headHTML(tab, ph) {
+  return `<div class="res-head"><div class="rh-l"><b>機型 <span id="r-count">0</span> 台</b><small id="r-note"></small></div>
+    <select class="sel" id="sort-sel" data-act="sort" aria-label="排序">${SORTS.map(([k, t]) => `<option value="${k}"${S.sort === k ? ' selected' : ''}>${t}</option>`).join('')}</select>
+    ${tab !== 'B' ? '<button class="fbtn" data-act="open">篩選<em id="r-fb"></em></button>' : ''}
+    ${ph ? '' : '<span class="wbtn">⚖ 權重</span>'}</div>`;
+}
+function drawerHTML(tab) {
+  const en = S.enter ? ' enter' : '';
+  if (tab === 'NOW') return `<aside class="drawer${en}" aria-label="手動篩選"><div class="dh"><b>手動篩選</b><button class="x" data-act="close" aria-label="關閉">✕</button></div><div class="db" id="r-now"></div></aside>`;
+  const t = S.t[tab], ph = g => `<div data-sec="${g}"></div>`;
+  const advBtn = (label, list) => `<button class="advt" data-act="adv" aria-expanded="${t.adv}"><b>${label}</b><small>${list}</small><em id="r-advn"></em><span class="car">${t.adv ? '▴' : '▾'}</span></button>`;
+  const body = tab === 'A'
+    ? BASIC.map(ph).join('') + advBtn('進階條件', '記憶體、硬碟、更新率、面板、續航、噪音、遊戲效能') + (t.adv ? ADV.map(ph).join('') : '')
+    : ph('price') + '<div id="r-cs" class="cs"></div><div id="r-ct"></div>' + advBtn('進階：直接調規格', '尺寸、重量、品牌、顯卡、記憶體…') + (t.adv ? [...BASIC.slice(1), ...ADV].map(ph).join('') : '');
+  return `<aside class="drawer${en}" aria-label="篩選"><div class="dh"><b>${tab === 'A' ? '篩選' : '說說你的用法'}</b><button class="x" data-act="close" aria-label="關閉">✕</button></div><div class="db">${body}</div><div class="df"><button class="ghost" data-act="clear">清除全部</button><button class="primary" data-act="close">顯示 <span class="fcount">0</span> 台</button></div></aside>`;
+}
+function popHTML(g) {
+  const list = g === 'more' ? ADV : [g];
+  return `<div class="pop${S.enter ? ' enter' : ''}" id="pop" role="dialog" aria-label="${g === 'more' ? '更多條件' : NAME[g]}"><div class="db">${list.map(x => `<div data-sec="${x}"></div>`).join('')}</div><div class="df"><button class="ghost" data-act="${g === 'more' ? 'clearadv' : 'clearg'}" data-g="${g}">清除</button><button class="primary" data-act="close">完成 · 顯示 <span class="fcount">0</span> 台</button></div></div>`;
+}
+function renderAll() {
+  const keep = dev.querySelector('.db') ? dev.querySelector('.db').scrollTop : 0;
+  const tab = S.tab, ph = S.dev === 'phone';
+  stage.className = 'stage ' + S.dev;
+  dev.className = 'device ' + S.dev;
+  const top = ph
+    ? '<div class="ph-status"><span>9:41</span><span>5G ▮▮▮</span></div><div class="ph-top"><span class="logo">筆</span><b>筆電選購助手</b><span class="seg2"><span>對話</span><span class="on">機型</span></span></div>'
+    : '<div class="chrome"><i></i><i></i><i></i><span>筆電選購助手 · 機型</span></div>';
+  const pillOpen = S.open && S.open.startsWith('pill:');
+  const drawer = tab !== 'B' && S.open === 'drawer' ? `<div class="scrim" data-act="close"></div>${drawerHTML(tab)}` : '';
+  const pop = tab === 'B' && pillOpen ? `<div class="scrim${ph ? '' : ' clear'}" data-act="close"></div>${popHTML(S.open.slice(5))}` : '';
+  dev.innerHTML = `${top}<div class="proto"><div class="app">${ph ? '' : chatHTML()}<main class="res" id="r-res">${headHTML(tab, ph)}<div id="r-bar"></div><div class="list" id="r-list"></div>${pop}</main>${drawer}</div></div>`;
+  refresh(null);
+  const db = dev.querySelector('.db');
+  if (db && !S.enter) db.scrollTop = keep;
+  S.enter = false;
+}
+function refresh(skip) {
+  const tab = S.tab, conds = condsOf(tab), w = weightsOf(tab), ev = evaluate(conds, w);
+  const q = s => dev.querySelector(s);
+  q('#r-count').textContent = ev.res.length;
+  const ups = tab === 'C' ? Object.keys(w).filter(k => w[k] > BASEW[k]).sort((a, b) => w[b] - w[a]) : [];
+  q('#r-note').textContent = ups.length && S.sort === 'score' ? `依你的用途：更重視${ups.map(k => DIM[k]).join('、')}` : '';
+  const fb = q('#r-fb'); if (fb) fb.textContent = conds.length || '';
+  dev.querySelectorAll('.fcount').forEach(e => { e.textContent = ev.res.length; });
+  q('#r-bar').innerHTML = barHTML(tab, conds);
+  q('#r-list').innerHTML = listHTML(ev, conds);
+  const nw = q('#r-now'); if (nw) nw.innerHTML = nowDrawerHTML();
+  dev.querySelectorAll('[data-sec]').forEach(el => { const g = el.dataset.sec; if (g === skip) liveUpdate(el, tab, g, conds); else el.outerHTML = secHTML(tab, g, conds); });
+  const cs = q('#r-cs'); if (cs) cs.innerHTML = csHTML();
+  const ct = q('#r-ct'); if (ct) ct.innerHTML = ctHTML(conds, w);
+  const an = q('#r-advn');
+  if (an) { const list = tab === 'A' ? ADV : [...BASIC.slice(1), ...ADV]; const n = conds.filter(c => !c.derived && list.includes(c.g)).length; an.textContent = n || ''; }
+  positionPop();
+}
+function positionPop() {
+  const pop = dev.querySelector('#pop'); if (!pop || S.dev === 'phone') return;
+  const g = S.open.slice(5), pill = dev.querySelector(`[data-pill="${g}"]`), res = dev.querySelector('#r-res'), bar = dev.querySelector('.pbar');
+  if (!pill || !res || !bar) return;
+  const rr = res.getBoundingClientRect(), pr = pill.getBoundingClientRect(), br = bar.getBoundingClientRect();
+  const left = Math.max(8, Math.min(pr.left - rr.left, rr.width - pop.offsetWidth - 8));
+  const top = br.bottom - rr.top + 6;
+  pop.style.left = left + 'px'; pop.style.top = top + 'px'; pop.style.maxHeight = (rr.height - top - 12) + 'px';
+}
+
+/* ── 說明欄 ── */
+const COPY = {
+  NOW:{ letter:'', title:'現在（v1.0.44）', sub:'右側抽屜，一排固定按鈕。點了立刻寫進需求，同一類只能選一個。',
+    tries:['抽屜已經打開；「1.5 萬以內」亮著，因為對話裡說過', '品牌點「華碩」再點「宏碁」，華碩會被換掉', '點「1.5 公斤以內」再點「18 吋左右」：點之前看不到台數，一點就變 0 台'],
+    pros:['按鈕少，看起來簡單', '和對話寫進同一份需求'], cons:['上面列的五個問題都在'], build:'' },
+  A:{ letter:'A', title:'改良抽屜', sub:'保留右側抽屜的位置，內容全部換新：價格分布圖配雙把手滑桿、多選、品牌可排除、每個選項標出台數，少用的收進「進階條件」。',
+    tries:['把價格左邊的把手拉到 1 萬，分布圖、台數、上方條件列一起變', '品牌按「排除」，可以同時排除好幾家', '把重量拉到 1.2 kg，看結果區怎麼建議放寬', '打開「進階條件」看記憶體、更新率、續航、噪音、遊戲效能'],
+    pros:['和購物網站的篩選習慣一樣，用戶不用學', '改動最小，現有抽屜和寫入需求的流程都能沿用', '條件再多也放得下'],
+    cons:['電腦版抽屜會蓋住部分結果', '手機版是全螢幕，篩的時候只看得到底部台數'], build:'<b>工作量：小。</b>抽屜內容重寫，加上計算台數的 API。' },
+  B:{ letter:'B', title:'篩選列', sub:'常用條件直接排在結果上方，點一下展開小面板，結果在背後即時變。條件一直看得到，按 ✕ 就拿掉。「更多」裡是 A 的進階條件。',
+    tries:['點「價格」調整，背後的結果即時更新', '按條件上的 ✕ 直接拿掉', '切到手機版：篩選列可以左右滑，面板從下方升起', '點「更多」設一個續航條件，它會變成一顆新的條件'],
+    pros:['邊篩邊看結果，台數變化最直覺', '篩選列本身就是「目前條件」，不用另外做一排', '手機上最順手，購物網站常見'],
+    cons:['一排只放得下 5～6 個常用條件', '條件很多時，「更多」面板還是要用到 A 的內容'], build:'<b>工作量：中。</b>篩選列、小面板，再加上 A 的區塊元件（兩者共用）。' },
+  C:{ letter:'C', title:'用途導向', sub:'先回答白話問題：拿來做什麼、多常帶出門、還在意什麼。系統換算成「最好有」和排序偏好，並寫出換算結果。只有預算這種你明說的條件才會刷掉機型。',
+    tries:['「每天背著走」和「打 3A 遊戲」已經從對話帶入，標著「對話推斷」，點掉看看', '加選「安靜」，看結果重新排名、權重比重變化', '把某個「最好有」改成「一定要」，台數會變少', '打開「進階：直接調規格」，就是 A 的內容'],
+    pros:['新手不用懂規格，最符合「系統懂我」', '用途變成排序偏好，不亂刷機型，符合「權重是核心」', '打遊戲看顯卡效能分數，不要求獨顯（照你 11/9 的決定）'],
+    cons:['用途怎麼換算要設計，而且要能在後台調整', '懂規格的用戶會覺得多一層'], build:'<b>工作量：大。</b>換算表要放進後台，並和現有的權重規則整合。' },
+};
+function renderCopy() {
+  const c = COPY[S.tab];
+  const dn = S.tab === 'NOW' ? ''
+    : S.tab === 'C' ? '<p class="dnote">C 本身就用到 D 的「最好有」：用途只會讓符合的機型排前面，不會刷掉機型。上方的 D 開關不影響 C。</p>'
+    : S.d ? '<p class="dnote">D 開著：每個條件旁邊可以切「一定要」（刷掉不符合的）或「最好有」（不刷掉，符合的排前面，卡片上標 ✓）。</p>'
+    : '<p class="dnote off">D 關著：所有條件都是「一定要」。打開上方的 D 開關，每個條件就能改成「最好有」。</p>';
+  copy.innerHTML = `<div class="kv"><h3>${c.letter ? `<span class="lt">${c.letter}</span>` : ''}${c.title}</h3><p class="sub">${c.sub}</p>${dn}<p class="kv-k">試試看</p><ul class="dot">${c.tries.map(x => `<li>${x}</li>`).join('')}</ul></div>
+    <div class="kv"><p class="kv-k">好處</p><ul class="dot pros">${c.pros.map(x => `<li>${x}</li>`).join('')}</ul><p class="kv-k">要注意</p><ul class="dot cons">${c.cons.map(x => `<li>${x}</li>`).join('')}</ul>${c.build ? `<p class="build">${c.build}</p>` : ''}<button type="button" class="reset" id="reset">重設這個分頁</button></div>`;
+}
+function syncTop() {
+  $$('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === S.tab)));
+  $$('[data-dev]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dev === S.dev)));
+  stage.setAttribute('aria-labelledby', 'tab-' + S.tab);
+}
+
+/* ── 事件 ── */
+dev.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || !dev.contains(b)) return;
+  const act = b.dataset.act, g = b.dataset.g, tab = S.tab, t = S.t[tab];
+  switch (act) {
+    case 'open': S.open = 'drawer'; S.enter = true; return renderAll();
+    case 'close': S.open = null; return renderAll();
+    case 'pill': S.open = S.open === 'pill:' + g ? null : 'pill:' + g; S.enter = true; return renderAll();
+    case 'adv': t.adv = !t.adv; return renderAll();
+    case 'chip': {
+      const k = JSON.parse(b.dataset.v);
+      if (MULTI[g]) { const a = t.f[g]; t.f[g] = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; }
+      else t.f[g] = t.f[g] === k ? clone(D0[g]) : k;
+      delete t.src[g]; break;
+    }
+    case 'brand': { const bn = b.dataset.b, m = b.dataset.m, v = { ...t.f.brand }; if (v[bn] === m) delete v[bn]; else v[bn] = m; t.f.brand = v; delete t.src.brand; break; }
+    case 'pq': t.f.price = b.dataset.v.split(',').map(Number); delete t.src.price; break;
+    case 'mode': t.mode[g] = b.dataset.m; break;
+    case 'dmode': S.c.dmode[g] = b.dataset.m; break;
+    case 'rm': t.f[g] = clone(D0[g]); delete t.src[g]; delete t.mode[g]; break;
+    case 'rmd': S.c.dmode[g] = 'off'; break;
+    case 'clearg': t.f[g] = clone(D0[g]); delete t.src[g]; break;
+    case 'clearadv': ADV.forEach(k => { t.f[k] = clone(D0[k]); }); break;
+    case 'clear': S.t[tab] = { f:DEF(), mode:{}, src:{}, adv:t.adv }; if (tab === 'C') S.c = { uses:[], carry:'', care:[], inferred:{}, dmode:{} }; break;
+    case 'more': S.shown += 12; break;
+    case 'sit': {
+      const key = b.dataset.k, k = b.dataset.v, c = S.c;
+      delete c.inferred[k];
+      if (key === 'carry') c.carry = c.carry === k ? '' : k;
+      else c[key] = c[key].includes(k) ? c[key].filter(x => x !== k) : [...c[key], k];
+      for (const gg in CMAP[key][k].soft) if (c.dmode[gg] === 'off') delete c.dmode[gg];
+      break;
+    }
+    case 'nb': S.now.budget = S.now.budget === b.dataset.v ? null : b.dataset.v; break;
+    case 'ns': { const v = +b.dataset.v; S.now.size = S.now.size === v ? null : v; break; }
+    case 'nbr': S.now.brand = S.now.brand === b.dataset.v ? null : b.dataset.v; break;
+    case 'ng': S.now.dgpu = !S.now.dgpu; break;
+    case 'nw': { const v = +b.dataset.v; S.now.wmax = S.now.wmax === v ? null : v; break; }
+    default: return;
+  }
+  refresh(null);
+});
+dev.addEventListener('input', e => {
+  const r = e.target.dataset.range; if (!r) return;
+  const t = S.t[S.tab], val = +e.target.value;
+  if (r === 'price-lo' || r === 'price-hi') {
+    let lo = pIdx(t.f.price[0]), hi = pIdx(t.f.price[1]);
+    if (r === 'price-lo') { lo = Math.min(val, hi - 1); e.target.value = lo; } else { hi = Math.max(val, lo + 1); e.target.value = hi; }
+    t.f.price = [PS[lo], PS[hi]]; delete t.src.price; refresh('price');
+  } else {
+    t.f[r] = Math.round(val * 10) / 10; delete t.src[r]; refresh(r);
+  }
+});
+dev.addEventListener('change', e => { if (e.target.dataset.act === 'sort') { S.sort = e.target.value; refresh(null); } });
+$$('.tab').forEach(b => b.addEventListener('click', () => {
+  S.tab = b.dataset.tab; S.open = S.tab === 'B' ? null : 'drawer'; S.enter = true; S.shown = 12;
+  syncTop(); renderCopy(); renderAll();
+}));
+$$('[data-dev]').forEach(b => b.addEventListener('click', () => { S.dev = b.dataset.dev; S.enter = true; syncTop(); renderAll(); }));
+$('#d-toggle').addEventListener('change', e => { S.d = e.target.checked; renderCopy(); renderAll(); });
+copy.addEventListener('click', e => {
+  if (!e.target.closest('#reset')) return;
+  if (S.tab === 'NOW') S.now = freshNow(); else S.t[S.tab] = freshT();
+  if (S.tab === 'C') S.c = freshC();
+  S.shown = 12; S.open = S.tab === 'B' ? null : 'drawer'; S.enter = true; renderAll();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.open) { S.open = null; renderAll(); } });
+window.addEventListener('resize', positionPop);
+
+syncTop(); renderCopy(); renderAll();
+})();
+</script>
+</body>
+</html>
