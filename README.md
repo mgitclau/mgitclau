@@ -35,3 +35,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 可切換模組總覽（v1.0.25） | https://mgitclau.github.io/mgitclau/laptop-switchable-modules-v1025.html | 2026-11-07 |
 | AI 筆電選購助手 · 一句話的並行地圖（v1.0.25） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-concurrency.html | 2026-11-07 |
 | AI 筆電選購助手 · 系統架構三層圖（v1.0.26） | https://mgitclau.github.io/mgitclau/laptop-architecture-v1026.html | 2026-11-08 |
+| AI 筆電選購助手 · 代理產出統計（v1.0.25–v1.0.39） | https://mgitclau.github.io/mgitclau/agent-output-stats.html | 2026-11-10 |

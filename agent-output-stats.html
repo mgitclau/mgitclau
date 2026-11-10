@@ -1,0 +1,228 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>代理產出統計 v1.0.25–v1.0.39</title>
+<style>body{font:14px/1.6 -apple-system,"PingFang TC",sans-serif;max-width:1100px;margin:auto;padding:24px 16px;background:#fafafa;color:#222}
+table{border-collapse:collapse;width:100%;margin:8px 0 20px;background:#fff}th,td{border:1px solid #ddd;padding:4px 8px;text-align:right;font-size:13px}th{background:#f0f0f0}td:first-child,th:first-child{text-align:left}
+.wrap{overflow-x:auto}.big{font-size:28px;font-weight:700;color:#1d4ed8}.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px 16px;margin:10px 0}
+.bar{display:inline-block;width:80px;height:8px;background:#eee;vertical-align:middle}.bar i{display:block;height:8px}details{margin:6px 0}summary{cursor:pointer;font-weight:600}small{color:#666}</style>
+<h1>代理產出統計：v1.0.25 – v1.0.39（15 版）</h1><small>產生日期 2026-11-10｜資料：Claude Code 對話紀錄（主代理＋子代理）、版本資料夾實際差異</small>
+<div class="card"><b>最重要的答案：每 1M 脈絡，平均能產出多少含程式碼的輸出？</b><br>
+<table><tr><th>算法</th><th>每 1M 累計脈絡</th><th>每 1M 新鮮 token（不含快取讀）</th></tr>
+<tr><td>版本實際新增程式（git 差異，含測試；全部代理合計）</td><td class="big">44 行</td><td class="big">1252 行</td></tr>
+<tr><td>可追蹤到單一代理的程式（Write/Edit/heredoc）</td><td class="big">37 行</td><td class="big">1055 行</td></tr>
+<tr><td>單一代理中位數（有寫碼、累計脈絡 ≥1M 的代理×版本）</td><td>58 行</td><td>—</td></tr></table>
+<small>共 153 個代理×版本，累計脈絡 749M（其中新鮮 26M，其餘為快取讀取）；實際新增程式 32,696 行。</small></div>
+<h2>怎麼讀這些數字（請務必看）</h2><ul>
+<li><b>累計脈絡</b> = 每次呼叫送進模型的輸入（含快取讀、快取寫）＋輸出，加總。快取讀很便宜但佔 90% 以上，所以另列「新鮮 token」。</li>
+<li><b>實際新增程式</b>：把 v1.0.N 和 v1.0.N-1 資料夾比對，數新增的非空白程式行（ts/tsx/js/sql/css/sh/py），含測試，排除 docs、data、node_modules。這是「真實產出」，但不能分到單一代理。</li>
+<li><b>可追蹤程式行</b>：從對話紀錄裡 Write、Edit（新字串行數）、Bash heredoc 數出來，可分到單一代理，但漏算用 sed／python／node／cp 產生的程式，所以整體<b>略偏低</b>（合計約為實際新增的 84%，單一版本因歸屬誤差可能偏差更大）。</li>
+<li><b>版本歸屬</b>：以代理寫檔／下指令的路徑（laptop-assistant-vX）判斷，之後的呼叫沿用該版本；沒有路徑的用時間最近的版本。規劃型對話橫跨多版時只能近似。</li>
+<li>「含程式碼的輸出」不含 md／html 文件。測試程式有算（約佔 60%）。</li></ul>
+<h2>各版本總表</h2><div class="wrap"><table><tr><th>版本</th><th>代理數（子）</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>實際新增行</th><th>其中測試</th><th>可追蹤行</th><th>實際行／1M</th><th></th></tr>
+<tr><td>v1.0.25</td><td>16（10）</td><td style='text-align:left'>Opus 5.5 292、Fable 5.1 86</td><td>54.8</td><td>2.61</td><td>2,197</td><td>1,182</td><td>1,986</td><td>40</td><td><span class="bar"><i style="width:61%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.26</td><td>12（6）</td><td style='text-align:left'>Opus 5.5 272、Fable 5.1 16</td><td>48.8</td><td>1.43</td><td>1,812</td><td>843</td><td>1,472</td><td>37</td><td><span class="bar"><i style="width:56%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.27</td><td>8（4）</td><td style='text-align:left'>Opus 5.5 105、Fable 5.1 51、Sonnet 5.5 20</td><td>25.6</td><td>0.95</td><td>742</td><td>428</td><td>471</td><td>29</td><td><span class="bar"><i style="width:44%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.28</td><td>8（6）</td><td style='text-align:left'>Opus 5.5 256、Fable 5.1 3</td><td>45.4</td><td>1.20</td><td>2,140</td><td>728</td><td>1,976</td><td>47</td><td><span class="bar"><i style="width:71%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.29</td><td>11（8）</td><td style='text-align:left'>Opus 5.5 211、Fable 5.1 110</td><td>53.1</td><td>2.08</td><td>1,876</td><td>1,000</td><td>1,803</td><td>35</td><td><span class="bar"><i style="width:53%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.30</td><td>8（6）</td><td style='text-align:left'>Opus 5.5 151、Fable 5.1 95</td><td>56.1</td><td>2.00</td><td>3,350</td><td>1,939</td><td>2,528</td><td>60</td><td><span class="bar"><i style="width:90%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.31</td><td>16（10）</td><td style='text-align:left'>Opus 5.5 386、Fable 5.1 141</td><td>109.0</td><td>3.59</td><td>5,082</td><td>3,454</td><td>5,055</td><td>47</td><td><span class="bar"><i style="width:70%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.32</td><td>11（5）</td><td style='text-align:left'>Opus 5.5 144、Fable 5.1 90</td><td>50.0</td><td>1.72</td><td>1,056</td><td>857</td><td>821</td><td>21</td><td><span class="bar"><i style="width:32%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.33</td><td>17（12）</td><td style='text-align:left'>Opus 5.5 653、Fable 5.1 16</td><td>129.8</td><td>3.29</td><td>5,708</td><td>3,952</td><td>3,816</td><td>44</td><td><span class="bar"><i style="width:66%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.34</td><td>14（8）</td><td style='text-align:left'>Opus 5.5 184、Fable 5.1 43</td><td>24.6</td><td>1.51</td><td>412</td><td>165</td><td>549</td><td>17</td><td><span class="bar"><i style="width:25%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.35</td><td>16（9）</td><td style='text-align:left'>Opus 5.5 541、Fable 5.1 98</td><td>108.5</td><td>4.11</td><td>5,881</td><td>3,638</td><td>5,388</td><td>54</td><td><span class="bar"><i style="width:82%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.36</td><td>2（0）</td><td style='text-align:left'>Opus 5.5 44</td><td>3.0</td><td>0.09</td><td>58</td><td>40</td><td>53</td><td>19</td><td><span class="bar"><i style="width:29%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.37</td><td>4（0）</td><td style='text-align:left'>Opus 5.5 72、Sonnet 5.5 10、Fable 5.2 1</td><td>9.9</td><td>0.47</td><td>491</td><td>179</td><td>439</td><td>50</td><td><span class="bar"><i style="width:75%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.38</td><td>5（1）</td><td style='text-align:left'>Opus 5.5 90、Fable 5.2 17</td><td>15.4</td><td>0.46</td><td>1,020</td><td>574</td><td>696</td><td>66</td><td><span class="bar"><i style="width:100%;background:#3b82f6"></i></span></td></tr>
+<tr><td>v1.0.39</td><td>5（3）</td><td style='text-align:left'>Opus 5.5 128、Sonnet 5.5 5</td><td>15.1</td><td>0.60</td><td>871</td><td>340</td><td>484</td><td>58</td><td><span class="bar"><i style="width:87%;background:#3b82f6"></i></span></td></tr>
+<tr><th>合計</th><th>153</th><th></th><th>749</th><th>26.1</th><th>32,696</th><th>19,319</th><th>27,537</th><th>44</th><th></th></tr></table></div>
+<h2>依模型</h2><small>只有可追蹤程式行能分模型。</small><div class="wrap"><table><tr><th>模型</th><th>累計脈絡 M</th><th>新鮮 M</th><th>輸出 M</th><th>可追蹤行</th><th>行／1M 累計</th><th>行／1M 新鮮</th></tr>
+<tr><td>Opus 5.5</td><td>534.9</td><td>20.45</td><td>3.55</td><td>24,064</td><td>45</td><td>1177</td></tr>
+<tr><td>Fable 5.1</td><td>210.5</td><td>5.22</td><td>1.29</td><td>3,128</td><td>15</td><td>600</td></tr>
+<tr><td>Sonnet 5.5</td><td>2.5</td><td>0.35</td><td>0.03</td><td>345</td><td>136</td><td>993</td></tr>
+<tr><td>Fable 5.2</td><td>1.1</td><td>0.10</td><td>0.02</td><td>0</td><td>0</td><td>0</td></tr>
+</table></div><h2>主代理 vs 子代理</h2><div class="wrap"><table><tr><th>角色</th><th>累計脈絡 M</th><th>新鮮 M</th><th>可追蹤行</th><th>行／1M 累計</th><th>行／1M 新鮮</th></tr>
+<tr><td>主代理</td><td>439.8</td><td>13.03</td><td>6,988</td><td>16</td><td>536</td></tr>
+<tr><td>子代理</td><td>309.2</td><td>13.08</td><td>20,549</td><td>66</td><td>1571</td></tr>
+</table></div><h2>每版每個代理明細</h2><small>峰值視窗 = 該代理單次呼叫的最大上下文（k token）。「行」為可追蹤程式行。點版本展開。</small>
+<details><summary>v1.0.25｜16 個代理｜54.8M｜實際 2,197 行／可追蹤 1,986 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 525d95</td><td style='text-align:left'>Fable 5.1 73</td><td>18.36</td><td>0.444</td><td>396</td><td>634</td><td>35</td></tr>
+<tr><td>general-purpose｜Map engine and nlu packages</td><td style='text-align:left'>Opus 5.5 32</td><td>5.60</td><td>0.261</td><td>238</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜D 審查者：gallery 方案審查</td><td style='text-align:left'>Opus 5.5 38</td><td>5.13</td><td>0.155</td><td>174</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜Map admin pages and admin API</td><td style='text-align:left'>Opus 5.5 29</td><td>4.39</td><td>0.246</td><td>225</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 c00e28</td><td style='text-align:left'>Opus 5.5 29</td><td>4.15</td><td>0.208</td><td>342</td><td>3</td><td>1</td></tr>
+<tr><td>general-purpose｜Map user-side web modules</td><td style='text-align:left'>Opus 5.5 31</td><td>4.13</td><td>0.206</td><td>187</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜Map turn host and schemes</td><td style='text-align:left'>Opus 5.5 28</td><td>3.60</td><td>0.176</td><td>174</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 2c6088</td><td style='text-align:left'>Fable 5.1 13、Opus 5.5 6</td><td>2.04</td><td>0.285</td><td>166</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜B1 gallery 卡片與右欄</td><td style='text-align:left'>Opus 5.5 20</td><td>2.01</td><td>0.153</td><td>126</td><td>574</td><td>286</td></tr>
+<tr><td>general-purpose｜B2 gallery 對比頁與圖表</td><td style='text-align:left'>Opus 5.5 23</td><td>1.82</td><td>0.130</td><td>100</td><td>552</td><td>303</td></tr>
+<tr><td>general-purpose｜B3 gallery 契約與後台測試</td><td style='text-align:left'>Opus 5.5 20</td><td>1.49</td><td>0.117</td><td>96</td><td>223</td><td>150</td></tr>
+<tr><td>主代理 e8c8f9</td><td style='text-align:left'>Opus 5.5 13</td><td>0.95</td><td>0.086</td><td>95</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 92e9db</td><td style='text-align:left'>Opus 5.5 8</td><td>0.43</td><td>0.044</td><td>66</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜D 測試者：全套測試與 e2e</td><td style='text-align:left'>Opus 5.5 10</td><td>0.43</td><td>0.061</td><td>54</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜D: independent review v1.0.26</td><td style='text-align:left'>Opus 5.5 3</td><td>0.16</td><td>0.019</td><td>57</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 c98379</td><td style='text-align:left'>Opus 5.5 2</td><td>0.09</td><td>0.017</td><td>45</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.26｜12 個代理｜48.8M｜實際 1,812 行／可追蹤 1,472 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 c00e28</td><td style='text-align:left'>Opus 5.5 71</td><td>22.31</td><td>0.232</td><td>377</td><td>428</td><td>19</td></tr>
+<tr><td>general-purpose｜D: independent review v1.0.26</td><td style='text-align:left'>Opus 5.5 48</td><td>7.01</td><td>0.233</td><td>220</td><td>39</td><td>6</td></tr>
+<tr><td>general-purpose｜B2: reply flow pages</td><td style='text-align:left'>Opus 5.5 40</td><td>4.89</td><td>0.180</td><td>161</td><td>461</td><td>94</td></tr>
+<tr><td>general-purpose｜審查 unknown 不入檔的連鎖影響</td><td style='text-align:left'>Opus 5.5 22</td><td>4.08</td><td>0.053</td><td>204</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 2e96a7</td><td style='text-align:left'>Opus 5.5 24、Fable 5.1 9</td><td>3.07</td><td>0.225</td><td>147</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜B3: review, UI, system pages</td><td style='text-align:left'>Opus 5.5 31</td><td>2.76</td><td>0.123</td><td>114</td><td>198</td><td>72</td></tr>
+<tr><td>主代理 c87efa</td><td style='text-align:left'>Fable 5.1 6、Opus 5.5 4</td><td>1.74</td><td>0.109</td><td>359</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 92e9db</td><td style='text-align:left'>Opus 5.5 11</td><td>1.35</td><td>0.108</td><td>150</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜B1: weight design pages</td><td style='text-align:left'>Opus 5.5 15</td><td>1.15</td><td>0.115</td><td>94</td><td>346</td><td>300</td></tr>
+<tr><td>主代理 dcdc46</td><td style='text-align:left'>Opus 5.5 5</td><td>0.25</td><td>0.027</td><td>51</td><td>0</td><td>0</td></tr>
+<tr><td>workflow-subagent｜review:F5</td><td style='text-align:left'>Opus 5.5 1</td><td>0.16</td><td>0.001</td><td>158</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 954f99</td><td style='text-align:left'>Fable 5.1 1</td><td>0.05</td><td>0.020</td><td>47</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.27｜8 個代理｜25.6M｜實際 742 行／可追蹤 471 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 c87efa</td><td style='text-align:left'>Fable 5.1 51</td><td>13.01</td><td>0.375</td><td>366</td><td>105</td><td>8</td></tr>
+<tr><td>general-purpose｜審查 unknown 不入檔的連鎖影響</td><td style='text-align:left'>Opus 5.5 40</td><td>4.99</td><td>0.199</td><td>208</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜v1.0.27 獨立審查</td><td style='text-align:left'>Opus 5.5 43</td><td>4.38</td><td>0.158</td><td>147</td><td>12</td><td>3</td></tr>
+<tr><td>general-purpose｜撰寫 v1.0.27 驗收測試</td><td style='text-align:left'>Sonnet 5.5 20</td><td>1.51</td><td>0.116</td><td>96</td><td>345</td><td>229</td></tr>
+<tr><td>主代理 7c48d6</td><td style='text-align:left'>Opus 5.5 10</td><td>0.95</td><td>0.065</td><td>295</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 a2c434</td><td style='text-align:left'>Opus 5.5 7</td><td>0.45</td><td>0.009</td><td>65</td><td>9</td><td>20</td></tr>
+<tr><td>主代理 eac4b7</td><td style='text-align:left'>Opus 5.5 4</td><td>0.20</td><td>0.024</td><td>50</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜D：v1.0.28 整體程式審查</td><td style='text-align:left'>Opus 5.5 1</td><td>0.10</td><td>0.003</td><td>95</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.28｜8 個代理｜45.4M｜實際 2,140 行／可追蹤 1,976 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 7c48d6</td><td style='text-align:left'>Opus 5.5 129</td><td>33.06</td><td>0.451</td><td>390</td><td>1,187</td><td>36</td></tr>
+<tr><td>general-purpose｜D：v1.0.28 整體程式審查</td><td style='text-align:left'>Opus 5.5 34</td><td>3.54</td><td>0.170</td><td>148</td><td>7</td><td>2</td></tr>
+<tr><td>general-purpose｜B：預設欄位目錄初稿</td><td style='text-align:left'>Opus 5.5 32</td><td>2.95</td><td>0.187</td><td>138</td><td>423</td><td>143</td></tr>
+<tr><td>general-purpose｜A：新舊 classify 等價性審查</td><td style='text-align:left'>Opus 5.5 20</td><td>1.72</td><td>0.138</td><td>111</td><td>95</td><td>55</td></tr>
+<tr><td>general-purpose｜C：classify 黃金等價測試</td><td style='text-align:left'>Opus 5.5 23</td><td>1.48</td><td>0.102</td><td>80</td><td>264</td><td>178</td></tr>
+<tr><td>general-purpose｜E：v1.0.29 整體程式審查</td><td style='text-align:left'>Opus 5.5 9</td><td>1.29</td><td>0.045</td><td>156</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 f86d8b</td><td style='text-align:left'>Opus 5.5 8、Fable 5.1 3</td><td>1.27</td><td>0.110</td><td>331</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜A：寫 situation.test.ts 黃金測試</td><td style='text-align:left'>Opus 5.5 1</td><td>0.09</td><td>0.002</td><td>90</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.29｜11 個代理｜53.1M｜實際 1,876 行／可追蹤 1,803 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 f86d8b</td><td style='text-align:left'>Fable 5.1 77、Opus 5.5 2</td><td>21.95</td><td>0.777</td><td>385</td><td>459</td><td>21</td></tr>
+<tr><td>general-purpose｜F：整體審查</td><td style='text-align:left'>Opus 5.5 60</td><td>9.19</td><td>0.236</td><td>223</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 36f8b5</td><td style='text-align:left'>Fable 5.1 33</td><td>8.56</td><td>0.236</td><td>441</td><td>128</td><td>15</td></tr>
+<tr><td>general-purpose｜E：v1.0.29 整體程式審查</td><td style='text-align:left'>Opus 5.5 36</td><td>4.68</td><td>0.190</td><td>194</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜B：審查擾動集合與就緒度公式</td><td style='text-align:left'>Opus 5.5 23</td><td>2.30</td><td>0.161</td><td>145</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜A：寫 situation.test.ts 黃金測試</td><td style='text-align:left'>Opus 5.5 21</td><td>1.74</td><td>0.149</td><td>113</td><td>543</td><td>312</td></tr>
+<tr><td>general-purpose｜F：重跑 9 段對話並整理局勢數字</td><td style='text-align:left'>Opus 5.5 21</td><td>1.50</td><td>0.100</td><td>99</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜C：後台「局勢報告」區塊與測試</td><td style='text-align:left'>Opus 5.5 19</td><td>1.44</td><td>0.097</td><td>95</td><td>439</td><td>304</td></tr>
+<tr><td>主代理 17b9c4</td><td style='text-align:left'>Opus 5.5 14</td><td>0.90</td><td>0.052</td><td>85</td><td>25</td><td>28</td></tr>
+<tr><td>general-purpose｜D：寫局勢報告的 API 測試</td><td style='text-align:left'>Opus 5.5 13</td><td>0.76</td><td>0.061</td><td>70</td><td>209</td><td>276</td></tr>
+<tr><td>general-purpose｜E：就緒度試算</td><td style='text-align:left'>Opus 5.5 2</td><td>0.08</td><td>0.021</td><td>39</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.30｜8 個代理｜56.1M｜實際 3,350 行／可追蹤 2,528 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 36f8b5</td><td style='text-align:left'>Fable 5.1 93、Opus 5.5 2</td><td>39.80</td><td>0.993</td><td>562</td><td>485</td><td>12</td></tr>
+<tr><td>general-purpose｜D：API 測試＋e2e</td><td style='text-align:left'>Opus 5.5 47</td><td>6.00</td><td>0.226</td><td>183</td><td>676</td><td>113</td></tr>
+<tr><td>general-purpose｜A：先寫引擎測試</td><td style='text-align:left'>Opus 5.5 24</td><td>2.92</td><td>0.223</td><td>172</td><td>865</td><td>296</td></tr>
+<tr><td>general-purpose｜E：就緒度試算</td><td style='text-align:left'>Opus 5.5 25</td><td>2.62</td><td>0.132</td><td>141</td><td>276</td><td>105</td></tr>
+<tr><td>general-purpose｜C：後台頁面</td><td style='text-align:left'>Opus 5.5 25</td><td>2.17</td><td>0.134</td><td>122</td><td>73</td><td>34</td></tr>
+<tr><td>主代理 8f5629</td><td style='text-align:left'>Opus 5.5 13、Fable 5.1 2</td><td>1.24</td><td>0.190</td><td>218</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜B：回覆層（nlu）</td><td style='text-align:left'>Opus 5.5 13</td><td>0.84</td><td>0.076</td><td>78</td><td>153</td><td>182</td></tr>
+<tr><td>general-purpose｜F：整體審查</td><td style='text-align:left'>Opus 5.5 2</td><td>0.47</td><td>0.022</td><td>233</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.31｜16 個代理｜109.0M｜實際 5,082 行／可追蹤 5,055 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 8f5629</td><td style='text-align:left'>Fable 5.1 112、Opus 5.5 2</td><td>47.82</td><td>1.162</td><td>579</td><td>1,144</td><td>24</td></tr>
+<tr><td>general-purpose｜E：對抗測試（紅線攻擊）</td><td style='text-align:left'>Opus 5.5 81</td><td>17.52</td><td>0.418</td><td>337</td><td>910</td><td>52</td></tr>
+<tr><td>general-purpose｜D：重跑腳本、新腳本、API 與 e2e 測試</td><td style='text-align:left'>Opus 5.5 57</td><td>9.56</td><td>0.314</td><td>247</td><td>968</td><td>101</td></tr>
+<tr><td>general-purpose｜F：整體審查 v1.0.31</td><td style='text-align:left'>Opus 5.5 53</td><td>8.24</td><td>0.263</td><td>230</td><td>38</td><td>5</td></tr>
+<tr><td>general-purpose｜C：後台越界頁與用戶端小卡</td><td style='text-align:left'>Opus 5.5 49</td><td>6.41</td><td>0.208</td><td>185</td><td>463</td><td>72</td></tr>
+<tr><td>general-purpose｜A：引擎測試先行（越界／收藏）</td><td style='text-align:left'>Opus 5.5 36</td><td>6.09</td><td>0.350</td><td>264</td><td>1,227</td><td>201</td></tr>
+<tr><td>general-purpose｜G：重跑預設／全開並整理 §14</td><td style='text-align:left'>Opus 5.5 43</td><td>4.13</td><td>0.185</td><td>155</td><td>14</td><td>3</td></tr>
+<tr><td>general-purpose｜B：回覆層與問答詞判定</td><td style='text-align:left'>Opus 5.5 27</td><td>2.58</td><td>0.138</td><td>122</td><td>291</td><td>113</td></tr>
+<tr><td>主代理 99b04d</td><td style='text-align:left'>Fable 5.1 21</td><td>2.13</td><td>0.133</td><td>146</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 edfd78</td><td style='text-align:left'>Opus 5.5 3</td><td>1.21</td><td>0.013</td><td>406</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 E：理解層對抗測試</td><td style='text-align:left'>Opus 5.5 13</td><td>0.89</td><td>0.076</td><td>136</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 2e96a7</td><td style='text-align:left'>Fable 5.1 4</td><td>0.76</td><td>0.080</td><td>190</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 89b64c</td><td style='text-align:left'>Opus 5.5 5、Fable 5.1 4</td><td>0.64</td><td>0.087</td><td>89</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 D2：API 與 e2e 測試</td><td style='text-align:left'>Opus 5.5 8</td><td>0.50</td><td>0.060</td><td>120</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜F 審查：v1.0.32 第 1 批與契約初稿</td><td style='text-align:left'>Opus 5.5 7</td><td>0.45</td><td>0.082</td><td>144</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 c87efa</td><td style='text-align:left'>Opus 5.5 2</td><td>0.09</td><td>0.018</td><td>46</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.32｜11 個代理｜50.0M｜實際 1,056 行／可追蹤 821 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 89b64c</td><td style='text-align:left'>Fable 5.1 85、Opus 5.5 8</td><td>27.25</td><td>0.826</td><td>413</td><td>93</td><td>3</td></tr>
+<tr><td>general-purpose｜A 測試先行：寫 v1.0.32 測試</td><td style='text-align:left'>Opus 5.5 57</td><td>8.16</td><td>0.276</td><td>214</td><td>685</td><td>84</td></tr>
+<tr><td>主代理 edfd78</td><td style='text-align:left'>Opus 5.5 23、Fable 5.1 1</td><td>6.94</td><td>0.180</td><td>497</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜F 審查：v1.0.32 第 1 批與契約初稿</td><td style='text-align:left'>Opus 5.5 39</td><td>5.67</td><td>0.171</td><td>206</td><td>43</td><td>8</td></tr>
+<tr><td>主代理 99b04d</td><td style='text-align:left'>Fable 5.1 4、Opus 5.5 1</td><td>0.81</td><td>0.171</td><td>168</td><td>0</td><td>0</td></tr>
+<tr><td>workflow-subagent｜review:F4</td><td style='text-align:left'>Opus 5.5 4</td><td>0.41</td><td>0.030</td><td>144</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 af213b</td><td style='text-align:left'>Opus 5.5 5</td><td>0.26</td><td>0.031</td><td>58</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 A：零改變鎖與測試先行</td><td style='text-align:left'>Opus 5.5 2</td><td>0.17</td><td>0.006</td><td>93</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 27d1aa</td><td style='text-align:left'>Opus 5.5 3</td><td>0.14</td><td>0.020</td><td>48</td><td>0</td><td>0</td></tr>
+<tr><td>workflow-subagent｜review:F3</td><td style='text-align:left'>Opus 5.5 1</td><td>0.10</td><td>0.011</td><td>98</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 b98863</td><td style='text-align:left'>Opus 5.5 1</td><td>0.05</td><td>0.002</td><td>45</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.33｜17 個代理｜129.8M｜實際 5,708 行／可追蹤 3,816 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 edfd78</td><td style='text-align:left'>Opus 5.5 185、Fable 5.1 16</td><td>69.86</td><td>1.187</td><td>513</td><td>571</td><td>8</td></tr>
+<tr><td>general-purpose｜子代理 D2：API 與 e2e 測試</td><td style='text-align:left'>Opus 5.5 86</td><td>17.79</td><td>0.282</td><td>283</td><td>1,024</td><td>58</td></tr>
+<tr><td>general-purpose｜子代理 A：零改變鎖與測試先行</td><td style='text-align:left'>Opus 5.5 59</td><td>7.90</td><td>0.264</td><td>204</td><td>851</td><td>108</td></tr>
+<tr><td>workflow-subagent｜review:F5</td><td style='text-align:left'>Opus 5.5 59</td><td>7.51</td><td>0.202</td><td>187</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 C：後台術語表與理解層顯示</td><td style='text-align:left'>Opus 5.5 39</td><td>4.67</td><td>0.197</td><td>168</td><td>533</td><td>114</td></tr>
+<tr><td>workflow-subagent｜review:F1</td><td style='text-align:left'>Opus 5.5 30</td><td>3.92</td><td>0.197</td><td>168</td><td>19</td><td>5</td></tr>
+<tr><td>workflow-subagent｜review:F2</td><td style='text-align:left'>Opus 5.5 29</td><td>3.28</td><td>0.153</td><td>152</td><td>9</td><td>3</td></tr>
+<tr><td>workflow-subagent｜review:F4</td><td style='text-align:left'>Opus 5.5 24</td><td>2.64</td><td>0.138</td><td>155</td><td>35</td><td>13</td></tr>
+<tr><td>general-purpose｜子代理 D1：重跑腳本與新案例</td><td style='text-align:left'>Opus 5.5 29</td><td>2.42</td><td>0.118</td><td>109</td><td>229</td><td>95</td></tr>
+<tr><td>general-purpose｜子代理 E：理解層對抗測試</td><td style='text-align:left'>Opus 5.5 19</td><td>2.22</td><td>0.094</td><td>144</td><td>386</td><td>174</td></tr>
+<tr><td>workflow-subagent｜review:F3</td><td style='text-align:left'>Opus 5.5 21</td><td>2.18</td><td>0.128</td><td>139</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 B：回覆層回顯與機型問答</td><td style='text-align:left'>Opus 5.5 22</td><td>1.93</td><td>0.113</td><td>107</td><td>130</td><td>67</td></tr>
+<tr><td>general-purpose｜遷移依賴遊戲推定獨顯的測試</td><td style='text-align:left'>Opus 5.5 22</td><td>1.58</td><td>0.115</td><td>95</td><td>29</td><td>18</td></tr>
+<tr><td>主代理 b98863</td><td style='text-align:left'>Opus 5.5 12</td><td>1.02</td><td>0.044</td><td>164</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 b1c97f</td><td style='text-align:left'>Opus 5.5 7</td><td>0.45</td><td>0.018</td><td>67</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 a2c434</td><td style='text-align:left'>Opus 5.5 7</td><td>0.36</td><td>0.012</td><td>55</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 368aa4</td><td style='text-align:left'>Opus 5.5 3</td><td>0.11</td><td>0.032</td><td>43</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.34｜14 個代理｜24.6M｜實際 412 行／可追蹤 549 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 b98863</td><td style='text-align:left'>Opus 5.5 38</td><td>4.49</td><td>0.158</td><td>167</td><td>378</td><td>84</td></tr>
+<tr><td>主代理 77da34</td><td style='text-align:left'>Fable 5.1 13</td><td>3.91</td><td>0.057</td><td>445</td><td>16</td><td>4</td></tr>
+<tr><td>主代理 87cacd</td><td style='text-align:left'>Fable 5.1 25</td><td>3.41</td><td>0.233</td><td>203</td><td>0</td><td>0</td></tr>
+<tr><td>Explore｜Explore scheme architecture v1.0.34</td><td style='text-align:left'>Opus 5.5 26</td><td>2.84</td><td>0.180</td><td>163</td><td>0</td><td>0</td></tr>
+<tr><td>Explore｜Explore existing capabilities overlap</td><td style='text-align:left'>Opus 5.5 21</td><td>2.39</td><td>0.177</td><td>164</td><td>0</td><td>0</td></tr>
+<tr><td>Explore｜Explore DB, API, UI, tests</td><td style='text-align:left'>Opus 5.5 34</td><td>2.30</td><td>0.137</td><td>116</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 a2c434</td><td style='text-align:left'>Opus 5.5 18</td><td>1.06</td><td>0.105</td><td>74</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜A2 API 測試</td><td style='text-align:left'>Opus 5.5 9</td><td>0.99</td><td>0.072</td><td>252</td><td>119</td><td>120</td></tr>
+<tr><td>主代理 2f7109</td><td style='text-align:left'>Fable 5.1 5</td><td>0.92</td><td>0.040</td><td>223</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜A1 引擎與 nlu 測試</td><td style='text-align:left'>Opus 5.5 6</td><td>0.85</td><td>0.037</td><td>202</td><td>36</td><td>42</td></tr>
+<tr><td>general-purpose｜Research design/video software reqs</td><td style='text-align:left'>Opus 5.5 12</td><td>0.52</td><td>0.093</td><td>74</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜Research dev/AI/other software reqs</td><td style='text-align:left'>Opus 5.5 9</td><td>0.42</td><td>0.089</td><td>70</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜Research 3D/CAD software reqs</td><td style='text-align:left'>Opus 5.5 8</td><td>0.30</td><td>0.069</td><td>57</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 9c69d2</td><td style='text-align:left'>Opus 5.5 3</td><td>0.18</td><td>0.063</td><td>75</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.35｜16 個代理｜108.5M｜實際 5,881 行／可追蹤 5,388 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 22b282</td><td style='text-align:left'>Opus 5.5 159</td><td>35.83</td><td>0.447</td><td>350</td><td>9</td><td>0</td></tr>
+<tr><td>主代理 77da34</td><td style='text-align:left'>Fable 5.1 40、Opus 5.5 1</td><td>11.94</td><td>0.914</td><td>460</td><td>64</td><td>5</td></tr>
+<tr><td>general-purpose｜子代理 D：編排方案與 8 個工具</td><td style='text-align:left'>Opus 5.5 54</td><td>11.02</td><td>0.394</td><td>301</td><td>1,322</td><td>120</td></tr>
+<tr><td>general-purpose｜E 對抗測試</td><td style='text-align:left'>Opus 5.5 58</td><td>10.74</td><td>0.350</td><td>286</td><td>750</td><td>70</td></tr>
+<tr><td>general-purpose｜A2 API 測試</td><td style='text-align:left'>Opus 5.5 50</td><td>8.65</td><td>0.250</td><td>253</td><td>1,134</td><td>131</td></tr>
+<tr><td>主代理 2f7109</td><td style='text-align:left'>Fable 5.1 52、Opus 5.5 1</td><td>8.07</td><td>0.451</td><td>236</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜A1 引擎與 nlu 測試</td><td style='text-align:left'>Opus 5.5 45</td><td>6.18</td><td>0.249</td><td>216</td><td>1,046</td><td>169</td></tr>
+<tr><td>general-purpose｜子代理 E：後台編排追蹤與重跑</td><td style='text-align:left'>Opus 5.5 43</td><td>3.81</td><td>0.145</td><td>125</td><td>254</td><td>67</td></tr>
+<tr><td>general-purpose｜A3 後台與 e2e 測試</td><td style='text-align:left'>Opus 5.5 33</td><td>2.71</td><td>0.136</td><td>115</td><td>418</td><td>154</td></tr>
+<tr><td>主代理 87cacd</td><td style='text-align:left'>Fable 5.1 6、Opus 5.5 5</td><td>2.66</td><td>0.323</td><td>258</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜審查 F：編排方案整體審查</td><td style='text-align:left'>Opus 5.5 24</td><td>2.17</td><td>0.146</td><td>123</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜子代理 C：理解與回覆層</td><td style='text-align:left'>Opus 5.5 27</td><td>2.15</td><td>0.153</td><td>125</td><td>138</td><td>64</td></tr>
+<tr><td>general-purpose｜子代理 B：引擎衝突分析與兩台對照</td><td style='text-align:left'>Opus 5.5 27</td><td>1.82</td><td>0.113</td><td>92</td><td>253</td><td>139</td></tr>
+<tr><td>主代理 9c5534</td><td style='text-align:left'>Opus 5.5 7</td><td>0.36</td><td>0.012</td><td>55</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 955cfa</td><td style='text-align:left'>Opus 5.5 6</td><td>0.20</td><td>0.022</td><td>34</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 c98c49</td><td style='text-align:left'>Opus 5.5 1</td><td>0.20</td><td>0.002</td><td>194</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.36｜2 個代理｜3.0M｜實際 58 行／可追蹤 53 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 9c5534</td><td style='text-align:left'>Opus 5.5 22</td><td>1.58</td><td>0.042</td><td>84</td><td>53</td><td>34</td></tr>
+<tr><td>主代理 c98c49</td><td style='text-align:left'>Opus 5.5 22</td><td>1.45</td><td>0.051</td><td>82</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.37｜4 個代理｜9.9M｜實際 491 行／可追蹤 439 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 c98c49</td><td style='text-align:left'>Opus 5.5 47、Sonnet 5.5 2</td><td>7.57</td><td>0.321</td><td>199</td><td>439</td><td>58</td></tr>
+<tr><td>主代理 8231f7</td><td style='text-align:left'>Opus 5.5 25</td><td>1.88</td><td>0.099</td><td>112</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 918e36</td><td style='text-align:left'>Sonnet 5.5 8</td><td>0.39</td><td>0.032</td><td>55</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 16c88f</td><td style='text-align:left'>Fable 5.2 1</td><td>0.05</td><td>0.021</td><td>46</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.38｜5 個代理｜15.4M｜實際 1,020 行／可追蹤 696 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>主代理 8231f7</td><td style='text-align:left'>Opus 5.5 73</td><td>13.18</td><td>0.201</td><td>243</td><td>696</td><td>53</td></tr>
+<tr><td>主代理 16c88f</td><td style='text-align:left'>Fable 5.2 14、Opus 5.5 7</td><td>1.60</td><td>0.173</td><td>127</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 b1c97f</td><td style='text-align:left'>Opus 5.5 9</td><td>0.45</td><td>0.034</td><td>55</td><td>0</td><td>0</td></tr>
+<tr><td>主代理 7fbff0</td><td style='text-align:left'>Fable 5.2 3</td><td>0.15</td><td>0.030</td><td>50</td><td>0</td><td>0</td></tr>
+<tr><td>general-purpose｜C 驗收：真實模型重跑</td><td style='text-align:left'>Opus 5.5 1</td><td>0.04</td><td>0.018</td><td>37</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<details><summary>v1.0.39｜5 個代理｜15.1M｜實際 871 行／可追蹤 484 行</summary><div class='wrap'><table><tr><th>代理</th><th>模型（呼叫數）</th><th>累計脈絡 M</th><th>新鮮 M</th><th>峰值視窗 k</th><th>可追蹤行</th><th>行／1M</th></tr>
+<tr><td>general-purpose｜A 後端：對話脈絡</td><td style='text-align:left'>Opus 5.5 46</td><td>6.78</td><td>0.269</td><td>206</td><td>387</td><td>57</td></tr>
+<tr><td>general-purpose｜C 驗收：真實模型重跑</td><td style='text-align:left'>Opus 5.5 41</td><td>4.63</td><td>0.140</td><td>155</td><td>20</td><td>4</td></tr>
+<tr><td>主代理 16c88f</td><td style='text-align:left'>Opus 5.5 19</td><td>1.96</td><td>0.062</td><td>123</td><td>62</td><td>32</td></tr>
+<tr><td>general-purpose｜B 後台：開關與追蹤</td><td style='text-align:left'>Opus 5.5 22</td><td>1.44</td><td>0.095</td><td>82</td><td>15</td><td>10</td></tr>
+<tr><td>主代理 57c6a2</td><td style='text-align:left'>Sonnet 5.5 5</td><td>0.26</td><td>0.035</td><td>56</td><td>0</td><td>0</td></tr>
+</table></div></details>
+<h2>附註：違反「子代理不用 Sonnet」規則</h2><p>範圍內有 1 筆子代理×版本使用了 Sonnet 5.5：v1.0.27 撰寫 v1.0.27 驗收測試 (20次)</p>
