@@ -306,6 +306,20 @@ td .flagtxt { color: var(--warn); font-weight: 600; }
 .soft { font-size: 11px; border-radius: 4px; padding: 0 5px; background: #eceff3; color: var(--muted); margin-left: 4px; }
 .endsum { display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
 .wrap > *, .frame-body > *, .sq > *, .endsum > * { min-width: 0; }
+.flagbox { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; border: 1px dashed #cdbbef; background: var(--note-soft); border-radius: var(--r); padding: 8px 12px; font-size: 13px; }
+.flagbox .lbl { width: 100%; color: var(--note); }
+.flagbox label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.flagbox select { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.dblock { display: grid; gap: 12px; border-top: 2px solid var(--line); padding-top: 14px; scroll-margin-top: calc(var(--tabs-h, 60px) + 8px); min-width: 0; }
+.dblock > * { min-width: 0; }
+.dblock.flash { animation: flash 1.2s ease; }
+.dblock-h { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.dblock-h h3 { font-size: 18px; }
+.dblock-h .jumpbtn { margin-left: auto; }
+.btn.jumpbtn { border-color: #b7cdee; color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.call { scroll-margin-top: calc(var(--tabs-h, 60px) + 12px); }
+.round { scroll-margin-top: calc(var(--tabs-h, 60px) + 12px); }
+
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--ink); white-space: nowrap; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -443,7 +457,8 @@ tr.dim td { opacity: .35; }
   <nav class="tabs" role="tablist" aria-label="切換方案">
     <button class="tab" role="tab" id="tab-a" aria-selected="false" aria-controls="view" data-plan="a"><span><b>A</b> 時間軸瀑布</span><small>先看全貌，再往下讀</small></button>
     <button class="tab" role="tab" id="tab-b" aria-selected="false" aria-controls="view" data-plan="b"><span><b>B</b> 左右檢視器</span><small>點一步看一步</small></button>
-    <button class="tab" role="tab" id="tab-c" aria-selected="true" aria-controls="view" data-plan="c"><span><b>C</b> 對話劇本・第 3 版</span><small>照順序往下讀，全部展開</small></button>
+    <button class="tab" role="tab" id="tab-c" aria-selected="false" aria-controls="view" data-plan="c"><span><b>C</b> 對話劇本・第 3 版</span><small>照順序往下讀，全部展開</small></button>
+    <button class="tab" role="tab" id="tab-d" aria-selected="true" aria-controls="view" data-plan="d"><span><b>D</b> 劇本＋時間軸</span><small>C 在前、A 在後</small></button>
     <button class="tab" role="tab" id="tab-s" aria-selected="false" aria-controls="view" data-plan="s"><span>代理分析頁</span><small>第 6 項，三案共用</small></button>
     <button class="tab" role="tab" id="tab-x" aria-selected="false" aria-controls="view" data-plan="x"><span>三案比較</span><small>開關與新記錄的資料</small></button>
   </nav>
@@ -1100,8 +1115,7 @@ function frameT(t, inner) {
   </div>`;
 }
 
-function planC() {
-  const t = curTurn();
+function storyParts(t, opt = {}) {
   const { steps, total } = stepsOf(t);
   const prep = steps[0], post = steps[steps.length - 1];
   const ev = [];
@@ -1157,17 +1171,15 @@ function planC() {
   const isum = iss.length
     ? `<div class="isum"><div class="sec-title">這一輪的問題（${iss.length}）<span class="muted">程式照固定規則自動找的，點一下跳過去</span></div><ol>${iss.map((x, i) => `<li>${sevTag(x.sev)} <a data-issue="${i}">${esc(x.title)}</a> <span class="faint small">第 ${(evStart.get(x.ev) / 1000).toFixed(2)} 秒</span></li>`).join('')}</ol></div>`
     : '<div class="isum ok"><span class="ok-txt">✓ 這一輪沒有發現問題</span><span class="small muted">（程式照固定規則檢查：SQL 錯誤、可疑資料列、被拒絕的需求、特別慢的回合、截斷、固定文案、被拿掉的卡片）</span></div>';
-  const inav = iss.length
-    ? `<div class="inav"><span>問題 <b data-inav-pos>${cIssue >= 0 ? cIssue + 1 : '–'}</b>／${iss.length}</span><button type="button" class="btn" data-inav="-1" aria-label="上一個問題">▲</button><button type="button" class="btn" data-inav="1" aria-label="下一個問題">▼ 下一個</button></div>`
-    : '<div class="inav"><span class="ok-txt">沒有問題</span></div>';
+  const inavIn = iss.length
+    ? `<span>問題 <b data-inav-pos>${cIssue >= 0 ? cIssue + 1 : '–'}</b>／${iss.length}</span><button type="button" class="btn" data-inav="-1" aria-label="上一個問題">▲</button><button type="button" class="btn" data-inav="1" aria-label="下一個問題">▼ 下一個</button>`
+    : '<span class="ok-txt">沒有問題</span>';
+  const inav = `<div class="inav">${inavIn}${opt.tlBtn ? `<button type="button" class="btn jumpbtn" data-jumpto="d-tl">${opt.tlBtn}</button>` : ''}</div>`;
   const lanes = ['用戶', '程式', '模型', '工具'].map((l, i) => `<span style="left:${LANE_X[i]}px">${l}</span>`).join('');
   const modelMs = t.rounds.reduce((a, r) => a + r.ms, 0), toolMs = t.rounds.reduce((a, r) => a + r.calls.reduce((b, c) => b + c.ms, 0), 0), progMs = Math.max(0, t.ms - modelMs - toolMs);
-  planC.iss = iss;
-  return `<div class="plan-head"><h2>C　對話劇本（第 3 版）</h2><p>每一步一張完整的卡片，照發生順序往下排，內容全部展開。第 3 版加了三件事：開發庫<b>全部 10 輪</b>代理紀錄都能看；程式<b>自動標出問題</b>，固定列上有「下一個」可以一個一個跳；每回合多一段<b>模型實際收到的原文</b>。頁面會很長，這是故意的。</p></div>
-  ${frameT(t, `
-    <div class="sec-title">代理執行過程 ${item(2)}</div>
-    ${summaryT(t)}
-    ${isum}
+  return {
+    iss, isum, summary: summaryT(t),
+    story: `
     <div class="sq-legend"><span class="lg"><b style="color:var(--ink)">讀法</b></span><span class="lg">左邊四條直線是四個角色</span><span class="lg"><i class="lg-msg"></i>誰把東西交給誰</span><span class="lg"><i class="lg-busy"></i>誰正在忙（越長越久）</span><span class="lg">每次工具呼叫拆成兩張卡：給了什麼參數、回了什麼結果</span></div>
     <div class="sq-head"><span class="tcap">時間</span><div class="sq-lanes" aria-hidden="true">${lanes}</div><div class="sq-story" role="navigation" aria-label="劇情列">${chips.join('')}</div>${inav}</div>
     <div class="sq">${rows}</div>
@@ -1177,24 +1189,145 @@ function planC() {
       <div class="propbar"><i style="flex:${Math.max(modelMs, 1)};background:var(--c-model)"></i><i style="flex:${Math.max(toolMs, total / 200)};background:var(--c-sql)"></i><i style="flex:${Math.max(progMs, total / 200)};background:var(--c-prog)"></i></div>
       <div class="sec-title">每回合讀入多少 token ${item(5)}</div>
       ${tokenT(t)}
-    </div>
+    </div>`,
+  };
+}
+
+function planC() {
+  const t = curTurn();
+  const s = storyParts(t);
+  planC.iss = s.iss;
+  return `<div class="plan-head"><h2>C　對話劇本（第 3 版）</h2><p>每一步一張完整的卡片，照發生順序往下排，內容全部展開。第 3 版加了三件事：開發庫<b>全部 10 輪</b>代理紀錄都能看；程式<b>自動標出問題</b>，固定列上有「下一個」可以一個一個跳；每回合多一段<b>模型實際收到的原文</b>。頁面會很長，這是故意的。</p></div>
+  ${frameT(t, `
+    <div class="sec-title">代理執行過程 ${item(2)}</div>
+    ${s.summary}
+    ${s.isum}
+    ${s.story}
   `)}`;
 }
 planC.iss = [];
+
+/* ================= D 劇本＋時間軸（C 在前、A 在後） ================= */
+const dState = { story: true, timeline: true, order: 'ca' };
+const storyOn = () => plan === 'c' || dState.story;
+/* 劇本卡片的 id → 時間軸那邊的卡片 id（劇本關掉時用） */
+function toTimelineId(ev) {
+  let m = /^c-m(\d+)$/.exec(ev); if (m) return `a2-m${m[1]}`;
+  m = /^c-[cr](\d+-\d+)$/.exec(ev); if (m) return `a2-c${m[1]}`;
+  return 'd-tl';
+}
+/* 時間軸的步驟 key → 劇本卡片 id */
+function keyToStoryId(key) {
+  if (key === 'prep') return 'c-prep';
+  if (key === 'post') return 'c-post';
+  if (key.startsWith('m')) return `c-${key}`;
+  return `c-r${key.slice(1)}`;
+}
+function waterfallT(t) {
+  const { steps, total } = stepsOf(t);
+  const stepS = total <= 16000 ? 2 : total <= 40000 ? 5 : 10;
+  const tick = ((stepS * 1000) / total) * 100;
+  const ticks = [];
+  for (let s = 0; s * 1000 <= total; s += stepS) ticks.push(`<span class="wf-tick" style="left:${((s * 1000) / total) * 100}%">${s} 秒</span>`);
+  const label = (s) => (s.key === 'prep' ? '準備' : s.key === 'post' ? '收尾' : s.c ? (KIND[s.c.name]?.label ?? s.c.name) : `第 ${s.rd.n} 回合・模型`);
+  const short = (s) => (s.c ? toolShort(s.c) : s.rd?.error ? '失敗' : '');
+  const rows = steps.map((s) => {
+    const bad = (s.c && s.c.status !== 'ok') || (!s.c && s.rd?.error);
+    const left = (s.start / total) * 100, w = (s.ms / total) * 100;
+    const flip = left + w > 78;
+    const sh = short(s);
+    const val = `<span class="wf-val" style="${flip ? `right:calc(${100 - left}% + 6px)` : `left:calc(${left + w}% + 6px)`}">${sec(s.ms)}${sh ? `・${esc(sh)}` : ''}</span>`;
+    const tip = `<span class="tk" style="--k:${KIND[s.kind]?.color ?? 'var(--c-prog)'}"></span><b>${sec(s.ms)}</b>　${esc(label(s))}<br>從第 ${(s.start / 1000).toFixed(2)} 秒開始${s.c ? `<br>${esc(s.c.summary)}` : s.rd ? `<br>讀入 ${n(s.rd.inTok)}・寫出 ${n(s.rd.outTok)} token` : ''}<br><b>點一下跳到${storyOn() ? '劇本' : '下面'}的那張卡</b>`;
+    return `<div class="wf-row ${s.c ? 'child' : ''}"><div class="wf-lab">${kdot(s.kind)}<span>${esc(label(s))}</span>${bad ? '<span class="pill bad" style="padding:0 5px">錯</span>' : ''}</div><div class="wf-track" style="--tick:${tick}%"><button type="button" class="wf-bar ${bad ? 'err' : ''}" style="--k:${KIND[s.kind]?.color ?? 'var(--c-prog)'};left:${left}%;width:${w}%" data-jump2="${s.key}" data-tip="${esc(tip)}" aria-label="${esc(`${label(s)} ${sec(s.ms)}`)}"></button>${val}</div></div>`;
+  }).join('');
+  return `<div class="wf"><div class="wf-row wf-axis"><div class="wf-lab"></div><div class="wf-track">${ticks.join('')}</div></div>${rows}</div>`;
+}
+function roundCardsT(t, iss) {
+  let state = { ...t.before };
+  const callouts = (ids) => iss.filter((x) => ids.includes(x.ev)).map((x) => `<div class="icall sev-${x.sev}"><b>${SEV_LABEL[x.sev]}：${esc(x.title)}</b>${x.detail ? `<span>${esc(x.detail)}</span>` : ''}</div>`).join('');
+  const tags = (ids) => iss.filter((x) => ids.includes(x.ev)).map((x) => sevTag(x.sev)).join('');
+  return t.rounds.map((rd) => {
+    const calls = rd.calls.map((c, j) => {
+      const before = state, res = c.result ?? {};
+      if (res.weights || res.top || res.formal != null) state = { weights: res.weights ?? state.weights, weightsFrom: '這輪前一次改', perf: res.perfSubs ?? state.perf, top: res.top ? res.top.map((x) => x.id) : state.top, formal: res.formal ?? state.formal };
+      const ids = [`c-c${rd.n}-${j}`, `c-r${rd.n}-${j}`];
+      let body = '';
+      if (c.name === 'sql_query' && typeof c.args?.sql === 'string') {
+        body = `<pre class="sql">${fmtSql(c.args.sql, colErr(res.error))}</pre>${res.ok ? `<div class="sub-h"><span>查到 ${n(res.rows.length)} 列</span><span class="faint">資料庫耗時 ${n(res.ms)} 毫秒</span>${item(3)}</div>${tableT(res.rows, new Set(suspicious(c).map((r) => r.id)))}` : `<div class="dberr"><b>資料庫回報</b><span>${esc(res.error)}</span></div>`}`;
+      } else if (c.name === 'update_profile') {
+        body = `${c.args?.weightReason ? `<p class="why">${esc(c.args.weightReason)}</p>` : ''}${profileT(c, before)}`;
+      } else if (c.name === 'reply') {
+        const cards = (c.args?.cards ?? []).map((k) => `<div class="ucard"><b>${esc(CARD_LABEL[k.type] ?? k.type)}</b>${(k.ids ?? []).map((id) => esc(sname(id))).join('、')}</div>`).join('');
+        body = `<div class="bubble">${esc(c.args?.text ?? '')}</div>${cards ? `<div class="cardrow">${cards}</div>` : ''}`;
+      }
+      return `<article class="call" id="a2-c${rd.n}-${j}">
+        <div class="call-h"><span class="ktag">${kdot(c.name)}${esc(KIND[c.name]?.label ?? c.name)}</span><span class="mono">${esc(c.name)}</span>${statusPill(c.status)}${tags(ids)}<span class="muted small num">${sec(c.ms)}</span><span class="sum">${esc(c.summary)}</span></div>
+        <div class="call-b">${callouts(ids)}${body}${rawView(c)}</div>
+      </article>`;
+    }).join('');
+    const think = t.id === R.id ? thinkView(rd, false) : '<p class="small muted">舊紀錄沒有存思考內容（v1.0.49 起才會記）。</p>';
+    return `<section class="round" id="a2-m${rd.n}">
+      <div class="round-h"><h4>${kdot('model')} 第 ${rd.n} 回合</h4><span class="meta">模型 ${sec(rd.ms)}・讀入 ${n(rd.inTok)}・寫出 ${n(rd.outTok)} token</span>${tags([`c-m${rd.n}`])}</div>
+      ${callouts([`c-m${rd.n}`])}
+      ${rd.error ? `<div class="dberr"><b>呼叫失敗</b><span>${esc(rd.error)}</span></div>` : `${think}${saidView(rd)}`}
+      ${calls ? `<div class="calls">${calls}</div>` : ''}
+    </section>`;
+  }).join('');
+}
+function timelineBlockT(t, iss, backBtn) {
+  return `<section class="dblock" id="d-tl">
+    <div class="dblock-h"><h3>時間軸瀑布</h3><span class="muted small">一個畫面看完時間花在哪；點任何一條橫條，跳到${storyOn() ? '上面劇本' : '下面'}對應的那張卡</span>${backBtn ? `<button type="button" class="btn jumpbtn" data-jumpto="d-story">${backBtn}</button>` : ''}</div>
+    <div class="legend">${['prog', 'model', 'sql_query', 'update_profile', 'reply'].map((k) => `<span>${kdot(k)}${KIND[k].label}</span>`).join('')}<span class="faint">紅框＝出錯</span></div>
+    ${waterfallT(t)}
+    <div class="ctxgrid">
+      <div><div class="sec-title">說明書組成 <span class="muted">${n(t.sysChars)} 字，點一段看全文</span>${item(5)}</div><div class="legend" style="margin:4px 0 6px"><span><i class="sw" style="background:var(--c-ctx)"></i>固定規則</span><span><i class="sw" style="background:var(--c-acc)"></i>每輪變動的資料</span></div>${partsT(t)}</div>
+      <div><div class="sec-title">每回合讀入多少 token ${item(5)}</div>${tokenT(t)}</div>
+    </div>
+    <div class="sec-title">每個回合 ${item(3)}${item(4)}</div>
+    ${roundCardsT(t, iss)}
+  </section>`;
+}
+function planD() {
+  const t = curTurn();
+  const ca = dState.order === 'ca';
+  const both = dState.story && dState.timeline;
+  const s = storyParts(t, { tlBtn: both ? (ca ? '看時間軸 ↓' : '看時間軸 ↑') : '' });
+  planC.iss = s.iss;
+  const story = dState.story ? `<section class="dblock" id="d-story"><div class="dblock-h"><h3>對話劇本</h3><span class="muted small">從頭讀懂這一輪：每一步交了什麼給誰、模型為什麼這樣做</span></div>${s.story}</section>` : '';
+  const timeline = dState.timeline ? timelineBlockT(t, s.iss, both ? (ca ? '回到劇本 ↑' : '回到劇本 ↓') : '') : '';
+  const blocks = !story && !timeline
+    ? '<p class="isum">兩塊都關了。到後台把「對話劇本」或「時間軸瀑布」至少打開一個。</p>'
+    : ca ? `${story}${timeline}` : `${timeline}${story}`;
+  const flags = `<div class="flagbox">
+    <span class="lbl">後台開關（示意，可以直接切換看效果）${item(1)}</span>
+    <label for="d-story-on"><input type="checkbox" id="d-story-on" ${dState.story ? 'checked' : ''}> 對話劇本 <span class="mono faint">admin.agent_story</span></label>
+    <label for="d-tl-on"><input type="checkbox" id="d-tl-on" ${dState.timeline ? 'checked' : ''}> 時間軸瀑布 <span class="mono faint">admin.agent_timeline</span></label>
+    <label for="d-order">順序 <select id="d-order"><option value="ca" ${ca ? 'selected' : ''}>劇本在前、時間軸在後</option><option value="ac" ${ca ? '' : 'selected'}>時間軸在前、劇本在後</option></select> <span class="mono faint">agentTraceOrder</span></label>
+  </div>`;
+  return `<div class="plan-head"><h2>D　劇本＋時間軸</h2><p>C 對話劇本在前、A 時間軸瀑布在後，兩塊都出現。內容有重複，但不同情況都好看：想從頭讀懂一輪看劇本，想快速掃時間、找慢在哪看時間軸。劇本頂端固定列有「看時間軸 ↓」，時間軸那邊有「回到劇本 ↑」；點瀑布圖的任何一條橫條，會跳到劇本裡對應的那張卡。10 輪紀錄都能切換。</p></div>
+  ${frameT(t, `
+    ${flags}
+    <div class="sec-title">代理執行過程 ${item(2)}</div>
+    ${s.summary}
+    ${s.isum}
+    ${blocks}
+  `)}`;
+}
 
 function gotoIssue(i) {
   const iss = planC.iss;
   if (!iss.length) return;
   cIssue = ((i % iss.length) + iss.length) % iss.length;
   view.querySelectorAll('[data-inav-pos]').forEach((x) => { x.textContent = String(cIssue + 1); });
-  flash(document.getElementById(iss[cIssue].ev));
+  const ev = iss[cIssue].ev;
+  flash(document.getElementById(storyOn() ? ev : toTimelineId(ev)));
 }
-function openTurn(id, jumpIssue = false) {
+function openTurn(id, jumpIssue = false, target = plan === 'c' || plan === 'd' ? plan : 'd') {
   const t = T2.find((x) => x.id === id || x.id.startsWith(id));
   if (!t) return;
   cTurnId = t.id; cIssue = -1;
-  plan = 'c';
-  document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x.dataset.plan === 'c')));
+  plan = target;
+  document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x.dataset.plan === target)));
   render();
   if (jumpIssue && planC.iss.length) requestAnimationFrame(() => gotoIssue(0));
   else view.scrollIntoView({ block: 'start' });
@@ -1204,7 +1337,7 @@ function openTurn(id, jumpIssue = false) {
 let spyRaf = 0;
 function spy() {
   spyRaf = 0;
-  if (plan !== 'c') return;
+  if (plan !== 'c' && plan !== 'd') return;
   const head = view.querySelector('.sq-head'), story = view.querySelector('.sq-story');
   if (!head || !story) return;
   const line = head.getBoundingClientRect().bottom + 16;
@@ -1366,11 +1499,11 @@ function comparePage() {
 
 /* ---------- 切換與互動 ---------- */
 const view = document.getElementById('view');
-let plan = 'c';
+let plan = 'd';
 function render() {
   UID = 0;
-  view.innerHTML = plan === 'a' ? planA() : plan === 'b' ? planB() : plan === 'c' ? planC() : plan === 's' ? statsPage() : comparePage();
-  if (plan === 'c') requestAnimationFrame(spy);
+  view.innerHTML = plan === 'a' ? planA() : plan === 'b' ? planB() : plan === 'c' ? planC() : plan === 'd' ? planD() : plan === 's' ? statsPage() : comparePage();
+  if (plan === 'c' || plan === 'd') requestAnimationFrame(spy);
 }
 document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
   plan = b.dataset.plan;
@@ -1386,7 +1519,7 @@ function flash(el) {
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
 view.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-goto],[data-node],[data-dtab],[data-showmore],[data-goto-c],[data-turn],[data-turnstep],[data-issue],[data-inav],[data-ai]');
+  const t = e.target.closest('[data-goto],[data-node],[data-dtab],[data-showmore],[data-goto-c],[data-turn],[data-turnstep],[data-issue],[data-inav],[data-ai],[data-jump2],[data-jumpto]');
   if (!t) return;
   if (t.dataset.goto) {
     const k = t.dataset.goto;
@@ -1398,6 +1531,8 @@ view.addEventListener('click', (e) => {
   if (t.dataset.dtab) { bTab = t.dataset.dtab; render(); return; }
   if (t.dataset.showmore) { view.querySelectorAll(`[data-more="${t.dataset.showmore}"]`).forEach((r) => { r.hidden = false; }); t.remove(); return; }
   if (t.dataset.gotoC) { flash(document.getElementById(t.dataset.gotoC)); return; }
+  if (t.dataset.jump2) { const k = t.dataset.jump2; flash(document.getElementById(storyOn() ? keyToStoryId(k) : k === 'prep' || k === 'post' ? 'd-tl' : `a2-${k}`)); return; }
+  if (t.dataset.jumpto) { flash(document.getElementById(t.dataset.jumpto)); return; }
   if (t.dataset.turnstep) { const i = T2.findIndex((x) => x.id === cTurnId) + Number(t.dataset.turnstep); if (T2[i]) openTurn(T2[i].id); return; }
   if (t.dataset.issue) { gotoIssue(Number(t.dataset.issue)); return; }
   if (t.dataset.inav) { gotoIssue(cIssue < 0 && Number(t.dataset.inav) > 0 ? 0 : cIssue + Number(t.dataset.inav)); return; }
@@ -1407,6 +1542,9 @@ view.addEventListener('click', (e) => {
 view.addEventListener('change', (e) => {
   if (e.target.id === 'f-issue') { onlyIssues = e.target.checked; render(); }
   if (e.target.id === 'c-turn') openTurn(e.target.value);
+  if (e.target.id === 'd-story-on') { dState.story = e.target.checked; render(); }
+  if (e.target.id === 'd-tl-on') { dState.timeline = e.target.checked; render(); }
+  if (e.target.id === 'd-order') { dState.order = e.target.value; render(); }
 });
 view.addEventListener('keydown', (e) => {
   if (plan !== 'b' || !['ArrowDown', 'ArrowUp'].includes(e.key) || !e.target.closest('.tree')) return;
