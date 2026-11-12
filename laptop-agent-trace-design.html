@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>代理執行過程設計稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* 版面：沿用後台的淺色系（深藍側欄色、白卡、藍色重點），設計稿放在模擬的後台框裡；上方分頁切換 A／B／C／分析頁。後台本身只有淺色，所以這頁刻意只做淺色。 */
+:root {
+  --bg: #f4f5f7; --surface: #ffffff; --sunk: #f7f8fa; --line: #dfe2e7; --line-2: #eceff3;
+  --ink: #1d2433; --muted: #5f6b7a; --faint: #8a94a3; --navy: #1d2433; --navy-2: #2c3548;
+  --accent: #1f5fbf; --accent-soft: #e8f0fb;
+  --ok: #17703f; --ok-soft: #e3f4ea; --warn: #8a5a00; --warn-soft: #fdf2d8; --bad: #b3261e; --bad-soft: #fbe9e7;
+  --c-model: #2a78d6; --c-sql: #eb6834; --c-profile: #1baf7a; --c-sort: #eda100; --c-reply: #e87ba4; --c-prog: #a3acb9;
+  --c-ctx: #5f6b7a; --c-acc: #9cc2ef;
+  --note: #6d3fc0; --note-soft: #f1ebfb;
+  --f-body: "Inter", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r: 8px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.6 var(--f-body); }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; line-height: 1.3; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num, td, .tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--f-mono); font-size: 12px; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.small { font-size: 12.5px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+
+/* 開頭 */
+.intro { display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.intro h1 { font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.lead { max-width: 68ch; color: #3a4456; font-size: 15px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: 12.5px; color: var(--muted); }
+.fact b { color: var(--ink); font-weight: 600; }
+
+/* 分頁 */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 0; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 5; padding-top: 8px; }
+.tab { border: 1px solid transparent; border-bottom: none; background: none; padding: 9px 14px 10px; border-radius: 8px 8px 0 0; cursor: pointer; color: var(--muted); font-weight: 500; display: grid; gap: 1px; text-align: left; }
+.tab small { font-size: 11.5px; font-weight: 400; color: var(--faint); }
+.tab:hover { color: var(--ink); background: #eaedf1; }
+.tab[aria-selected="true"] { background: var(--surface); border-color: var(--line); color: var(--ink); margin-bottom: -1px; }
+.tab[aria-selected="true"] b { color: var(--accent); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; color: var(--muted); }
+.toolbar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.plan-head { display: grid; gap: 6px; }
+.plan-head h2 { font-size: 20px; }
+.plan-head p { max-width: 75ch; color: #3a4456; }
+
+/* 模擬後台框 */
+.frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(29,36,51,.06), 0 8px 24px rgba(29,36,51,.06); margin-inline: auto; width: 100%; transition: max-width .25s ease; }
+.frame.narrow { max-width: 680px; }
+.frame-bar { background: var(--navy); color: #c9d0db; padding: 8px 14px; font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.frame-bar b { color: #fff; font-weight: 600; }
+.frame-bar .sep { color: #6c7790; }
+.frame-body { padding: 16px; display: grid; gap: 14px; }
+.run-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.run-head h3 { font-size: 16px; }
+.quote { background: var(--sunk); border-radius: 6px; padding: 8px 12px; }
+.pre-step { font-size: 12.5px; color: var(--muted); }
+.folded { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 6px; }
+.folded-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.folded-list span { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; background: var(--sunk); }
+.folded-list span::before { content: "▸ "; color: var(--faint); }
+
+/* 標籤 */
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 20px; background: #eceff3; color: var(--muted); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.ok::before { content: "✓"; }
+.pill.bad::before { content: "✕"; }
+.kdot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; background: var(--k, var(--c-prog)); }
+.ktag { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.demo { font-size: 11px; font-weight: 600; color: var(--note); background: var(--note-soft); border-radius: 4px; padding: 0 6px; line-height: 18px; }
+
+/* 設計稿註記 */
+.note { display: none; border-left: 3px solid var(--note); background: var(--note-soft); color: #3d2a66; border-radius: 0 6px 6px 0; padding: 7px 10px; font-size: 12.5px; }
+.note b { color: var(--note); }
+.show-notes .note { display: block; }
+.item { display: none; font-size: 11px; font-weight: 700; color: var(--note); border: 1px solid #cdbbef; border-radius: 4px; padding: 0 5px; line-height: 17px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.show-notes .item { display: inline-block; }
+
+/* 摘要列 */
+.sumbar { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; padding: 10px 14px; background: var(--sunk); border: 1px solid var(--line-2); border-radius: var(--r); }
+.sumbar .stat { display: grid; gap: 0; }
+.sumbar .stat span { font-size: 11.5px; color: var(--muted); }
+.sumbar .stat b { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.sumbar .stat b small { font-size: 12px; font-weight: 500; color: var(--muted); }
+
+/* 區塊標題 */
+.sec-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 650; }
+.sec-title .muted { font-weight: 400; font-size: 12.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* 瀑布圖 */
+.wf { display: grid; gap: 2px; }
+.wf-row { display: grid; grid-template-columns: 168px minmax(0, 1fr); align-items: center; min-height: 26px; border-radius: 4px; }
+.wf-row.child .wf-lab { padding-left: 18px; }
+.wf-row.child .wf-lab::before { content: "└"; color: var(--faint); margin-right: 4px; }
+.wf-row:hover, .wf-row.hl { background: var(--accent-soft); }
+.wf-lab { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; display: flex; align-items: center; gap: 6px; }
+.wf-track { position: relative; height: 26px; background-image: linear-gradient(to right, var(--line-2) 1px, transparent 1px); background-size: var(--tick) 100%; }
+.wf-bar { position: absolute; top: 6px; height: 14px; border: 0; padding: 0; border-radius: 3px; background: var(--k); cursor: pointer; min-width: 3px; }
+.wf-bar.err { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--bad); }
+.wf-bar:hover, .wf-bar:focus-visible { filter: brightness(1.08); outline: 2px solid var(--ink); outline-offset: 1px; }
+.wf-val { position: absolute; top: 4px; font-size: 11.5px; color: var(--muted); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.wf-axis .wf-track { height: 18px; background: none; }
+.wf-tick { position: absolute; top: 0; font-size: 11px; color: var(--faint); transform: translateX(-50%); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wf-tick:last-child { transform: translateX(-100%); }
+.wf-tick:first-child { transform: none; }
+
+/* 步驟卡 */
+.round { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); scroll-margin-top: 90px; }
+.round.flash { animation: flash 1.2s ease; }
+@keyframes flash { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.round-h { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.round-h h4 { font-size: 14.5px; }
+.round-h .meta { font-size: 12.5px; color: var(--muted); }
+.calls { display: grid; gap: 10px; border-left: 2px solid var(--line-2); margin-left: 4px; padding-left: 14px; }
+.call { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; scroll-margin-top: 90px; }
+.call.flash { animation: flash 1.2s ease; }
+.call-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 8px 12px; background: var(--sunk); border-bottom: 1px solid var(--line-2); }
+.call-h .mono { color: var(--muted); }
+.call-h .sum { color: #3a4456; font-size: 13px; flex: 1 1 260px; }
+.call-b { padding: 10px 12px; display: grid; gap: 10px; min-width: 0; }
+.think { border: 1px solid #d5e4f7; background: #f5f9fe; border-radius: 6px; }
+.think summary { cursor: pointer; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.think summary .lbl { font-weight: 600; color: #1b4f8f; }
+.think[open] summary .prev { display: none; }
+.think .body { padding: 0 10px 10px; display: grid; gap: 6px; }
+.think .body p { max-width: 72ch; }
+.said { margin: 0; border-left: 3px solid var(--c-model); padding: 4px 10px; color: #2b3445; }
+.raw { font-size: 12.5px; }
+.raw summary { cursor: pointer; color: var(--muted); }
+.raw pre { background: var(--sunk); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; max-height: 280px; overflow: auto; font-family: var(--f-mono); font-size: 11.5px; line-height: 1.5; margin: 6px 0 0; white-space: pre-wrap; word-break: break-all; }
+.raws { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.raws .raw { flex: 1 1 260px; min-width: 0; }
+
+/* SQL */
+.sql { margin: 0; background: #1d2433; color: #dfe5ee; border-radius: 6px; padding: 10px 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+.sql .kw { color: #8fc1ff; font-weight: 600; }
+.sql .str { color: #f3c37a; }
+.sql .badcol { background: #8f1f1a; color: #fff; border-radius: 3px; padding: 0 3px; }
+.dberr { display: flex; gap: 8px; align-items: flex-start; background: var(--bad-soft); color: var(--bad); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
+.dberr b { white-space: nowrap; }
+.tblwrap { overflow-x: auto; border: 1px solid var(--line-2); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th { text-align: left; font-weight: 600; background: var(--sunk); color: #3a4456; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: bottom; }
+th .mono { display: block; font-weight: 400; color: var(--faint); font-size: 10.5px; }
+td { padding: 5px 8px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+td.r, th.r { text-align: right; }
+td.name { max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+tr.flag td { background: #fff6e0; }
+td .flagtxt { color: var(--warn); font-weight: 600; }
+.more { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 4px 0; font-size: 12.5px; }
+
+/* 改需求 */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12.5px; background: #e6f6ef; color: #0f5c3c; border-radius: 6px; padding: 2px 8px; }
+.chip.cut { background: var(--bad-soft); color: var(--bad); }
+.why { font-size: 13px; color: #3a4456; }
+.why::before { content: "模型的理由："; color: var(--muted); }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px 20px; }
+.sub-h { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.wrows { display: grid; gap: 5px; }
+.wrow { display: grid; grid-template-columns: 52px minmax(60px, 1fr) 104px; gap: 8px; align-items: center; font-size: 12.5px; }
+.wt { position: relative; height: 14px; background: var(--sunk); border-radius: 3px; }
+.wt .was { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--c-prog); border-radius: 0 2px 2px 0; }
+.wt .now { position: absolute; left: 0; top: 0; height: 8px; background: var(--c-profile); border-radius: 0 3px 3px 0; }
+.wv { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.up { color: var(--ok); font-style: normal; font-weight: 600; }
+.down { color: var(--bad); font-style: normal; font-weight: 600; }
+.same { color: var(--faint); font-style: normal; }
+.ranks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ranks ol { margin: 0; padding-left: 20px; display: grid; gap: 3px; font-size: 12.5px; }
+.ranks li { padding-left: 2px; }
+.ranks li.mv { font-weight: 600; }
+
+/* 回覆預覽 */
+.bubble { background: #f3f5f8; border: 1px solid var(--line-2); border-radius: 12px 12px 12px 4px; padding: 10px 12px; white-space: pre-line; font-size: 13px; max-height: 260px; overflow: auto; }
+.cardrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.ucard { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; background: var(--surface); }
+.ucard b { display: block; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+
+/* 說明書與 token */
+.ctxgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px 22px; }
+.parts { display: grid; gap: 2px; }
+.part summary { display: grid; grid-template-columns: 112px minmax(40px, 1fr) 104px; gap: 8px; align-items: center; font-size: 12.5px; cursor: pointer; padding: 2px 4px; border-radius: 4px; list-style: none; }
+.part summary::-webkit-details-marker { display: none; }
+.part summary:hover { background: var(--accent-soft); }
+.part .pl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.part .pt { height: 10px; background: var(--sunk); border-radius: 2px; position: relative; }
+.part .pt i { position: absolute; inset: 0 auto 0 0; background: var(--c-ctx); border-radius: 0 2px 2px 0; }
+.part.data .pt i { background: var(--c-acc); }
+.part .pv { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.part pre { margin: 4px 0 8px; background: var(--sunk); border-radius: 6px; padding: 8px 10px; font-family: var(--f-mono); font-size: 11.5px; white-space: pre-wrap; max-height: 200px; overflow: auto; }
+.tokrows { display: grid; gap: 6px; }
+.tokrow { display: grid; grid-template-columns: 64px minmax(80px, 1fr) 66px; gap: 8px; align-items: center; font-size: 12.5px; }
+.toktrack { height: 16px; display: flex; gap: 2px; }
+.toktrack i { display: block; height: 100%; }
+.toktrack i:first-child { border-radius: 3px 0 0 3px; }
+.toktrack i:last-child { border-radius: 0 3px 3px 0; }
+.tokaxis { display: grid; grid-template-columns: 64px minmax(80px, 1fr) 66px; gap: 8px; font-size: 11px; color: var(--faint); }
+.tokaxis div { display: flex; justify-content: space-between; }
+.insight { font-size: 13px; background: var(--accent-soft); color: #173f7a; border-radius: 6px; padding: 7px 10px; }
+
+/* B 檢視器 */
+.insp { display: grid; grid-template-columns: 300px minmax(0, 1fr); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; min-height: 560px; }
+.tree { background: var(--sunk); border-right: 1px solid var(--line); padding: 8px; display: grid; align-content: start; gap: 1px; overflow-y: auto; max-height: 720px; }
+.node { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; grid-template-rows: auto 4px; column-gap: 8px; row-gap: 3px; align-items: center; width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 13px; }
+.node.child { padding-left: 26px; grid-template-columns: 12px minmax(0, 1fr) auto; }
+.node:hover { background: #eaedf1; }
+.node[aria-selected="true"] { background: var(--surface); border-color: var(--accent); box-shadow: 0 1px 2px rgba(31,95,191,.12); }
+.node .nl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .nm { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.node .nb { grid-column: 2 / 4; height: 4px; background: var(--line-2); border-radius: 2px; position: relative; }
+.node .nb i { position: absolute; top: 0; height: 4px; background: var(--k); border-radius: 2px; min-width: 2px; }
+.node .bad { color: var(--bad); font-weight: 700; }
+.tree-sep { font-size: 11px; color: var(--faint); padding: 8px 8px 2px; letter-spacing: .06em; }
+.detail { padding: 14px 16px; display: grid; align-content: start; gap: 12px; min-width: 0; }
+.detail-h { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.detail-h h4 { font-size: 16px; }
+.dtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.dtab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 10px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.dtab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.propbar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; gap: 2px; }
+.propbar i { display: block; height: 100%; min-width: 2px; }
+.kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface); }
+
+/* C 劇本 */
+.story { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12.5px; }
+.story .st { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px 1px 6px; background: var(--surface); cursor: pointer; }
+.story .st:hover { border-color: var(--accent); }
+.story .st.err { border-color: #e7a59f; background: var(--bad-soft); }
+.story .ar { color: var(--faint); }
+.lanes { display: grid; grid-template-columns: 78px repeat(3, minmax(0, 1fr)); column-gap: 12px; row-gap: 10px; align-items: start; }
+.lane-h { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); padding-bottom: 6px; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 6px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 60px); background: var(--surface); z-index: 2; }
+.rail { display: grid; justify-items: end; gap: 4px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 6px; }
+.rail i { display: block; width: 6px; border-radius: 3px; background: var(--k); min-height: 4px; }
+.ev { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; display: grid; gap: 7px; background: var(--surface); min-width: 0; scroll-margin-top: 110px; }
+.ev.flash { animation: flash 1.2s ease; }
+.ev.model { border-color: #c6dbf5; background: #f8fbff; }
+.ev.err { border-color: #e7a59f; }
+.ev-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 13px; }
+.ev-h .muted { font-size: 12px; }
+.conn { align-self: center; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+.conn::before, .conn::after { content: ""; flex: 1; height: 0; border-top: 1.5px dashed #b9c1cd; }
+.conn.right::after { content: "▶"; flex: none; border: 0; color: #b9c1cd; font-size: 9px; }
+.conn.left::before { content: "◀"; flex: none; border: 0; color: #b9c1cd; font-size: 9px; }
+.mini-wt { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+.lane-tag { display: none; }
+
+/* 分析頁 */
+.filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.filters label { display: grid; gap: 2px; font-size: 11.5px; color: var(--muted); }
+.filters select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.filters .check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink); align-self: end; padding-bottom: 4px; cursor: pointer; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; display: grid; gap: 2px; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi b { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kpi b small { font-size: 13px; font-weight: 500; color: var(--muted); }
+.kpi em { font-style: normal; font-size: 12px; color: var(--muted); }
+.panel { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.trow { display: grid; grid-template-columns: 190px minmax(80px, 1fr) 64px; gap: 10px; align-items: center; font-size: 12.5px; min-height: 24px; }
+.trow .tl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow .tl small { color: var(--faint); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.ttrack { display: flex; height: 14px; gap: 2px; background-image: linear-gradient(to right, var(--line-2) 1px, transparent 1px); background-size: var(--tick) 100%; }
+.ttrack i { display: block; height: 100%; }
+.ttrack i.m { background: var(--c-model); border-radius: 3px 0 0 3px; }
+.ttrack i.t { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 4px); min-width: 2px; }
+.ttrack i.p { background: var(--c-prog); border-radius: 0 3px 3px 0; min-width: 2px; }
+.tval { text-align: right; font-variant-numeric: tabular-nums; }
+.taxis { display: grid; grid-template-columns: 190px minmax(80px, 1fr) 64px; gap: 10px; font-size: 11px; color: var(--faint); }
+.taxis div { position: relative; height: 14px; }
+.taxis div span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.taxis div span:first-child { transform: none; }
+.taxis div span:last-child { transform: translateX(-100%); }
+.sw { display: inline-block; width: 12px; height: 10px; border-radius: 2px; }
+.sw.t { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 4px); border: 1px solid var(--ink); }
+.issues { display: grid; gap: 8px; }
+.issue { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; border: 1px solid var(--line); border-radius: var(--r); padding: 9px 12px; }
+.issue .cnt { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; grid-row: 1 / span 3; grid-column: 1; align-self: start; min-width: 28px; }
+.issue > :not(.cnt) { grid-column: 2; }
+.issue.bad .cnt { color: var(--bad); }
+.issue.warn .cnt { color: var(--warn); }
+.issue h4 { font-size: 13.5px; }
+.issue p { font-size: 12.5px; color: #3a4456; }
+.issue .links { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; }
+.issue .links a { color: var(--accent); text-decoration: none; }
+.issue .links a:hover { text-decoration: underline; }
+.ibar { display: inline-block; height: 8px; background: var(--c-model); border-radius: 0 2px 2px 0; vertical-align: middle; margin-right: 6px; }
+.ibar.tok { background: var(--c-ctx); }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--accent-soft); }
+tr.dim td { opacity: .35; }
+
+/* 比較與共通 */
+.cmp th, .cmp td { white-space: normal; vertical-align: top; padding: 8px 10px; font-size: 13px; min-width: 150px; }
+.cmp th:first-child, .cmp td:first-child { min-width: 92px; color: var(--muted); font-weight: 600; }
+.cmp .rec { background: #f2f7ff; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 12px; }
+.box h2 { font-size: 18px; }
+.list { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 80ch; }
+.flags td { white-space: normal; }
+.flags td:first-child { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+.on { color: var(--ok); font-weight: 600; }
+.ask { display: grid; gap: 6px; }
+.ask li { max-width: 80ch; }
+
+/* 浮動說明 */
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--navy); color: #fff; border-radius: 6px; padding: 6px 9px; font-size: 12px; line-height: 1.45; max-width: 300px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+#tip b { font-size: 13px; }
+#tip .tk { display: inline-block; width: 10px; height: 2px; background: var(--k); vertical-align: middle; margin-right: 5px; }
+
+@media (max-width: 860px) {
+  .insp { grid-template-columns: 1fr; }
+  .tree { border-right: 0; border-bottom: 1px solid var(--line); max-height: 300px; }
+  .lanes { grid-template-columns: 56px minmax(0, 1fr); }
+  .lanes .lane-h { display: none; }
+  .lanes .ev { grid-column: 2 !important; }
+  .lanes .conn { display: none; }
+  .lane-tag { display: inline-flex; }
+}
+@media (max-width: 560px) {
+  .wf-row { grid-template-columns: 110px minmax(0, 1fr); }
+  .trow, .taxis { grid-template-columns: 110px minmax(60px, 1fr) 54px; }
+  .ranks { grid-template-columns: 1fr; }
+  .intro h1 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body class="show-notes">
+<div class="wrap">
+  <header class="intro">
+    <div class="eyebrow">AI 筆電選購助手 · v1.0.49 設計稿</div>
+    <h1>代理執行過程設計稿</h1>
+    <p class="lead">後台對話紀錄裡，代理方案每一輪的執行過程要怎麼畫？下面三種版面都用同一輪的<b>真實紀錄</b>：2026/11/11 對話第 5 輪，用戶在追問卡選了「3A 大作」。三案差在版面。工具的看懂版、模型思考、說明書組成這些內容，三案都一樣。最後一頁是第 6 項「代理分析頁」，用目前全部 12 輪代理紀錄算的。</p>
+    <div class="facts">
+      <span class="fact">資料：<b>對話 c4b57ca2 第 5 輪</b></span>
+      <span class="fact">模型：<b>DeepSeek V4.1 Flash</b>（思考強度 high）</span>
+      <span class="fact">整輪：<b>14.4 秒</b>・4 回合・5 次工具</span>
+      <span class="fact">紫色字是<b>設計稿註記</b>，正式版不會出現</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="切換方案">
+    <button class="tab" role="tab" id="tab-a" aria-selected="true" aria-controls="view" data-plan="a"><span><b>A</b> 時間軸瀑布</span><small>先看全貌，再往下讀</small></button>
+    <button class="tab" role="tab" id="tab-b" aria-selected="false" aria-controls="view" data-plan="b"><span><b>B</b> 左右檢視器</span><small>點一步看一步</small></button>
+    <button class="tab" role="tab" id="tab-c" aria-selected="false" aria-controls="view" data-plan="c"><span><b>C</b> 對話劇本</span><small>誰對誰說了什麼</small></button>
+    <button class="tab" role="tab" id="tab-s" aria-selected="false" aria-controls="view" data-plan="s"><span>代理分析頁</span><small>第 6 項，三案共用</small></button>
+    <button class="tab" role="tab" id="tab-x" aria-selected="false" aria-controls="view" data-plan="x"><span>三案比較</span><small>開關與新記錄的資料</small></button>
+  </nav>
+
+  <div class="toolbar">
+    <label for="opt-notes"><input type="checkbox" id="opt-notes" checked> 顯示設計稿註記（紫色）</label>
+    <label for="opt-narrow"><input type="checkbox" id="opt-narrow"> 模擬後台右欄寬度（約 650px）</label>
+  </div>
+
+  <main id="view" role="tabpanel" aria-live="polite"></main>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const DATA = {"run": {"id": "9320a687-59d0-40a5-b937-a0fee3516f40", "turnNo": 5, "input": "3A 大作", "createdAt": "2026-11-11T10:09:16.776016+09:00", "ms": 14412, "preStep": "用戶在追問卡「遊戲類型」選了「3A 大作」，程式已把需求設成「需要獨立顯卡」", "userMessage": "（用戶在畫面上的操作）用戶在追問卡「遊戲類型」選了「3A 大作」，程式已把需求設成「需要獨立顯卡」", "stop": "reply_tool", "replySource": "reply_tool", "totals": {"ms": 14252, "rounds": 4, "toolCalls": 5, "inputTokens": 96191, "outputTokens": 1428}, "timings": [{"ms": 3, "name": "讀設定"}, {"ms": 37, "name": "讀對話紀錄"}, {"ms": 0, "name": "讀用戶操作"}, {"ms": 27, "name": "前置步驟"}, {"ms": 4588, "name": "代理第 1 回合"}, {"ms": 2413, "name": "代理第 2 回合"}, {"ms": 2266, "name": "代理第 3 回合"}, {"ms": 4957, "name": "代理第 4 回合"}, {"ms": 1, "name": "整理卡片"}, {"ms": 119, "name": "局勢"}, {"ms": 8, "name": "存檔"}], "contextChars": 28817, "parts": [{"name": "開場白", "chars": 68, "kind": "rule", "excerpt": "你是「AI 筆電選購助手」，在台灣幫用戶挑筆電。你的唯一目標：了解用戶真正的需求，推薦最適合他的筆電，讓用戶感受到你了解他、理解他。\n\n"}, {"name": "工作方式", "head": "你怎麼工作", "chars": 116, "kind": "rule", "excerpt": "## 你怎麼工作\n每一輪你會收到用戶說的一句話，或程式替用戶在畫面上的操作寫的說明。你自己判斷用戶想做什麼；需要資料就用工具查，工具可以呼叫很多次，查夠了再回答。\n最後一定要呼叫 reply 工具交出回覆和卡片，這一輪才算結束。\n\n"}, {"name": "選工具的規則", "head": "兩條路：先想清楚再選工具", "chars": 267, "kind": "rule", "excerpt": "## 兩條路：先想清楚再選工具\n1. 篩選、排序類（「1 萬以內」「要 OLED」「最輕的幾台」「續航最久的」「推薦一台給我」）：用 update_profile 設定需求與權重，需要依某個規格排時用 sort_pool，交給推薦引擎算。引擎算出的名單就是用戶畫面上的候選池，你推薦的機型要從這份名單挑。\n2. 查事實、統計類（「這台喇叭幾瓦」「各品牌平均價格」「有幾台有指紋辨識」）：用 sql_query 查資料庫。只是想知道一件事時，不要去改用戶的需求。\n分不清時問自己：用戶是想「縮小或重排候選」，還是只想「知道一件事」？\n\n"}, {"name": "推薦引擎說明", "head": "推薦引擎怎麼算", "chars": 640, "kind": "rule", "excerpt": "## 推薦引擎怎麼算\n- 需求分兩種：硬條件（hard: true）會把不符合的機型排除；偏好（hard: false）不排除。偏好會不會自動改權重，看下方「這段對話目前的狀態」的「權重怎麼變」那行。\n- 什麼時候用硬條件：用戶說「一定要」「不能超過」「X 以內」「只要」「不要」這種明確界線才用硬條件。「希望」「最好」「輕一點」「便宜一點」「盡量」是偏好：用 hard: false 的需求記下來，再調高對應的權重（例如「輕一點」→ 調高 portability），不要直接加硬條件把候選刷掉。硬條件刷掉大量機型前，先想想用戶是不是真的不能接受。\n- 七個權重維度，整數、總和 100：performance 性能、display 螢幕、portability 便攜、battery 續航、thermal 散熱、noise 安靜、expandability 擴充。每台機型在每個維度有分數，產品力分＝各維度分數依權重加權。\n- 性能底下有 5 個細項比例，總和 100：cpu_single 單核、cpu_multi 多核、gpu 顯卡、memory 記憶體、storage 儲存。\n- 權重是這個用戶專屬的：依你對他的了解設定，並在 w"}, {"name": "需求寫法", "head": "需求的寫法（update_profile 的 ops）", "chars": 947, "kind": "rule", "excerpt": "## 需求的寫法（update_profile 的 ops）\n新增或修改：{\"op\":\"upsert\",\"req\":{\"id\":\"自己取，英數與底線，同一條需求沿用同一個 id\",\"field\":欄位,\"value\":值,\"label\":\"給用戶看的短標籤\",\"hard\":true 或 false,\"confidence\":0到1,\"evidence\":\"用戶原文片段，沒有就 null\"}}\n刪除：{\"op\":\"delete\",\"id\":\"需求 id\"}\n欄位與值：\n- budget 預算（新台幣）：{\"min\":數字,\"max\":數字}，可只給一邊\n- size 螢幕尺寸：{\"mode\":\"around\"|\"max\"|\"min\"|\"range\",\"inch\":數字,\"to\":數字（range 才給）}\n- weight_max 重量上限：公斤數字\n- brand 品牌：{\"only\":[\"品牌\"],\"no\":[\"品牌\"]}\n- os 作業系統：\"windows\" 或 \"macos\"\n- ram_min 記憶體下限：GB 數字\n- dgpu_required 要不要獨顯：true 或 false\n- refresh_min "}, {"name": "資料庫欄位清單", "head": "資料庫", "chars": 16600, "kind": "data", "excerpt": "## 資料庫\n共 370 台上架筆電，價格是新台幣。sql_query 只能查檢視表 agent_laptops（每台一列，id 是機型 id，name 是機型名稱）。欄位清單（欄名｜中文｜類型｜單位）：\nid｜機型 id｜文字\nname｜機型名稱｜文字\nbrand｜品牌｜類別\nprice｜價格｜數值（越低越好）｜元\ntest_start_date｜測試開始日期｜文字（不可比較）\nreview_date｜評測日期｜文字（不可比較）\nseries｜系列｜類別\nwarranty_months｜保固期｜數值（越高越好）｜月\nbuy_url｜購買連結｜文字（不可比較）\nreview_video_url｜評測影片連結｜文字（不可比較）\ntested_perf_mode｜測試時的性能模式｜類別\nperf_modes｜可選性能模式｜文字（不可比較）\nhumidity_pct｜測試環境濕度｜數值（越高越好）｜%\nroom_temp_c｜測試室溫｜數值（越低越好）｜°C\ndescription｜配置描述｜文字（不可比較）\nshell_a_material｜A 面（螢幕背蓋）材質｜類別\nshell_b_material｜B 面（螢幕邊框）材質｜"}, {"name": "卡片說明", "head": "卡片（放在 reply 的 cards）", "chars": 451, "kind": "rule", "excerpt": "## 卡片（放在 reply 的 cards）\n這一輪可以用的卡片：recommend、compare、followup\n只能用上面列出的種類；下面的寫法說明裡，沒有列在上面的種類這一輪不能用，出了會被程式拿掉。\n- recommend 推薦卡：{\"type\":\"recommend\",\"ids\":[\"機型 id\",...]}，依你要的順序，最多 5 台。\n- compare 對比卡：{\"type\":\"compare\",\"ids\":[\"機型 id\",...]}，2～3 台並排比較。\n- followup 追問卡：{\"type\":\"followup\",\"cardId\":\"題目 id\"}，從下方追問題庫挑一題，一輪最多一張；用戶點了選項，程式會套用並在下一輪告訴你。\n- suggest 建議回覆：{\"type\":\"suggest\",\"items\":[\"用戶可能想接著說的一句話\",...]}，最多 3 句，用用戶的口吻寫完整的話。\n需求卡（這輪新增的需求）和候選數量卡由程式自動附上，你不用出。\n\n"}, {"name": "回覆寫法", "head": "回覆的寫法", "chars": 384, "kind": "rule", "excerpt": "## 回覆的寫法\n- 繁體中文（台灣用語），口語、親切、簡潔。\n- 純文字：畫面不支援粗體、標題、表格與 * # | 這些符號；要分點就用「1.」或換行。\n- 價格、規格、分數只能用工具查到或下方資料裡的數字；查不到就說不知道，不要猜。沒有查過的面向（例如噪音、散熱、做工）不要下評語，要評論先用 sql_query 查。\n- 說「最便宜」「最輕」「續航最久」這類最高級之前，要用 sort_pool 或 sql_query 在整個候選池確認過；只看過其中幾台時，要說「這幾台裡」。比較兩台誰比較強，要對照查到的數字，不要憑印象。\n- 回覆文字裡提到的名次與順序，要和你附的推薦卡順序一致；「第 1 名」「前兩名」指的是候選池（推薦卡）的順序。\n- 推薦時說清楚為什麼適合他、要接受哪些取捨。\n- 資訊不夠時，問一個最關鍵的問題就好（可以用追問卡，也可以直接問）。\n\n"}, {"name": "目前狀態", "head": "這段對話目前的狀態", "chars": 898, "kind": "data", "excerpt": "## 這段對話目前的狀態\n第 5 輪對話\n需求標籤（id｜欄位｜標籤｜硬條件或偏好｜值）：\n- budget｜budget｜預算 1 萬以內｜硬條件｜值 {\"max\":10000}\n- purpose｜purpose｜上課寫報告＋玩遊戲｜偏好｜值 \"上課寫報告、玩遊戲\"\n- carry｜portability｜每天背去學校｜偏好｜值 \"high\"\n- req_card_card_battery_day｜priority｜重視續航｜偏好｜值 \"battery\"\n- req_card_card_game_genre_aaa｜dgpu_required｜需要獨立顯卡｜硬條件｜值 true\n七維權重（AI 設定；理由：要玩遊戲所以性能拉高，但每天背去學校、要撐一整天，便攜和續航還是留著重量）：性能＝30、螢幕＝20、便攜＝20、續航＝20、散熱＝6、安靜＝3、擴充＝1\n權重怎麼變：用途、攜帶頻率、特別重視這些偏好需求本身不會改權重；要影響排名，請在 update_profile 直接給 weights。\n性能細項（AI 設定）：顯卡＝35、記憶體＝12、儲存＝8、多核＝20、單核＝25\n排除的機型：（沒有）\n對比清單：華碩a豆14 "}, {"name": "候選前 10 名", "head": "候選池前幾名", "chars": 948, "kind": "data", "excerpt": "## 候選池前幾名\n符合 127 台、差一點 35 台\n1. 260129A｜機械革命翼龍15 Pro 2026｜NT$6,549｜產品力 63.9\n2. SHDX0007｜ROG 魔霸9 (Strix 9 G16) (2025) 魔霸9 G16 RTX5070｜NT$8,999｜產品力 55.2\n3. SHDX0163｜拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 32GB / 1TB｜NT$9,999｜產品力 54.8\n4. SHDX0162｜拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 16GB / 1TB｜NT$8,499｜產品力 54.6\n5. SHDX0248｜戰神 T10 Pro (2025) Intel Core i7-14700HX / RTX 5070 Ti 12GB / 32GB / 1TB｜NT$7,899｜產品力 54.1\n6. SHDX0046｜華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 AI9+RTX5"}, {"name": "追問題庫", "head": "追問題庫", "chars": 1198, "kind": "data", "excerpt": "## 追問題庫\ncard_edit_intensity｜剪輯強度｜你剪片大概是哪種強度？｜選項：輕度、中度、重度\ncard_portability｜攜帶頻率｜你多常帶著它出門？｜選項：每天背著走、偶爾帶出門、幾乎都放桌上\ncard_software｜常用軟體｜有固定要用的專業軟體嗎？｜選項：Photoshop、Illustrator、Premiere Pro、都沒有，一般使用為主\ncard_weight｜重量上限｜重量最多能接受多少？｜選項：1.5 公斤以下、1.8 公斤以下、2.2 公斤以下\ncard_scenario｜使用場景｜最常在哪裡用？｜選項：通勤、出差、宿舍、租屋、固定桌面、外接螢幕、咖啡廳、圖書館\ncard_student｜學生用法｜你在學校主要怎麼用？｜選項：上課筆記、寫報告、宿舍當主力電腦、課程設計、競賽要跑程式\ncard_battery｜續航需求｜不插電大概要用多久？｜選項：盡量撐一整天、半天就好、幾乎都插電用｜這段對話已問過\ncard_dgpu｜獨立顯卡｜需要獨立顯卡嗎？｜選項：要獨顯、內顯就好\ncard_expand｜擴充升級｜擴充和升級重要嗎？｜選項：連接埠要多、常外接、之後想自己加記憶體、硬碟、用"}, {"name": "軟體庫", "head": "軟體庫", "chars": 3346, "kind": "data", "excerpt": "## 軟體庫\nPhotoshop｜平面設計（記憶體至少 16GB、記憶體建議 32GB 以上）\nIllustrator｜平面設計\nPremiere Pro｜4K 剪輯（記憶體至少 16GB、顯示記憶體至少 6GB、記憶體建議 32GB 以上、顯示記憶體建議 8GB 以上）\nLightroom Classic｜一般修圖（記憶體至少 8GB、記憶體建議 16GB 以上、顯示記憶體建議 4GB 以上）、AI 降噪（記憶體至少 8GB、記憶體建議 16GB 以上、顯示記憶體建議 8GB 以上）\nInDesign｜排版（記憶體至少 8GB、記憶體建議 16GB 以上）\nFigma｜UI 設計（記憶體至少 8GB、記憶體建議 16GB 以上）\nCorelDRAW｜向量繪圖（記憶體至少 8GB、記憶體建議 16GB 以上、顯示記憶體建議 4GB 以上）\nCanva｜簡易設計\nAffinity｜平面設計（記憶體至少 8GB、記憶體建議 16GB 以上）、Photo 大檔（記憶體至少 8GB、記憶體建議 24GB 以上、顯示記憶體建議 4GB 以上）\nClip Studio Paint｜插畫漫畫（記憶體建議 16GB 以上）\nAfter Ef"}, {"name": "用戶最近操作", "head": "用戶最近在畫面上的操作", "chars": 36, "kind": "data", "excerpt": "## 用戶最近在畫面上的操作\n- 11/11 09:04 開始新對話\n\n"}, {"name": "先前的對話", "head": "先前的對話", "chars": 2920, "kind": "data", "excerpt": "## 先前的對話\n第 1 輪 用戶：預算 4 萬，平常上課寫報告，每天要背去學校\n第 1 輪 系統：了解，4 萬以內、每天背去學校、主要上課寫報告。我把權重調成便攜和續航優先，性能只要夠用就好，候選池裡符合的有 365 台。\n\n這幾台裡我最推前兩台：\n1. 聯想 小新 Pro 16 GT AI 元啟版 2026（GJS0001）：1.72 公斤、續航 27.5 小時，是這批裡續航最長的，16 吋 OLED 120Hz 螢幕寫報告、看資料很舒服，32GB／1TB，約 1.29 萬。缺點是 16 吋加變壓器外出總重 2 公斤，每天背會有點負擔。\n2. 華碩 a豆14 Air 2026（BIBA0005）：只有 0.99 公斤、外出總重 1.6 公斤，續航 16.5 小時，14 吋 OLED 120Hz，同樣 32GB／1TB，約 5900 元。要輕巧好背的話這台最適合，價格也最省。\n3. 聯想小新Pro 16 GT AI元啟版（BIBA0002）：規格跟第 1 台幾乎一樣，1.78 公斤、續航 27.5 小時，約 1.29 萬，想要大螢幕又在意續航可以看這台。\n\n如果你每天通勤距離長、很在意背包重量，我會選第 2 台；如果報告常"}], "rounds": [{"n": 1, "ms": 4494, "inTok": 20705, "outTok": 441, "text": "用戶選了 3A 大作，我來查一下候選池裡這幾台的遊戲效能，並把權重往遊戲性能調。", "sentChars": 28875, "calls": [{"id": "call_00_i5UFuMbaVSnBlHpgBAHr9279", "name": "sql_query", "status": "error", "ms": 25, "summary": "查詢失敗：column \"dgpu_required\" does not exist", "args": {"sql": "SELECT id, name, price, discrete_gpu_model, vram_gb, dgpu_tgp_w, gpu_timespy_score, fps_avg_1080p_cyberpunk_2077, fps_avg_1080p_monster_hunter, body_weight_kg, travel_weight_kg, battery_life_hours, screen_size_inch, refresh_rate_hz, memory_gb, storage_gb FROM agent_laptops WHERE price <= 10000 AND dgpu_required IS NOT NULL AND discrete_gpu_model IS NOT NULL AND discrete_gpu_model NOT ILIKE '%內%' ORDER BY gpu_timespy_score DESC NULLS LAST LIMIT 20"}, "result": {"ms": 25, "ok": false, "error": "查詢失敗：column \"dgpu_required\" does not exist"}}, {"id": "call_01_cdr0pdcKXMb9IW9wBdeU8749", "name": "update_profile", "status": "ok", "ms": 64, "summary": "新增 1 條、設定權重、設定性能細項，符合 127 台（參數結尾多了括號，已自動修正）", "args": {"ops": [{"op": "upsert", "req": {"id": "game_genre_aaa", "hard": false, "field": "other", "label": "主要玩 3A 大作", "value": "主要玩 3A 大作", "evidence": "3A 大作", "confidence": 0.9}}], "weights": {"noise": 4, "battery": 12, "display": 18, "thermal": 10, "performance": 42, "portability": 12, "expandability": 2}, "perfSubs": {"gpu": 50, "memory": 10, "storage": 7, "cpu_multi": 18, "cpu_single": 15}, "weightReason": "要跑 3A 大作，性能（尤其顯卡）優先，但每天背去學校仍留一點便攜和續航"}, "result": {"cut": [{"cut": 132, "label": "預算 1 萬以內"}, {"cut": 76, "label": "需要獨立顯卡"}], "out": 208, "top": [{"id": "260129A", "name": "機械革命翼龍15 Pro 2026", "rank": 1, "power": 65.6, "price": 6549}, {"id": "SHDX0248", "name": "戰神 T10 Pro (2025) Intel Core i7-14700HX / RTX 5070 Ti 12GB / 32GB / 1TB", "rank": 2, "power": 58.9, "price": 7899}, {"id": "SHDX0163", "name": "拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 32GB / 1TB", "rank": 3, "power": 58.4, "price": 9999}, {"id": "SHDX0007", "name": "ROG 魔霸9 (Strix 9 G16) (2025) 魔霸9 G16 RTX5070", "rank": 4, "power": 58.3, "price": 8999}, {"id": "SHDX0162", "name": "拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 16GB / 1TB", "rank": 5, "power": 58.1, "price": 8499}, {"id": "SHDX0332", "name": "戰神 T9 (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "rank": 6, "power": 57.6, "price": 9999}, {"id": "SHDX0360", "name": "曙光16 2025款 (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "rank": 7, "power": 57.4, "price": 9999}, {"id": "SHDX0045", "name": "華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 AI9+RTX5060/32GB 日蝕灰", "rank": 8, "power": 57.2, "price": 9199}, {"id": "SHDX0046", "name": "華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 AI9+RTX5060/32GB 月光銀", "rank": 9, "power": 57.2, "price": 9499}, {"id": "SHDX0174", "name": "ZERO 16 (RTX 5070) (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "rank": 10, "power": 57.1, "price": 10000}], "edge": 35, "sort": "產品力", "formal": 127, "applied": ["新增需求「主要玩 3A 大作」", "設定權重：性能 42、螢幕 18、便攜 12、續航 12、散熱 10、安靜 4、擴充 2", "設定性能細項：單核 15、多核 18、顯卡 50、記憶體 10、儲存 7"], "ignored": [], "weights": {"noise": 4, "battery": 12, "display": 18, "thermal": 10, "performance": 42, "portability": 12, "expandability": 2}, "perfSubs": {"gpu": 50, "memory": 10, "storage": 7, "cpu_multi": 18, "cpu_single": 15}, "rejected": []}}]}, {"n": 2, "ms": 2385, "inTok": 22002, "outTok": 175, "text": "", "sentChars": 2177, "calls": [{"id": "call_00_BBuLRXiHG2kIxDTyhRrj2957", "name": "sql_query", "status": "ok", "ms": 28, "summary": "查到 20 列", "args": {"sql": "SELECT id, name, price, discrete_gpu_model, vram_gb, dgpu_tgp_w, gpu_timespy_score, fps_avg_1080p_cyberpunk_2077, fps_avg_1080p_monster_hunter, body_weight_kg, travel_weight_kg, battery_life_hours, screen_size_inch, refresh_rate_hz, memory_gb, storage_gb FROM agent_laptops WHERE price <= 10000 AND discrete_gpu_model IS NOT NULL AND discrete_gpu_model NOT ILIKE '%內%' ORDER BY gpu_timespy_score DESC NULLS LAST LIMIT 20"}, "result": {"ms": 27, "ok": true, "rows": [{"id": "BIBA0003", "name": "華碩天選Air 2026 (銳龍AI MAX版)", "price": 3214, "vram_gb": 0, "memory_gb": 64, "dgpu_tgp_w": 0, "storage_gb": 1024, "body_weight_kg": 1.5, "refresh_rate_hz": 160, "screen_size_inch": 14, "travel_weight_kg": 2.37, "gpu_timespy_score": 17800, "battery_life_hours": 12, "discrete_gpu_model": "無", "fps_avg_1080p_cyberpunk_2077": 117.1, "fps_avg_1080p_monster_hunter": 156.7}, {"id": "SHDX0248", "name": "戰神 T10 Pro (2025) Intel Core i7-14700HX / RTX 5070 Ti 12GB / 32GB / 1TB", "price": 7899, "vram_gb": 12, "memory_gb": 32, "dgpu_tgp_w": 140, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 300, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 16208, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 Ti 12GB", "fps_avg_1080p_cyberpunk_2077": 89.5, "fps_avg_1080p_monster_hunter": 106.5}, {"id": "SHDX0276", "name": "蛟龍 K16 Pro (高配) (2025) AMD Ryzen 9 8945H / RTX 5070 Ti 12GB / 32GB / 1TB", "price": 8500, "vram_gb": 12, "memory_gb": 32, "dgpu_tgp_w": 140, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 300, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 15807, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 Ti 12GB", "fps_avg_1080p_cyberpunk_2077": 83, "fps_avg_1080p_monster_hunter": 103.2}, {"id": "SHDX0043", "name": "華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 Max+392/32GB 日蝕灰", "price": 8499, "vram_gb": 0, "memory_gb": 32, "dgpu_tgp_w": 0, "storage_gb": 1024, "body_weight_kg": 2.15, "refresh_rate_hz": 165, "screen_size_inch": 14, "travel_weight_kg": 2.37, "gpu_timespy_score": 15642, "battery_life_hours": 6.67, "discrete_gpu_model": "無", "fps_avg_1080p_cyberpunk_2077": 81.4, "fps_avg_1080p_monster_hunter": 95.9}, {"id": "SHDX0184", "name": "獵刃16 (RTX 5070) (2025) Intel Core i9-13900HX / RTX 5070 8GB / 16GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 300, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13993, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.5, "fps_avg_1080p_monster_hunter": 91.3}, {"id": "SHDX0174", "name": "ZERO 16 (RTX 5070) (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "price": 10000, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13837, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 76, "fps_avg_1080p_monster_hunter": 86.6}, {"id": "SHDX0187", "name": "獵刃16 (RTX 5070 i7版) (2025) Intel Core i7-13650HX / RTX 5070 8GB / 16GB / 1TB", "price": 9299, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 300, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13719, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 81.6, "fps_avg_1080p_monster_hunter": 88.1}, {"id": "SHDX0332", "name": "戰神 T9 (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13718, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 75.7, "fps_avg_1080p_monster_hunter": 86.9}, {"id": "SHDX0185", "name": "獵刃S (RTX 5070 Intel) (2025) Intel Core i7-13650HX / RTX 5070 8GB / 16GB / 1TB", "price": 9299, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13710, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 73.3, "fps_avg_1080p_monster_hunter": 92.7}, {"id": "SHDX0240", "name": "戰神 S9 (2025) Intel Core i7-13620H / RTX 5070 8GB / 16GB / 1TB", "price": 7500, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.32, "refresh_rate_hz": 165, "screen_size_inch": 15.6, "travel_weight_kg": 2.94, "gpu_timespy_score": 13707, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 75.9, "fps_avg_1080p_monster_hunter": 89.4}, {"id": "SHDX0078", "name": "OMEN暗影精靈11 標準版 (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "price": 7999, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13705, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.9, "fps_avg_1080p_monster_hunter": 91.8}, {"id": "SHDX0265", "name": "Katana 17 HX B14WFK (2025款) (2025) Intel Core i7-14650HX / RTX 5070 8GB / 16GB / 512GB", "price": 7000, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 512, "body_weight_kg": 2.79, "refresh_rate_hz": 144, "screen_size_inch": 17.3, "travel_weight_kg": 3.41, "gpu_timespy_score": 13610, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.7, "fps_avg_1080p_monster_hunter": 92.7}, {"id": "SHDX0239", "name": "戰神 S8 (RTX 5070) (2025) Intel Core i7-13620H / RTX 5070 8GB / 16GB / 1TB", "price": 5899, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.32, "refresh_rate_hz": 165, "screen_size_inch": 15.6, "travel_weight_kg": 2.94, "gpu_timespy_score": 13490, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 73.9, "fps_avg_1080p_monster_hunter": 91.2}, {"id": "SHDX0188", "name": "獵刃S Ultra (RTX 5070) (2025) 未公佈 / RTX 5070 8GB / 16GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13479, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 72.3, "fps_avg_1080p_monster_hunter": 92.6}, {"id": "SHDX0081", "name": "OMEN暗影精靈11 銳龍版 (2025) AMD Ryzen 9 8945HX / RTX 5070 8GB / 16GB / 1TB", "price": 7199, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13473, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.3, "fps_avg_1080p_monster_hunter": 93.7}, {"id": "SHDX0007", "name": "ROG 魔霸9 (Strix 9 G16) (2025) 魔霸9 G16 RTX5070", "price": 8999, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13428, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 72.3, "fps_avg_1080p_monster_hunter": 87.6}, {"id": "SHDX0309", "name": "曙光16S (i9-13900HX + RTX 5070) (2025) Intel Core i9-13900HX / RTX 5070 8GB / 16GB / 1TB", "price": 9000, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13403, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.5, "fps_avg_1080p_monster_hunter": 91.5}, {"id": "SHDX0300", "name": "暗影精靈 11 (2025) Intel Core i7-14650HX / RTX 5070 8GB / 16GB / 1TB", "price": 6959, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13400, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 78.6, "fps_avg_1080p_monster_hunter": 90.9}, {"id": "SHDX0084", "name": "OMEN暗影精靈11 英雄聯盟典藏版 (2025) Intel Core i7-14650HX / RTX 5070 8GB / 32GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13346, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 75, "fps_avg_1080p_monster_hunter": 88.5}, {"id": "SHDX0082", "name": "OMEN暗影精靈11 銳龍版 (2025) AMD Ryzen 9 8945HX / RTX 5070 8GB / 32GB / 1TB", "price": 7599, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13337, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 73.9, "fps_avg_1080p_monster_hunter": 89.7}], "columns": ["id", "name", "price", "discrete_gpu_model", "vram_gb", "dgpu_tgp_w", "gpu_timespy_score", "fps_avg_1080p_cyberpunk_2077", "fps_avg_1080p_monster_hunter", "body_weight_kg", "travel_weight_kg", "battery_life_hours", "screen_size_inch", "refresh_rate_hz", "memory_gb", "storage_gb"], "rowCount": 20, "truncated": false}}]}, {"n": 3, "ms": 2234, "inTok": 26038, "outTok": 170, "text": "", "sentChars": 9718, "calls": [{"id": "call_00_L13Y2lxa2drd9FVc0ROj7781", "name": "sql_query", "status": "ok", "ms": 32, "summary": "查到 6 列", "args": {"sql": "SELECT id, name, price, discrete_gpu_model, vram_gb, dgpu_tgp_w, gpu_timespy_score, fps_avg_1080p_cyberpunk_2077, fps_avg_1080p_monster_hunter, body_weight_kg, travel_weight_kg, battery_life_hours, screen_size_inch, refresh_rate_hz, memory_gb, storage_gb FROM agent_laptops WHERE id IN ('260129A','SHDX0163','SHDX0162','SHDX0045','SHDX0046','SHDX0360')"}, "result": {"ms": 30, "ok": true, "rows": [{"id": "260129A", "name": "機械革命翼龍15 Pro 2026", "price": 6549, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2, "refresh_rate_hz": 300, "screen_size_inch": 15, "travel_weight_kg": 2.77, "gpu_timespy_score": 12298, "battery_life_hours": 13, "discrete_gpu_model": "NVIDIA RTX 5060", "fps_avg_1080p_cyberpunk_2077": 69.1, "fps_avg_1080p_monster_hunter": 100.1}, {"id": "SHDX0045", "name": "華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 AI9+RTX5060/32GB 日蝕灰", "price": 9199, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.15, "refresh_rate_hz": 165, "screen_size_inch": 14, "travel_weight_kg": 2.77, "gpu_timespy_score": 11198, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5060 8GB (115W)", "fps_avg_1080p_cyberpunk_2077": 67.5, "fps_avg_1080p_monster_hunter": 80.8}, {"id": "SHDX0046", "name": "華碩天選Air 2026 (TUF Air 2026) (2026) 天選Air 2026 AI9+RTX5060/32GB 月光銀", "price": 9499, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.15, "refresh_rate_hz": 165, "screen_size_inch": 14, "travel_weight_kg": 2.77, "gpu_timespy_score": 11117, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5060 8GB (115W)", "fps_avg_1080p_cyberpunk_2077": 64.1, "fps_avg_1080p_monster_hunter": 74.6}, {"id": "SHDX0162", "name": "拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 16GB / 1TB", "price": 8499, "vram_gb": 8, "memory_gb": 16, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.23, "refresh_rate_hz": 165, "screen_size_inch": 15.3, "travel_weight_kg": 2.85, "gpu_timespy_score": 11486, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5060 8GB", "fps_avg_1080p_cyberpunk_2077": 65.5, "fps_avg_1080p_monster_hunter": 78.9}, {"id": "SHDX0163", "name": "拯救者 Y7000X (2026) Intel Core Ultra 7 251HX / RTX 5060 8GB / 32GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.23, "refresh_rate_hz": 165, "screen_size_inch": 15.3, "travel_weight_kg": 2.85, "gpu_timespy_score": 11211, "battery_life_hours": 6.67, "discrete_gpu_model": "NVIDIA RTX 5060 8GB", "fps_avg_1080p_cyberpunk_2077": 63.4, "fps_avg_1080p_monster_hunter": 82.5}, {"id": "SHDX0360", "name": "曙光16 2025款 (2025) Intel Core i9-14900HX / RTX 5070 8GB / 32GB / 1TB", "price": 9999, "vram_gb": 8, "memory_gb": 32, "dgpu_tgp_w": 115, "storage_gb": 1024, "body_weight_kg": 2.43, "refresh_rate_hz": 240, "screen_size_inch": 16, "travel_weight_kg": 3.05, "gpu_timespy_score": 13120, "battery_life_hours": 11, "discrete_gpu_model": "NVIDIA RTX 5070 8GB", "fps_avg_1080p_cyberpunk_2077": 71.1, "fps_avg_1080p_monster_hunter": 89.3}], "columns": ["id", "name", "price", "discrete_gpu_model", "vram_gb", "dgpu_tgp_w", "gpu_timespy_score", "fps_avg_1080p_cyberpunk_2077", "fps_avg_1080p_monster_hunter", "body_weight_kg", "travel_weight_kg", "battery_life_hours", "screen_size_inch", "refresh_rate_hz", "memory_gb", "storage_gb"], "rowCount": 6, "truncated": false}}]}, {"n": 4, "ms": 4957, "inTok": 27446, "outTok": 642, "text": "", "sentChars": 3224, "calls": [{"id": "call_00_h7T4ZmTkU4a0dVhXnXfg0838", "name": "reply", "status": "ok", "ms": 0, "summary": "交出回覆，2 張卡", "args": {"text": "了解，是 3A 大作，那顯卡就要認真挑了。我把權重改成性能優先（顯卡佔性能的一半），重新排了一次，1 萬以內有獨顯的有 127 台。\n\n這幾台裡我推這三台：\n1. 戰神 T10 Pro（7899 元）：RTX 5070 Ti 12GB、140W，顯卡跑分 16208 是這批裡最高的，1080p 跑電馭叛客 2077 平均 89.5 幀、魔物獵人 106.5 幀，3A 大作順跑沒問題。16 吋 300Hz、32GB／1TB，續航 11 小時。代價是 2.43 公斤、外出總重 3.05 公斤，每天背會比較重。\n2. 機械革命翼龍15 Pro 2026（6549 元）：RTX 5060 8GB、115W，跑分 12298，2077 約 69 幀、魔物獵人 100 幀，3A 開中高畫質可以順玩。15 吋 300Hz、32GB／1TB，續航 13 小時是這批最久，機身 2 公斤、外出總重 2.77 公斤，是這幾台裡最好背的。想省錢又要顧重量，這台最划算。\n3. 曙光16 2025款（9999 元）：RTX 5070 8GB、跑分 13120，2077 約 71 幀，16 吋 240Hz、32GB／1TB，續航 11 小時。效能比第 2 台強一階，但價格頂到預算上限、重量 2.43 公斤。\n\n簡單說：遊戲效能優先就第 1 台，那顆 5070 Ti 12GB 在 1 萬內幾乎沒對手；想兼顧每天背的重量和續航就第 2 台；想要 5070 又不想超過 1 萬就第 3 台。\n\n提醒一下，加了獨顯之後重量都在 2 公斤以上，跟之前那台 0.99 公斤的 a豆14 Air 是兩條完全不同的路。你每天背去學校的距離大概多遠？如果走很久，我會建議往第 2 台看。", "cards": [{"ids": ["SHDX0248", "260129A", "SHDX0360"], "type": "recommend"}, {"ids": ["SHDX0248", "260129A"], "type": "compare"}]}, "result": {"ok": true}}]}], "reply": "了解，是 3A 大作，那顯卡就要認真挑了。我把權重改成性能優先（顯卡佔性能的一半），重新排了一次，1 萬以內有獨顯的有 127 台。\n\n這幾台裡我推這三台：\n1. 戰神 T10 Pro（7899 元）：RTX 5070 Ti 12GB、140W，顯卡跑分 16208 是這批裡最高的，1080p 跑電馭叛客 2077 平均 89.5 幀、魔物獵人 106.5 幀，3A 大作順跑沒問題。16 吋 300Hz、32GB／1TB，續航 11 小時。代價是 2.43 公斤、外出總重 3.05 公斤，每天背會比較重。\n2. 機械革命翼龍15 Pro 2026（6549 元）：RTX 5060 8GB、115W，跑分 12298，2077 約 69 幀、魔物獵人 100 幀，3A 開中高畫質可以順玩。15 吋 300Hz、32GB／1TB，續航 13 小時是這批最久，機身 2 公斤、外出總重 2.77 公斤，是這幾台裡最好背的。想省錢又要顧重量，這台最划算。\n3. 曙光16 2025款（9999 元）：RTX 5070 8GB、跑分 13120，2077 約 71 幀，16 吋 240Hz、32GB／1TB，續航 11 小時。效能比第 2 台強一階，但價格頂到預算上限、重量 2.43 公斤。\n\n簡單說：遊戲效能優先就第 1 台，那顆 5070 Ti 12GB 在 1 萬內幾乎沒對手；想兼顧每天背的重量和續航就第 2 台；想要 5070 又不想超過 1 萬就第 3 台。\n\n提醒一下，加了獨顯之後重量都在 2 公斤以上，跟之前那台 0.99 公斤的 a豆14 Air 是兩條完全不同的路。你每天背去學校的距離大概多遠？如果走很久，我會建議往第 2 台看。", "weightsBefore": {"noise": 3, "battery": 20, "display": 20, "thermal": 6, "performance": 30, "portability": 20, "expandability": 1}, "perfBefore": {"gpu": 35, "memory": 12, "storage": 8, "cpu_multi": 20, "cpu_single": 25}, "topBefore": ["260129A", "SHDX0007", "SHDX0163", "SHDX0162", "SHDX0248"], "formalBefore": 127}, "stats": {"silent": 2, "turns": [{"id": "5eabbb6e", "conv": "c4b57c", "at": "2026-11-11 10:04", "input": "預算 4 萬，平常上課寫報告，每天要背去學校", "rounds": 3, "tools": 3, "ms": 10328, "modelMs": 10049, "toolMs": 81, "inTok": 58528, "outTok": 1008, "stop": "reply_tool", "calls": [{"name": "update_profile", "status": "ok", "summary": "新增 3 條、設定權重、設定性能細項，符合 365 台（參數結尾多了括號，已自動修正）"}, {"name": "sql_query", "status": "ok", "summary": "查到 8 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "2b4f3165", "conv": "c4b57c", "at": "2026-11-11 10:05", "input": "盡量撐一整天", "rounds": 3, "tools": 3, "ms": 9195, "modelMs": 8920, "toolMs": 83, "inTok": 59395, "outTok": 725, "stop": "reply_tool", "calls": [{"name": "update_profile", "status": "ok", "summary": "設定權重，符合 365 台"}, {"name": "sql_query", "status": "ok", "summary": "查到 8 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "11fbaeff", "conv": "c4b57c", "at": "2026-11-11 10:06", "input": "預算1萬以內", "rounds": 3, "tools": 3, "ms": 8434, "modelMs": 8237, "toolMs": 65, "inTok": 61277, "outTok": 755, "stop": "reply_tool", "calls": [{"name": "update_profile", "status": "ok", "summary": "修改 1 條，符合 197 台"}, {"name": "sql_query", "status": "ok", "summary": "查到 10 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "359d3cd0", "conv": "c4b57c", "at": "2026-11-11 10:07", "input": "經常玩遊戲需要獨顯可以嗎？", "rounds": 3, "tools": 3, "ms": 12461, "modelMs": 12270, "toolMs": 71, "inTok": 64189, "outTok": 1038, "stop": "reply_tool", "calls": [{"name": "update_profile", "status": "ok", "summary": "新增 1 條、修改 1 條、設定權重、設定性能細項，符合 127 台（參數結尾多了括號，已自動修正）"}, {"name": "sql_query", "status": "ok", "summary": "查到 10 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "9320a687", "conv": "c4b57c", "at": "2026-11-11 10:09", "input": "3A 大作", "rounds": 4, "tools": 5, "ms": 14412, "modelMs": 14070, "toolMs": 149, "inTok": 96191, "outTok": 1428, "stop": "reply_tool", "calls": [{"name": "sql_query", "status": "error", "summary": "查詢失敗：column \"dgpu_required\" does not exist"}, {"name": "update_profile", "status": "ok", "summary": "新增 1 條、設定權重、設定性能細項，符合 127 台（參數結尾多了括號，已自動修正）"}, {"name": "sql_query", "status": "ok", "summary": "查到 20 列"}, {"name": "sql_query", "status": "ok", "summary": "查到 6 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "c4717556", "conv": "c4b57c", "at": "2026-11-11 18:49", "input": "这个机械革命和这个拯救者 Y9000P 定制版哪个更好呀？", "rounds": 2, "tools": 2, "ms": 6044, "modelMs": 5847, "toolMs": 39, "inTok": 43514, "outTok": 663, "stop": "reply_tool", "calls": [{"name": "sql_query", "status": "ok", "summary": "查到 2 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "d2eeb6f2", "conv": "279400", "at": "2026-11-11 20:28", "input": "預算 4 萬，平常上課寫報告，每天要背去學校", "rounds": 6, "tools": 9, "ms": 31044, "modelMs": 30526, "toolMs": 276, "inTok": 127111, "outTok": 4308, "stop": "reply_tool", "calls": [{"name": "update_profile", "status": "ok", "summary": "新增 2 條、設定權重，符合 370 台（參數結尾多了括號，已自動修正）"}, {"name": "sql_query", "status": "error", "summary": "查詢失敗：column \"ram_gb\" does not exist（提示：Perhaps you meant to reference the column \"agent_laptops.vram_gb\".）"}, {"name": "sql_query", "status": "ok", "summary": "查到 1 列"}, {"name": "sql_query", "status": "ok", "summary": "查到 7 列"}, {"name": "sql_query", "status": "ok", "summary": "查到 1 列"}, {"name": "update_profile", "status": "error", "summary": "拒絕 2 條，符合 370 台"}, {"name": "sql_query", "status": "ok", "summary": "查到 6 列"}, {"name": "update_profile", "status": "ok", "summary": "新增 1 條，符合 365 台"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "d6c16043", "conv": "c4b57c", "at": "2026-11-11 23:53", "input": "呃，除了前3，把第四到第八名的都给我看看吗？", "rounds": 2, "tools": 2, "ms": 36569, "modelMs": 36309, "toolMs": 33, "inTok": 45985, "outTok": 3055, "stop": "reply_tool", "calls": [{"name": "sql_query", "status": "ok", "summary": "查到 5 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，1 張卡"}], "roundErr": []}, {"id": "c6640fbb", "conv": "c4b57c", "at": "2026-11-11 23:56", "input": "第456加入對比可以嗎？", "rounds": 2, "tools": 2, "ms": 48446, "modelMs": 48227, "toolMs": 28, "inTok": 47805, "outTok": 2695, "stop": "reply_tool", "calls": [{"name": "sql_query", "status": "ok", "summary": "查到 4 列"}, {"name": "reply", "status": "ok", "summary": "交出回覆，2 張卡"}], "roundErr": []}, {"id": "4fea197b", "conv": "c4b57c", "at": "2026-11-12 00:02", "input": "‘", "rounds": 1, "tools": 0, "ms": 10613, "modelMs": 10505, "toolMs": 0, "inTok": null, "outTok": null, "stop": "error", "calls": [], "roundErr": ["模型連線失敗：fetch failed：Connect Timeout Error (attempted address: api.deepseek.com:443, timeout: 10000ms)"]}]}};
+
+</script>
+<script>
+(() => {
+'use strict';
+const R = DATA.run;
+const S = DATA.stats;
+
+/* ---------- 小工具 ---------- */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n = (x) => (x == null ? '—' : Number(x).toLocaleString('zh-TW'));
+const sec = (ms) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} 秒` : `${Math.round(ms)} 毫秒`);
+const pct = (a, b) => `${((a / b) * 100).toFixed(a / b < 0.01 ? 1 : 0)}%`;
+const jlen = (v) => (v === undefined ? 0 : JSON.stringify(v).length);
+const KIND = {
+  prog: { label: '程式', color: 'var(--c-prog)' },
+  model: { label: '模型', color: 'var(--c-model)' },
+  sql_query: { label: '唯讀 SQL', color: 'var(--c-sql)' },
+  update_profile: { label: '改需求與權重', color: 'var(--c-profile)' },
+  sort_pool: { label: '自訂排序', color: 'var(--c-sort)' },
+  reply: { label: '交出回覆', color: 'var(--c-reply)' },
+};
+const DIM = { performance: '性能', display: '螢幕', portability: '便攜', battery: '續航', thermal: '散熱', noise: '安靜', expandability: '擴充' };
+const SUB = { gpu: '顯卡', cpu_multi: '多核', cpu_single: '單核', memory: '記憶體', storage: '儲存' };
+const SHORT = {
+  '260129A': '機械革命翼龍15 Pro 2026', SHDX0248: '戰神 T10 Pro（5070 Ti）', SHDX0163: '拯救者 Y7000X（32GB）', SHDX0007: 'ROG 魔霸9 G16',
+  SHDX0162: '拯救者 Y7000X（16GB）', SHDX0332: '戰神 T9', SHDX0360: '曙光16 2025款', SHDX0045: '天選Air 2026 日蝕灰', SHDX0046: '天選Air 2026 月光銀',
+  SHDX0174: 'ZERO 16', BIBA0003: '天選Air 2026 銳龍AI MAX版',
+};
+const short = (id) => SHORT[id] ?? id;
+const COL = {
+  name: '機型', price: '價格', discrete_gpu_model: '獨顯型號', vram_gb: '顯存', dgpu_tgp_w: '顯卡功耗', gpu_timespy_score: 'Time Spy',
+  fps_avg_1080p_cyberpunk_2077: '2077 幀數', fps_avg_1080p_monster_hunter: '魔物獵人幀數', body_weight_kg: '機身重', travel_weight_kg: '外出總重',
+  battery_life_hours: '續航', screen_size_inch: '尺寸', refresh_rate_hz: '更新率', memory_gb: '記憶體', storage_gb: '硬碟',
+};
+const UNIT = { price: ' 元', vram_gb: ' GB', dgpu_tgp_w: ' W', body_weight_kg: ' kg', travel_weight_kg: ' kg', battery_life_hours: ' h', screen_size_inch: ' 吋', refresh_rate_hz: ' Hz', memory_gb: ' GB', storage_gb: ' GB' };
+// 示意：目前系統沒有存思考內容，以下是依模型實際動作寫的示意文字。
+const THINK = {
+  1: '用戶在追問卡選了「3A 大作」，程式已經幫他加上「需要獨立顯卡」。3A 大作很吃顯卡，目前權重性能只有 30、顯卡細項 35，太低了。我要做兩件事：先查 1 萬以內有獨顯的機型，看 Time Spy 跑分和實際遊戲幀數；同時把性能權重拉到 40 以上、顯卡細項拉到一半。他每天要背去學校，便攜和續航不能歸零。',
+  2: 'SQL 失敗了，資料庫沒有 dgpu_required 這個欄位。discrete_gpu_model 有值就代表有獨顯，拿掉那個條件重查一次。',
+  3: '前 20 名有了。引擎重排後的前幾名是 260129A、SHDX0163、SHDX0162、SHDX0045、SHDX0046、SHDX0360，把這幾台的遊戲幀數查出來，和跑分最高的戰神 T10 Pro 對照。',
+  4: '資料夠了。戰神 T10 Pro 的 5070 Ti 跑分最高，但外出總重 3.05 公斤；翼龍15 Pro 最輕、續航最久，又最便宜；曙光16 是 5070、剛好 9999 元。推這三台，前兩台放對比卡，最後問他通勤要走多遠。',
+};
+const item = (k) => `<span class="item">第 ${k} 項</span>`;
+const statusPill = (s) => (s === 'ok' ? '<span class="pill ok">成功</span>' : s === 'error' ? '<span class="pill bad">錯誤</span>' : `<span class="pill warn">${esc(s)}</span>`);
+const toolShort = (c) => (c.status !== 'ok' ? '失敗' : c.name === 'sql_query' ? `查到 ${c.result?.rows?.length ?? '?'} 列` : c.name === 'update_profile' ? `改權重，符合 ${n(c.result?.formal)} 台` : c.name === 'reply' ? `${(c.args?.cards ?? []).length} 張卡` : c.summary);
+const kdot = (kind) => `<i class="kdot" style="--k:${KIND[kind]?.color ?? 'var(--c-prog)'}"></i>`;
+
+/* ---------- 步驟（時間軸） ---------- */
+function buildSteps() {
+  const laps = R.timings;
+  const first = laps.findIndex((l) => l.name.startsWith('代理第'));
+  const last = laps.length - 1 - [...laps].reverse().findIndex((l) => l.name.startsWith('代理第'));
+  const pre = laps.slice(0, first), post = laps.slice(last + 1);
+  const steps = [];
+  let t = pre.reduce((a, l) => a + l.ms, 0);
+  steps.push({ key: 'prep', kind: 'prog', label: '準備', start: 0, ms: t, laps: pre });
+  for (const rd of R.rounds) {
+    const lap = laps.find((l) => l.name === `代理第 ${rd.n} 回合`)?.ms ?? rd.ms;
+    steps.push({ key: `m${rd.n}`, kind: 'model', label: `第 ${rd.n} 回合・模型`, start: t, ms: rd.ms, rd });
+    let u = t + rd.ms;
+    rd.calls.forEach((c, j) => { steps.push({ key: `c${rd.n}-${j}`, kind: c.name, label: KIND[c.name]?.label ?? c.name, start: u, ms: c.ms, rd, c, child: true }); u += c.ms; });
+    t += lap;
+  }
+  steps.push({ key: 'post', kind: 'prog', label: '收尾', start: t, ms: post.reduce((a, l) => a + l.ms, 0), laps: post });
+  return steps;
+}
+const STEPS = buildSteps();
+const TOTAL = Math.max(R.ms, ...STEPS.map((s) => s.start + s.ms));
+const MODEL_MS = R.rounds.reduce((a, r) => a + r.ms, 0);
+const TOOL_MS = R.rounds.reduce((a, r) => a + r.calls.reduce((b, c) => b + c.ms, 0), 0);
+const PROG_MS = Math.max(0, R.ms - MODEL_MS - TOOL_MS);
+const stepTip = (s) => {
+  const head = `<span class="tk" style="--k:${KIND[s.kind].color}"></span><b>${sec(s.ms)}</b>　${esc(s.label)}`;
+  const at = `<br>從第 ${(s.start / 1000).toFixed(2)} 秒開始`;
+  if (s.c) return `${head}${at}<br>${esc(s.c.summary)}`;
+  if (s.rd) return `${head}${at}<br>讀入 ${n(s.rd.inTok)} token・寫出 ${n(s.rd.outTok)} token`;
+  return `${head}${at}<br>${s.laps.map((l) => `${esc(l.name)} ${l.ms} 毫秒`).join('、')}`;
+};
+
+/* ---------- 共用畫法：SQL ---------- */
+function fmtSql(sql, badCol) {
+  let s = esc(sql);
+  s = s.replace(/\s+(FROM|WHERE|ORDER BY|LIMIT)\s+/g, '\n$1 ').replace(/\s+(AND)\s+/g, '\n  $1 ');
+  s = s.replace(/(&#39;[^&]*?&#39;)/g, '<span class="str">$1</span>');
+  s = s.replace(/\b(SELECT|FROM|WHERE|ORDER BY|LIMIT|AND|NOT|ILIKE|IS|NULLS LAST|NULL|IN|DESC)\b/g, '<b class="kw">$1</b>');
+  if (badCol) s = s.split(badCol).join(`<span class="badcol">${badCol}</span>`);
+  return s;
+}
+function cell(k, v) {
+  if (v == null) return '<td class="r faint">—</td>';
+  if (k === 'name') return `<td class="name" title="${esc(v)}">${esc(v)}</td>`;
+  if (k === 'discrete_gpu_model') return v === '無' ? '<td><span class="flagtxt">無</span></td>' : `<td>${esc(v)}</td>`;
+  if (typeof v === 'number') return `<td class="r">${n(v)}${UNIT[k] ?? ''}</td>`;
+  return `<td>${esc(v)}</td>`;
+}
+function rowsTable(rows, limit, uid) {
+  const cols = Object.keys(rows[0]).filter((k) => k !== 'id');
+  const order = ['name', 'price', 'discrete_gpu_model', 'gpu_timespy_score', 'fps_avg_1080p_cyberpunk_2077', 'fps_avg_1080p_monster_hunter', 'vram_gb', 'dgpu_tgp_w', 'body_weight_kg', 'travel_weight_kg', 'battery_life_hours', 'screen_size_inch', 'refresh_rate_hz', 'memory_gb', 'storage_gb'];
+  const rank = (k) => { const i = order.indexOf(k); return i < 0 ? 999 : i; };
+  cols.sort((a, b) => rank(a) - rank(b));
+  const body = rows.map((r, i) => `<tr class="${r.discrete_gpu_model === '無' ? 'flag' : ''}" ${i >= limit ? `data-more="${uid}" hidden` : ''}>${cols.map((k) => cell(k, r[k])).join('')}</tr>`).join('');
+  const head = cols.map((k) => `<th class="${typeof rows[0][k] === 'number' ? 'r' : ''}">${esc(COL[k] ?? k)}<span class="mono">${esc(k)}</span></th>`).join('');
+  const more = rows.length > limit ? `<button class="more" type="button" data-showmore="${uid}">顯示全部 ${rows.length} 列（目前 ${limit} 列）</button>` : '';
+  return `<div class="tblwrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${more}`;
+}
+let UID = 0;
+function sqlView(c, { rows = 5 } = {}) {
+  const res = c.result ?? {};
+  const bad = /column "([^"]+)" does not exist/.exec(res.error ?? '')?.[1];
+  let out = `<pre class="sql">${fmtSql(c.args.sql, bad)}</pre>`;
+  if (!res.ok) {
+    out += `<div class="dberr"><b>資料庫回報</b><span>${esc(res.error)}${bad ? `<br>白話：資料庫沒有「${esc(bad)}」這個欄位。` : ''}</span></div>`;
+    out += `<div class="note"><b>設計稿註記：</b>錯的欄位名稱直接在 SQL 裡標紅。分析頁會把這類錯誤集中起來，看得出是不是說明書的欄位清單寫得不夠清楚。</div>`;
+  } else {
+    out += `<div class="sub-h"><span>查到 ${n(res.rows.length)} 列</span><span class="faint">資料庫耗時 ${n(res.ms)} 毫秒</span>${item(3)}</div>`;
+    out += rowsTable(res.rows, rows, `t${UID++}`);
+    if (res.rows.some((r) => r.discrete_gpu_model === '無')) {
+      out += `<div class="note"><b>設計稿註記（真實發現）：</b>第 1 列「獨顯型號＝無」也被查出來了，因為 SQL 只排除了含「內」的值。現在要點開 11,692 字的 JSON 才看得到；變成表格後，黃底那列一眼就看出問題。</div>`;
+    }
+  }
+  return out;
+}
+
+/* ---------- 共用畫法：改需求與權重 ---------- */
+function wRows(after, before, labels, max) {
+  const keys = Object.keys(after).sort((a, b) => after[b] - after[a]);
+  return `<div class="wrows">${keys.map((k) => {
+    const a = after[k], b = before?.[k];
+    const d = b == null ? 0 : a - b;
+    const delta = b == null ? '' : d > 0 ? `<em class="up">▲${d}</em>` : d < 0 ? `<em class="down">▼${-d}</em>` : '<em class="same">—</em>';
+    return `<div class="wrow"><span>${esc(labels[k] ?? k)}</span><span class="wt" title="改之前 ${b ?? '—'}，改之後 ${a}">${b != null ? `<i class="was" style="width:${(b / max) * 100}%"></i>` : ''}<i class="now" style="width:${(a / max) * 100}%"></i></span><span class="wv">${b ?? '—'} → <b>${a}</b> ${delta}</span></div>`;
+  }).join('')}</div>`;
+}
+function rankView(res) {
+  const before = R.topBefore;
+  const after = res.top.slice(0, 5).map((t) => t.id);
+  const was = new Map(before.map((id, i) => [id, i + 1]));
+  const li = after.map((id, i) => {
+    const w = was.get(id);
+    const mv = w == null ? '<em class="up">新進</em>' : w > i + 1 ? `<em class="up">▲${w - (i + 1)}</em>` : w < i + 1 ? `<em class="down">▼${i + 1 - w}</em>` : '<em class="same">—</em>';
+    return `<li class="${w !== i + 1 ? 'mv' : ''}">${esc(short(id))} ${mv}</li>`;
+  }).join('');
+  return `<div class="ranks"><div><div class="sub-h">改之前前 5 名</div><ol>${before.map((id) => `<li>${esc(short(id))}</li>`).join('')}</ol></div><div><div class="sub-h">改之後前 5 名</div><ol>${li}</ol></div></div>`;
+}
+function profileView(c, { compact = false } = {}) {
+  const res = c.result, a = c.args;
+  const applied = `<div class="chips">${(res.applied ?? []).map((x) => `<span class="chip">${esc(x.replace(/：.*$/, ''))}</span>`).join('')}${(res.rejected ?? []).map((x) => `<span class="chip cut">被拒絕：${esc(x.why ?? '')}</span>`).join('')}</div>`;
+  const why = a.weightReason ? `<p class="why">${esc(a.weightReason)}</p>` : '';
+  const cand = `<div><div class="sub-h">候選台數 ${item(3)}</div><p class="small">正式 <b>${n(R.formalBefore)} → ${n(res.formal)}</b> 台（沒變）・邊界 ${n(res.edge)}・排除 ${n(res.out)}</p><div class="chips" style="margin-top:6px">${res.cut.map((x) => `<span class="chip cut">${esc(x.label)} −${n(x.cut)}</span>`).join('')}</div></div>`;
+  if (compact) {
+    const keys = Object.keys(a.weights).filter((k) => a.weights[k] !== R.weightsBefore[k]).sort((x, y) => Math.abs(a.weights[y] - R.weightsBefore[y]) - Math.abs(a.weights[x] - R.weightsBefore[x]));
+    return `${applied}<div class="mini-wt">${keys.slice(0, 4).map((k) => { const d = a.weights[k] - R.weightsBefore[k]; return `<span>${DIM[k]} ${R.weightsBefore[k]}→<b>${a.weights[k]}</b> ${d > 0 ? `<em class="up">▲${d}</em>` : `<em class="down">▼${-d}</em>`}</span>`; }).join('')}<span class="faint">顯卡細項 35→<b>50</b></span></div><p class="small muted">候選仍是 ${n(res.formal)} 台・第 1 名不變・戰神 T10 Pro 從第 5 升到第 2</p>`;
+  }
+  return `${applied}${why}
+    <div class="cols2">
+      <div><div class="sub-h"><span>權重</span><span class="legend"><span><i class="sw" style="background:var(--c-prog);height:4px"></i>改之前</span><span><i class="sw" style="background:var(--c-profile);height:8px"></i>改之後</span></span>${item(3)}</div>${wRows(a.weights, R.weightsBefore, DIM, 50)}</div>
+      <div><div class="sub-h"><span>性能細項</span></div>${wRows(a.perfSubs, R.perfBefore, SUB, 60)}</div>
+    </div>
+    <div class="cols2">${cand}<div>${rankView(res)}</div></div>`;
+}
+
+/* ---------- 共用畫法：交出回覆 ---------- */
+function replyView(c, { clip = false } = {}) {
+  const text = c.args.text;
+  const cards = (c.args.cards ?? []).map((k) => `<div class="ucard"><b>${k.type === 'recommend' ? '推薦卡' : k.type === 'compare' ? '對比卡' : esc(k.type)}</b>${k.ids.map((id) => esc(short(id))).join('、')}</div>`).join('');
+  const body = clip ? `${esc(text.slice(0, 120))}…` : esc(text);
+  return `<div class="bubble">${body}</div><div class="cardrow">${cards}</div>`;
+}
+function toolBody(c, opt = {}) {
+  if (c.name === 'sql_query') return sqlView(c, opt);
+  if (c.name === 'update_profile') return profileView(c, opt);
+  if (c.name === 'reply') return replyView(c, opt);
+  return '';
+}
+function rawView(c) {
+  const args = JSON.stringify(c.args, null, 2), res = JSON.stringify(c.result, null, 2);
+  return `<div class="raws"><details class="raw"><summary>參數原文（${n(jlen(c.args))} 字）</summary><pre>${esc(args)}</pre></details><details class="raw"><summary>交給模型的結果原文（${n(jlen(c.result))} 字）</summary><pre>${esc(res)}</pre></details></div>`;
+}
+
+/* ---------- 共用畫法：模型 ---------- */
+function thinkView(rd, open) {
+  const t = THINK[rd.n];
+  return `<details class="think" ${open ? 'open' : ''}><summary><span class="lbl">模型的思考</span><span class="demo">示意</span>${item(4)}<span class="muted small prev">${esc(t.slice(0, 34))}…</span></summary><div class="body"><p>${esc(t)}</p><p class="small muted">示意文字：現在的系統沒有存思考內容。v1.0.49 起會記下模型真正的思考（每回合最多 2 萬字），還有思考用掉多少 token。</p></div></details>`;
+}
+const saidView = (rd) => (rd.text ? `<blockquote class="said">${esc(rd.text)}</blockquote>` : '<p class="small muted">這回合沒有說話，直接呼叫工具。</p>');
+const sentLine = (rd) => (rd.n === 1
+  ? `送出：說明書 ${n(R.contextChars)} 字＋用戶訊息`
+  : `送出：上一回合的工具結果 ${n(rd.sentChars)} 字（說明書照樣整份重送）`);
+
+/* ---------- 說明書與 token ---------- */
+function partsView() {
+  const parts = [...R.parts].sort((a, b) => b.chars - a.chars);
+  const total = parts.reduce((a, p) => a + p.chars, 0), max = parts[0].chars;
+  return `<div class="parts">${parts.map((p) => `<details class="part ${p.kind}"><summary><span class="pl" title="${esc(p.head ?? p.name)}">${esc(p.name)}</span><span class="pt"><i style="width:${(p.chars / max) * 100}%"></i></span><span class="pv">${n(p.chars)} 字・${pct(p.chars, total)}</span></summary><pre>${esc(p.excerpt)}${p.chars > p.excerpt.length ? '\n…（點開正式版可看全文）' : ''}</pre></details>`).join('')}</div>`;
+}
+function tokenView() {
+  const base = R.rounds[0].inTok;
+  const max = 30000;
+  const rows = R.rounds.map((rd) => {
+    const extra = rd.inTok - base;
+    return `<div class="tokrow" data-tip="${esc(`<b>${n(rd.inTok)} token</b>　第 ${rd.n} 回合讀入<br>說明書與用戶訊息 約 ${n(base)}<br>之前回合累積 ${n(extra)}<br>寫出 ${n(rd.outTok)} token`)}"><span>第 ${rd.n} 回合</span><span class="toktrack"><i style="width:${(base / max) * 100}%;background:var(--c-ctx)"></i>${extra > 0 ? `<i style="width:${(extra / max) * 100}%;background:var(--c-acc)"></i>` : ''}</span><span class="num muted">${n(rd.inTok)}</span></div>`;
+  }).join('');
+  const sum = R.totals.inputTokens, rep = base * R.rounds.length;
+  return `<div class="legend"><span><i class="sw" style="background:var(--c-ctx)"></i>說明書＋用戶訊息（每回合重送）</span><span><i class="sw" style="background:var(--c-acc)"></i>之前回合累積的工具結果與回覆</span></div>
+    <div class="tokrows">${rows}</div>
+    <div class="tokaxis"><span></span><div><span>0</span><span>10K</span><span>20K</span><span>30K</span></div><span></span></div>
+    <p class="insight">${R.rounds.length} 回合共讀入 ${n(sum)} token，其中約 ${n(rep)}（${pct(rep, sum)}）是每回合重送的說明書。</p>`;
+}
+function contextBlock() {
+  return `<div class="ctxgrid">
+    <div><div class="sec-title">說明書組成 <span class="muted">${n(R.contextChars)} 字，點一段看內容</span>${item(5)}</div><div class="legend" style="margin:4px 0 6px"><span><i class="sw" style="background:var(--c-ctx)"></i>固定規則</span><span><i class="sw" style="background:var(--c-acc)"></i>每輪變動的資料</span></div>${partsView()}</div>
+    <div><div class="sec-title">每回合讀入多少 token ${item(5)}</div>${tokenView()}</div>
+  </div>`;
+}
+
+/* ---------- 共用：外框 ---------- */
+function frame(inner, opts = {}) {
+  const folded = ['模型抽取結果', '需求檔案的變化', '候選與結果', '前 5 名各維度貢獻', '回覆', '模型呼叫', '權重變化表', '追問決策', '局勢報告', '原始資料'];
+  return `<div class="frame ${document.getElementById('opt-narrow').checked ? 'narrow' : ''}">
+    ${opts.stats ? '<div class="frame-bar"><b>後台</b><span class="sep">›</span>對話檢視<span class="sep">›</span><b>代理分析</b></div>' : '<div class="frame-bar"><b>後台</b><span class="sep">›</span>對話紀錄<span class="sep">›</span>預算 4 萬，平常上課寫報告…<span class="sep">›</span><b>第 5 輪</b></div>'}
+    <div class="frame-body">
+      ${opts.stats ? '' : `<div class="run-head"><h3>第 5 輪</h3><span class="pill ok">推薦</span><span class="muted small">2026/11/11 10:09・14,412 毫秒・方案：代理方案</span></div>
+      <div class="quote">${esc(R.input)}</div>
+      <p class="pre-step">程式先做的事：${esc(R.preStep)}</p>
+      <div class="note"><b>第 1 項：</b>代理方案的輪次，執行過程直接放在用戶原文下面。原本排在前面的 10 個區塊，代理方案大多用不到，改成收起來放在最下面。</div>`}
+      ${inner}
+      ${opts.noFold ? '' : `<div class="folded"><div class="sec-title">其他區塊 <span class="muted">代理方案用不到或不常看，預設收起</span>${item(1)}</div><div class="folded-list">${folded.map((f) => `<span>${f}</span>`).join('')}</div></div>`}
+    </div>
+  </div>`;
+}
+function summaryBar() {
+  return `<div class="sumbar">
+    <span class="ktag">結束原因 <span class="pill ok">交出回覆</span></span>
+    <div class="stat"><span>回合</span><b>${R.totals.rounds}</b></div>
+    <div class="stat"><span>工具</span><b>${R.totals.toolCalls} <small>次・錯 1</small></b></div>
+    <div class="stat"><span>整輪</span><b>${sec(R.ms)}</b></div>
+    <div class="stat"><span>等模型</span><b>${pct(MODEL_MS, R.ms)}</b></div>
+    <div class="stat"><span>讀入／寫出 token</span><b>${n(R.totals.inputTokens)} <small>／ ${n(R.totals.outputTokens)}</small></b></div>
+  </div>`;
+}
+
+/* ================= A 時間軸瀑布 ================= */
+function waterfall() {
+  const tick = (2000 / TOTAL) * 100;
+  const ticks = [];
+  for (let s = 0; s * 1000 <= TOTAL; s += 2) ticks.push(`<span class="wf-tick" style="left:${((s * 1000) / TOTAL) * 100}%">${s} 秒</span>`);
+  const rows = STEPS.map((s) => {
+    const left = (s.start / TOTAL) * 100, w = (s.ms / TOTAL) * 100;
+    const flip = left + w > 82;
+    const val = `<span class="wf-val" style="${flip ? `right:calc(${100 - left}% + 6px)` : `left:calc(${left + w}% + 6px)`}">${sec(s.ms)}${s.c ? `・${esc(toolShort(s.c))}` : ''}</span>`;
+    const icon = s.c && s.c.status !== 'ok' ? '<span class="pill bad" style="padding:0 5px">錯</span>' : '';
+    return `<div class="wf-row ${s.child ? 'child' : ''}" data-row="${s.key}"><div class="wf-lab">${kdot(s.kind)}<span>${esc(s.label)}</span>${icon}</div><div class="wf-track" style="--tick:${tick}%"><button type="button" class="wf-bar ${s.c && s.c.status !== 'ok' ? 'err' : ''}" style="--k:${KIND[s.kind].color};left:${left}%;width:${w}%" data-goto="${s.key}" data-tip="${esc(stepTip(s))}" aria-label="${esc(`${s.label} ${sec(s.ms)}`)}"></button>${val}</div></div>`;
+  }).join('');
+  return `<div class="wf"><div class="wf-row wf-axis"><div class="wf-lab"></div><div class="wf-track">${ticks.join('')}</div></div>${rows}</div>`;
+}
+function roundCardsA() {
+  return R.rounds.map((rd) => `
+    <section class="round" id="a-m${rd.n}">
+      <div class="round-h"><h4>${kdot('model')} 第 ${rd.n} 回合</h4><span class="meta">模型 ${sec(rd.ms)}・讀入 ${n(rd.inTok)}・寫出 ${n(rd.outTok)} token</span><span class="meta faint">${sentLine(rd)}</span></div>
+      ${thinkView(rd, false)}
+      ${saidView(rd)}
+      <div class="calls">${rd.calls.map((c, j) => `
+        <article class="call" id="a-c${rd.n}-${j}">
+          <div class="call-h"><span class="ktag">${kdot(c.name)}${esc(KIND[c.name].label)}</span><span class="mono">${esc(c.name)}</span>${statusPill(c.status)}<span class="muted small num">${sec(c.ms)}</span><span class="sum">${esc(c.summary)}</span></div>
+          <div class="call-b">${toolBody(c)}${rawView(c)}</div>
+        </article>`).join('')}</div>
+    </section>`).join('');
+}
+function planA() {
+  return `<div class="plan-head"><h2>A　時間軸瀑布</h2><p>最上面一張瀑布圖：每一列是一步，橫條長度就是花的時間。滑過看細節，點一下跳到下面那一步。下面照順序列出每個回合：模型的思考、說的話、每個工具的看懂版。和瀏覽器開發者工具的「網路」分頁很像，適合找「慢在哪、錯在哪」。</p></div>
+  ${frame(`
+    <div class="sec-title">代理執行過程 ${item(2)}</div>
+    ${summaryBar()}
+    <div class="legend">${['prog', 'model', 'sql_query', 'update_profile', 'reply'].map((k) => `<span>${kdot(k)}${KIND[k].label}</span>`).join('')}<span class="faint">紅框＝出錯</span></div>
+    ${waterfall()}
+    <div class="note"><b>第 2 項：</b>一眼看出 14.4 秒幾乎都在等模型（藍條），工具都只有幾十毫秒。第 1 回合的 SQL 有紅框，點它直接跳到那張卡。</div>
+    ${contextBlock()}
+    <div class="sec-title">每個回合 ${item(3)}${item(4)}</div>
+    ${roundCardsA()}
+  `)}`;
+}
+
+/* ================= B 左右檢視器 ================= */
+let bSel = null, bTab = null;
+function bNodes() {
+  const nodes = [{ key: 'ctx', kind: 'prog', label: '說明書', meta: `${n(R.contextChars)} 字`, sep: '交給模型的資料' }];
+  for (const s of STEPS) nodes.push({ ...s, meta: sec(s.ms), sep: s.key === 'prep' ? '執行順序' : undefined });
+  return nodes;
+}
+function bTree(nodes) {
+  return nodes.map((s) => {
+    const left = s.start != null ? (s.start / TOTAL) * 100 : 0, w = s.ms != null ? (s.ms / TOTAL) * 100 : 0;
+    const bad = s.c && s.c.status !== 'ok';
+    return `${s.sep ? `<div class="tree-sep">${s.sep}</div>` : ''}<button type="button" class="node ${s.child ? 'child' : ''}" role="option" aria-selected="${s.key === bSel}" data-node="${s.key}" style="--k:${KIND[s.kind].color}">${kdot(s.kind)}<span class="nl">${esc(s.label)}${bad ? ' <span class="bad">✕</span>' : ''}</span><span class="nm">${esc(s.meta)}</span>${s.start != null ? `<span class="nb"><i style="left:${left}%;width:${w}%"></i></span>` : '<span class="nb" style="background:none"></span>'}</button>`;
+  }).join('');
+}
+function bDetail(nodes) {
+  const s = nodes.find((x) => x.key === bSel);
+  const tabsOf = (list) => `<div class="dtabs" role="tablist">${list.map(([id, label]) => `<button type="button" class="dtab" role="tab" data-dtab="${id}" aria-selected="${id === bTab}">${label}</button>`).join('')}</div>`;
+  if (s.key === 'ctx') {
+    bTab = bTab && ['parts', 'tokens'].includes(bTab) ? bTab : 'parts';
+    return `<div class="detail-h">${kdot('prog')}<h4>說明書</h4><span class="muted small">${n(R.contextChars)} 字・每回合都整份送給模型</span>${item(5)}</div>
+      ${tabsOf([['parts', '組成'], ['tokens', '每回合 token']])}
+      ${bTab === 'parts' ? partsView() : tokenView()}`;
+  }
+  if (!s.rd) {
+    return `<div class="detail-h">${kdot('prog')}<h4>${esc(s.label)}</h4><span class="muted small">${sec(s.ms)}・程式自己做，不叫模型</span></div>
+      <div class="tblwrap"><table><thead><tr><th>步驟</th><th class="r">耗時</th></tr></thead><tbody>${s.laps.map((l) => `<tr><td>${esc(l.name)}</td><td class="r">${n(l.ms)} 毫秒</td></tr>`).join('')}</tbody></table></div>
+      ${s.key === 'prep' ? `<p class="small">${esc(R.preStep)}</p>` : '<p class="small muted">整理卡片、算局勢報告、存檔。之後用戶就看到回覆。</p>'}`;
+  }
+  if (!s.c) {
+    const rd = s.rd;
+    bTab = bTab && ['think', 'said', 'sent'].includes(bTab) ? bTab : 'think';
+    const body = bTab === 'think' ? thinkView(rd, true) : bTab === 'said' ? saidView(rd) + `<p class="small muted">這回合呼叫了 ${rd.calls.length} 個工具：${rd.calls.map((c) => KIND[c.name].label).join('、')}</p>` : `<p class="small">${sentLine(rd)}</p><p class="small muted">讀入 ${n(rd.inTok)} token・寫出 ${n(rd.outTok)} token・耗時 ${sec(rd.ms)}</p>${tokenView()}`;
+    return `<div class="detail-h">${kdot('model')}<h4>第 ${rd.n} 回合・模型</h4><span class="muted small num">${sec(rd.ms)}・讀入 ${n(rd.inTok)}・寫出 ${n(rd.outTok)}</span></div>
+      ${tabsOf([['think', '思考'], ['said', '說的話'], ['sent', '送出內容']])}${body}`;
+  }
+  const c = s.c;
+  bTab = bTab && ['view', 'args', 'res'].includes(bTab) ? bTab : 'view';
+  const body = bTab === 'view' ? toolBody(c, { rows: 20 }) : `<pre class="sql" style="background:var(--sunk);color:var(--ink)">${esc(JSON.stringify(bTab === 'args' ? c.args : c.result, null, 2))}</pre>`;
+  return `<div class="detail-h">${kdot(c.name)}<h4>${esc(KIND[c.name].label)}</h4><span class="mono muted">${esc(c.name)}</span>${statusPill(c.status)}<span class="muted small num">第 ${s.rd.n} 回合・${sec(c.ms)}</span></div>
+    <p class="small">${esc(c.summary)}</p>
+    ${tabsOf([['view', '看懂版'], ['args', `參數原文（${n(jlen(c.args))} 字）`], ['res', `結果原文（${n(jlen(c.result))} 字）`]])}${body}`;
+}
+function planB() {
+  const nodes = bNodes();
+  if (!bSel) bSel = STEPS.find((s) => s.c && s.c.status !== 'ok')?.key ?? 'ctx';
+  const prop = `<div class="propbar" data-tip="${esc(`<b>${sec(R.ms)}</b>　整輪<br>模型 ${sec(MODEL_MS)}（${pct(MODEL_MS, R.ms)}）<br>工具 ${sec(TOOL_MS)}（${pct(TOOL_MS, R.ms)}）<br>程式 ${sec(PROG_MS)}（${pct(PROG_MS, R.ms)}）`)}"><i style="flex:${MODEL_MS};background:var(--c-model)"></i><i style="flex:${Math.max(TOOL_MS, 60)};background:var(--c-sql)"></i><i style="flex:${Math.max(PROG_MS, 60)};background:var(--c-prog)"></i></div>`;
+  return `<div class="plan-head"><h2>B　左右檢視器</h2><p>左邊是步驟清單，每一步下面有一條小時間條；右邊只顯示選中的那一步，用分頁切換「看懂版／參數原文／結果原文」。打開時自動選第一個出錯的步驟。LangSmith、Langfuse 這類專門追蹤 AI 代理的工具多半長這樣，資訊最密。缺點是要比較寬的畫面：放在後台右欄會太擠，正式版會開成整頁寬的檢視器。</p></div>
+  ${frame(`
+    <div class="sec-title">代理執行過程 ${item(2)}<span class="muted">用 <span class="kbd">↑</span> <span class="kbd">↓</span> 換步驟</span></div>
+    ${summaryBar()}
+    <div class="legend"><span><i class="sw" style="background:var(--c-model)"></i>模型 ${pct(MODEL_MS, R.ms)}</span><span><i class="sw" style="background:var(--c-sql)"></i>工具 ${pct(TOOL_MS, R.ms)}</span><span><i class="sw" style="background:var(--c-prog)"></i>程式 ${pct(PROG_MS, R.ms)}</span><span class="faint">（工具和程式太短，畫成最小寬度）</span></div>
+    ${prop}
+    <div class="note"><b>設計稿註記：</b>打開就自動選中「第 1 回合 › 唯讀 SQL ✕」。點左邊任何一步，右邊換內容。</div>
+    <div class="insp"><div class="tree" role="listbox" aria-label="執行步驟" tabindex="0">${bTree(nodes)}</div><div class="detail">${bDetail(nodes)}</div></div>
+  `)}`;
+}
+
+/* ================= C 對話劇本 ================= */
+function planC() {
+  const PX = 26; // 1 秒 = 26px
+  const ev = [];
+  const prep = STEPS[0];
+  ev.push({ lane: 2, kind: 'prog', at: 0, ms: prep.ms, id: 'c-prep', html: `<div class="ev-h">${kdot('prog')}<b>程式</b><span class="muted">${sec(prep.ms)}</span><span class="lane-tag pill">程式</span></div><p class="small">收到用戶按追問卡：「3A 大作」。${esc(R.preStep.replace(/^用戶在追問卡「遊戲類型」選了「3A 大作」，/, ''))}，重算候選。</p><p class="small muted">組好說明書 ${n(R.contextChars)} 字，連同用戶訊息交給模型。</p>` });
+  for (const rd of R.rounds) {
+    const st = STEPS.find((s) => s.key === `m${rd.n}`);
+    const back = rd.n > 1 ? R.rounds[rd.n - 2].calls.length : 0;
+    ev.push({ lane: 3, kind: 'model', at: st.start, ms: rd.ms, id: `c-m${rd.n}`, conn: rd.n > 1 ? { col: 4, dir: 'left', text: `${back} 個結果交回` } : { col: 2, dir: 'right', text: '說明書＋訊息' }, html: `<div class="ev-h">${kdot('model')}<b>模型・第 ${rd.n} 回合</b><span class="muted num">${sec(rd.ms)}・讀入 ${n(rd.inTok)} token</span><span class="lane-tag pill">模型</span></div>${thinkView(rd, rd.n === 1)}${saidView(rd)}` });
+    rd.calls.forEach((c, j) => {
+      const s = STEPS.find((x) => x.key === `c${rd.n}-${j}`);
+      let body = '';
+      if (c.name === 'sql_query') {
+        const res = c.result;
+        body = `<pre class="sql" style="max-height:120px;overflow:auto">${fmtSql(c.args.sql, /column "([^"]+)"/.exec(res.error ?? '')?.[1])}</pre>${res.ok ? `<p class="small">查到 <b>${res.rows.length}</b> 列：${res.rows.slice(0, 3).map((r) => esc(short(r.id))).join('、')}…</p><details class="raw"><summary>看表格</summary>${rowsTable(res.rows, 5, `c${UID++}`)}</details>` : `<div class="dberr"><b>失敗</b><span>欄位「${esc(/column "([^"]+)"/.exec(res.error)?.[1] ?? '')}」不存在</span></div>`}`;
+      } else if (c.name === 'update_profile') body = `${profileView(c, { compact: true })}<details class="raw"><summary>看權重與名次變化</summary>${profileView(c)}</details>`;
+      else if (c.name === 'reply') body = replyView(c, { clip: true });
+      ev.push({ lane: 4, kind: c.name, at: s.start, ms: c.ms, id: `c-c${rd.n}-${j}`, err: c.status !== 'ok', conn: { col: 3, dir: 'right', text: j === 0 ? '呼叫' : '同時呼叫' }, html: `<div class="ev-h">${kdot(c.name)}<b>${esc(KIND[c.name].label)}</b>${statusPill(c.status)}<span class="muted num">${sec(c.ms)}</span><span class="lane-tag pill">工具</span></div>${body}` });
+    });
+  }
+  const post = STEPS[STEPS.length - 1];
+  ev.push({ lane: 2, kind: 'prog', at: post.start, ms: post.ms, id: 'c-post', conn: { col: 3, dir: 'left', text: '回覆與卡片', span: '3 / 5' }, html: `<div class="ev-h">${kdot('prog')}<b>程式</b><span class="muted">${sec(post.ms)}</span><span class="lane-tag pill">程式</span></div><p class="small">檢查卡片（沒有被拿掉的）、補需求卡、存檔。用戶在第 ${(R.ms / 1000).toFixed(1)} 秒看到回覆。</p>` });
+
+  const story = [];
+  story.push(`<span class="st" data-goto-c="c-prep">${kdot('prog')}程式套用追問卡</span>`);
+  for (const rd of R.rounds) {
+    story.push(`<span class="ar">→</span><span class="st" data-goto-c="c-m${rd.n}">${kdot('model')}想 ${sec(rd.ms)}</span>`);
+    rd.calls.forEach((c, j) => story.push(`<span class="ar">→</span><span class="st ${c.status !== 'ok' ? 'err' : ''}" data-goto-c="c-c${rd.n}-${j}">${kdot(c.name)}${c.name === 'sql_query' ? (c.status === 'ok' ? `SQL ${c.result.rows.length} 列` : 'SQL 失敗') : c.name === 'update_profile' ? '改權重' : '交出回覆'}</span>`));
+  }
+  const grid = ev.map((e, i) => {
+    const h = Math.max(4, (e.ms / 1000) * PX);
+    const rail = `<div class="rail" style="grid-row:${i + 2};grid-column:1"><span>${(e.at / 1000).toFixed(2)} 秒</span><i style="--k:${KIND[e.kind].color};height:${h}px" data-tip="${esc(`<b>${sec(e.ms)}</b>　${KIND[e.kind].label}`)}"></i></div>`;
+    const conn = e.conn ? `<div class="conn ${e.conn.dir}" style="grid-row:${i + 2};grid-column:${e.conn.span ?? e.conn.col}">${esc(e.conn.text)}</div>` : '';
+    return `${rail}${conn}<div class="ev ${e.kind === 'model' ? 'model' : ''} ${e.err ? 'err' : ''}" id="${e.id}" style="grid-row:${i + 2};grid-column:${e.lane}">${e.html}</div>`;
+  }).join('');
+  return `<div class="plan-head"><h2>C　對話劇本</h2><p>把一輪畫成三個角色的對話：程式、模型、工具各一條泳道，虛線箭頭標出誰把什麼交給誰。左邊的時間條高度代表花的時間（1 秒＝${PX}px），所以模型想很久的地方會拉得很長。最上面一行是整輪的劇情，點一下跳過去。最像在讀故事，最容易看懂模型為什麼這樣做，適合改提示詞時用。</p></div>
+  ${frame(`
+    <div class="sec-title">代理執行過程 ${item(2)}</div>
+    ${summaryBar()}
+    <div class="story">${story.join('')}</div>
+    <div class="note"><b>設計稿註記：</b>窄螢幕時三條泳道會合成一條，每張卡片標上是誰。</div>
+    <div class="lanes">
+      <div class="lane-h" style="grid-row:1;grid-column:1">時間</div>
+      <div class="lane-h" style="grid-row:1;grid-column:2">${kdot('prog')}程式</div>
+      <div class="lane-h" style="grid-row:1;grid-column:3">${kdot('model')}模型</div>
+      <div class="lane-h" style="grid-row:1;grid-column:4"><i class="kdot" style="--k:var(--c-sql)"></i>工具</div>
+      ${grid}
+    </div>
+    <details class="raw"><summary>說明書組成與每回合 token ${item(5)}</summary><div style="margin-top:10px">${contextBlock()}</div></details>
+  `)}`;
+}
+
+/* ================= 代理分析頁 ================= */
+let onlyIssues = false;
+function statsPage() {
+  const T = S.turns;
+  const total = T.reduce((a, t) => a + t.ms, 0);
+  const sorted = [...T].map((t) => t.ms).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  const slowest = sorted[sorted.length - 1];
+  const model = T.reduce((a, t) => a + t.modelMs, 0), tool = T.reduce((a, t) => a + t.toolMs, 0);
+  const calls = T.flatMap((t) => t.calls.map((c) => ({ ...c, turn: t })));
+  const errs = calls.filter((c) => c.status !== 'ok');
+  const modelErr = T.filter((t) => t.roundErr.length);
+  const tools = ['sql_query', 'update_profile', 'sort_pool', 'reply'].map((name) => {
+    const xs = calls.filter((c) => c.name === name);
+    return { name, n: xs.length, ok: xs.filter((c) => c.status === 'ok').length };
+  });
+  const hasIssue = (t) => t.calls.some((c) => c.status !== 'ok') || t.roundErr.length || t.ms > 30000;
+  const max = 50000, tick = (10000 / max) * 100;
+  const label = (t) => `<small>${t.at.slice(5).replace('-', '/')}</small>${esc(t.input)}`;
+  const timeRows = T.map((t) => {
+    const p = Math.max(0, t.ms - t.modelMs - t.toolMs);
+    return `<div class="trow ${onlyIssues && !hasIssue(t) ? 'dimrow' : ''}" ${onlyIssues && !hasIssue(t) ? 'hidden' : ''}><span class="tl" title="${esc(t.input)}">${label(t)}</span><span class="ttrack" style="--tick:${tick}%" data-tip="${esc(`<b>${sec(t.ms)}</b>　${t.input.slice(0, 20)}<br><span class='tk' style='--k:var(--c-model)'></span>模型 ${sec(t.modelMs)}（${pct(t.modelMs, t.ms)}）<br>工具 ${sec(t.toolMs)}・程式 ${sec(p)}<br>${t.rounds} 回合・${t.tools} 次工具`)}"><i class="m" style="width:${(t.modelMs / max) * 100}%"></i><i class="t" style="width:${(t.toolMs / max) * 100}%"></i><i class="p" style="width:${(p / max) * 100}%"></i></span><span class="tval">${sec(t.ms)}</span></div>`;
+  }).join('');
+  const axis = `<div class="taxis"><span></span><div>${[0, 10, 20, 30, 40, 50].map((s) => `<span style="left:${((s * 1000) / max) * 100}%">${s} 秒</span>`).join('')}</div><span></span></div>`;
+  const maxTok = 130000;
+  const tableRows = T.map((t) => `<tr class="clickable ${onlyIssues && !hasIssue(t) ? '' : ''}" ${onlyIssues && !hasIssue(t) ? 'hidden' : ''} data-tip="${esc('點一下打開這一輪的執行過程（設計稿一律打開「3A 大作」那輪）')}"><td class="num">${t.at.slice(5).replace('-', '/')}</td><td class="name" title="${esc(t.input)}">${esc(t.input)}</td><td class="r">${t.rounds}</td><td class="r">${t.tools}${t.calls.some((c) => c.status !== 'ok') ? ' <span class="pill bad" style="padding:0 5px">錯</span>' : ''}</td><td class="r"><span class="ibar" style="width:${(t.ms / 50000) * 60}px"></span>${sec(t.ms)}</td><td class="r"><span class="ibar tok" style="width:${((t.inTok ?? 0) / maxTok) * 60}px"></span>${n(t.inTok)}</td><td class="r">${n(t.outTok)}</td><td>${t.stop === 'reply_tool' ? '<span class="pill ok">交出回覆</span>' : '<span class="pill bad">模型呼叫失敗</span>'}</td></tr>`).join('');
+
+  const sqlBad = errs.filter((c) => c.name === 'sql_query');
+  const prof = errs.filter((c) => c.name === 'update_profile');
+  const slow = T.filter((t) => t.ms > 30000 && t.rounds <= 2);
+  const link = (t, txt) => `<a href="#" data-turn="${t.id}">${esc(txt ?? t.input.slice(0, 16))}・${sec(t.ms)}</a>`;
+  const issues = `
+    <div class="issue bad"><span class="cnt">${sqlBad.length}</span><h4>SQL 欄位名稱寫錯</h4><p>${sqlBad.map((c) => `<span class="mono">${esc(/column "([^"]+)"/.exec(c.summary)?.[1])}</span>`).join('、')} 都不存在（資料庫還提示 ram_gb 可能是 vram_gb）。說明書的欄位清單有 16,600 字，模型還是會猜欄位名。<b>可以改：</b>常用欄位放最前面、加「欄位名稱只能用清單裡的」。</p><div class="links">${sqlBad.map((c) => link(c.turn)).join('')}</div></div>
+    <div class="issue warn"><span class="cnt">${slow.length}</span><h4>只有 2 回合卻特別慢</h4><p>${slow.map((t) => `${sec(t.ms)}（寫出 ${n(t.outTok)} token）`).join('、')}。其他輪通常寫出 700～1,000 token，這兩輪可能想了很久。記錄思考內容以後就能確認。</p><div class="links">${slow.map((t) => link(t)).join('')}</div></div>
+    <div class="issue warn"><span class="cnt">${prof.length}</span><h4>改需求被拒絕</h4><p>${prof.map((c) => esc(c.summary)).join('、')}。要看被拒絕的是哪兩條、理由是什麼。</p><div class="links">${prof.map((c) => link(c.turn)).join('')}</div></div>
+    <div class="issue bad"><span class="cnt">${modelErr.length}</span><h4>模型連線失敗</h4><p>${modelErr.map((t) => esc(t.roundErr[0].replace(/\s*\(attempted.*$/, ''))).join('')}（等了 10 秒連不上 api.deepseek.com）。用戶收到固定文案。</p><div class="links">${modelErr.map((t) => link(t, `用戶打「${t.input}」`)).join('')}</div></div>
+    <div class="issue"><span class="cnt">0</span><h4>「自訂排序」一次都沒用過</h4><p>32 次工具呼叫裡沒有 sort_pool。可能是說明書沒講清楚什麼時候該用，或是用戶還沒問過「最輕的幾台」這類問題。</p></div>`;
+  return `<div class="plan-head"><h2>代理分析頁（第 6 項）</h2><p>後台新的一頁，把所有代理方案的輪次放在一起看：時間花在哪、哪個工具常出錯、哪些輪次特別慢。每一筆都能點進去看那一輪的執行過程。下面是目前開發資料庫裡全部 12 輪代理紀錄的<b>真實統計</b>（10 輪打字、2 輪按鈕操作）。</p></div>
+  ${frame(`
+    <div class="filters">
+      <label for="f-date">日期<select id="f-date"><option>最近 30 天</option><option>最近 7 天</option><option>全部</option></select></label>
+      <label for="f-prompt">說明書版本<select id="f-prompt"><option>全部版本</option><option>說明書 v2（目前啟用）</option></select></label>
+      <label for="f-model">模型<select id="f-model"><option>全部</option><option>deepseek-flash</option></select></label>
+      <label class="check" for="f-issue"><input type="checkbox" id="f-issue" ${onlyIssues ? 'checked' : ''}> 只看有問題的輪次</label>
+    </div>
+    <div class="note"><b>設計稿註記：</b>「說明書版本」要靠 v1.0.49 起每輪記下用了哪一版說明書。這樣改完提示詞，可以直接比較改之前和改之後。</div>
+    <div class="kpis">
+      <div class="kpi"><span>打字的輪次</span><b>${T.length}</b><em>另有 ${S.silent} 輪按鈕操作（不叫模型）</em></div>
+      <div class="kpi"><span>每輪平均</span><b>${(total / T.length / 1000).toFixed(1)} <small>秒</small></b><em>中位數 ${(median / 1000).toFixed(1)} 秒・最慢 ${(slowest / 1000).toFixed(1)} 秒</em></div>
+      <div class="kpi"><span>等模型的時間</span><b>${((model / total) * 100).toFixed(1)}%</b><em>工具合計只佔 ${pct(tool, total)}</em></div>
+      <div class="kpi"><span>平均回合</span><b>${(T.reduce((a, t) => a + t.rounds, 0) / T.length).toFixed(1)}</b><em>工具共 ${calls.length} 次</em></div>
+      <div class="kpi"><span>工具出錯</span><b>${errs.length} <small>／ ${calls.length}</small></b><em>模型連線失敗 ${modelErr.length} 輪</em></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="sec-title">時間花在哪 <span class="muted">每輪一條，滑過看細節</span></div>
+        <div class="legend"><span><i class="sw" style="background:var(--c-model)"></i>等模型</span><span><i class="sw t"></i>工具</span><span><i class="sw" style="background:var(--c-prog)"></i>程式</span></div>
+        ${axis}${timeRows}
+      </div>
+      <div class="panel"><div class="sec-title">需要注意的地方 <span class="muted">程式自動整理，點連結看那一輪</span></div><div class="issues">${issues}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="sec-title">工具使用</div>
+        <div class="tblwrap"><table><thead><tr><th>工具</th><th class="r">次數</th><th class="r">成功</th><th class="r">成功率</th></tr></thead><tbody>${tools.map((x) => `<tr><td><span class="ktag" style="font-weight:500">${kdot(x.name)}${KIND[x.name].label}</span> <span class="mono faint">${x.name}</span></td><td class="r">${x.n}</td><td class="r">${x.ok}</td><td class="r">${x.n ? pct(x.ok, x.n) : '<span class="faint">沒用過</span>'}</td></tr>`).join('')}</tbody></table></div>
+      </div>
+      <div class="panel"><div class="sec-title">結束原因</div>
+        <div class="tblwrap"><table><thead><tr><th>原因</th><th class="r">輪數</th><th>白話</th></tr></thead><tbody>
+          <tr><td><span class="pill ok">交出回覆</span></td><td class="r">${T.filter((t) => t.stop === 'reply_tool').length}</td><td>模型用 reply 工具正常結束</td></tr>
+          <tr><td><span class="pill bad">模型呼叫失敗</span></td><td class="r">${T.filter((t) => t.stop === 'error').length}</td><td>連不上模型，給固定文案</td></tr>
+          <tr><td><span class="pill warn">回合數到上限</span></td><td class="r">0</td><td>上限 30 回合</td></tr>
+          <tr><td><span class="pill warn">直接回文字</span></td><td class="r">0</td><td>沒用 reply 工具</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+    <div class="panel"><div class="sec-title">全部輪次 <span class="muted">點一列打開那一輪</span></div>
+      <div class="tblwrap"><table><thead><tr><th>時間</th><th>用戶說</th><th class="r">回合</th><th class="r">工具</th><th class="r">整輪</th><th class="r">讀入 token</th><th class="r">寫出</th><th>結束</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+    </div>
+  `, { noFold: true, stats: true })}`;
+}
+
+/* ================= 三案比較 ================= */
+function comparePage() {
+  return `<div class="box">
+    <h2>三案比較</h2>
+    <div class="tblwrap"><table class="cmp"><thead><tr><th></th><th>A 時間軸瀑布</th><th>B 左右檢視器</th><th>C 對話劇本</th></tr></thead><tbody>
+      <tr><td>一句話</td><td>上面一張時間圖，下面照順序讀</td><td>左邊選一步，右邊看那一步</td><td>程式、模型、工具三個角色的對話</td></tr>
+      <tr><td>最擅長</td><td>找「慢在哪、錯在哪」</td><td>一步一步對照參數和結果</td><td>看懂模型為什麼這樣做</td></tr>
+      <tr><td>時間怎麼看</td><td>瀑布圖，最準</td><td>每步一條小時間條</td><td>時間條高度＋泳道順序</td></tr>
+      <tr><td>放在哪</td><td>每輪說明最上面，右欄放得下</td><td>右欄太擠，要開成整頁寬</td><td>右欄放得下，窄時三道合一</td></tr>
+      <tr><td>缺點</td><td>回合多時頁面很長</td><td>一次只看一步，不好看全貌</td><td>最佔高度，工具很多時要捲很久</td></tr>
+      <tr><td>做起來</td><td>中</td><td>中偏大（多一個整頁檢視器）</td><td>中</td></tr>
+    </tbody></table></div>
+    <p class="small muted">「工具看懂版」（SQL 表格、權重前後、名次變化、回覆預覽）、「模型思考」、「說明書組成」、「每回合 token」這些內容三案共用，只是擺的位置不同。也可以混搭，例如 A 的瀑布圖加上 C 的劇情列。</p>
+  </div>
+  <div class="box">
+    <h2>v1.0.49 會開始多記錄的資料</h2>
+    <ul class="list">
+      <li><b>模型的思考內容</b>：每回合都記，最多 2 萬字，超過的截斷（開關預設開）。</li>
+      <li><b>思考用掉的 token</b>，以及<b>快取命中的 token</b>：供應商有回才記，DeepSeek 都會回。可以看出重送的說明書有沒有被快取。</li>
+      <li><b>每一步的開始時間</b>：瀑布圖才畫得準。現在只有每步各花多久。</li>
+      <li><b>改需求之前的狀態</b>：權重、性能細項、候選台數、前 5 名，才畫得出「從多少改成多少」。</li>
+      <li><b>這輪用的說明書版本和各段字數</b>：分析頁可以比較改提示詞前後的差別。</li>
+    </ul>
+    <p class="small muted">已經存好的 12 輪舊紀錄也能用新畫面看。缺的部分會顯示「舊紀錄沒有這項」，時間軸改用每步花的時間依序推算。</p>
+  </div>
+  <div class="box">
+    <h2>新開關（全部預設開）</h2>
+    <div class="tblwrap"><table class="flags"><thead><tr><th>開關</th><th>控制什麼</th></tr></thead><tbody>
+      <tr><td>admin.agent_first</td><td>代理方案的輪次把執行過程放最上面，其他區塊收到下面（第 1 項）</td></tr>
+      <tr><td>admin.agent_timeline</td><td>時間軸（第 2 項）</td></tr>
+      <tr><td>admin.agent_view_sql</td><td>SQL 排版與結果表格（第 3 項）</td></tr>
+      <tr><td>admin.agent_view_profile</td><td>改需求：權重前後長條、候選台數（第 3 項）</td></tr>
+      <tr><td>admin.agent_view_rank</td><td>改需求：前 5 名名次變化（第 3 項）</td></tr>
+      <tr><td>admin.agent_view_reply</td><td>交出回覆：回覆文字與卡片預覽（第 3 項）</td></tr>
+      <tr><td>agent.trace_thinking</td><td>記錄模型的思考內容（第 4 項；門檻：每回合最多 2 萬字）</td></tr>
+      <tr><td>admin.agent_thinking</td><td>後台顯示模型的思考內容（第 4 項）</td></tr>
+      <tr><td>admin.agent_context</td><td>說明書組成與每回合送出的內容（第 5 項）</td></tr>
+      <tr><td>admin.agent_tokens</td><td>每回合 token 圖（第 5 項）</td></tr>
+      <tr><td>admin.agent_stats</td><td>代理分析頁（第 6 項）</td></tr>
+    </tbody></table></div>
+    <p class="small muted">開關名稱是暫定的，寫規格時會照專案的命名規則定案。原本的「代理追蹤」區塊保留，關掉新開關就回到現在的樣子。</p>
+  </div>
+  <div class="box">
+    <h2>請你決定</h2>
+    <ol class="ask">
+      <li>選哪一案？或是混搭，例如「A＋C 的劇情列」。</li>
+      <li>要不要三案都做，在後台用一個設定切換，方便你找用戶比較？這樣工作量大約多一半。</li>
+      <li>分析頁的「需要注意的地方」裡有改提示詞的建議，要用固定規則寫，還是之後再交給模型自動整理？</li>
+    </ol>
+  </div>`;
+}
+
+/* ---------- 切換與互動 ---------- */
+const view = document.getElementById('view');
+let plan = 'a';
+function render() {
+  UID = 0;
+  view.innerHTML = plan === 'a' ? planA() : plan === 'b' ? planB() : plan === 'c' ? planC() : plan === 's' ? statsPage() : comparePage();
+}
+document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+  plan = b.dataset.plan;
+  document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+  render();
+}));
+document.getElementById('opt-notes').addEventListener('change', (e) => document.body.classList.toggle('show-notes', e.target.checked));
+document.getElementById('opt-narrow').addEventListener('change', () => render());
+
+function flash(el) {
+  if (!el) return;
+  el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+view.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-goto],[data-node],[data-dtab],[data-showmore],[data-goto-c],[data-turn],tr.clickable');
+  if (!t) return;
+  if (t.dataset.goto) {
+    const k = t.dataset.goto;
+    const id = k.startsWith('m') ? `a-${k}` : k.startsWith('c') ? `a-${k}` : null;
+    if (id) flash(document.getElementById(id));
+    return;
+  }
+  if (t.dataset.node) { bSel = t.dataset.node; bTab = null; render(); document.querySelector(`[data-node="${bSel}"]`)?.focus(); return; }
+  if (t.dataset.dtab) { bTab = t.dataset.dtab; render(); return; }
+  if (t.dataset.showmore) { view.querySelectorAll(`[data-more="${t.dataset.showmore}"]`).forEach((r) => { r.hidden = false; }); t.remove(); return; }
+  if (t.dataset.gotoC) { flash(document.getElementById(t.dataset.gotoC)); return; }
+  if (t.dataset.turn || t.matches('tr.clickable')) {
+    e.preventDefault();
+    const b = document.getElementById('tab-a'); b.click();
+    window.scrollTo({ top: 0 });
+  }
+});
+view.addEventListener('change', (e) => {
+  if (e.target.id === 'f-issue') { onlyIssues = e.target.checked; render(); }
+});
+view.addEventListener('keydown', (e) => {
+  if (plan !== 'b' || !['ArrowDown', 'ArrowUp'].includes(e.key) || !e.target.closest('.tree')) return;
+  e.preventDefault();
+  const keys = bNodes().map((x) => x.key);
+  const i = keys.indexOf(bSel);
+  bSel = keys[Math.max(0, Math.min(keys.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+  bTab = null; render();
+  document.querySelector(`[data-node="${bSel}"]`)?.focus();
+});
+view.addEventListener('mouseover', (e) => {
+  const row = e.target.closest('[data-goto]');
+  document.querySelectorAll('.wf-row.hl').forEach((r) => r.classList.remove('hl'));
+  if (row) row.closest('.wf-row')?.classList.add('hl');
+});
+
+/* 浮動說明（滑鼠與鍵盤都有） */
+const tip = document.getElementById('tip');
+function showTip(el, x, y) {
+  tip.innerHTML = el.dataset.tip; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${Math.min(window.innerWidth - w - 8, Math.max(8, x + 12))}px`;
+  tip.style.top = `${y + h + 20 > window.innerHeight ? y - h - 12 : y + 16}px`;
+}
+document.addEventListener('pointermove', (e) => {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el) { tip.hidden = true; return; }
+  showTip(el, e.clientX, e.clientY);
+});
+document.addEventListener('focusin', (e) => {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el) { tip.hidden = true; return; }
+  const r = el.getBoundingClientRect(); showTip(el, r.left, r.bottom - 8);
+});
+document.addEventListener('scroll', () => { tip.hidden = true; }, { passive: true });
+
+render();
+})();
+</script>
+</body>
+</html>
