@@ -60,7 +60,7 @@ button { font: inherit; color: inherit; }
 .plan-head p { max-width: 75ch; color: #3a4456; }
 
 /* 模擬後台框 */
-.frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(29,36,51,.06), 0 8px 24px rgba(29,36,51,.06); margin-inline: auto; width: 100%; transition: max-width .25s ease; }
+.frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: clip; box-shadow: 0 1px 2px rgba(29,36,51,.06), 0 8px 24px rgba(29,36,51,.06); margin-inline: auto; width: 100%; transition: max-width .25s ease; }
 .frame.narrow { max-width: 680px; }
 .frame-bar { background: var(--navy); color: #c9d0db; padding: 8px 14px; font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .frame-bar b { color: #fff; font-weight: 600; }
@@ -241,28 +241,70 @@ td .flagtxt { color: var(--warn); font-weight: 600; }
 .propbar i { display: block; height: 100%; min-width: 2px; }
 .kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--surface); }
 
-/* C 劇本 */
-.story { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12.5px; }
-.story .st { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px 1px 6px; background: var(--surface); cursor: pointer; }
-.story .st:hover { border-color: var(--accent); }
-.story .st.err { border-color: #e7a59f; background: var(--bad-soft); }
-.story .ar { color: var(--faint); }
-.lanes { display: grid; grid-template-columns: 78px repeat(3, minmax(0, 1fr)); column-gap: 12px; row-gap: 10px; align-items: start; }
-.lane-h { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); padding-bottom: 6px; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 6px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 60px); background: var(--surface); z-index: 2; }
-.rail { display: grid; justify-items: end; gap: 4px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 6px; }
-.rail i { display: block; width: 6px; border-radius: 3px; background: var(--k); min-height: 4px; }
-.ev { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; display: grid; gap: 7px; background: var(--surface); min-width: 0; scroll-margin-top: 110px; }
-.ev.flash { animation: flash 1.2s ease; }
-.ev.model { border-color: #c6dbf5; background: #f8fbff; }
-.ev.err { border-color: #e7a59f; }
-.ev-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 13px; }
-.ev-h .muted { font-size: 12px; }
-.conn { align-self: center; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--faint); white-space: nowrap; }
-.conn::before, .conn::after { content: ""; flex: 1; height: 0; border-top: 1.5px dashed #b9c1cd; }
-.conn.right::after { content: "▶"; flex: none; border: 0; color: #b9c1cd; font-size: 9px; }
-.conn.left::before { content: "◀"; flex: none; border: 0; color: #b9c1cd; font-size: 9px; }
-.mini-wt { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
-.lane-tag { display: none; }
+/* C 劇本（第 2 版）：左邊窄順序圖（四條直線＝四個角色），右邊整寬卡片照順序往下排；上方劇情列固定在畫面頂端 */
+.sq-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--muted); align-items: center; }
+.sq-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+.lg-msg { width: 26px; height: 2px; background: var(--muted); position: relative; display: inline-block; }
+.lg-msg::after { content: ""; position: absolute; right: -2px; top: -4px; border-style: solid; border-width: 5px 0 5px 7px; border-color: transparent transparent transparent var(--muted); }
+.lg-busy { width: 8px; height: 18px; border-radius: 4px; background: var(--c-model); display: inline-block; }
+.sq-head { position: sticky; top: var(--tabs-h, 60px); z-index: 4; background: var(--surface); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 72px 136px minmax(0, 1fr); align-items: center; margin-inline: -16px; padding: 6px 16px; }
+.sq-head .tcap { font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; padding-right: 10px; }
+.sq-lanes { position: relative; height: 22px; }
+.sq-lanes span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.sq-story { position: relative; display: flex; gap: 4px; align-items: center; overflow-x: auto; white-space: nowrap; scrollbar-width: thin; padding: 3px 2px; font-size: 12.5px; }
+.sq-story .st { flex: none; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px 1px 6px; background: var(--surface); cursor: pointer; }
+.sq-story .st:hover { border-color: var(--accent); }
+.sq-story .st.err { border-color: #e7a59f; background: var(--bad-soft); }
+.sq-story .st.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); color: #173f7a; font-weight: 600; }
+.sq-story .ar { color: var(--faint); flex: none; }
+.sq { display: grid; }
+.sq-row { display: grid; grid-template-columns: 72px 136px minmax(0, 1fr); }
+.sq-time { padding-top: 13px; text-align: right; padding-right: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; display: grid; align-content: start; gap: 1px; }
+.sq-time b { color: var(--ink); font-weight: 600; font-size: 12.5px; }
+.sp { position: relative; min-height: 44px; background-image: linear-gradient(var(--line), var(--line)), linear-gradient(var(--line), var(--line)), linear-gradient(var(--line), var(--line)), linear-gradient(var(--line), var(--line)); background-size: 1px 100%; background-repeat: no-repeat; background-position: 17px 0, 51px 0, 85px 0, 119px 0; }
+.sp .busy { position: absolute; top: 14px; bottom: 12px; width: 8px; border-radius: 4px; background: var(--k); }
+.sp .msg { position: absolute; top: 22px; height: 2px; background: var(--k); }
+.sp .msg::after { content: ""; position: absolute; top: -4px; right: -2px; border-style: solid; border-width: 5px 0 5px 7px; border-color: transparent transparent transparent var(--k); }
+.sp .msg.back::after { right: auto; left: -2px; border-width: 5px 7px 5px 0; border-color: transparent var(--k) transparent transparent; }
+.sp .dot { position: absolute; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--k); }
+.sq-body { padding: 8px 0 10px 4px; min-width: 0; }
+.msgcard { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; min-width: 0; scroll-margin-top: calc(var(--tabs-h, 60px) + 56px); }
+.msgcard.flash { animation: flash 1.2s ease; }
+.msgcard.k-model { background: #f8fbff; border-color: #cfe0f6; }
+.msgcard.k-prog { background: var(--sunk); }
+.msgcard.k-user { background: #f4faf6; border-color: #d3eadc; }
+.msgcard.err { border-color: #e7a59f; }
+.mc-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--line-2); }
+.mc-h .verb { font-weight: 650; }
+.mc-h .to { color: var(--faint); }
+.mc-h .meta { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; gap: 8px; align-items: center; }
+.who { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 0 9px 0 7px; line-height: 22px; background: var(--surface); border: 1px solid var(--line); white-space: nowrap; }
+.who::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--k); }
+.mc-b { padding: 12px 14px 14px; display: grid; gap: 14px; min-width: 0; }
+.lbl { font-size: 12px; font-weight: 650; color: var(--muted); letter-spacing: .04em; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.blk { display: grid; gap: 6px; min-width: 0; }
+.thinkfull { background: #eaf2fc; border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.thinkfull p { max-width: 72ch; line-height: 1.75; }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 13px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; }
+.colchips { display: flex; flex-wrap: wrap; gap: 4px; }
+.colchips span { font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; background: var(--surface); }
+.colchips span .mono { color: var(--faint); font-size: 10.5px; margin-left: 4px; }
+.rd { padding: 22px 0 8px 4px; display: grid; gap: 8px; }
+.rd-h { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.rd-h h4 { font-size: 17px; }
+.rd-bar { display: flex; gap: 2px; height: 8px; max-width: 560px; }
+.rd-bar i { display: block; border-radius: 2px; background: var(--line); min-width: 3px; }
+.rd-bar i.cur { background: var(--c-model); }
+.rd-cap { font-size: 11.5px; color: var(--faint); }
+.userview { display: grid; gap: 8px; max-width: 680px; }
+.userview .bubble { max-height: none; }
+.reqcard { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; font-size: 12.5px; background: var(--surface); }
+.reqcard > b { font-size: 11.5px; color: var(--muted); }
+.hard { font-size: 11px; border-radius: 4px; padding: 0 5px; background: var(--bad-soft); color: var(--bad); margin-left: 4px; }
+.soft { font-size: 11px; border-radius: 4px; padding: 0 5px; background: #eceff3; color: var(--muted); margin-left: 4px; }
+.endsum { display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
 
 /* 分析頁 */
 .filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
@@ -331,11 +373,9 @@ tr.dim td { opacity: .35; }
 @media (max-width: 860px) {
   .insp { grid-template-columns: 1fr; }
   .tree { border-right: 0; border-bottom: 1px solid var(--line); max-height: 300px; }
-  .lanes { grid-template-columns: 56px minmax(0, 1fr); }
-  .lanes .lane-h { display: none; }
-  .lanes .ev { grid-column: 2 !important; }
-  .lanes .conn { display: none; }
-  .lane-tag { display: inline-flex; }
+  .tabs { position: static; }
+  .sq-row, .sq-head { grid-template-columns: 56px minmax(0, 1fr); }
+  .sp, .sq-lanes { display: none; }
 }
 @media (max-width: 560px) {
   .wf-row { grid-template-columns: 110px minmax(0, 1fr); }
@@ -363,9 +403,9 @@ tr.dim td { opacity: .35; }
   </header>
 
   <nav class="tabs" role="tablist" aria-label="切換方案">
-    <button class="tab" role="tab" id="tab-a" aria-selected="true" aria-controls="view" data-plan="a"><span><b>A</b> 時間軸瀑布</span><small>先看全貌，再往下讀</small></button>
+    <button class="tab" role="tab" id="tab-a" aria-selected="false" aria-controls="view" data-plan="a"><span><b>A</b> 時間軸瀑布</span><small>先看全貌，再往下讀</small></button>
     <button class="tab" role="tab" id="tab-b" aria-selected="false" aria-controls="view" data-plan="b"><span><b>B</b> 左右檢視器</span><small>點一步看一步</small></button>
-    <button class="tab" role="tab" id="tab-c" aria-selected="false" aria-controls="view" data-plan="c"><span><b>C</b> 對話劇本</span><small>誰對誰說了什麼</small></button>
+    <button class="tab" role="tab" id="tab-c" aria-selected="true" aria-controls="view" data-plan="c"><span><b>C</b> 對話劇本・第 2 版</span><small>照順序往下讀，全部展開</small></button>
     <button class="tab" role="tab" id="tab-s" aria-selected="false" aria-controls="view" data-plan="s"><span>代理分析頁</span><small>第 6 項，三案共用</small></button>
     <button class="tab" role="tab" id="tab-x" aria-selected="false" aria-controls="view" data-plan="x"><span>三案比較</span><small>開關與新記錄的資料</small></button>
   </nav>
@@ -526,10 +566,10 @@ function rankView(res) {
   }).join('');
   return `<div class="ranks"><div><div class="sub-h">改之前前 5 名</div><ol>${before.map((id) => `<li>${esc(short(id))}</li>`).join('')}</ol></div><div><div class="sub-h">改之後前 5 名</div><ol>${li}</ol></div></div>`;
 }
-function profileView(c, { compact = false } = {}) {
+function profileView(c, { compact = false, noWhy = false } = {}) {
   const res = c.result, a = c.args;
   const applied = `<div class="chips">${(res.applied ?? []).map((x) => `<span class="chip">${esc(x.replace(/：.*$/, ''))}</span>`).join('')}${(res.rejected ?? []).map((x) => `<span class="chip cut">被拒絕：${esc(x.why ?? '')}</span>`).join('')}</div>`;
-  const why = a.weightReason ? `<p class="why">${esc(a.weightReason)}</p>` : '';
+  const why = a.weightReason && !noWhy ? `<p class="why">${esc(a.weightReason)}</p>` : '';
   const cand = `<div><div class="sub-h">候選台數 ${item(3)}</div><p class="small">正式 <b>${n(R.formalBefore)} → ${n(res.formal)}</b> 台（沒變）・邊界 ${n(res.edge)}・排除 ${n(res.out)}</p><div class="chips" style="margin-top:6px">${res.cut.map((x) => `<span class="chip cut">${esc(x.label)} −${n(x.cut)}</span>`).join('')}</div></div>`;
   if (compact) {
     const keys = Object.keys(a.weights).filter((k) => a.weights[k] !== R.weightsBefore[k]).sort((x, y) => Math.abs(a.weights[y] - R.weightsBefore[y]) - Math.abs(a.weights[x] - R.weightsBefore[x]));
@@ -721,58 +761,205 @@ function planB() {
   `)}`;
 }
 
-/* ================= C 對話劇本 ================= */
+/* ================= C 對話劇本（第 2 版：不擠在一個畫面，照順序往下讀） ================= */
+const LANE_X = [17, 51, 85, 119];
+const laneOf = (k) => (k === 'user' ? 0 : k === 'prog' ? 1 : k === 'model' ? 2 : 3);
+const ACTOR = { user: { label: '用戶', color: 'var(--ink)' }, prog: { label: '程式', color: '#7d8796' }, model: { label: '模型', color: 'var(--c-model)' } };
+const actorOf = (k) => ACTOR[k] ?? { label: KIND[k]?.label ?? k, color: KIND[k]?.color ?? 'var(--c-prog)' };
+const who = (k) => `<span class="who" style="--k:${actorOf(k).color}">${esc(actorOf(k).label)}</span>`;
+// 用戶最後看到的卡片（messages 表的真實資料）
+const FINAL = { reqs: [['需要獨立顯卡', true], ['主要玩 3A 大作', false]], count: { from: 127, to: 127, edge: 35 }, recommend: ['SHDX0248', '260129A', 'SHDX0360'], compare: ['SHDX0248', '260129A'] };
+
+function spineOf(e) {
+  let h = '';
+  if (e.busy) h += `<i class="busy" style="left:${LANE_X[laneOf(e.busy)] - 4}px;--k:${actorOf(e.busy).color}"></i>`;
+  if (e.from && e.to) {
+    const a = LANE_X[laneOf(e.from)], b = LANE_X[laneOf(e.to)];
+    h += `<i class="msg ${b < a ? 'back' : ''}" style="left:${Math.min(a, b)}px;width:${Math.abs(a - b)}px;--k:${actorOf(e.from).color}"></i><i class="dot" style="left:${a - 5}px;--k:${actorOf(e.from).color}"></i>`;
+  }
+  return `<div class="sp" aria-hidden="true">${h}</div>`;
+}
+function sqRow(e) {
+  const meta = [e.status ? statusPill(e.status) : '', e.ms != null ? `<span>${sec(e.ms)}</span>` : ''].join('');
+  const head = `${who(e.from ?? e.busy)}${e.to ? `<span class="to">→</span>${who(e.to)}` : ''}<span class="verb">${esc(e.verb)}</span><span class="meta">${meta}</span>`;
+  return `<div class="sq-row" data-chip="${e.chip}"><div class="sq-time"><b>${(e.at / 1000).toFixed(2)} 秒</b>${e.ms != null && e.ms >= 1000 ? `<span>花 ${sec(e.ms)}</span>` : ''}</div>${spineOf(e)}<div class="sq-body"><article class="msgcard k-${e.card} ${e.err ? 'err' : ''}" id="${e.id}"><div class="mc-h">${head}</div><div class="mc-b">${e.body}</div></article></div></div>`;
+}
+const blk = (label, html) => `<div class="blk"><span class="lbl">${label}</span>${html}</div>`;
+const rawOne = (label, v) => `<details class="raw"><summary>${label}（${n(jlen(v))} 字）</summary><pre>${esc(JSON.stringify(v, null, 2))}</pre></details>`;
+
+/* 每回合在整輪裡的位置 */
+function roundSpans() {
+  const ms = STEPS.filter((s) => s.kind === 'model').map((s) => s.start);
+  const post = STEPS[STEPS.length - 1];
+  return R.rounds.map((rd, i) => ({ n: rd.n, start: ms[i], end: i + 1 < ms.length ? ms[i + 1] : post.start }));
+}
+function dividerRow(rd, spans, chip) {
+  const sp = spans.find((x) => x.n === rd.n);
+  const prep = STEPS[0].ms, post = STEPS[STEPS.length - 1].ms;
+  const bar = `<i style="flex:${Math.max(prep, 1)}"></i>${spans.map((x) => `<i class="${x.n === rd.n ? 'cur' : ''}" style="flex:${x.end - x.start}"></i>`).join('')}<i style="flex:${Math.max(post, 1)}"></i>`;
+  const tools = rd.calls.map((c) => `${KIND[c.name].label}${c.status === 'ok' ? ' ✓' : ' ✕'}`).join('、');
+  return `<div class="sq-row" data-chip="${chip}"><div class="sq-time"></div><div class="sp" aria-hidden="true"></div><div class="rd"><div class="rd-h"><h4>第 ${rd.n} 回合</h4><span class="muted small">共 ${sec(sp.end - sp.start)}・模型想 ${sec(rd.ms)}・${rd.calls.length} 個工具：${esc(tools)}</span></div><div class="rd-bar" title="整輪 ${sec(TOTAL)}，藍色是這個回合">${bar}</div><span class="rd-cap">藍色是這個回合在整輪 ${sec(TOTAL)} 裡的位置（第 ${(sp.start / 1000).toFixed(2)}～${(sp.end / 1000).toFixed(2)} 秒）</span></div></div>`;
+}
+
+/* 各種卡片的內容 */
+function bodyUser() {
+  const m = /追問卡「(.+?)」選了「(.+?)」/.exec(R.preStep);
+  return `<p class="quote">${esc(R.input)}</p><p class="small muted">${m ? `在追問卡「${esc(m[1])}」按了選項「${esc(m[2])}」。` : ''}按鈕操作也會走一輪代理。</p>`;
+}
+function bodyPrep() {
+  const laps = STEPS[0].laps.map((l) => `${esc(l.name)} ${n(l.ms)} 毫秒`).join('、');
+  return [
+    blk('程式先做的事', `<p>${esc(R.preStep)}，重算候選池。</p>`),
+    blk('花的時間', `<p class="small">${laps}</p>`),
+    blk('交給模型的用戶訊息', `<blockquote class="said" style="border-left-color:#7d8796">${esc(R.userMessage)}</blockquote>`),
+    blk(`交給模型的說明書　${n(R.contextChars)} 字　${item(5)}`, `<div class="legend"><span><i class="sw" style="background:var(--c-ctx)"></i>固定規則</span><span><i class="sw" style="background:var(--c-acc)"></i>每輪變動的資料</span><span class="faint">點一段看內容</span></div>${partsView()}`),
+  ].join('');
+}
+function bodyModel(rd) {
+  const prev = R.rounds[rd.n - 2];
+  const got = rd.n === 1
+    ? `說明書 ${n(R.contextChars)} 字＋用戶訊息。`
+    : `上一回合 ${prev.calls.length} 個工具的結果（${n(rd.sentChars)} 字），加上前面所有內容（說明書照樣整份重送）。`;
+  const tok = `讀入 ${n(rd.inTok)} token${prev ? `（比上一回合多 ${n(rd.inTok - prev.inTok)}）` : ''}・寫出 ${n(rd.outTok)} token`;
+  const next = rd.calls.map((c) => `<span class="chip" style="background:var(--surface);border:1px solid var(--line);color:var(--ink)">${kdot(c.name)} ${esc(KIND[c.name].label)}</span>`).join('');
+  return [
+    blk('這回合收到', `<p class="small">${got}</p><p class="small muted num">${tok}</p>`),
+    blk(`模型的思考 <span class="demo">示意</span>${item(4)}`, `<div class="thinkfull"><p>${esc(THINK[rd.n])}</p><p class="small muted">示意文字：現在的系統沒有存思考內容。v1.0.49 起會記下模型真正的思考（每回合最多 2 萬字），還有思考用掉多少 token。</p></div>`),
+    blk('模型說的話', saidView(rd)),
+    blk('決定下一步', `<div class="chips">${next}</div>`),
+  ].join('');
+}
+function bodyCall(c) {
+  if (c.name === 'sql_query') {
+    const bad = /column "([^"]+)" does not exist/.exec(c.result?.error ?? '')?.[1];
+    const cols = (/SELECT\s+(.*?)\s+FROM/s.exec(c.args.sql)?.[1] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+    return [
+      blk('SQL', `<pre class="sql">${fmtSql(c.args.sql, bad)}</pre>`),
+      blk(`要查的欄位（${cols.length} 個）`, `<div class="colchips">${cols.map((k) => `<span>${esc(COL[k] ?? k)}<span class="mono">${esc(k)}</span></span>`).join('')}</div>`),
+      rawOne('參數原文', c.args),
+    ].join('');
+  }
+  if (c.name === 'update_profile') {
+    const a = c.args;
+    const ops = (a.ops ?? []).map((o) => `<div>${o.op === 'upsert' ? '新增' : esc(o.op)}「${esc(o.req?.label)}」<span class="${o.req?.hard ? 'hard' : 'soft'}">${o.req?.hard ? '硬條件' : '偏好'}</span><span class="small muted">　信心 ${o.req?.confidence}・根據用戶說的「${esc(o.req?.evidence)}」</span></div>`).join('');
+    const list = (obj, labels) => Object.keys(obj).sort((x, y) => obj[y] - obj[x]).map((k) => `${labels[k] ?? k} ${obj[k]}`).join('、');
+    return `<dl class="kv">
+        <dt>需求</dt><dd>${ops || '<span class="muted">沒有改</span>'}</dd>
+        <dt>權重</dt><dd>${list(a.weights, DIM)}</dd>
+        <dt>性能細項</dt><dd>${list(a.perfSubs, SUB)}</dd>
+        <dt>理由</dt><dd>${esc(a.weightReason)}</dd>
+      </dl>${/自動修正/.test(c.summary) ? '<p class="small muted">程式註記：參數結尾多了一個括號，程式自動修正後照用。</p>' : ''}${rawOne('參數原文', c.args)}`;
+  }
+  // reply：模型交給程式
+  const cards = (c.args.cards ?? []).map((k) => `<div class="ucard"><b>${k.type === 'recommend' ? '推薦卡' : k.type === 'compare' ? '對比卡' : esc(k.type)}</b>${k.ids.map((id) => esc(short(id))).join('、')}</div>`).join('');
+  return [blk(`回覆文字（${n(c.args.text.length)} 字）`, `<div class="bubble" style="max-height:none">${esc(c.args.text)}</div>`), blk('要附的卡片', `<div class="cardrow">${cards}</div>`), rawOne('參數原文', c.args)].join('');
+}
+function bodyResult(c) {
+  const res = c.result ?? {};
+  if (c.name === 'sql_query') {
+    if (!res.ok) {
+      const bad = /column "([^"]+)" does not exist/.exec(res.error ?? '')?.[1];
+      return `<div class="dberr"><b>資料庫回報</b><span>${esc(res.error)}${bad ? `<br>白話：資料庫沒有「${esc(bad)}」這個欄位，整句 SQL 沒有執行。` : ''}</span></div><p class="small muted">這個錯誤原樣交回給模型，模型在下一回合自己改 SQL 重查。</p>${rawOne('交給模型的結果原文', res)}`;
+    }
+    const flag = res.rows.some((r) => r.discrete_gpu_model === '無')
+      ? `<div class="note"><b>設計稿註記（真實發現）：</b>第 1 列「獨顯型號＝無」也被查出來了，因為 SQL 只排除了含「內」的值。整張表攤開來，黃底那列一眼就看得到。</div>` : '';
+    return `<p class="small">查到 <b>${n(res.rows.length)}</b> 列・資料庫耗時 ${n(res.ms)} 毫秒・全部列出 ${item(3)}</p>${rowsTable(res.rows, res.rows.length, `q${UID++}`)}${flag}${rawOne('交給模型的結果原文', res)}`;
+  }
+  if (c.name === 'update_profile') return `${profileView(c, { noWhy: true })}${rawOne('交給模型的結果原文', res)}`;
+  return rawOne('結果原文', res);
+}
+function bodyFinish() {
+  const laps = STEPS[STEPS.length - 1].laps.map((l) => `${esc(l.name)} ${n(l.ms)} 毫秒`).join('、');
+  return [
+    blk('花的時間', `<p class="small">${laps}</p>`),
+    blk('卡片檢查', `<p class="small">模型要了推薦卡、對比卡，裡面的機型都存在而且有上架，<b>沒有被拿掉的</b>。程式另外自動附上需求卡和候選數量卡。</p>`),
+  ].join('');
+}
+function bodyDeliver() {
+  const rq = FINAL.reqs.map(([l, h]) => `<span>${esc(l)}<span class="${h ? 'hard' : 'soft'}">${h ? '硬條件' : '偏好'}</span></span>`).join('　');
+  return `<div class="userview">
+      <div class="bubble">${esc(R.reply)}</div>
+      <div class="reqcard"><b>需求卡（程式自動附）</b><div>${rq}</div></div>
+      <div class="cardrow">
+        <div class="ucard"><b>候選數量卡（程式自動附）</b>${FINAL.count.from} → ${FINAL.count.to} 台・邊界 ${FINAL.count.edge}</div>
+        <div class="ucard"><b>推薦卡</b>${FINAL.recommend.map((id) => esc(short(id))).join('、')}</div>
+        <div class="ucard"><b>對比卡</b>${FINAL.compare.map((id) => esc(short(id))).join('、')}</div>
+      </div>
+    </div>`;
+}
+
 function planC() {
-  const PX = 26; // 1 秒 = 26px
   const ev = [];
-  const prep = STEPS[0];
-  ev.push({ lane: 2, kind: 'prog', at: 0, ms: prep.ms, id: 'c-prep', html: `<div class="ev-h">${kdot('prog')}<b>程式</b><span class="muted">${sec(prep.ms)}</span><span class="lane-tag pill">程式</span></div><p class="small">收到用戶按追問卡：「3A 大作」。${esc(R.preStep.replace(/^用戶在追問卡「遊戲類型」選了「3A 大作」，/, ''))}，重算候選。</p><p class="small muted">組好說明書 ${n(R.contextChars)} 字，連同用戶訊息交給模型。</p>` });
+  const prep = STEPS[0], post = STEPS[STEPS.length - 1];
+  ev.push({ id: 'c-user', chip: 'c-user', card: 'user', from: 'user', to: 'prog', verb: '按了追問卡', at: 0, body: bodyUser() });
+  ev.push({ id: 'c-prep', chip: 'c-prep', card: 'prog', busy: 'prog', from: 'prog', to: 'model', verb: '準備好，交給模型', at: 0, ms: prep.ms, body: bodyPrep() });
+  const spans = roundSpans();
   for (const rd of R.rounds) {
     const st = STEPS.find((s) => s.key === `m${rd.n}`);
-    const back = rd.n > 1 ? R.rounds[rd.n - 2].calls.length : 0;
-    ev.push({ lane: 3, kind: 'model', at: st.start, ms: rd.ms, id: `c-m${rd.n}`, conn: rd.n > 1 ? { col: 4, dir: 'left', text: `${back} 個結果交回` } : { col: 2, dir: 'right', text: '說明書＋訊息' }, html: `<div class="ev-h">${kdot('model')}<b>模型・第 ${rd.n} 回合</b><span class="muted num">${sec(rd.ms)}・讀入 ${n(rd.inTok)} token</span><span class="lane-tag pill">模型</span></div>${thinkView(rd, rd.n === 1)}${saidView(rd)}` });
+    ev.push({ divider: rd, chip: `c-m${rd.n}` });
+    ev.push({ id: `c-m${rd.n}`, chip: `c-m${rd.n}`, card: 'model', busy: 'model', verb: `思考（第 ${rd.n} 回合）`, at: st.start, ms: rd.ms, body: bodyModel(rd) });
     rd.calls.forEach((c, j) => {
       const s = STEPS.find((x) => x.key === `c${rd.n}-${j}`);
-      let body = '';
-      if (c.name === 'sql_query') {
-        const res = c.result;
-        body = `<pre class="sql" style="max-height:120px;overflow:auto">${fmtSql(c.args.sql, /column "([^"]+)"/.exec(res.error ?? '')?.[1])}</pre>${res.ok ? `<p class="small">查到 <b>${res.rows.length}</b> 列：${res.rows.slice(0, 3).map((r) => esc(short(r.id))).join('、')}…</p><details class="raw"><summary>看表格</summary>${rowsTable(res.rows, 5, `c${UID++}`)}</details>` : `<div class="dberr"><b>失敗</b><span>欄位「${esc(/column "([^"]+)"/.exec(res.error)?.[1] ?? '')}」不存在</span></div>`}`;
-      } else if (c.name === 'update_profile') body = `${profileView(c, { compact: true })}<details class="raw"><summary>看權重與名次變化</summary>${profileView(c)}</details>`;
-      else if (c.name === 'reply') body = replyView(c, { clip: true });
-      ev.push({ lane: 4, kind: c.name, at: s.start, ms: c.ms, id: `c-c${rd.n}-${j}`, err: c.status !== 'ok', conn: { col: 3, dir: 'right', text: j === 0 ? '呼叫' : '同時呼叫' }, html: `<div class="ev-h">${kdot(c.name)}<b>${esc(KIND[c.name].label)}</b>${statusPill(c.status)}<span class="muted num">${sec(c.ms)}</span><span class="lane-tag pill">工具</span></div>${body}` });
+      const chip = `c-r${rd.n}-${j}`;
+      if (c.name === 'reply') {
+        ev.push({ id: chip, chip, card: 'model', from: 'model', to: 'prog', verb: '交出回覆', at: s.start, body: bodyCall(c) });
+        return;
+      }
+      ev.push({ id: `c-c${rd.n}-${j}`, chip, card: 'call', from: 'model', to: c.name, verb: `呼叫${j > 0 ? '（同一回合第 2 個）' : ''}`, at: s.start, body: bodyCall(c) });
+      ev.push({ id: chip, chip, card: 'result', busy: c.name, from: c.name, to: 'model', verb: '回傳結果', status: c.status, err: c.status !== 'ok', at: s.start, ms: c.ms, body: bodyResult(c) });
     });
   }
-  const post = STEPS[STEPS.length - 1];
-  ev.push({ lane: 2, kind: 'prog', at: post.start, ms: post.ms, id: 'c-post', conn: { col: 3, dir: 'left', text: '回覆與卡片', span: '3 / 5' }, html: `<div class="ev-h">${kdot('prog')}<b>程式</b><span class="muted">${sec(post.ms)}</span><span class="lane-tag pill">程式</span></div><p class="small">檢查卡片（沒有被拿掉的）、補需求卡、存檔。用戶在第 ${(R.ms / 1000).toFixed(1)} 秒看到回覆。</p>` });
+  ev.push({ id: 'c-post', chip: 'c-post', card: 'prog', busy: 'prog', verb: '收尾', at: post.start, ms: post.ms, body: bodyFinish() });
+  ev.push({ id: 'c-deliver', chip: 'c-post', card: 'prog', from: 'prog', to: 'user', verb: '用戶看到的回覆', at: TOTAL, body: bodyDeliver() });
 
-  const story = [];
-  story.push(`<span class="st" data-goto-c="c-prep">${kdot('prog')}程式套用追問卡</span>`);
+  const chips = [`<span class="st" data-goto-c="c-user">${kdot('prog')}用戶按卡</span>`, `<span class="ar">→</span><span class="st" data-goto-c="c-prep">${kdot('prog')}程式準備</span>`];
   for (const rd of R.rounds) {
-    story.push(`<span class="ar">→</span><span class="st" data-goto-c="c-m${rd.n}">${kdot('model')}想 ${sec(rd.ms)}</span>`);
-    rd.calls.forEach((c, j) => story.push(`<span class="ar">→</span><span class="st ${c.status !== 'ok' ? 'err' : ''}" data-goto-c="c-c${rd.n}-${j}">${kdot(c.name)}${c.name === 'sql_query' ? (c.status === 'ok' ? `SQL ${c.result.rows.length} 列` : 'SQL 失敗') : c.name === 'update_profile' ? '改權重' : '交出回覆'}</span>`));
+    chips.push(`<span class="ar">→</span><span class="st" data-goto-c="c-m${rd.n}">${kdot('model')}想 ${sec(rd.ms)}</span>`);
+    rd.calls.forEach((c, j) => chips.push(`<span class="ar">→</span><span class="st ${c.status !== 'ok' ? 'err' : ''}" data-goto-c="c-r${rd.n}-${j}">${kdot(c.name)}${c.name === 'sql_query' ? (c.status === 'ok' ? `SQL ${c.result.rows.length} 列` : 'SQL 失敗') : c.name === 'update_profile' ? '改權重' : '交出回覆'}</span>`));
   }
-  const grid = ev.map((e, i) => {
-    const h = Math.max(4, (e.ms / 1000) * PX);
-    const rail = `<div class="rail" style="grid-row:${i + 2};grid-column:1"><span>${(e.at / 1000).toFixed(2)} 秒</span><i style="--k:${KIND[e.kind].color};height:${h}px" data-tip="${esc(`<b>${sec(e.ms)}</b>　${KIND[e.kind].label}`)}"></i></div>`;
-    const conn = e.conn ? `<div class="conn ${e.conn.dir}" style="grid-row:${i + 2};grid-column:${e.conn.span ?? e.conn.col}">${esc(e.conn.text)}</div>` : '';
-    return `${rail}${conn}<div class="ev ${e.kind === 'model' ? 'model' : ''} ${e.err ? 'err' : ''}" id="${e.id}" style="grid-row:${i + 2};grid-column:${e.lane}">${e.html}</div>`;
-  }).join('');
-  return `<div class="plan-head"><h2>C　對話劇本</h2><p>把一輪畫成三個角色的對話：程式、模型、工具各一條泳道，虛線箭頭標出誰把什麼交給誰。左邊的時間條高度代表花的時間（1 秒＝${PX}px），所以模型想很久的地方會拉得很長。最上面一行是整輪的劇情，點一下跳過去。最像在讀故事，最容易看懂模型為什麼這樣做，適合改提示詞時用。</p></div>
+  chips.push(`<span class="ar">→</span><span class="st" data-goto-c="c-post">${kdot('prog')}用戶看到回覆</span>`);
+
+  const rows = ev.map((e) => (e.divider ? dividerRow(e.divider, spans, e.chip) : sqRow(e))).join('');
+  const lanes = ['用戶', '程式', '模型', '工具'].map((l, i) => `<span style="left:${LANE_X[i]}px">${l}</span>`).join('');
+  return `<div class="plan-head"><h2>C　對話劇本（第 2 版）</h2><p>不再把東西擠在一個畫面。每一步一張完整的卡片，照發生順序往下排，內容全部展開：模型完整的思考、整張 SQL 結果表、權重前後、名次變化，最後是用戶實際看到的回覆。頁面會很長，這是故意的。往下捲時，上方的劇情列會固定在畫面頂端，標出你讀到哪一步，點一下就能跳過去。</p></div>
   ${frame(`
     <div class="sec-title">代理執行過程 ${item(2)}</div>
     ${summaryBar()}
-    <div class="story">${story.join('')}</div>
-    <div class="note"><b>設計稿註記：</b>窄螢幕時三條泳道會合成一條，每張卡片標上是誰。</div>
-    <div class="lanes">
-      <div class="lane-h" style="grid-row:1;grid-column:1">時間</div>
-      <div class="lane-h" style="grid-row:1;grid-column:2">${kdot('prog')}程式</div>
-      <div class="lane-h" style="grid-row:1;grid-column:3">${kdot('model')}模型</div>
-      <div class="lane-h" style="grid-row:1;grid-column:4"><i class="kdot" style="--k:var(--c-sql)"></i>工具</div>
-      ${grid}
+    <div class="sq-legend"><span class="lg"><b style="color:var(--ink)">讀法</b></span><span class="lg">左邊四條直線是四個角色</span><span class="lg"><i class="lg-msg"></i>誰把東西交給誰</span><span class="lg"><i class="lg-busy"></i>誰正在忙（越長越久）</span><span class="lg">每次工具呼叫拆成兩張卡：給了什麼參數、回了什麼結果</span></div>
+    <div class="note"><b>設計稿註記：</b>第 1 版三條泳道各佔 1/3 寬，SQL 和表格被擠進小框，還要再點開。第 2 版卡片用滿整寬、全部展開。原始 JSON 仍然收在每張卡最下面。</div>
+    <div class="sq-head"><span class="tcap">時間</span><div class="sq-lanes" aria-hidden="true">${lanes}</div><div class="sq-story" role="navigation" aria-label="劇情列">${chips.join('')}</div></div>
+    <div class="sq">${rows}</div>
+    <div class="endsum">
+      <div class="sec-title">整輪結算</div>
+      <div class="legend"><span><i class="sw" style="background:var(--c-model)"></i>等模型 ${sec(MODEL_MS)}（${pct(MODEL_MS, R.ms)}）</span><span><i class="sw" style="background:var(--c-sql)"></i>工具 ${sec(TOOL_MS)}</span><span><i class="sw" style="background:var(--c-prog)"></i>程式 ${sec(PROG_MS)}</span></div>
+      <div class="propbar"><i style="flex:${MODEL_MS};background:var(--c-model)"></i><i style="flex:${Math.max(TOOL_MS, 60)};background:var(--c-sql)"></i><i style="flex:${Math.max(PROG_MS, 60)};background:var(--c-prog)"></i></div>
+      <div class="sec-title">每回合讀入多少 token ${item(5)}</div>
+      ${tokenView()}
     </div>
-    <details class="raw"><summary>說明書組成與每回合 token ${item(5)}</summary><div style="margin-top:10px">${contextBlock()}</div></details>
   `)}`;
 }
+
+/* 劇情列跟著捲動 */
+let spyRaf = 0;
+function spy() {
+  spyRaf = 0;
+  if (plan !== 'c') return;
+  const head = view.querySelector('.sq-head'), story = view.querySelector('.sq-story');
+  if (!head || !story) return;
+  const line = head.getBoundingClientRect().bottom + 16;
+  let cur = null;
+  for (const r of view.querySelectorAll('.sq-row[data-chip]')) { if (r.getBoundingClientRect().top <= line) cur = r.dataset.chip; else break; }
+  cur = cur ?? 'c-user';
+  story.querySelectorAll('.st').forEach((s) => {
+    const on = s.dataset.gotoC === cur;
+    if (on && !s.classList.contains('on')) story.scrollTo({ left: s.offsetLeft - story.clientWidth / 2 + s.offsetWidth / 2, behavior: 'smooth' });
+    s.classList.toggle('on', on);
+  });
+}
+addEventListener('scroll', () => { if (!spyRaf) spyRaf = requestAnimationFrame(spy); }, { passive: true });
+const setTabsH = () => { const tb = document.querySelector('.tabs'); document.documentElement.style.setProperty('--tabs-h', `${getComputedStyle(tb).position === 'sticky' ? tb.offsetHeight : 0}px`); };
+setTabsH();
+addEventListener('resize', setTabsH);
 
 /* ================= 代理分析頁 ================= */
 let onlyIssues = false;
@@ -858,13 +1045,13 @@ function statsPage() {
 function comparePage() {
   return `<div class="box">
     <h2>三案比較</h2>
-    <div class="tblwrap"><table class="cmp"><thead><tr><th></th><th>A 時間軸瀑布</th><th>B 左右檢視器</th><th>C 對話劇本</th></tr></thead><tbody>
-      <tr><td>一句話</td><td>上面一張時間圖，下面照順序讀</td><td>左邊選一步，右邊看那一步</td><td>程式、模型、工具三個角色的對話</td></tr>
-      <tr><td>最擅長</td><td>找「慢在哪、錯在哪」</td><td>一步一步對照參數和結果</td><td>看懂模型為什麼這樣做</td></tr>
-      <tr><td>時間怎麼看</td><td>瀑布圖，最準</td><td>每步一條小時間條</td><td>時間條高度＋泳道順序</td></tr>
-      <tr><td>放在哪</td><td>每輪說明最上面，右欄放得下</td><td>右欄太擠，要開成整頁寬</td><td>右欄放得下，窄時三道合一</td></tr>
-      <tr><td>缺點</td><td>回合多時頁面很長</td><td>一次只看一步，不好看全貌</td><td>最佔高度，工具很多時要捲很久</td></tr>
-      <tr><td>做起來</td><td>中</td><td>中偏大（多一個整頁檢視器）</td><td>中</td></tr>
+    <div class="tblwrap"><table class="cmp"><thead><tr><th></th><th>A 時間軸瀑布</th><th>B 左右檢視器</th><th class="rec">C 對話劇本（第 2 版）</th></tr></thead><tbody>
+      <tr><td>一句話</td><td>上面一張時間圖，下面照順序讀</td><td>左邊選一步，右邊看那一步</td><td class="rec">用戶、程式、模型、工具四個角色的對話，照順序往下讀</td></tr>
+      <tr><td>最擅長</td><td>找「慢在哪、錯在哪」</td><td>一步一步對照參數和結果</td><td class="rec">看懂模型為什麼這樣做、每一步交了什麼給誰</td></tr>
+      <tr><td>時間怎麼看</td><td>瀑布圖，最準</td><td>每步一條小時間條</td><td class="rec">每張卡標開始秒數和花多久；每回合有「在整輪裡的位置」條；最後有整輪結算</td></tr>
+      <tr><td>放在哪</td><td>每輪說明最上面，右欄放得下</td><td>右欄太擠，要開成整頁寬</td><td class="rec">右欄放得下（卡片用滿整寬），手機寬度時順序圖收起</td></tr>
+      <tr><td>缺點</td><td>回合多時頁面很長</td><td>一次只看一步，不好看全貌</td><td class="rec">頁面很長；靠固定在上方的劇情列跳轉</td></tr>
+      <tr><td>做起來</td><td>中</td><td>中偏大（多一個整頁檢視器）</td><td class="rec">中</td></tr>
     </tbody></table></div>
     <p class="small muted">「工具看懂版」（SQL 表格、權重前後、名次變化、回覆預覽）、「模型思考」、「說明書組成」、「每回合 token」這些內容三案共用，只是擺的位置不同。也可以混搭，例如 A 的瀑布圖加上 C 的劇情列。</p>
   </div>
@@ -899,7 +1086,7 @@ function comparePage() {
   <div class="box">
     <h2>請你決定</h2>
     <ol class="ask">
-      <li>選哪一案？或是混搭，例如「A＋C 的劇情列」。</li>
+      <li>C 第 2 版這樣可以嗎？還有哪裡要調？</li>
       <li>要不要三案都做，在後台用一個設定切換，方便你找用戶比較？這樣工作量大約多一半。</li>
       <li>分析頁的「需要注意的地方」裡有改提示詞的建議，要用固定規則寫，還是之後再交給模型自動整理？</li>
     </ol>
@@ -908,10 +1095,11 @@ function comparePage() {
 
 /* ---------- 切換與互動 ---------- */
 const view = document.getElementById('view');
-let plan = 'a';
+let plan = 'c';
 function render() {
   UID = 0;
   view.innerHTML = plan === 'a' ? planA() : plan === 'b' ? planB() : plan === 'c' ? planC() : plan === 's' ? statsPage() : comparePage();
+  if (plan === 'c') requestAnimationFrame(spy);
 }
 document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
   plan = b.dataset.plan;
