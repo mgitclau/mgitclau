@@ -364,6 +364,25 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 }
+
+/* ---------- AI 一輪回覆＝一個泡泡（2026-11-17 M 要求）----------
+   泡泡 = 白底大卡（左下尖角，和右邊藍色用戶泡泡對稱）
+   泡泡內的區塊（聽到了／推薦卡／追問卡）= 淡灰底、無陰影
+   區塊內的小組（優缺點、選項、標籤）= 白底 */
+.ai-row{align-items:flex-end}
+.ai-body{max-width:94%;background:var(--card);border-radius:22px 22px 22px 6px;padding:16px 16px 14px;
+  box-shadow:0 1px 2px rgba(22,30,52,.06),0 16px 36px -14px rgba(22,30,52,.28);gap:12px}
+.ai-ava{display:none}
+.ai-body::before{content:"＊　選購助手";font:600 12.5px/1 var(--display);color:var(--ink-2);letter-spacing:.02em;margin-bottom:-2px}
+.ai-body > .heard,.ai-body > .card{background:#F2F4F8;box-shadow:none;border-radius:16px}
+.ai-body .htag,.ai-body .pc,.ai-body .rec-thumb,.ai-body .ask .note{background:var(--card)}
+.ai-body .opt{background:var(--card)}
+.ai-body .opt:hover{background:var(--card);border-color:var(--ink)}
+.ai-body .opt[aria-pressed="true"]{background:var(--blue-soft);border-color:var(--accent)}
+.ai-body .opt .go{background:#F2F4F8}
+.ai-body .actions{border-top-color:#DFE3EB}
+.ai-body > .fb{margin-top:2px;padding-top:12px;border-top:1px solid var(--line)}
+@media (max-width:600px){.ai-body{padding:13px 12px 12px;border-radius:18px 18px 18px 5px}}
 </style>
 </head>
 <body>
