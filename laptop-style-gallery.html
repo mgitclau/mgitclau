@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>筆電選購助手｜介面風格展覽</title>
+<style>
+:root{--bg:#f6f4ef;--ink:#1d1b18;--ink2:#6b655c;--line:#e2ddd3;--card:#fff;--acc:#8a2c22}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--ink:#ece8e1;--ink2:#a39d93;--line:#2e2b27;--card:#1d1c19;--acc:#e0846f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "PingFang TC","Noto Sans TC",system-ui,sans-serif;padding:40px 20px 64px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:.02em}
+.lead{color:var(--ink2);margin:0 0 28px;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
+a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none;transition:transform .2s,box-shadow .2s}
+a.card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+a.card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top left;border-bottom:1px solid var(--line)}
+.body{padding:14px 16px 16px}
+.name{font-weight:700;font-size:17px}.en{color:var(--ink2);font-weight:400;font-size:13px;margin-left:6px}
+.base{display:inline-block;font-size:12px;color:var(--acc);border:1px solid currentColor;border-radius:999px;padding:0 8px;margin-left:6px;vertical-align:2px}
+.desc{color:var(--ink2);font-size:13.5px;margin-top:6px}
+h2{font-size:19px;margin:44px 0 12px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--ink2);font-weight:600}
+td a{color:var(--acc)}
+.note{color:var(--ink2);font-size:13px;margin-top:14px}
+</style></head><body><div class="wrap">
+<h1>介面風格展覽</h1>
+<p class="lead">同一個畫面（對話＋需求＋候選卡片），換成 8 種不同風格。不只換顏色、圓角、字體，連陰影做法、裝飾元素、標籤形狀、標題樣式、照片處理都跟著換。點卡片打開完整 Demo。風格方向取自下方幾個熱門的設計提示詞庫。</p>
+<div class="grid">
+<a class="card" href="laptop-style-glass.html"><img src="img/laptop-styles/glass.jpg" alt="玻璃擬態截圖" loading="lazy"><div class="body"><div class="name">玻璃擬態<span class="en">Glassmorphism</span><span class="base">目前版本</span></div><div class="desc">毛玻璃半透明面板、深綠側欄。作為比較基準。</div></div></a>
+<a class="card" href="laptop-style-editorial.html"><img src="img/laptop-styles/editorial.jpg" alt="編輯雜誌風截圖" loading="lazy"><div class="body"><div class="name">編輯雜誌風<span class="en">Editorial</span></div><div class="desc">紙張紋理、宋體大標、首字放大、酒紅引言、雜誌導讀小標「No. 01 §」、圖說自動編號、規格改成底線文字。</div></div></a>
+<a class="card" href="laptop-style-terminal.html"><img src="img/laptop-styles/terminal.jpg" alt="復古終端風截圖" loading="lazy"><div class="body"><div class="name">復古未來／終端風<span class="en">Terminal</span></div><div class="desc">磷光綠 CRT 掃描線、等寬字、$ 提示符、閃爍游標、[ 送出 ] 按鈕、#tag 需求、點陣字價格、綠色雙色調照片。</div></div></a>
+<a class="card" href="laptop-style-brutalism.html"><img src="img/laptop-styles/brutalism.jpg" alt="新粗獷截圖" loading="lazy"><div class="body"><div class="name">新粗獷<span class="en">Neo-Brutalism</span></div><div class="desc">酸黃底、3px 黑框、無模糊硬投影（按下會縮）、傾斜貼紙名次、跑馬燈、棋盤格條、方格紙背景。</div></div></a>
+<a class="card" href="laptop-style-organic.html"><img src="img/laptop-styles/organic.jpg" alt="有機自然風截圖" loading="lazy"><div class="body"><div class="name">有機自然風<span class="en">Organic</span></div><div class="desc">奶油紙紋、苔綠側欄、卵石不規則圓角、棕色長陰影、手繪葉枝與波浪分隔線、葉片形狀的狀態點。</div></div></a>
+<a class="card" href="laptop-style-clay.html"><img src="img/laptop-styles/clay.jpg" alt="黏土擬態截圖" loading="lazy"><div class="body"><div class="name">黏土擬態<span class="en">Claymorphism</span></div><div class="desc">三塊粉彩黏土板、雙層內陰影、按下回彈、金銀銅黏土球名次、照片放在黏土盤上、漂浮黏土球背景。</div></div></a>
+<a class="card" href="laptop-style-cinematic.html"><img src="img/laptop-styles/cinematic.jpg" alt="電影感暗色截圖" loading="lazy"><div class="body"><div class="name">電影感暗色奢華<span class="en">Cinematic</span></div><div class="desc">純黑底片顆粒、上下遮幅、香檳金細線角框、CHAPTER 章節標題、片尾字幕式小字、聚光燈海報卡。</div></div></a>
+<a class="card" href="laptop-style-aurora.html"><img src="img/laptop-styles/aurora.jpg" alt="極光網格截圖" loading="lazy"><div class="body"><div class="name">極光網格<span class="en">Aurora Mesh</span></div><div class="desc">夜空靛藍、緩慢漂移的極光、星塵、發光漸層邊框、第一名卡片旋轉光框、懸停彩虹光澤掃過。</div></div></a>
+<a class="card" href="laptop-style-blueprint.html"><img src="img/laptop-styles/blueprint.jpg" alt="工程藍圖風截圖" loading="lazy"><div class="body"><div class="name">工程藍圖風<span class="en">Blueprint</span></div><div class="desc">藍圖網格、十字對位標記、照片轉成青色線稿、尺寸標註線、引線式規格標籤、工程圖標題欄、印章按鈕。</div></div></a>
+</div>
+
+<h2>風格提示詞來源</h2>
+<div class="tbl"><table>
+<tr><th>來源</th><th>熱度</th><th>用到的地方</th></tr>
+<tr><td><a href="https://github.com/wilwaldon/Claude-Code-Frontend-Design-Toolkit">UI/UX Pro Max（收錄於 Frontend Design Toolkit）</a></td><td>約 6.3 萬星</td><td>風格清單：黏土擬態、新粗獷、極光、賽博／復古未來</td></tr>
+<tr><td><a href="https://github.com/rohitg00/awesome-claude-design">rohitg00/awesome-claude-design</a></td><td>約 1.2k 星</td><td>美學家族：Warm Editorial、Cinematic Dark、Terminal-Core、Cult／Indie</td></tr>
+<tr><td><a href="https://github.com/claudekit/frontend-design-pro-demo">claudekit/frontend-design-pro-demo</a></td><td>約 277 星</td><td>11 種風格的招牌效果：黏土、Aurora、Dark OLED Luxury、Organic Biomorphic</td></tr>
+<tr><td><a href="https://github.com/superdesigndev/superdesign-prompts">superdesign-prompts</a></td><td>依使用次數排名</td><td>使用次數第一的「Acid-Yellow Neo-Brutalist」、前幾名的「Loam 溫暖有機」</td></tr>
+<tr><td><a href="https://github.com/VoltAgent/awesome-claude-design">VoltAgent/awesome-claude-design</a></td><td>68 份 DESIGN.md</td><td>參考</td></tr>
+</table></div>
+<p class="note">工程藍圖風是額外加的，因為它跟筆電規格最搭。所有 Demo 都是靜態畫面快照，按鈕不會真的運作。2026-11-16</p>
+</div></body></html>

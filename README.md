@@ -39,3 +39,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 篩選改版提案（A／B／C＋D） | https://mgitclau.github.io/mgitclau/laptop-filter-redesign.html | 2026-11-11 |
 | AI 筆電選購助手 · 代理執行過程設計稿（A／B／C／D＋分析頁） | https://mgitclau.github.io/mgitclau/laptop-agent-trace-design.html | 2026-11-13 |
 | 生活英文 3000 字（三級單字表） | https://mgitclau.github.io/mgitclau/english-3000-words.html | 2026-11-16 |
+| AI 筆電選購助手 · 介面風格展覽（8 種風格＋玻璃擬態） | https://mgitclau.github.io/mgitclau/laptop-style-gallery.html | 2026-11-16 |
