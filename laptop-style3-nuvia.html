@@ -1,0 +1,1289 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>筆電選購助手｜貼紙粗野 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Outfit:wght@400;500;600;700;800&family=Silkscreen:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --ink:#17141F; --ink2:#463F55; --ink3:#635C76;
+  --bg:#F1EEFB; --grid:#E1DAF6;
+  --paper:#FFFFFF; --soft:#F6F3FF;
+  --lav:#BBA9FB; --lav-h:#A893FA; --lav2:#DDD3FE; --lav3:#EEE9FF;
+  --violet:#5532D0;
+  --lime:#D4F47A; --sky:#9DDAF5; --peach:#FFBE8C; --pink:#F9B6D7; --sun:#FFDB72; --mint:#A6EECB;
+  --good:#0F7A45; --bad:#C0213A;
+  --cjk:"PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Outfit","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+  --f-zh-display:"Noto Sans TC","PingFang TC",system-ui,sans-serif;
+  --f-display:"Bungee","Outfit","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+  --f-pixel:"Silkscreen","Outfit","Noto Sans TC","PingFang TC",system-ui,monospace;
+  --top-h:76px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--f-body); font-size:14.5px; line-height:1.55; color:var(--ink);
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px);
+  background-size:48px 48px;
+  overflow:hidden;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,h4,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+:focus-visible{outline:3px solid var(--violet);outline-offset:3px}
+img,svg{max-width:100%}
+
+/* ---------- 背景裝飾（不可點） ---------- */
+.board-deco{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.board-deco svg{position:absolute}
+.deco{pointer-events:none;user-select:none}
+
+/* ---------- 共用：粗描邊字 ---------- */
+.ol{color:#fff;text-shadow:
+  0 2px 0 var(--ink),2px 0 0 var(--ink),0 -2px 0 var(--ink),-2px 0 0 var(--ink),
+  2px 2px 0 var(--ink),-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),
+  1px 2px 0 var(--ink),2px 1px 0 var(--ink),-1px 2px 0 var(--ink),-2px 1px 0 var(--ink),
+  1px -2px 0 var(--ink),2px -1px 0 var(--ink),-1px -2px 0 var(--ink),-2px -1px 0 var(--ink),
+  4px 4px 0 var(--ink),5px 5px 0 var(--ink)}
+.ol-lav{color:var(--lav)}
+.px{font-family:var(--f-pixel);letter-spacing:.04em}
+
+/* ---------- 按鈕三級 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:36px;padding:0 15px;border:2.5px solid var(--ink);border-radius:999px;
+  background:#fff;color:var(--ink);font-weight:700;font-size:14px;white-space:nowrap;
+  box-shadow:3px 3px 0 var(--ink);
+  transition:transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+.btn:hover{transform:translate(-1.5px,-1.5px);box-shadow:5px 5px 0 var(--ink);background:var(--lav3)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn svg{width:17px;height:17px;flex:0 0 auto}
+.btn-primary{background:var(--lav);min-height:42px;padding:0 20px;font-size:15px;font-weight:800;box-shadow:4px 4px 0 var(--ink)}
+.btn-primary:hover{background:var(--lav-h);box-shadow:6px 6px 0 var(--ink)}
+.btn-sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn.on{background:var(--lav2)}
+.btn .badge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--ink);color:#fff;font-size:12px;font-weight:800}
+.btn-circle{width:44px;min-width:44px;padding:0;height:44px}
+.link{
+  background:none;border:0;padding:2px 0;color:var(--violet);font-weight:700;font-size:13.5px;
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer;
+}
+.link:hover{color:var(--ink);text-decoration-style:wavy;text-decoration-color:var(--violet)}
+.link-quiet{color:var(--ink3)}
+.link-quiet:hover{color:var(--bad);text-decoration-color:var(--bad)}
+
+/* ---------- 頂部列 ---------- */
+.top{
+  position:relative;z-index:20;height:var(--top-h);display:flex;align-items:center;gap:14px;
+  padding:0 22px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{width:50px;height:50px;flex:0 0 auto;transform:rotate(-8deg)}
+.brand-text{display:flex;flex-direction:column;line-height:1.05}
+.brand-zh{font-family:var(--f-zh-display);font-weight:900;font-size:22px;letter-spacing:.04em}
+.brand-en{font-family:var(--f-pixel);font-size:11px;color:var(--ink2);letter-spacing:.12em;margin-top:3px}
+.tagline{display:flex;align-items:center;gap:8px;margin-left:8px;font-size:13px;color:var(--ink2);line-height:1.3}
+.tagline svg{width:58px;height:30px}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hist-wrap{position:relative}
+.hist-pop{
+  position:absolute;top:calc(100% + 12px);left:0;width:340px;z-index:40;
+  background:#fff;border:2.5px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink);padding:12px;
+}
+.hist-pop h3{font-family:var(--f-zh-display);font-weight:900;font-size:16px;display:flex;align-items:center;gap:8px;padding:2px 6px 8px}
+.hist-pop h3 .px{font-size:10px;background:var(--lav3);border-radius:6px;padding:1px 6px}
+.hist-item{
+  width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:none;
+  border-radius:14px;padding:9px 10px;min-height:44px;
+}
+.hist-item:hover{background:var(--lav3)}
+.hist-item .hn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.hist-item small{color:var(--ink3);font-size:12px;flex:0 0 auto}
+.hist-item .dotc{width:12px;height:12px;border-radius:50%;flex:0 0 auto;border:2px solid var(--ink)}
+.hist-item.cur{background:var(--lav2)}
+.hist-item.cur small{color:var(--ink);font-weight:700}
+.style-tag{
+  position:absolute;right:22px;bottom:-14px;z-index:5;pointer-events:none;
+  font-size:11.5px;line-height:1.2;color:var(--ink);background:#FFF3B8;padding:4px 10px 4px;
+  transform:rotate(-3deg);
+}
+.style-tag::before{content:"";position:absolute;left:50%;top:-7px;width:38px;height:12px;margin-left:-19px;background:rgba(187,169,251,.75);transform:rotate(4deg)}
+.style-tag b{font-family:var(--f-zh-display);font-weight:900}
+.style-tag i{font-style:normal;font-family:var(--f-pixel);font-size:10px;margin-left:5px;color:var(--ink2)}
+
+/* ---------- 主畫面 ---------- */
+.app{
+  position:relative;z-index:2;height:calc(100vh - var(--top-h));
+  display:grid;grid-template-columns:minmax(380px,35%) minmax(0,1fr);gap:26px;
+  padding:6px 22px 22px;
+}
+.chat-col{min-height:0;min-width:0}
+.res-col{min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;padding:10px 12px 0 4px;margin-right:-12px;scroll-behavior:smooth}
+
+/* 手機外框對話欄 */
+.phone{height:100%;background:var(--ink);border-radius:48px;padding:9px;box-shadow:9px 9px 0 var(--lav)}
+.screen{position:relative;height:100%;background:#FDFCFF;border-radius:40px;display:flex;flex-direction:column;overflow:hidden}
+.island{
+  align-self:center;margin-top:9px;display:flex;align-items:center;gap:8px;
+  background:var(--ink);color:#fff;border-radius:999px;padding:5px 16px 5px 12px;font-size:12px;
+}
+.island .live{width:9px;height:9px;border-radius:50%;background:#7CF0A8;box-shadow:0 0 0 3px rgba(124,240,168,.25);animation:pulse 1.6s infinite}
+.island .px{font-size:10px;color:#CFC6F5}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(124,240,168,0)}}
+.phone-head{display:flex;align-items:center;gap:12px;padding:12px 20px 12px}
+.avatar{width:50px;height:50px;flex:0 0 auto}
+.phone-head b{display:block;font-size:17px;font-weight:800;line-height:1.25}
+.phone-head small{color:var(--ink3);font-size:12.5px}
+.phone-head .ph-deco{margin-left:auto;width:36px;height:36px}
+.dash{height:0;border-top:2px dashed #CFC7E8;margin:0 20px}
+.msgs > *{flex-shrink:0}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:16px 18px 18px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.msg-user{
+  align-self:flex-end;max-width:86%;background:var(--lav);border:2.5px solid var(--ink);
+  border-radius:22px 22px 6px 22px;padding:10px 15px;font-weight:600;
+}
+.ai-who{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:-8px}
+.ai-who svg{width:22px;height:22px}
+.ai-text{font-size:14.5px;color:var(--ink)}
+.ai-text mark{background:linear-gradient(transparent 55%, var(--lime) 55%);color:inherit;padding:0 2px}
+.heard{background:var(--lav3);border-radius:18px;padding:11px 13px}
+.heard-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:8px}
+.heard-h .px{font-size:10px;background:#fff;border-radius:5px;padding:1px 6px;color:var(--violet)}
+.heard ul{display:flex;flex-wrap:wrap;gap:6px}
+.heard li{display:inline-flex;align-items:center;gap:5px;background:#fff;border-radius:8px;padding:3px 9px;font-size:12.5px;font-weight:600}
+.heard li svg{width:11px;height:11px;color:var(--violet)}
+.heard-count{margin-top:9px;font-size:12.5px;color:var(--ink2)}
+.heard-count s{text-decoration:none;position:relative;font-weight:700;color:var(--ink3)}
+.heard-count s::after{content:"";position:absolute;left:-3px;right:-3px;top:50%;height:2.5px;background:var(--bad);transform:rotate(-8deg);border-radius:2px}
+.heard-count b{font-family:var(--f-display);font-size:16px;color:var(--violet);font-weight:400}
+
+/* 對話內推薦卡（貼紙卡片輪播） */
+.recs{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;padding:12px 22px 18px;scrollbar-width:thin}
+.rec{
+  flex:0 0 258px;scroll-snap-align:start;background:#fff;border:2.5px solid var(--ink);border-radius:24px;
+  box-shadow:4px 4px 0 var(--ink);padding:9px 9px 11px;transform:rotate(var(--r,0deg));transition:transform .2s ease;
+  display:flex;flex-direction:column;
+}
+.rec:hover{transform:rotate(0deg) translateY(-2px)}
+.rec-body{padding:9px 5px 0;display:flex;flex-direction:column;gap:6px;flex:1}
+.rec-name{font-weight:800;font-size:15px;line-height:1.3}
+.rec-sub{font-size:12px;color:var(--ink3);margin-top:-4px}
+.rec-price{font-weight:800;font-size:21px;letter-spacing:-.01em;line-height:1.2}
+.rec-price small{font-size:12px;font-weight:600;color:var(--ink3);margin-right:4px}
+.reasons{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.reasons li{position:relative;padding-left:20px;line-height:1.45}
+.reasons li::before{position:absolute;left:0;top:1px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:12px;line-height:1}
+.reasons .pro::before{content:"+";background:#CFF5DF;color:var(--good)}
+.reasons .con{color:var(--ink2)}
+.reasons .con::before{content:"−";background:#FFE0E5;color:var(--bad)}
+.act-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:auto;padding-top:10px;border-top:2px dashed #D8D1EE}
+.act-row .link{margin-left:auto}
+
+/* 圖片磚（共用） */
+.tile{
+  position:relative;border-radius:18px;border:2px solid var(--ink);overflow:hidden;
+  background-color:var(--tc,var(--lav2));
+  background-image:linear-gradient(rgba(255,255,255,.45) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(255,255,255,.45) 1.5px,transparent 1.5px);
+  background-size:22px 22px;display:grid;place-items:center;
+}
+.t-lav{--tc:var(--lav2)} .t-lime{--tc:var(--lime)} .t-sky{--tc:var(--sky)} .t-peach{--tc:var(--peach)} .t-pink{--tc:var(--pink)} .t-sun{--tc:var(--sun)} .t-mint{--tc:var(--mint)}
+.tile .lap{width:84%;height:auto;overflow:visible}
+.tile .t-brand{position:absolute;right:9px;top:9px;font-family:var(--f-pixel);font-size:10.5px;background:#fff;border-radius:6px;padding:2px 7px;letter-spacing:.06em}
+.tile .t-star{position:absolute;left:12px;bottom:10px;width:22px;height:22px;color:#fff}
+.rank-burst{position:absolute;left:4px;top:3px;width:52px;height:52px;z-index:2}
+.rank-burst text{font-family:var(--f-display)}
+
+/* 追問卡（便利貼） */
+.ask{
+  position:relative;background:var(--lime);border:2.5px solid var(--ink);border-radius:22px;
+  padding:18px 16px 14px;box-shadow:5px 5px 0 var(--ink);transform:rotate(-.6deg);margin-top:6px;
+}
+.tape{position:absolute;top:-12px;left:50%;width:84px;height:22px;margin-left:-42px;transform:rotate(-4deg);
+  background:repeating-linear-gradient(45deg,rgba(187,169,251,.85) 0 7px,rgba(221,211,254,.85) 7px 14px);}
+.ask-quote{font-size:12.5px;color:var(--ink2)}
+.ask-q{font-family:var(--f-zh-display);font-weight:900;font-size:19px;line-height:1.35;margin-top:4px}
+.ask-why{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.opt{
+  display:flex;align-items:center;gap:8px;text-align:left;background:#fff;border:2px solid var(--ink);border-radius:16px;
+  padding:9px 9px 9px 12px;min-height:58px;box-shadow:3px 3px 0 var(--ink);transition:transform .12s, box-shadow .12s, background-color .12s;
+}
+.opt span{flex:1;min-width:0;font-weight:700;font-size:13.5px;line-height:1.3}
+.opt small{display:block;font-weight:500;font-size:11.5px;color:var(--ink3);margin-top:1px}
+.opt i{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-style:normal;font-weight:900;font-size:13px;background:#fff;transition:transform .15s}
+.opt:hover{transform:translate(-1.5px,-1.5px);box-shadow:5px 5px 0 var(--ink);background:var(--lav3)}
+.opt:hover i{transform:translateX(2px)}
+.opt:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.opt.sel{background:var(--lav)}
+.opt.sel i{background:var(--ink);color:#fff}
+.ask-links{display:flex;gap:18px;margin-top:12px}
+.feedback{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.composer{
+  margin:6px 16px 16px;display:flex;align-items:flex-end;gap:8px;background:#fff;border:2.5px solid var(--ink);
+  border-radius:28px;padding:6px 6px 6px 18px;transition:box-shadow .15s;
+}
+.composer:focus-within{box-shadow:4px 4px 0 var(--lav)}
+.composer textarea{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;padding:9px 0;height:42px;font-size:14.5px}
+.composer textarea::placeholder{color:#7A7390}
+.suggest{display:flex;gap:7px;flex-wrap:wrap;margin:0 16px 2px}
+
+/* ---------- 結果區 ---------- */
+.res-title{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:4px 4px 0;margin-bottom:20px}
+.kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--ink2)}
+.kicker svg{width:14px;height:14px;color:var(--violet)}
+.mega-zh{font-family:var(--f-zh-display);font-weight:900;font-size:36px;line-height:1.15;letter-spacing:.08em;margin-top:2px;white-space:nowrap}
+.mega-zh .num{font-family:var(--f-display);font-weight:400;font-size:46px;letter-spacing:.02em;margin:0 12px 0 6px}
+.res-sub{font-size:13px;color:var(--ink2);margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:6px;height:40px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:0 6px 0 14px;box-shadow:3px 3px 0 var(--ink);transition:box-shadow .12s, transform .12s}
+.search:hover{box-shadow:5px 5px 0 var(--ink);transform:translate(-1.5px,-1.5px)}
+.search:focus-within{background:var(--lav3)}
+.search input{border:0;outline:0;background:transparent;width:120px;font-size:13.5px}
+.search input::placeholder{color:#7A7390}
+.search svg{width:16px;height:16px}
+.select{position:relative}
+.select select{appearance:none;-webkit-appearance:none;height:40px;padding:0 36px 0 15px;border:2.5px solid var(--ink);border-radius:999px;background:#fff;font-weight:700;font-size:13.5px;box-shadow:3px 3px 0 var(--ink);cursor:pointer;transition:box-shadow .12s, transform .12s, background-color .12s}
+.select select:hover{box-shadow:5px 5px 0 var(--ink);transform:translate(-1.5px,-1.5px);background:var(--lav3)}
+.select::after{content:"";position:absolute;right:15px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:rotate(45deg);pointer-events:none}
+
+.panel{position:relative;background:#fff;border:2.5px solid var(--ink);border-radius:28px;box-shadow:6px 6px 0 var(--ink);padding:18px 20px 20px;margin-bottom:28px}
+.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ph h2{font-family:var(--f-zh-display);font-weight:900;font-size:20px;letter-spacing:.03em}
+.ph .px-chip{font-family:var(--f-pixel);font-size:10px;background:var(--lav3);color:var(--violet);border-radius:6px;padding:2px 7px}
+.ph small{font-size:13px;color:var(--ink3)}
+.ph .grow{flex:1}
+
+/* 需求標籤 */
+.needs{display:flex;flex-wrap:wrap;gap:12px}
+.need{
+  border-radius:14px;padding:9px 13px 8px;background:var(--nc,var(--lav3));min-width:0;max-width:100%;
+  transform:rotate(var(--r,0deg));
+}
+.need-top{display:flex;align-items:center;gap:8px}
+.need-top b{font-size:14px;font-weight:800}
+.need-top .dot{width:9px;height:9px;border-radius:50%;background:var(--ink);flex:0 0 auto}
+.need-top .link{font-size:12.5px;padding:0}
+.need-top .link + .link{margin-left:-2px}
+.need small{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+.need-hint{margin-top:14px;font-size:12.5px;color:var(--ink2);background:var(--soft);border-radius:12px;padding:8px 12px;display:flex;gap:8px}
+.need-hint svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--violet)}
+
+/* 招牌：第一名貼紙海報 */
+.hero{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);padding:0;overflow:hidden}
+.stage{
+  position:relative;min-height:440px;background-color:var(--lav2);border-right:2.5px solid var(--ink);
+  background-image:linear-gradient(rgba(255,255,255,.55) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(255,255,255,.55) 1.5px,transparent 1.5px);
+  background-size:30px 30px;overflow:hidden;
+}
+.stage .big-no{
+  position:absolute;right:66px;top:-4px;font-family:var(--f-display);font-size:250px;line-height:1;color:#fff;-webkit-text-stroke:3px var(--ink);
+  text-shadow:2px 2px 0 var(--lav),4px 4px 0 var(--lav),6px 6px 0 var(--lav),8px 8px 0 var(--lav),10px 10px 0 var(--lav),12px 12px 0 var(--lav),14px 14px 0 var(--lav);
+}
+.frame{position:absolute;border:3px solid #fff;border-radius:26px}
+.frame.f1{left:40px;top:58px;right:74px;bottom:70px}
+.frame.f2{left:52px;top:70px;right:62px;bottom:58px;border-color:rgba(255,255,255,.7)}
+.hero-lap{position:absolute;left:24px;right:70px;top:96px;transform:rotate(-6deg);transition:transform .4s ease}
+.hero-lap #heroLap{animation:floaty 5s ease-in-out infinite}
+.hero-lap .lap{width:100%;height:auto;overflow:visible;display:block}
+@keyframes floaty{50%{transform:translateY(-8px)}}
+.ring{position:absolute;left:12px;top:12px;width:112px;height:112px}
+.ring .spin{transform-origin:60px 60px;animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fit-pill{position:absolute;right:16px;top:18px;display:flex;align-items:center;gap:5px;background:#fff;border-radius:999px;padding:4px 12px 4px 9px;font-weight:800;font-size:13.5px}
+.fit-pill svg{width:16px;height:16px;color:#FFB020}
+.fit-pill small{font-weight:600;color:var(--ink3);font-size:12px}
+.swatches{position:absolute;right:14px;top:120px;display:flex;flex-direction:column;gap:8px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:7px 6px;box-shadow:3px 3px 0 var(--ink)}
+.sw{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--ink);background:var(--c);padding:0;transition:transform .12s}
+.sw:hover{transform:scale(1.12)}
+.sw.on{box-shadow:0 0 0 3px #fff,0 0 0 5.5px var(--ink)}
+.sizes{position:absolute;left:22px;bottom:20px;display:flex;gap:9px;align-items:center}
+.sizes .lbl{font-family:var(--f-pixel);font-size:10px;background:#fff;border-radius:5px;padding:1px 6px;margin-right:2px}
+.sz{width:48px;height:48px;border-radius:50%;border:2.5px solid var(--ink);background:#fff;font-weight:800;font-size:13px;box-shadow:3px 3px 0 var(--ink);transition:transform .12s, box-shadow .12s, background-color .12s}
+.sz:hover{transform:translate(-1.5px,-1.5px);box-shadow:5px 5px 0 var(--ink)}
+.sz:active{transform:translate(3px,3px);box-shadow:none}
+.sz.on{background:var(--lav)}
+.hot{position:absolute;width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);background:#fff;font-weight:900;font-size:18px;line-height:1;box-shadow:2px 2px 0 var(--ink);display:grid;place-items:center;z-index:3;transition:transform .15s}
+.hot:hover{transform:scale(1.1)}
+.hot.open{background:var(--ink);color:#fff;transform:rotate(45deg)}
+.hot-tip{position:absolute;z-index:4;background:var(--ink);color:#fff;font-size:12.5px;font-weight:700;border-radius:12px;padding:6px 11px;width:max-content;max-width:190px;pointer-events:none}
+.hot-tip.tip-r::after{left:auto;right:14px}
+.hot-tip::after{content:"";position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--ink)}
+.stage .sparkle{position:absolute;color:#fff}
+.hero-info{padding:24px 26px 24px 28px;display:flex;flex-direction:column;gap:12px;min-width:0;position:relative}
+.no1{display:flex;align-items:center;gap:8px;font-size:11px}
+.no1 .px{background:var(--ink);color:#fff;border-radius:6px;padding:2px 8px}
+.no1 span:last-child{font-family:var(--cjk);font-weight:700;font-size:13px;color:var(--violet)}
+.mega{font-family:var(--f-display);font-weight:400;font-size:38px;line-height:1.08;letter-spacing:.01em;overflow-wrap:anywhere}
+.hero-zh{font-size:13.5px;color:var(--ink2);margin-top:-2px}
+.hero-why{display:flex;flex-direction:column;gap:5px;font-size:13.5px;background:var(--soft);border-radius:16px;padding:11px 13px}
+.hero-why h4{font-size:12.5px;color:var(--ink3);font-weight:700;margin-bottom:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:var(--soft);border-radius:7px;padding:2px 8px;font-size:12px;font-weight:600;color:var(--ink2)}
+.chips span.key{background:#FFF1BF;color:#5C4400}
+.price-box{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:14px;border-top:2.5px dashed #D8D1EE}
+.price{line-height:1.1}
+.price small{display:block;font-size:12px;color:var(--ink3);font-weight:600}
+.price b{font-weight:800;font-size:32px;letter-spacing:-.015em}
+.price .was{font-size:12.5px;color:var(--ink3);margin-left:6px;font-weight:600}
+.hero-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cart-circle{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--ink);display:grid;place-items:center;margin-right:-12px}
+.cart-circle svg{width:15px;height:15px}
+.flower{position:absolute;right:26px;bottom:22px;width:62px;height:62px}
+.stage-tag{position:absolute;left:58%;top:330px;z-index:2;background:var(--pink);color:var(--ink);font-family:var(--f-pixel);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;transform:rotate(-12deg);box-shadow:0 0 0 3px #fff;pointer-events:none}
+
+/* 權重 */
+.wt{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:22px}
+.share{display:flex;height:40px;border:2.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-bottom:18px;background:#fff}
+.share div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;transition:flex-grow .25s ease;min-width:0}
+.share div + div{border-left:2.5px solid var(--ink)}
+.wrows{display:flex;flex-direction:column;gap:14px}
+.wrow{display:grid;grid-template-columns:42px 86px minmax(0,1fr) 54px;align-items:center;gap:10px}
+.wicon{width:42px;height:42px;border-radius:14px;background:var(--c);display:grid;place-items:center}
+.wicon svg{width:22px;height:22px}
+.wname b{display:block;font-weight:800;font-size:14.5px;line-height:1.2}
+.wname small{font-size:11.5px;color:var(--ink3)}
+.wval{font-family:var(--f-display);font-size:19px;text-align:right}
+.wval small{font-family:var(--f-body);font-size:11px;color:var(--ink3);display:block;font-weight:600;margin-top:-3px}
+input.wr{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent;cursor:pointer;margin:0}
+input.wr::-webkit-slider-runnable-track{height:22px;border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(90deg,var(--c) 0 var(--p),#fff var(--p) 100%)}
+input.wr::-moz-range-track{height:17px;border:2.5px solid var(--ink);border-radius:999px;background:linear-gradient(90deg,var(--c) 0 var(--p),#fff var(--p) 100%)}
+input.wr::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-6.5px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink);transition:transform .12s}
+input.wr::-moz-range-thumb{width:25px;height:25px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:2px 2px 0 var(--ink)}
+input.wr:hover::-webkit-slider-thumb{transform:scale(1.1)}
+input.wr:active::-webkit-slider-thumb{transform:scale(.92);cursor:grabbing;background:var(--lav3)}
+input.wr:focus-visible{outline:none}
+input.wr:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--lav),2px 2px 0 var(--ink)}
+.presets{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:20px;padding-top:16px;border-top:2.5px dashed #D8D1EE}
+.presets-l{font-size:13px;font-weight:700;color:var(--ink2)}
+.rankbox{background:var(--soft);border-radius:20px;padding:14px 14px 10px;position:relative}
+.rankbox h3{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rankbox h3 .px{font-size:10px;color:var(--violet)}
+.rlist{display:flex;flex-direction:column;gap:7px;position:relative}
+.ritem{display:grid;grid-template-columns:30px 54px minmax(0,1fr) auto;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:6px 10px 6px 7px}
+.ritem .rn{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-size:13px}
+.ritem:first-child .rn{background:var(--sun);color:var(--ink)}
+.ritem .rthumb{width:54px;height:38px}
+.ritem .rthumb .lap{width:100%;height:100%;overflow:visible}
+.ritem .rname{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ritem .rbar{height:6px;border-radius:3px;background:#ECE7FA;margin-top:4px;overflow:hidden}
+.ritem .rbar i{display:block;height:100%;background:var(--violet);border-radius:3px;transition:width .3s}
+.ritem .rsc{font-family:var(--f-display);font-size:15px;text-align:right;line-height:1.1}
+.ritem .rsc small{display:block;font-family:var(--f-body);font-size:11px;font-weight:800}
+.up{color:var(--good)} .down{color:var(--bad)} .same{color:var(--ink3)}
+.rank-note{font-size:12px;color:var(--ink3);margin-top:8px}
+
+/* 候選卡網格 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px}
+.cand{background:#fff;border:2.5px solid var(--ink);border-radius:24px;box-shadow:5px 5px 0 var(--ink);padding:10px;display:flex;flex-direction:column;transition:transform .18s ease, box-shadow .18s ease}
+.cand:hover{transform:translateY(-3px);box-shadow:7px 8px 0 var(--ink)}
+.cand .tile{height:156px;transform:rotate(var(--r,0deg));transition:transform .25s ease;margin:2px 2px 0}
+.cand:hover .tile{transform:rotate(0deg)}
+.cand-body{padding:12px 6px 2px;display:flex;flex-direction:column;gap:7px;flex:1}
+.cand-brand{font-size:11.5px;font-weight:700;color:var(--ink3);letter-spacing:.04em}
+.cand-name{font-size:16px;font-weight:800;line-height:1.3;margin-top:-5px}
+.cand-sub{font-size:12px;color:var(--ink3);margin-top:-5px}
+.cand-price{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:2px}
+.cand-price b{font-size:23px;font-weight:800;letter-spacing:-.015em}
+.cand-price small{font-size:12px;color:var(--ink3);font-weight:600}
+.cand-price em{font-style:normal;font-size:12px;font-weight:800;color:var(--violet);background:var(--lav3);border-radius:6px;padding:1px 7px}
+.more-row{display:flex;justify-content:center;margin-top:22px}
+
+/* 次候選池便利貼 */
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px}
+.note{
+  position:relative;background:#FFFBE4;border-radius:6px 6px 18px 6px;padding:16px 14px 12px;
+  box-shadow:0 1px 0 rgba(23,20,31,.08),0 8px 18px -10px rgba(23,20,31,.35);transform:rotate(var(--r,0deg));
+  display:flex;flex-direction:column;gap:5px;
+}
+.note.pink{background:#FFEFF6}
+.note.blue{background:#EEF8FF}
+.note .tape{top:-10px;width:66px;height:18px;margin-left:-33px}
+.note-top{display:flex;align-items:center;gap:10px}
+.note-thumb{width:66px;height:46px;flex:0 0 auto;opacity:.7;filter:saturate(.45)}
+.note-thumb .lap{width:100%;height:100%;overflow:visible}
+.note-name{font-weight:700;font-size:14px;color:var(--ink2);line-height:1.3}
+.note-price{font-size:13px;color:var(--ink3);font-weight:600}
+.why-out{font-size:13px;color:var(--ink2);margin-top:4px}
+.circled{position:relative;display:inline-block;color:var(--bad);font-weight:800;padding:1px 12px;margin:4px 0 6px 2px}
+.circled svg{position:absolute;left:-2px;top:-5px;width:calc(100% + 4px);height:calc(100% + 10px);overflow:visible;pointer-events:none}
+.note .link{align-self:flex-start;margin-top:4px}
+.out-kind{font-family:var(--f-pixel);font-size:10px;color:var(--ink3)}
+
+/* 對比托盤 */
+.tray{
+  position:sticky;bottom:14px;z-index:10;display:flex;align-items:center;gap:12px;margin:0 auto 4px 0;width:max-content;max-width:100%;
+  background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:5px 5px 0 var(--ink);padding:7px 8px 7px 18px;
+}
+.tray-title{font-weight:800;font-size:13.5px;white-space:nowrap}
+.tray-items{display:flex;gap:6px}
+.tray-mini{display:flex;align-items:center;gap:6px;background:var(--soft);border-radius:999px;padding:3px 3px 3px 4px}
+.tray-mini .lapm{width:40px;height:28px}
+.tray-mini .lapm .lap{width:100%;height:100%;overflow:visible}
+.tray-mini span{font-size:12.5px;font-weight:700;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--ink);background:#fff;display:grid;place-items:center;font-weight:900;font-size:13px;line-height:1;transition:background-color .12s, transform .12s}
+.x-btn:hover{background:#FFE0E5;transform:rotate(90deg)}
+
+/* 篩選抽屜 */
+.scrim{position:fixed;inset:0;background:rgba(23,20,31,.35);z-index:60}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);z-index:61;background:#fff;border-left:3px solid var(--ink);display:flex;flex-direction:column;
+  background-image:linear-gradient(var(--soft) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--soft) 1.5px,transparent 1.5px);background-size:32px 32px;animation:slidein .25s ease}
+@keyframes slidein{from{transform:translateX(40px);opacity:0}}
+.drawer-head{display:flex;align-items:center;gap:12px;padding:20px 20px 14px;padding-top:calc(20px + env(safe-area-inset-top,0px))}
+.drawer-head h2{font-family:var(--f-zh-display);font-weight:900;font-size:28px;letter-spacing:.05em}
+.drawer-body{flex:1;overflow:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:20px}
+.fsec h3{font-size:14.5px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.fsec h3 small{font-weight:500;color:var(--ink3);font-size:12px}
+.fchips{display:flex;flex-wrap:wrap;gap:9px}
+.fchip{min-height:36px;padding:0 13px;border:2px solid var(--ink);border-radius:999px;background:#fff;font-weight:700;font-size:13.5px;box-shadow:2px 2px 0 var(--ink);transition:transform .1s, box-shadow .1s, background-color .1s}
+.fchip:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink);background:var(--lav3)}
+.fchip:active{transform:translate(2px,2px);box-shadow:none}
+.fchip.on{background:var(--lav)}
+.fchip em{font-style:normal;font-size:11.5px;color:var(--ink3);margin-left:4px;font-weight:600}
+.fchip.on em{color:var(--ink2)}
+.drawer-foot{display:flex;align-items:center;gap:14px;padding:14px 20px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));border-top:2.5px solid var(--ink);background:#fff}
+.drawer-foot .btn-primary{flex:1}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;z-index:80;transform:translateX(-50%) rotate(-1.5deg);background:#fff;border:2.5px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:10px 16px;display:flex;align-items:center;gap:10px;font-weight:700;max-width:calc(100% - 32px);animation:pop .3s ease}
+.toast .px{background:var(--lime);border-radius:6px;padding:1px 7px;font-size:11px}
+@keyframes pop{from{transform:translateX(-50%) scale(.8) rotate(-6deg);opacity:0}}
+
+.mtabs{display:none}
+.mobile-only{display:none}
+
+/* ---------- 窄螢幕 ---------- */
+@media (max-width:1180px){
+  .tagline{display:none}
+  .hero{grid-template-columns:1fr}
+  .stage{border-right:0;border-bottom:2.5px solid var(--ink);min-height:400px}
+  .wt{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  :root{--top-h:64px}
+  html,body{height:auto}
+  body{overflow:visible;background-size:40px 40px}
+  .top{padding:0 16px;gap:8px;position:sticky;top:0;background:rgba(241,238,251,.94);border-bottom:2.5px solid var(--ink);padding-top:env(safe-area-inset-top,0px);height:calc(var(--top-h) + env(safe-area-inset-top,0px))}
+  .brand-logo{width:40px;height:40px}
+  .brand-zh{font-size:17px}
+  .brand-en{font-size:9px}
+  .top-right .desk-only{display:none}
+  .style-tag{right:auto;left:66px;bottom:-14px;font-size:10.5px}
+  .app{display:block;height:auto;padding:22px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+  body[data-view="chat"] .res-col{display:none}
+  body[data-view="results"] .chat-col{display:none}
+  .res-col{overflow:visible;padding:0;margin:0}
+  .phone{height:auto;background:transparent;padding:0;border-radius:0;box-shadow:none}
+  .screen{background:#FDFCFF;border:2.5px solid var(--ink);border-radius:28px;box-shadow:6px 6px 0 var(--lav);overflow:visible;padding:14px 14px 14px}
+  .island{display:none}
+  .phone-head{padding:2px 2px 12px}
+  .dash{margin:0 2px}
+  .msgs{overflow:visible;padding:16px 0 10px}
+  .recs{margin:0 -14px;padding:12px 14px 18px}
+  .rec{flex-basis:262px}
+  .composer{position:sticky;bottom:calc(80px + env(safe-area-inset-bottom,0px));margin:6px 0 0;box-shadow:4px 4px 0 var(--ink)}
+  .suggest{margin:0}
+  .mega-zh{font-size:28px;white-space:normal}
+  .mega-zh .num{font-size:34px}
+  .res-title{margin-bottom:18px}
+  .toolbar{width:100%}
+  .search{flex:1 1 140px}
+  .search input{width:100%}
+  .panel{padding:16px 14px 16px;border-radius:24px;box-shadow:5px 5px 0 var(--ink)}
+  .hero{padding:0}
+  .stage{min-height:360px}
+  .stage .big-no{font-size:240px;bottom:-46px}
+  .ring{width:86px;height:86px;left:8px;top:8px}
+  .hero-lap{left:10px;right:58px;top:84px}
+  .frame.f1{left:24px;top:52px;right:62px;bottom:62px}
+  .frame.f2{left:34px;top:62px;right:54px;bottom:52px}
+  .swatches{top:96px;right:10px}
+  .sizes{left:14px;bottom:14px}
+  .hero-info{padding:18px 16px}
+  .mega{font-size:30px}
+  .wrow{grid-template-columns:40px minmax(0,1fr) 50px;row-gap:4px}
+  .wrow input.wr{grid-column:1 / -1;order:4}
+  .grid{grid-template-columns:1fr;gap:20px}
+  .cand .tile{height:170px}
+  .notes{grid-template-columns:1fr}
+  .tray{display:none}
+  .tray-items{display:none}
+  .tray-title{font-size:12.5px}
+  .tray .btn-primary{padding:0 14px}
+  .hist-pop{position:fixed;left:16px;right:16px;top:calc(var(--top-h) + 10px);width:auto}
+  .mtabs{
+    display:flex;position:fixed;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;
+    background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:4px 4px 0 var(--ink);padding:5px;gap:4px;
+  }
+  .mtabs button{flex:1;min-height:44px;border:0;border-radius:999px;background:transparent;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .mtabs button svg{width:17px;height:17px}
+  .mtabs button:hover{background:var(--lav3)}
+  .mtabs button[aria-current="true"]{background:var(--lav);box-shadow:inset 0 0 0 2px var(--ink)}
+  .mobile-only{display:revert} .btn.mobile-only{display:inline-flex}
+  .board-deco .d-desk{display:none}
+}
+@media (max-width:420px){
+  .btn-primary{padding:0 14px}
+  .opts{grid-template-columns:1fr}
+  .hist-btn-label{display:none}
+  .brand-en{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-view="chat">
+
+<!-- 共用 SVG 濾鏡：貼紙白邊 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="stk" x="-12%" y="-14%" width="124%" height="132%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="9" result="d2"/>
+      <feOffset in="d2" dx="3" dy="6" result="o"/>
+      <feGaussianBlur in="o" stdDeviation="3" result="ob"/>
+      <feFlood flood-color="#2B2140" flood-opacity=".22"/>
+      <feComposite in2="ob" operator="in" result="shadow"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="8" result="d"/>
+      <feFlood flood-color="#FFFFFF"/>
+      <feComposite in2="d" operator="in" result="border"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="stkS" x="-15%" y="-15%" width="130%" height="135%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d2"/>
+      <feOffset in="d2" dx="2" dy="3" result="o"/>
+      <feFlood flood-color="#2B2140" flood-opacity=".18"/>
+      <feComposite in2="o" operator="in" result="shadow"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/>
+      <feFlood flood-color="#FFFFFF"/>
+      <feComposite in2="d" operator="in" result="border"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 0C13 8 16 11 24 12 16 13 13 16 12 24 11 16 8 13 0 12 8 11 11 8 12 0Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 6h18M6.5 12h11M10 18h4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M5 21h14M4 7h16M4 7l-2.5 6a3 3 0 0 0 5 0L4 7Zm16 0-2.5 6a3 3 0 0 0 5 0L20 7Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-starf" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8Z" fill="currentColor" stroke="#17141F" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14l-4-4M20 16H6l4 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 11v9H3v-9h4Zm2 9h8.5a2 2 0 0 0 2-1.6l1.3-6A2 2 0 0 0 18.8 10H14l.8-4.2A2 2 0 0 0 12.9 3.5L9 10v10Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><g transform="rotate(180 12 12)"><path d="M7 11v9H3v-9h4Zm2 9h8.5a2 2 0 0 0 2-1.6l1.3-6A2 2 0 0 0 18.8 10H14l.8-4.2A2 2 0 0 0 12.9 3.5L9 10v10Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 11v6M12 7.2v.1" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7Z" fill="#fff" stroke="#17141F" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bat" viewBox="0 0 24 24"><rect x="2.5" y="7" width="17" height="10" rx="2.5" fill="#fff" stroke="#17141F" stroke-width="2.2"/><path d="M21.5 10.5v3" stroke="#17141F" stroke-width="2.4" stroke-linecap="round"/><rect x="5" y="9.5" width="9" height="5" rx="1" fill="#17141F"/></symbol>
+    <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20 4C11 4 6 9 6 18l-2 2M6 18c8 0 13-5 14-14M9 15h6" fill="#fff" stroke="#17141F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2.5" fill="#fff" stroke="#17141F" stroke-width="2.2"/><path d="M8 21h8M12 17v4" stroke="#17141F" stroke-width="2.2" stroke-linecap="round"/><circle cx="9" cy="10.5" r="2" fill="#17141F"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#fff" stroke="#17141F" stroke-width="2.2"/><path d="M14.8 9.2c-.6-1-1.6-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2s1 1.6 2.7 2 2.9.9 2.9 2.2-1.2 2.1-2.9 2.1c-1.3 0-2.4-.5-3-1.5M12 6v1.8M12 16.1V18" fill="none" stroke="#17141F" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- 背景：薰衣草緞帶與塗鴉（純裝飾） -->
+<div class="board-deco" aria-hidden="true">
+  <svg class="d-desk" viewBox="0 0 1440 900" preserveAspectRatio="none" style="inset:0;width:100%;height:100%">
+    <path d="M-60 260 C 240 120, 330 520, 560 470 S 880 120, 1060 300 S 1300 760, 1520 640" fill="none" stroke="#CDBFF8" stroke-width="86" stroke-linecap="round" opacity=".75"/>
+    <path d="M-80 880 C 200 760, 420 940, 700 860" fill="none" stroke="#CDBFF8" stroke-width="70" stroke-linecap="round" opacity=".6"/>
+  </svg>
+  <svg viewBox="0 0 24 24" style="right:24px;bottom:40px;width:46px;height:46px;color:#B9A7FA" class="d-desk"><use href="#i-spark"/></svg>
+  <svg viewBox="0 0 60 60" style="left:6px;bottom:6px;width:56px;height:56px" class="d-desk"><path d="M12 12 48 48M48 12 12 48" stroke="#9DDAF5" stroke-width="13" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ 頂部列 ============ -->
+<header class="top">
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+      <g filter="url(#stkS)">
+        <circle cx="32" cy="32" r="27" fill="#FFBE8C" stroke="#17141F" stroke-width="3"/>
+        <ellipse cx="24" cy="27" rx="3.6" ry="6.5" fill="#17141F"/><ellipse cx="40" cy="27" rx="3.6" ry="6.5" fill="#17141F"/>
+        <path d="M19 38c4 7 22 7 26 0" fill="none" stroke="#17141F" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M48 47c-3 0-6 2-7 6l9-1.5c-.5-2.3-1-3.7-2-4.5Z" fill="#fff" stroke="#17141F" stroke-width="2"/>
+      </g>
+    </svg>
+    <div class="brand-text"><span class="brand-zh">筆電選購助手</span><span class="brand-en">LAPTOP PICKER</span></div>
+  </div>
+  <button class="btn btn-primary" id="newChat" type="button">＋ 新對話</button>
+  <div class="hist-wrap">
+    <button class="btn" id="histBtn" type="button" aria-expanded="false" aria-controls="histPop">
+      <svg aria-hidden="true"><use href="#i-chat"/></svg><span class="hist-btn-label">歷史對話</span><span class="badge">6</span>
+    </button>
+    <div class="hist-pop" id="histPop" hidden>
+      <h3>歷史對話 <span class="px">HISTORY</span></h3>
+      <div id="histList"></div>
+    </div>
+  </div>
+  <div class="tagline deco" aria-hidden="true">
+    <svg viewBox="0 0 120 60"><g stroke="#17141F" stroke-width="3.2" stroke-linecap="round"><path d="M10 56h100"/><path d="M60 52 60 6M60 52 36 10M60 52 84 10M60 52 16 26M60 52 104 26M60 52 46 7M60 52 74 7M60 52 25 16M60 52 95 16M60 52 10 40M60 52 110 40"/></g><path d="M38 56a22 22 0 0 1 44 0Z" fill="#F1EEFB"/></svg>
+    <span>說錯了隨時改，<br>我一直在聽。</span>
+  </div>
+  <div class="top-right">
+    <button class="btn desk-only" type="button" id="favTop"><svg aria-hidden="true"><use href="#i-star"/></svg>收藏 <span class="badge" id="favCount">1</span></button>
+    <button class="btn desk-only" type="button" id="cmpTop"><svg aria-hidden="true"><use href="#i-swap"/></svg>對比 <span class="badge" id="cmpCount">2</span></button>
+  </div>
+  <div class="style-tag" aria-hidden="true"><b>貼紙粗野</b><i>STICKER BRUTAL</i></div>
+</header>
+
+<main class="app">
+  <!-- ============ 對話欄（手機機身） ============ -->
+  <section class="chat-col" aria-label="選購對話">
+    <div class="phone">
+      <div class="screen">
+        <div class="island" aria-hidden="true"><span class="live"></span><span>AI 正在聽</span><span class="px">LIVE</span></div>
+        <div class="phone-head">
+          <svg class="avatar" viewBox="0 0 64 64" aria-hidden="true">
+            <g filter="url(#stkS)">
+              <circle cx="32" cy="32" r="26" fill="#D4F47A" stroke="#17141F" stroke-width="3"/>
+              <path d="M21 28c1.5-3 5.5-3 7 0M36 28c1.5-3 5.5-3 7 0" fill="none" stroke="#17141F" stroke-width="3" stroke-linecap="round"/>
+              <path d="M22 37c4 6 16 6 20 0Z" fill="#17141F"/>
+            </g>
+          </svg>
+          <div><b>嗨，我是你的選機搭子</b><small>直接說需求，說錯了隨時改</small></div>
+          <svg class="ph-deco deco" viewBox="0 0 24 24" aria-hidden="true" style="color:#BBA9FB"><use href="#i-spark"/></svg>
+        </div>
+        <div class="dash"></div>
+        <div class="msgs" id="msgs">
+          <div class="msg-user">預算 5 萬以內，平常上課寫報告、偶爾剪 Vlog，每天要背去學校</div>
+
+          <div class="heard">
+            <div class="heard-h"><span class="px">HEARD</span>這句話我聽到了</div>
+            <ul>
+              <li><svg aria-hidden="true"><use href="#i-spark"/></svg>預算 5 萬以內</li>
+              <li><svg aria-hidden="true"><use href="#i-spark"/></svg>上課寫報告</li>
+              <li><svg aria-hidden="true"><use href="#i-spark"/></svg>偶爾剪 Vlog</li>
+              <li><svg aria-hidden="true"><use href="#i-spark"/></svg>每天背著走</li>
+              <li><svg aria-hidden="true"><use href="#i-spark"/></svg>記憶體至少 16GB</li>
+            </ul>
+            <p class="heard-count">符合的機型從 <s>370</s> 台變成 <b>128</b> 台</p>
+          </div>
+
+          <div class="ai-who"><svg viewBox="0 0 24 24" aria-hidden="true" style="color:#5532D0"><use href="#i-spark"/></svg>選機搭子</div>
+          <p class="ai-text">條件幫你設成<mark>預算 5 萬內、記憶體至少 16GB</mark>。你每天要背，所以我把<b>輕便</b>和<b>續航</b>排在最前面；偶爾剪 Vlog，效能也不會給太弱的。128 台裡我最推這三台：</p>
+
+          <div class="recs" id="recs" aria-label="推薦卡"></div>
+
+          <p class="ai-text">提醒一下：前兩名都在 1.3 公斤內、續航 15 小時以上，背一整天沒問題。如果你之後要剪 4K，我會再往效能多看一點。</p>
+
+          <div class="ask" id="ask">
+            <div class="tape" aria-hidden="true"></div>
+            <p class="ask-quote">你剛剛說：「偶爾剪 Vlog」</p>
+            <h3 class="ask-q">你剪 Vlog 大多用什麼軟體？</h3>
+            <p class="ask-why">這會決定我要不要把「效能」的權重調高。</p>
+            <div class="opts" role="radiogroup" aria-label="追問選項">
+              <button class="opt" type="button" role="radio" aria-checked="false" data-eff="-10"><span>手機 App 就夠<small>剪映、CapCut</small></span><i aria-hidden="true">→</i></button>
+              <button class="opt" type="button" role="radio" aria-checked="false" data-eff="20"><span>Premiere 或 DaVinci<small>要更強的效能</small></span><i aria-hidden="true">→</i></button>
+              <button class="opt" type="button" role="radio" aria-checked="false" data-eff="mac"><span>Final Cut<small>只能用 Mac</small></span><i aria-hidden="true">→</i></button>
+              <button class="opt" type="button" role="radio" aria-checked="false" data-eff="0"><span>不確定<small>你先幫我假設</small></span><i aria-hidden="true">→</i></button>
+            </div>
+            <div class="ask-links"><button class="link" type="button" data-toast="好，這題先跳過">跳過這題</button><button class="link" type="button" data-goto="hero">直接看建議</button></div>
+          </div>
+
+          <div class="feedback">這次推薦對你有幫助嗎？
+            <button class="btn btn-sm" type="button" data-fb="up"><svg aria-hidden="true"><use href="#i-up"/></svg>有幫助</button>
+            <button class="btn btn-sm" type="button" data-fb="down"><svg aria-hidden="true"><use href="#i-down"/></svg>沒幫助</button>
+          </div>
+        </div>
+        <form class="composer" id="composer">
+          <textarea id="ta" rows="1" aria-label="輸入需求" placeholder="例如：預算 4 萬、要剪片"></textarea>
+          <button class="btn btn-primary" type="submit">送出<svg aria-hidden="true"><use href="#i-send"/></svg></button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 結果區 ============ -->
+  <section class="res-col" id="results" aria-label="候選筆電">
+    <div class="res-title">
+      <div>
+        <span class="kicker px"><svg aria-hidden="true"><use href="#i-spark"/></svg>MAIN POOL ✦ 主候選池</span>
+        <h1 class="mega-zh"><span class="ol">幫你挑出</span><span class="num ol ol-lav" id="mainCount">128</span><span class="ol">台</span></h1>
+        <p class="res-sub">次候選池 <b id="subCount">41</b> 台・全部 370 台 <button class="link" type="button" data-goto="second">看全部</button></p>
+      </div>
+      <div class="toolbar">
+        <label class="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input type="search" id="q" placeholder="搜尋型號、品牌"></label>
+        <span class="select"><select id="sort" aria-label="排序">
+          <option value="fit">按合適程度</option><option value="pa">價格低到高</option><option value="pd">價格高到低</option><option value="kg">重量輕到重</option>
+        </select></span>
+        <button class="btn" type="button" id="filterBtn" style="min-height:40px"><svg aria-hidden="true"><use href="#i-filter"/></svg>篩選 <span class="badge">2</span></button>
+        <button class="btn mobile-only" type="button" id="cmpMobile" style="min-height:40px"><svg aria-hidden="true"><use href="#i-swap"/></svg>對比 <span class="badge" id="cmpCountM">2</span></button>
+        <button class="btn btn-primary" type="button" id="wBtn"><svg aria-hidden="true"><use href="#i-scale"/></svg>權重</button>
+      </div>
+    </div>
+
+    <!-- 需求 -->
+    <section class="panel" aria-labelledby="needsH">
+      <div class="ph"><span class="px-chip">YOU SAID</span><h2 id="needsH">我聽到的需求</h2><small>5 項</small><span class="grow"></span><button class="link" type="button" data-toast="在左邊直接打字補充就可以">＋ 補充需求</button></div>
+      <div class="needs" id="needs"></div>
+      <p class="need-hint"><svg aria-hidden="true"><use href="#i-info"/></svg>卡片上的規格依你的需求挑選：重量（你每天要背）、續航（上課一整天）、記憶體（你要至少 16GB）、螢幕色域（剪 Vlog 看顏色）。</p>
+    </section>
+
+    <!-- 招牌：第一名貼紙海報 -->
+    <section class="panel hero" id="hero" aria-label="最適合你的第 1 名"></section>
+
+    <!-- 權重 -->
+    <section class="panel" id="weights" aria-labelledby="wH">
+      <div class="ph"><span class="px-chip">WEIGHTS</span><h2 id="wH">權重配方</h2><small>拖拖看，右邊的排名會跟著換</small><span class="grow"></span><button class="link" type="button" id="wReset">恢復預設</button></div>
+      <div class="share" id="share" aria-label="你的考量組成"></div>
+      <div class="wt">
+        <div>
+          <div class="wrows" id="wrows"></div>
+          <div class="presets"><span class="presets-l">一鍵套用：</span>
+            <button class="btn btn-sm" type="button" data-preset="commute">通勤學生</button>
+            <button class="btn btn-sm" type="button" data-preset="create">剪片創作</button>
+            <button class="btn btn-sm" type="button" data-preset="game">打遊戲</button>
+            <button class="btn btn-sm" type="button" data-preset="even">平均一點</button>
+          </div>
+        </div>
+        <div class="rankbox">
+          <h3><span class="px">LIVE</span>即時排名</h3>
+          <ol class="rlist" id="rlist"></ol>
+          <p class="rank-note">分數 = 各項分數 × 你的權重；箭頭是和剛剛比的名次變化。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 候選卡 -->
+    <section class="panel" id="pool" aria-labelledby="poolH">
+      <div class="ph"><span class="px-chip">PICKS</span><h2 id="poolH">主候選池</h2><small id="poolSmall">128 台・照你的權重排</small></div>
+      <div class="grid" id="grid"></div>
+      <div class="more-row"><button class="btn" type="button" id="moreBtn">再顯示 2 台</button></div>
+    </section>
+
+    <!-- 次候選池 -->
+    <section class="panel" id="second" aria-labelledby="secH" style="background:#FCFBFF">
+      <div class="ph"><span class="px-chip">ALMOST</span><h2 id="secH">次候選池</h2><small>差一點就進來了，原因用紅筆圈給你看</small><span class="grow"></span><button class="link" type="button" data-toast="示意：展開全部 41 台">看全部 41 台</button></div>
+      <div class="notes" id="notes"></div>
+    </section>
+
+    <div class="tray" id="tray" aria-label="對比清單"></div>
+  </section>
+</main>
+
+<nav class="mtabs" aria-label="切換畫面">
+  <button type="button" data-view="chat" aria-current="true"><svg aria-hidden="true"><use href="#i-chat"/></svg>對話</button>
+  <button type="button" data-view="results" aria-current="false"><svg aria-hidden="true"><use href="#i-grid"/></svg>機型</button>
+  <button type="button" data-view="weights" aria-current="false"><svg aria-hidden="true"><use href="#i-scale"/></svg>權重</button>
+</nav>
+
+<div id="drawerWrap" hidden>
+  <div class="scrim" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drH">
+    <div class="drawer-head"><h2 class="ol" id="drH">篩選</h2><span class="px" style="font-size:11px;color:var(--ink3)">FILTER</span><span style="flex:1"></span><button class="x-btn" type="button" data-close aria-label="關閉篩選" style="width:40px;height:40px">✕</button></div>
+    <div class="drawer-body">
+      <div class="fsec"><h3>預算 <small>單選</small></h3><div class="fchips" data-single>
+        <button class="fchip" type="button">3 萬以內<em>46</em></button><button class="fchip" type="button">3～4 萬<em>52</em></button><button class="fchip on" type="button">5 萬以內<em>128</em></button><button class="fchip" type="button">不限<em>370</em></button></div></div>
+      <div class="fsec"><h3>重量 <small>你說每天要背</small></h3><div class="fchips" data-single>
+        <button class="fchip on" type="button">1.3 公斤內<em>61</em></button><button class="fchip" type="button">1.6 公斤內<em>104</em></button><button class="fchip" type="button">不限<em>128</em></button></div></div>
+      <div class="fsec"><h3>品牌 <small>可複選</small></h3><div class="fchips">
+        <button class="fchip" type="button">ASUS<em>31</em></button><button class="fchip" type="button">Apple<em>9</em></button><button class="fchip" type="button">Acer<em>18</em></button><button class="fchip" type="button">HP<em>16</em></button><button class="fchip" type="button">Lenovo<em>24</em></button><button class="fchip" type="button">MSI<em>14</em></button><button class="fchip" type="button">Dell<em>16</em></button></div></div>
+      <div class="fsec"><h3>螢幕</h3><div class="fchips">
+        <button class="fchip" type="button">OLED<em>58</em></button><button class="fchip" type="button">2K 以上<em>97</em></button><button class="fchip" type="button">120Hz 以上<em>44</em></button></div></div>
+    </div>
+    <div class="drawer-foot"><button class="link" type="button" id="fClear">全部清除</button><button class="btn btn-primary" type="button" data-close>看 61 台</button></div>
+  </aside>
+</div>
+
+<div id="toastHost" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const INK = "#17141F";
+let uid = 0;
+
+/* ---------- 資料 ---------- */
+const DIMS = [
+  {k:"perf",  name:"效能", hint:"剪片、多開",  c:"#BBA9FB", icon:"i-bolt"},
+  {k:"bat",   name:"續航", hint:"上課一整天", c:"#A6EECB", icon:"i-bat"},
+  {k:"light", name:"輕便", hint:"每天背著走", c:"#9DDAF5", icon:"i-feather"},
+  {k:"scr",   name:"螢幕", hint:"看片調色",  c:"#F9B6D7", icon:"i-screen"},
+  {k:"price", name:"價格", hint:"越便宜越好", c:"#FFDB72", icon:"i-coin"}
+];
+const W0 = {perf:50, bat:60, light:70, scr:40, price:30};
+let W = Object.assign({}, W0);
+
+const L = [
+ {id:"zen",  brand:"ASUS",   name:"Zenbook 14 OLED",     zh:"14 吋 OLED 輕薄筆電", cpu:"Core Ultra 7 255H", gpu:"Intel Arc 內顯", ram:"32GB", ssd:"1TB", scr:"3K OLED 120Hz", kg:1.28, bat:15, price:39900, low:34900,
+  s:{perf:74,bat:92,light:91,scr:94,price:70}, body:"#5B6B8C", s1:"#7C5CFF", s2:"#FF9EC7", s3:"#FFD66B", kind:"thin", tile:"t-lav",
+  pros:["1.28 公斤、續航 15 小時，背一整天沒負擔","3K OLED 螢幕，剪 Vlog 看顏色很準"], cons:["只有內顯，剪 4K 會比較慢"], colors:[["霧藍灰","#5B6B8C"],["曜石黑","#2C2E36"],["珍珠白","#ECE8F2"]]},
+ {id:"mba",  brand:"Apple",  name:"MacBook Air 13 M4",   zh:"13.6 吋 輕薄筆電",   cpu:"Apple M4 10 核",    gpu:"10 核 GPU",     ram:"16GB", ssd:"512GB", scr:"Liquid Retina", kg:1.24, bat:18, price:35900, low:32900,
+  s:{perf:78,bat:97,light:90,scr:84,price:66}, body:"#D3D8E2", s1:"#8FD8F5", s2:"#B9A7FA", s3:"#D6F57A", kind:"mac", tile:"t-sky",
+  pros:["續航 18 小時，這批最長","剪映、Final Cut 都很順"], cons:["512GB 容量，素材多要外接硬碟"], colors:[["星光","#E9E1D2"],["午夜","#2B3140"],["天藍","#BFD6EA"]]},
+ {id:"omni", brand:"HP",     name:"OmniBook 7 Aero 13",  zh:"13.3 吋 超輕筆電",   cpu:"Ryzen AI 7 350",   gpu:"Radeon 860M",  ram:"16GB", ssd:"1TB", scr:"2.5K IPS", kg:0.97, bat:14, price:33900, low:29900,
+  s:{perf:70,bat:86,light:98,scr:72,price:82}, body:"#E6DFD2", s1:"#FFB27A", s2:"#F7A8D0", s3:"#FFFFFF", kind:"thin", tile:"t-peach",
+  pros:["不到 1 公斤，全場最輕"], cons:["IPS 螢幕色域普通，調色要小心"], colors:[["奶茶金","#E6DFD2"],["銀","#CDD1D8"],["石墨","#3A3D46"]]},
+ {id:"swift",brand:"Acer",   name:"Swift Go 14",         zh:"14 吋 OLED 輕薄筆電", cpu:"Core Ultra 5 225H", gpu:"Intel Arc 內顯", ram:"16GB", ssd:"512GB", scr:"2.8K OLED 90Hz", kg:1.32, bat:13, price:29900, low:26900,
+  s:{perf:66,bat:84,light:86,scr:88,price:90}, body:"#9AB3C9", s1:"#D6F57A", s2:"#8FD8F5", s3:"#FFFFFF", kind:"thin", tile:"t-lime",
+  pros:["不到 3 萬就有 OLED，最划算"], cons:["效能是這批最弱的"], colors:[["冰川藍","#9AB3C9"],["銀","#CDD1D8"],["黑","#2C2E36"]]},
+ {id:"pres", brand:"MSI",    name:"Prestige 13 AI+",     zh:"13.3 吋 商務輕薄",   cpu:"Core Ultra 7 258V", gpu:"Intel Arc 140V", ram:"32GB", ssd:"1TB", scr:"2.8K OLED", kg:0.99, bat:12, price:42900, low:38900,
+  s:{perf:68,bat:80,light:97,scr:80,price:66}, body:"#2F3550", s1:"#F9B6D7", s2:"#BBA9FB", s3:"#FFDB72", kind:"thin", tile:"t-pink",
+  pros:["0.99 公斤又有 32GB 記憶體"], cons:["價格偏高，接近預算上限"], colors:[["星辰藍","#2F3550"],["珍珠白","#ECE8F2"],["銀","#CDD1D8"]]},
+ {id:"dell", brand:"Dell",   name:"Dell 14 Plus",        zh:"14 吋 文書筆電",     cpu:"Core Ultra 7 256V", gpu:"Intel Arc 140V", ram:"16GB", ssd:"1TB", scr:"2.5K IPS", kg:1.55, bat:15, price:34900, low:31900,
+  s:{perf:72,bat:92,light:76,scr:78,price:80}, body:"#4A4F5C", s1:"#FFDB72", s2:"#FFB27A", s3:"#FFFFFF", kind:"thin", tile:"t-sun",
+  pros:["續航 15 小時、鍵盤好打"], cons:["1.55 公斤，天天背會有感"], colors:[["冰藍","#4A4F5C"],["銀","#CDD1D8"],["黑","#2C2E36"]]},
+ {id:"g14",  brand:"ASUS",   name:"ROG Zephyrus G14",    zh:"14 吋 電競輕薄",     cpu:"Ryzen AI 9 HX 370", gpu:"RTX 5070 Ti 12GB", ram:"32GB", ssd:"1TB", scr:"3K OLED 120Hz", kg:1.57, bat:9, price:49900, low:45900,
+  s:{perf:94,bat:64,light:72,scr:96,price:40}, body:"#E3E5EA", s1:"#2B2140", s2:"#7C5CFF", s3:"#FF6FB0", kind:"gamer", tile:"t-mint",
+  pros:["剪 4K、打遊戲都夠力","螢幕是這批最好的"], cons:["續航只有 9 小時","剛好卡在預算上限"], colors:[["月光白","#E3E5EA"],["日蝕灰","#3A3D46"],["薰衣草","#C9BBF5"]]},
+ {id:"leg",  brand:"Lenovo", name:"Legion 5 Gen 10",     zh:"15.1 吋 電競筆電",   cpu:"Ryzen 7 260",      gpu:"RTX 5060 8GB",   ram:"32GB", ssd:"1TB", scr:"2.5K OLED 165Hz", kg:2.05, bat:8, price:46990, low:42990,
+  s:{perf:92,bat:52,light:42,scr:86,price:64}, body:"#3A3D46", s1:"#17141F", s2:"#5532D0", s3:"#9DDAF5", kind:"gamer", tile:"t-sky",
+  pros:["效能強，剪片輸出快"], cons:["2.05 公斤，不適合每天背"], colors:[["碳灰","#3A3D46"],["冰川白","#E3E5EA"],["黑","#1F2128"]]}
+];
+const OUT0 = [
+ {id:"mbp",  brand:"Apple",  name:"MacBook Pro 14 M4 Pro", price:64900, body:"#2B3140", s1:"#7C5CFF", s2:"#9DDAF5", s3:"#FFDB72", kind:"mac", kind2:"over", circ:"多 NT$ 14,900", why:"效能和螢幕都頂級，只是超出你的 5 萬。", note:"yellow", r:"-1.2deg", act:"還是想看看"},
+ {id:"blade",brand:"Razer",  name:"Blade 14 (2025)",       price:49990, body:"#1F2128", s1:"#2B2140", s2:"#7CF0A8", s3:"#FFFFFF", kind:"gamer", kind2:"heavy", circ:"1.84 公斤", why:"你說每天要背，超過 1.7 公斤我先放這裡。", note:"pink", r:"1deg", act:"還是想看看"},
+ {id:"slim", brand:"Lenovo", name:"IdeaPad Slim 3",        price:19900, body:"#CDD1D8", s1:"#9DDAF5", s2:"#D6F57A", s3:"#FFFFFF", kind:"thin", kind2:"ram", circ:"只有 8GB", why:"不符合「記憶體至少 16GB」。", note:"blue", r:"-.6deg", act:"還是想看看"},
+ {id:"nitro",brand:"Acer",   name:"Nitro V 15",            price:32900, body:"#2C2E36", s1:"#17141F", s2:"#C0213A", s3:"#FFB27A", kind:"gamer", kind2:"user", circ:"你按了不考慮", why:"上一輪對話你說不要電競外型。", note:"yellow", r:".8deg", act:"放回主候選池"}
+];
+let OUT = OUT0.slice();
+const NEEDS = [
+  {t:"預算 5 萬以內", src:"「預算 5 萬以內」", c:"#FFF1BF", r:"-.8deg"},
+  {t:"上課寫報告", src:"「平常上課寫報告」", c:"#E3F8EC", r:".6deg"},
+  {t:"偶爾剪 Vlog", src:"「偶爾剪 Vlog」", c:"#FDE6F1", r:"-.4deg"},
+  {t:"每天背著走", src:"「每天要背去學校」", c:"#E3F3FC", r:".9deg"},
+  {t:"記憶體至少 16GB", src:"剪 Vlog 的基本門檻", c:"#EEE9FF", r:"-.6deg"}
+];
+const HIST = [
+  ["預算 5 萬，上課＋剪 Vlog", "現在", "#BBA9FB", true],
+  ["想買一台打遊戲的筆電，3 萬 5 左右", "昨天", "#D4F47A"],
+  ["我要剪 4K 影片，常用 Premiere Pro", "11/14", "#FFBE8C"],
+  ["幫讀大學的弟弟挑一台", "11/12", "#9DDAF5"],
+  ["Photoshop 要什麼規格才夠", "11/09", "#F9B6D7"],
+  ["新對話", "11/08", "#FFDB72"]
+];
+const TILE_ROT = ["-2.2deg","1.8deg","-1.4deg","2.4deg","-1.8deg","1.2deg","-2deg","1.6deg"];
+
+let fav = new Set(["swift"]);
+let cmp = ["zen","mba"];
+let excluded = new Set();
+let showAll = false;
+let prevRank = {};
+let hero = {color:null, ram:"32G", hot:null};
+let sortMode = "fit", query = "";
+
+/* ---------- 工具 ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const fmt = n => "NT$ " + n.toLocaleString("en-US");
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function score(l){
+  let sum=0, ws=0;
+  for(const d of DIMS){ sum += W[d.k]*l.s[d.k]; ws += W[d.k]; }
+  return ws ? sum/ws : 0;
+}
+function ranked(){
+  return L.filter(l=>!excluded.has(l.id)).map(l=>({l, sc:score(l)})).sort((a,b)=>b.sc-a.sc);
+}
+
+/* ---------- 筆電貼紙 SVG ---------- */
+function lap(o, opt={}){
+  const id = "lp"+(++uid);
+  const body = opt.body || o.body;
+  const top = shade(body, 16), dark = shade(body, -34), deep = shade(body, -60);
+  const thick = o.kind==="gamer" ? 13 : 7;
+  const filt = opt.filter===false ? "" : ` filter="url(#${opt.small?"stkS":"stk"})"`;
+  const sw = opt.small ? 4 : 3;
+  let extra = "";
+  if(o.kind==="mac") extra += `<rect x="121" y="17" width="20" height="6" rx="2.5" fill="${INK}"/>`;
+  if(o.kind==="gamer"){
+    extra += `<path d="M18 ${170+thick-5} L242 ${164+thick-5}" stroke="${o.s3}" stroke-width="3" stroke-linecap="round"/>`;
+    extra += `<g stroke="${deep}" stroke-width="3" stroke-linecap="round"><path d="M70 117l0 0M86 116.6l0 0"/></g>`;
+    extra += `<path d="M60 129 L78 128.6" stroke="${o.s3}" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  return `<svg class="lap" viewBox="0 0 260 196" aria-hidden="true">
+<defs>
+ <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${o.s1}"/><stop offset="1" stop-color="${o.s2}"/></linearGradient>
+ <clipPath id="${id}c"><path d="M56 23 L205 17 L210 111 L51 115Z"/></clipPath>
+</defs>
+<g${filt}>
+ <path d="M44 12 L216 5 L223 122 L37 126 Z" fill="${body}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>
+ <path d="M56 23 L205 17 L210 111 L51 115Z" fill="url(#${id}g)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>
+ <g clip-path="url(#${id}c)">
+   <circle cx="78" cy="112" r="44" fill="${o.s3}" opacity=".85"/>
+   <path d="M40 88 C 90 60, 130 110, 220 58 L220 130 L40 130Z" fill="#fff" opacity=".28"/>
+   <rect x="118" y="36" width="70" height="44" rx="8" fill="#fff" opacity=".92" stroke="${INK}" stroke-width="2"/>
+   <rect x="126" y="45" width="34" height="5" rx="2.5" fill="${INK}"/>
+   <rect x="126" y="55" width="52" height="4" rx="2" fill="${shade(o.s1,-30)}" opacity=".6"/>
+   <rect x="126" y="63" width="42" height="4" rx="2" fill="${shade(o.s1,-30)}" opacity=".45"/>
+   <path d="M86 40C87 47 89.5 49.5 96 50.5 89.5 51.5 87 54 86 61 85 54 82.5 51.5 76 50.5 82.5 49.5 85 47 86 40Z" fill="#fff"/>
+ </g>
+ <path d="M37 126 L223 122 L255 163 L5 169 Z" fill="${top}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>
+ <path d="M5 169 L255 163 L255 ${163+thick} Q255 ${166+thick} 250 ${166+thick} L10 ${172+thick} Q5 ${172+thick} 5 ${169+thick} Z" fill="${dark}" stroke="${INK}" stroke-width="${sw}" stroke-linejoin="round"/>
+ <path d="M52 130 L208 126.5 L224 147 L36 151 Z" fill="${dark}" opacity=".5"/>
+ <g stroke="${deep}" stroke-width="4.5" stroke-dasharray="7 3.2" opacity=".55">
+   <path d="M55 134.5 L209 131"/><path d="M50 140.5 L214 137"/><path d="M45 146.5 L219 143"/>
+ </g>
+ <path d="M104 154 L156 153 L160 162 L100 163 Z" fill="${dark}" opacity=".35" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+ ${extra}
+</g></svg>`;
+}
+
+function burst(n, color){
+  const pts=[]; const R=25, r=19, cx=26, cy=26, k=12;
+  for(let i=0;i<k*2;i++){ const a=Math.PI*i/k - Math.PI/2; const rr = i%2? r: R; pts.push((cx+rr*Math.cos(a)).toFixed(1)+","+(cy+rr*Math.sin(a)).toFixed(1)); }
+  return `<svg class="rank-burst" viewBox="0 0 52 52" role="img" aria-label="第 ${n} 名"><polygon points="${pts.join(" ")}" fill="${color}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/><text x="26" y="33" text-anchor="middle" font-size="19" fill="${INK}">${n}</text></svg>`;
+}
+const BURST_C = ["#FFDB72","#FFFFFF","#FFBE8C"];
+
+/* ---------- 對話推薦卡 ---------- */
+function renderRecs(){
+  const top = ranked().slice(0,3);
+  const rot = ["-1.4deg","1.6deg","-1deg"];
+  $("#recs").innerHTML = top.map(({l},i)=>`
+   <article class="rec" style="--r:${rot[i]}">
+     <div class="tile ${l.tile}" style="height:132px">${burst(i+1, BURST_C[i])}<span class="t-brand">${l.brand.toUpperCase()}</span>${lap(l)}</div>
+     <div class="rec-body">
+       <h4 class="rec-name">${l.brand} ${l.name}</h4>
+       <p class="rec-sub">${l.kg} 公斤・續航 ${l.bat} 小時・${l.ram}</p>
+       <p class="rec-price"><small>售價</small>${fmt(l.price)}</p>
+       <ul class="reasons">${l.pros.slice(0,1).map(p=>`<li class="pro">${p}</li>`).join("")}${l.cons.slice(0,1).map(p=>`<li class="con">${p}</li>`).join("")}</ul>
+       <div class="act-row">
+         <button class="btn btn-sm ${fav.has(l.id)?"on":""}" type="button" data-fav="${l.id}"><svg aria-hidden="true"><use href="#${fav.has(l.id)?"i-starf":"i-star"}"/></svg>${fav.has(l.id)?"已收藏":"收藏"}</button>
+         <button class="btn btn-sm ${cmp.includes(l.id)?"on":""}" type="button" data-cmp="${l.id}">${cmp.includes(l.id)?"已加入對比":"加入對比"}</button>
+         <button class="link link-quiet" type="button" data-ex="${l.id}">不考慮這台</button>
+       </div>
+     </div>
+   </article>`).join("");
+}
+
+/* ---------- 需求標籤 ---------- */
+function renderNeeds(){
+  $("#needs").innerHTML = NEEDS.map((n,i)=>`
+    <div class="need" style="--nc:${n.c};--r:${n.r}">
+      <div class="need-top"><span class="dot" aria-hidden="true"></span><b>${n.t}</b><button class="link" type="button" data-toast="示意：修改「${n.t}」">修改</button><button class="link link-quiet" type="button" data-delneed="${i}">刪除</button></div>
+      <small>我聽到的：${n.src}</small>
+    </div>`).join("");
+}
+
+/* ---------- 招牌：第一名 ---------- */
+let heroId = null;
+function renderHero(force){
+  const r = ranked(); const top = r[0]; const l = top.l;
+  if(heroId !== l.id){ hero.color = l.colors[0][1]; hero.ram = l.ram==="32GB"?"32G":"16G"; hero.hot=null; }
+  else if(!force) { updateHeroPrice(); $("#heroFit").textContent = top.sc.toFixed(1); return; }
+  heroId = l.id;
+  const price = hero.ram==="32G" ? (l.ram==="32GB"?l.price:l.price+5000) : (l.ram==="32GB"?l.low:l.price);
+  const ringId = "rp"+(++uid);
+  $("#hero").innerHTML = `
+   <div class="stage">
+     <div class="frame f1" aria-hidden="true"></div><div class="frame f2" aria-hidden="true"></div>
+     <svg class="sparkle deco" viewBox="0 0 24 24" style="left:46%;top:24px;width:26px;height:26px" aria-hidden="true"><use href="#i-spark"/></svg>
+     <svg class="sparkle deco" viewBox="0 0 24 24" style="left:30px;bottom:96px;width:18px;height:18px;color:#5532D0" aria-hidden="true"><use href="#i-spark"/></svg>
+     <svg class="ring deco" viewBox="0 0 120 120" aria-hidden="true">
+       <defs><path id="${ringId}" d="M60,60 m-41,0 a41,41 0 1,1 82,0 a41,41 0 1,1 -82,0"/></defs>
+       <g filter="url(#stkS)">
+         <circle cx="60" cy="60" r="55" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+         <g class="spin"><text font-family="Silkscreen, monospace" font-size="11.5" font-weight="700" fill="${INK}" letter-spacing="1"><textPath href="#${ringId}">BEST PICK ✦ NO.1 ✦ BEST PICK ✦ NO.1 ✦ </textPath></text></g>
+         <circle cx="60" cy="60" r="30" fill="#FFBE8C" stroke="${INK}" stroke-width="2.5"/>
+         <ellipse cx="51" cy="55" rx="3.4" ry="7" fill="${INK}"/><ellipse cx="69" cy="55" rx="3.4" ry="7" fill="${INK}"/>
+         <path d="M46 67c6 8 22 8 28 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+         <path d="M98 92 C 92 92 86 98 86 106 C 92 104 99 100 104 96 Z" fill="#EEE9FF" stroke="${INK}" stroke-width="2"/>
+       </g>
+     </svg>
+     <div class="fit-pill"><svg aria-hidden="true" style="color:#FFB020"><use href="#i-starf"/></svg><span id="heroFit">${top.sc.toFixed(1)}</span><small>合適度</small></div>
+     <svg class="flower deco" viewBox="0 0 100 100" aria-hidden="true"><g fill="#fff" stroke="${INK}" stroke-width="3">${[0,45,90,135].map(a=>`<ellipse cx="50" cy="50" rx="11" ry="44" transform="rotate(${a} 50 50)"/>`).join("")}</g><circle cx="50" cy="50" r="11" fill="#fff" stroke="none"/></svg>
+     <span class="stage-tag" aria-hidden="true">${l.kg} KG</span>
+     <div class="hero-lap"><div id="heroLap">${lap(l,{body:hero.color})}</div>
+       <button class="hot" type="button" style="left:24%;top:34%" data-hot="0" aria-label="看螢幕規格">+</button>
+       <button class="hot" type="button" style="left:60%;top:76%" data-hot="1" aria-label="看重量">+</button>
+       <div id="hotTip"></div>
+     </div>
+     <div class="swatches" role="radiogroup" aria-label="機身顏色">
+       ${l.colors.map(([n,c])=>`<button class="sw ${c===hero.color?"on":""}" type="button" role="radio" aria-checked="${c===hero.color}" style="--c:${c}" data-sw="${c}" aria-label="${n}" title="${n}"></button>`).join("")}
+     </div>
+     <div class="sizes" role="radiogroup" aria-label="記憶體">
+       <span class="lbl" aria-hidden="true">RAM</span>
+       ${["16G","32G"].map(s=>`<button class="sz ${s===hero.ram?"on":""}" type="button" role="radio" aria-checked="${s===hero.ram}" data-sz="${s}">${s}</button>`).join("")}
+     </div>
+   </div>
+   <div class="hero-info">
+     <div class="no1"><span class="px">NO.1</span><span>最適合你的一台</span></div>
+     <h2 class="mega ol">${l.name.toUpperCase()}</h2>
+     <p class="hero-zh">${l.brand}・${l.zh}・${l.kg} 公斤・續航 ${l.bat} 小時</p>
+     <div class="chips"><span class="key">${l.kg} 公斤</span><span class="key">續航 ${l.bat} 小時</span><span>${l.cpu}</span><span>${l.scr}</span><span>${l.ssd}</span></div>
+     <div class="hero-why">
+       <h4>為什麼是它</h4>
+       <ul class="reasons">${l.pros.map(p=>`<li class="pro">${p}</li>`).join("")}${l.cons.map(p=>`<li class="con">${p}</li>`).join("")}</ul>
+     </div>
+     <div class="price-box">
+       <p class="price"><small>售價（${hero.ram} 版）</small><b id="heroPrice">${fmt(price)}</b></p>
+       <div class="hero-acts">
+         <button class="btn" type="button" data-fav="${l.id}"><svg aria-hidden="true"><use href="#${fav.has(l.id)?"i-starf":"i-star"}"/></svg>${fav.has(l.id)?"已收藏":"收藏"}</button>
+         <button class="btn btn-primary" type="button" data-cmp="${l.id}">${cmp.includes(l.id)?"已加入對比":"加入對比"}<span class="cart-circle" aria-hidden="true"><svg><use href="#i-swap"/></svg></span></button>
+       </div>
+     </div>
+     <button class="link" type="button" data-toast="示意：打開完整規格" style="align-self:flex-start">看完整規格</button>
+   </div>`;
+}
+function heroPrice(){
+  const l = L.find(x=>x.id===heroId);
+  if(hero.ram==="32G") return l.ram==="32GB"?l.price:l.price+5000;
+  return l.ram==="32GB"?l.low:l.price;
+}
+function updateHeroPrice(){
+  const el = $("#heroPrice"); if(!el) return;
+  el.textContent = fmt(heroPrice());
+  el.parentElement.querySelector("small").textContent = `售價（${hero.ram} 版）`;
+}
+
+/* ---------- 權重 ---------- */
+function renderWeights(){
+  $("#wrows").innerHTML = DIMS.map(d=>`
+    <div class="wrow">
+      <span class="wicon" style="--c:${d.c}" aria-hidden="true"><svg><use href="#${d.icon}"/></svg></span>
+      <label class="wname" for="w-${d.k}"><b>${d.name}</b><small>${d.hint}</small></label>
+      <input class="wr" type="range" min="0" max="100" step="1" id="w-${d.k}" data-k="${d.k}" value="${W[d.k]}" style="--c:${d.c};--p:${W[d.k]}%">
+      <span class="wval" id="wv-${d.k}"></span>
+    </div>`).join("");
+  updateShare();
+}
+function updateShare(){
+  const tot = DIMS.reduce((s,d)=>s+W[d.k],0) || 1;
+  $("#share").innerHTML = DIMS.map(d=>{
+    const p = Math.round(W[d.k]/tot*100);
+    return `<div style="flex-grow:${Math.max(W[d.k],0.001)};background:${d.c}" title="${d.name} ${p}%">${p>=9?`${d.name} ${p}%`:""}</div>`;
+  }).join("");
+  for(const d of DIMS){
+    const p = Math.round(W[d.k]/tot*100);
+    const v = $("#wv-"+d.k); if(v) v.innerHTML = `${p}%<small>的考量</small>`;
+  }
+}
+function renderRank(animate){
+  const list = $("#rlist");
+  const before = {};
+  if(animate) $$(".ritem", list).forEach(el=>before[el.dataset.id]=el.getBoundingClientRect().top);
+  const r = ranked().slice(0,5);
+  const maxSc = 100;
+  list.innerHTML = r.map(({l,sc},i)=>{
+    const pr = prevRank[l.id]; let d = "";
+    if(pr===undefined || pr===i) d = `<small class="same">－</small>`;
+    else if(pr>i) d = `<small class="up">↑${pr-i}</small>`;
+    else d = `<small class="down">↓${i-pr}</small>`;
+    return `<li class="ritem" data-id="${l.id}"><span class="rn">${i+1}</span><span class="rthumb">${lap(l,{small:true})}</span>
+      <div style="min-width:0"><div class="rname">${l.brand} ${l.name}</div><div class="rbar"><i style="width:${sc.toFixed(1)}%"></i></div></div>
+      <span class="rsc">${sc.toFixed(1)}${d}</span></li>`;
+  }).join("");
+  if(animate){
+    $$(".ritem", list).forEach(el=>{
+      const b = before[el.dataset.id]; const a = el.getBoundingClientRect().top;
+      const dy = b===undefined ? 16 : b - a;
+      if(dy && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+        el.animate([{transform:`translateY(${dy}px)`, opacity: b===undefined?0:1},{transform:"none", opacity:1}],{duration:320,easing:"cubic-bezier(.2,.8,.2,1)"});
+      }
+    });
+  }
+}
+function snapshotRank(){ prevRank = {}; ranked().forEach(({l},i)=>prevRank[l.id]=i); }
+
+/* ---------- 候選卡 ---------- */
+function renderGrid(){
+  let r = ranked();
+  if(query){ const q=query.toLowerCase(); r = r.filter(({l})=>(l.brand+" "+l.name+" "+l.zh).toLowerCase().includes(q)); }
+  if(sortMode==="pa") r.sort((a,b)=>a.l.price-b.l.price);
+  if(sortMode==="pd") r.sort((a,b)=>b.l.price-a.l.price);
+  if(sortMode==="kg") r.sort((a,b)=>a.l.kg-b.l.kg);
+  const fitOrder = ranked().map(x=>x.l.id);
+  const shown = showAll ? r : r.slice(0,6);
+  $("#grid").innerHTML = shown.length ? shown.map(({l,sc},i)=>{
+    const rk = fitOrder.indexOf(l.id)+1;
+    return `<article class="cand">
+      <div class="tile ${l.tile}" style="--r:${TILE_ROT[i%8]}">${rk<=3?burst(rk,BURST_C[rk-1]):""}<span class="t-brand">${l.brand.toUpperCase()}</span>${lap(l)}</div>
+      <div class="cand-body">
+        <p class="cand-brand">${l.brand}</p>
+        <h3 class="cand-name">${l.name}</h3>
+        <p class="cand-sub">${l.cpu}・${l.zh}</p>
+        <div class="chips"><span class="key">${l.kg} 公斤</span><span class="key">續航 ${l.bat} 小時</span><span>${l.ram}</span><span>${l.scr}</span><span>${l.ssd}</span></div>
+        <div class="cand-price"><b>${fmt(l.price)}</b><em>合適 ${sc.toFixed(0)}</em></div>
+        <div class="act-row">
+          <button class="btn btn-sm ${fav.has(l.id)?"on":""}" type="button" data-fav="${l.id}"><svg aria-hidden="true"><use href="#${fav.has(l.id)?"i-starf":"i-star"}"/></svg>${fav.has(l.id)?"已收藏":"收藏"}</button>
+          <button class="btn btn-sm ${cmp.includes(l.id)?"on":""}" type="button" data-cmp="${l.id}">${cmp.includes(l.id)?"已加入對比":"加入對比"}</button>
+          <button class="link link-quiet" type="button" data-ex="${l.id}">不考慮這台</button>
+        </div>
+      </div></article>`;
+  }).join("") : `<p style="color:var(--ink3)">找不到「${query}」，換個關鍵字試試。</p>`;
+  const rest = r.length - shown.length;
+  $("#moreBtn").parentElement.hidden = rest<=0;
+  $("#moreBtn").textContent = `再顯示 ${rest} 台`;
+  const main = 128 - excluded.size;
+  $("#mainCount").textContent = main;
+  $("#poolSmall").textContent = `${main} 台・照你的權重排`;
+}
+
+/* ---------- 次候選池 ---------- */
+function circleSVG(){
+  return `<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M14 6 C 34 1, 80 1, 94 12 C 101 20, 96 33, 70 37 C 44 40, 8 37, 3 25 C -1 14, 10 7, 30 4" fill="none" stroke="#C0213A" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const KIND_LBL = {over:"OVER BUDGET 超出預算", heavy:"TOO HEAVY 太重", ram:"SPEC 規格不夠", user:"YOU SKIPPED 你不考慮的"};
+function renderNotes(){
+  $("#notes").innerHTML = OUT.map(o=>`
+   <div class="note ${o.note==="pink"?"pink":o.note==="blue"?"blue":""}" style="--r:${o.r}">
+     <div class="tape" aria-hidden="true"></div>
+     <span class="out-kind">${KIND_LBL[o.kind2]}</span>
+     <div class="note-top"><span class="note-thumb">${lap(o,{small:true})}</span>
+       <div><p class="note-name">${o.brand} ${o.name}</p><p class="note-price">${fmt(o.price)}</p></div></div>
+     <p class="why-out"><span class="circled">${o.circ}${circleSVG()}</span><br>${o.why}</p>
+     <button class="link" type="button" ${o.kind2==="user"?`data-restore="${o.id}"`:`data-toast="示意：打開 ${o.name}"`}>${o.act}</button>
+   </div>`).join("");
+  $("#subCount").textContent = 41 + excluded.size;
+}
+
+/* ---------- 對比托盤 ---------- */
+function renderTray(){
+  const all = L.concat(OUT0);
+  $("#tray").innerHTML = cmp.length ? `
+    <span class="tray-title">對比清單 ${cmp.length}/4</span>
+    <div class="tray-items">${cmp.map(id=>{ const l = all.find(x=>x.id===id); return `<span class="tray-mini"><span class="lapm">${lap(l,{small:true,filter:false})}</span><span>${l.name}</span><button class="x-btn" type="button" data-uncmp="${id}" aria-label="從對比移除 ${l.name}">✕</button></span>`; }).join("")}</div>
+    <button class="btn btn-primary" type="button" data-toast="示意：打開對比表" style="min-height:40px">開始對比</button>` : "";
+  $("#tray").hidden = !cmp.length;
+  $("#cmpCount").textContent = cmp.length; $("#cmpCountM").textContent = cmp.length;
+  $("#favCount").textContent = fav.size;
+}
+
+function renderHist(){
+  $("#histList").innerHTML = HIST.map(([t,d,c,cur])=>`<button class="hist-item ${cur?"cur":""}" type="button" data-toast="示意：打開「${t}」"><span class="dotc" style="background:${c}"></span><span class="hn">${t}</span><small>${d}</small></button>`).join("");
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg, tag="OK!"){
+  const h = $("#toastHost");
+  h.innerHTML = `<div class="toast"><span class="px">${tag}</span>${msg}</div>`;
+  clearTimeout(toastT); toastT = setTimeout(()=>{h.innerHTML="";}, 2400);
+}
+
+function refreshAll(animateRank){
+  renderRank(animateRank); renderHero(false); renderGrid(); renderRecs(); renderTray();
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener("input", e=>{
+  const t = e.target;
+  if(t.matches("input.wr")){
+    W[t.dataset.k] = +t.value; t.style.setProperty("--p", t.value+"%");
+    updateShare();
+    scheduleRank();
+  }
+  if(t.id==="q"){ query = t.value.trim(); renderGrid(); }
+});
+let rankRaf = null;
+function scheduleRank(){
+  if(rankRaf) return;
+  rankRaf = requestAnimationFrame(()=>{ rankRaf=null; renderRank(true); renderHero(false); renderGrid(); });
+}
+document.addEventListener("change", e=>{
+  if(e.target.matches("input.wr")){ snapshotRank(); renderRecs(); renderHero(false); }
+  if(e.target.id==="sort"){ sortMode = e.target.value; renderGrid(); }
+});
+document.addEventListener("pointerdown", e=>{ if(e.target.matches("input.wr")) snapshotRank(); });
+document.addEventListener("keydown", e=>{ if(e.target.matches && e.target.matches("input.wr") && !e.repeat) snapshotRank(); if(e.key==="Escape"){ closeDrawer(); closeHist(); } });
+
+document.addEventListener("click", e=>{
+  const b = e.target.closest("button, [data-close]");
+  if(!e.target.closest(".hist-wrap")) closeHist();
+  if(!b) return;
+  if(b.dataset.fav){ const id=b.dataset.fav; fav.has(id)?fav.delete(id):fav.add(id); toast(fav.has(id)?"已收藏，在右上角「收藏」找得到":"已取消收藏", fav.has(id)?"SAVED":"OK"); renderHero(true); renderGrid(); renderRecs(); renderTray(); return; }
+  if(b.dataset.cmp){ const id=b.dataset.cmp; if(cmp.includes(id)) cmp=cmp.filter(x=>x!==id); else if(cmp.length<4) cmp.push(id); else { toast("對比最多 4 台，先移掉一台吧","FULL"); return; } renderHero(true); renderGrid(); renderRecs(); renderTray(); return; }
+  if(b.dataset.uncmp){ cmp=cmp.filter(x=>x!==b.dataset.uncmp); renderHero(true); renderGrid(); renderRecs(); renderTray(); return; }
+  if(b.dataset.ex){
+    const l = L.find(x=>x.id===b.dataset.ex); excluded.add(l.id); snapshotRank();
+    cmp = cmp.filter(x=>x!==l.id);
+    OUT = [{id:l.id, brand:l.brand, name:l.name, price:l.price, body:l.body, s1:l.s1, s2:l.s2, s3:l.s3, kind:l.kind, kind2:"user", circ:"你按了不考慮", why:"剛剛在卡片上按掉的。", note:"yellow", r:"-.8deg", act:"放回主候選池"}].concat(OUT);
+    renderNotes(); refreshAll(true); renderHero(true);
+    toast(`「${l.name}」移到次候選池了，隨時可以放回`,"MOVED"); return;
+  }
+  if(b.dataset.restore){
+    const id=b.dataset.restore; OUT = OUT.filter(o=>o.id!==id);
+    if(excluded.has(id)){ excluded.delete(id); snapshotRank(); refreshAll(true); renderHero(true); }
+    renderNotes(); toast("放回主候選池了","BACK"); return;
+  }
+  if(b.dataset.sw){ hero.color = b.dataset.sw; $("#heroLap").innerHTML = lap(L.find(x=>x.id===heroId),{body:hero.color}); $$(".sw").forEach(s=>{const on=s.dataset.sw===hero.color; s.classList.toggle("on",on); s.setAttribute("aria-checked",on);}); return; }
+  if(b.dataset.sz){ hero.ram = b.dataset.sz; $$(".sz").forEach(s=>{const on=s.dataset.sz===hero.ram; s.classList.toggle("on",on); s.setAttribute("aria-checked",on);}); updateHeroPrice(); return; }
+  if(b.dataset.hot!==undefined){
+    const l = L.find(x=>x.id===heroId); const i=+b.dataset.hot; const open = hero.hot!==i; hero.hot = open?i:null;
+    $$(".hot").forEach(h=>h.classList.toggle("open", open && +h.dataset.hot===i));
+    const tip = $("#hotTip");
+    if(open){ const txt = i===0 ? `${l.scr}・色域 100% DCI-P3` : `${l.kg} 公斤・比一般 14 吋輕 300 克`; tip.innerHTML = i===0 ? `<span class="hot-tip" style="left:calc(${b.style.left} - 4px);bottom:calc(100% - ${b.style.top} + 10px)">${txt}</span>` : `<span class="hot-tip tip-r" style="right:calc(100% - ${b.style.left} - 38px);bottom:calc(100% - ${b.style.top} + 10px)">${txt}</span>`; }
+    else tip.innerHTML = "";
+    return;
+  }
+  if(b.dataset.delneed!==undefined){ const n = NEEDS.splice(+b.dataset.delneed,1)[0]; renderNeeds(); toast(`刪掉「${n.t}」了（示意）`,"DEL"); return; }
+  if(b.dataset.toast){ toast(b.dataset.toast, "DEMO"); closeHist(); return; }
+  if(b.dataset.goto){ go(b.dataset.goto); return; }
+  if(b.dataset.fb){ $$("[data-fb]").forEach(x=>x.classList.toggle("on", x===b)); toast(b.dataset.fb==="up"?"謝謝！我會記得你喜歡這種推薦":"了解，說說哪裡不對，我馬上改", "THX"); return; }
+  if(b.classList.contains("opt")){
+    $$(".opt").forEach(o=>{o.classList.toggle("sel", o===b); o.setAttribute("aria-checked", o===b); o.querySelector("i").textContent = o===b?"✓":"→";});
+    const eff = b.dataset.eff;
+    if(eff==="mac"){ toast("Final Cut 只能在 Mac 上跑，我把 MacBook 排前面看看","GOT IT"); W.light=Math.max(0,W.light-10); W.perf=Math.min(100,W.perf+8); }
+    else if(+eff>0){ W.perf=Math.min(100,W.perf+(+eff)); toast("效能權重調高了，排名可能會換","GOT IT"); }
+    else if(+eff<0){ W.perf=Math.max(0,W.perf+(+eff)); toast("那效能不用太強，輕便更重要","GOT IT"); }
+    else toast("我先假設你用手機 App 剪，之後隨時能改","GOT IT");
+    snapshotRank(); syncSliders(); refreshAll(true); return;
+  }
+  if(b.closest(".mtabs")){ setView(b.dataset.view); return; }
+  if(b.id==="histBtn"){ const p=$("#histPop"); p.hidden=!p.hidden; b.setAttribute("aria-expanded", !p.hidden); return; }
+  if(b.id==="newChat"){ toast("示意：開一段新對話","NEW"); return; }
+  if(b.id==="filterBtn"){ $("#drawerWrap").hidden=false; return; }
+  if(b.hasAttribute("data-close")){ closeDrawer(); return; }
+  if(b.id==="fClear"){ $$(".fchip").forEach(c=>c.classList.remove("on")); return; }
+  if(b.classList.contains("fchip")){ const g=b.parentElement; if(g.hasAttribute("data-single")) $$(".fchip",g).forEach(c=>c.classList.toggle("on",c===b)); else b.classList.toggle("on"); return; }
+  if(b.id==="wBtn"){ go("weights"); return; }
+  if(b.id==="wReset"){ snapshotRank(); W=Object.assign({},W0); syncSliders(); refreshAll(true); toast("權重恢復成預設了","RESET"); return; }
+  if(b.dataset.preset){
+    const P={commute:{perf:30,bat:70,light:80,scr:30,price:40},create:{perf:85,bat:40,light:35,scr:75,price:25},game:{perf:95,bat:20,light:15,scr:60,price:35},even:{perf:50,bat:50,light:50,scr:50,price:50}};
+    snapshotRank(); W=Object.assign({},P[b.dataset.preset]); syncSliders(); refreshAll(true); toast(`套用「${b.textContent}」權重`,"MIX"); return;
+  }
+  if(b.id==="moreBtn"){ showAll=true; renderGrid(); return; }
+  if(b.id==="favTop"){ toast(`你收藏了 ${fav.size} 台（示意）`,"SAVED"); return; }
+  if(b.id==="cmpTop"||b.id==="cmpMobile"){ toast(`對比清單有 ${cmp.length} 台（示意：打開對比表）`,"VS"); return; }
+});
+function syncSliders(){ for(const d of DIMS){ const i=$("#w-"+d.k); if(i){ i.value=W[d.k]; i.style.setProperty("--p",W[d.k]+"%"); } } updateShare(); }
+function closeDrawer(){ $("#drawerWrap").hidden=true; }
+function closeHist(){ const p=$("#histPop"); if(p && !p.hidden){ p.hidden=true; $("#histBtn").setAttribute("aria-expanded","false"); } }
+function go(where){
+  const mobile = matchMedia("(max-width:860px)").matches;
+  if(mobile) setView(where==="weights"?"weights":"results", true);
+  const el = where==="tray" ? $("#tray") : document.getElementById(where);
+  if(!el) return;
+  el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"});
+  if(el.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) el.animate([{transform:"rotate(0)"},{transform:"rotate(-.8deg)"},{transform:"rotate(.6deg)"},{transform:"rotate(0)"}],{duration:500,delay:300});
+}
+function setView(v, noScroll){
+  const view = v==="weights" ? "results" : v;
+  document.body.dataset.view = view;
+  $$(".mtabs button").forEach(b=>b.setAttribute("aria-current", b.dataset.view===v));
+  if(!noScroll){
+    if(v==="weights") setTimeout(()=>$("#weights").scrollIntoView({block:"start"}),0);
+    else window.scrollTo(0,0);
+  }
+}
+$("#composer").addEventListener("submit", e=>{
+  e.preventDefault(); const ta=$("#ta"); const v=ta.value.trim(); if(!v){ ta.focus(); return; }
+  const m = document.createElement("div"); m.className="msg-user"; m.textContent=v; $("#msgs").appendChild(m);
+  ta.value=""; $("#msgs").scrollTop = $("#msgs").scrollHeight; toast("收到！（示意，不會真的送出）","SENT");
+});
+
+/* ---------- 啟動 ---------- */
+renderNeeds(); renderWeights(); snapshotRank(); renderRank(false); renderHero(true); renderGrid(); renderRecs(); renderNotes(); renderTray(); renderHist();
+const h = location.hash.replace("#","");
+if(h==="results"||h==="weights") setView(h);
+function toBottom(){ const m=$("#msgs"); m.style.scrollBehavior="auto"; const r=$("#recs"); m.scrollTop = Math.min(m.scrollHeight, r.offsetTop - m.offsetTop - 120); m.style.scrollBehavior=""; }
+toBottom();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(toBottom);
+})();
+</script>
+</body>
+</html>

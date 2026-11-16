@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>筆電選購助手｜精品標註 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== 精品標註 Boutique Callout — 四層：底（灰藍）→ 面板（霧白）→ 卡片（純白＋柔影）→ 卡內小組（冷灰） ===== */
+:root{
+  --ground:#C6CDDC;          /* L0 背景 */
+  --ground-2:#BAC3D5;
+  --panel:#EDF0F5;           /* L1 區塊面板 */
+  --card:#FFFFFF;            /* L2 卡片 */
+  --group:#EBEEF4;           /* L3 卡內小組 */
+  --group-2:#E2E7F0;
+  --ink:#12151C;
+  --ink-2:#454C5D;
+  --ink-3:#5A6174;
+  --line:#D7DCE6;
+  --accent:#2340C4;          /* 文字連結 */
+  --accent-ink:#1A2F96;
+  --blue-soft:#DDE4F7;
+  --signal:#F0602A;          /* 精品橘點 */
+  --signal-ink:#A8401A;
+  --good:#1D7349;
+  --bad:#AE3626;
+  --sh-card:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16);
+  --sh-panel:0 30px 60px -30px rgba(30,40,70,.35);
+  --sans:"Inter","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  --display:"Inter Tight","Inter","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"PingFang TC","Noto Sans TC",monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(1200px 700px at 80% -10%,#D3D9E6 0%,transparent 60%),linear-gradient(180deg,var(--ground),var(--ground-2));
+  background-attachment:fixed;
+  color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- 按鈕三級 ---------- */
+/* 主要：黑色實心膠囊＋箭頭 */
+.btn-p{display:inline-flex;align-items:center;gap:12px;height:44px;padding:0 10px 0 20px;border:0;border-radius:999px;
+  background:var(--ink);color:#fff;font-weight:600;font-size:14.5px;letter-spacing:.01em;white-space:nowrap;
+  box-shadow:0 6px 16px -6px rgba(18,21,28,.55);transition:background .18s,transform .12s,box-shadow .18s}
+.btn-p .arw{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);transition:transform .2s}
+.btn-p:hover{background:#2C3343;box-shadow:0 10px 22px -8px rgba(18,21,28,.6)}
+.btn-p:hover .arw{transform:translate(2px,-2px);background:rgba(255,255,255,.22)}
+.btn-p:active{transform:scale(.97);background:#000}
+/* 次要：白底黑框膠囊（參考作品的 Buy Now） */
+.btn-s{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 15px;border-radius:999px;
+  background:var(--card);border:1.3px solid #2A2F3A;color:var(--ink);font-weight:500;font-size:13.5px;white-space:nowrap;
+  transition:background .15s,transform .12s,border-color .15s}
+.btn-s:hover{background:var(--group)}
+.btn-s:active{transform:scale(.96);background:var(--group-2)}
+.btn-s[aria-pressed="true"]{background:var(--blue-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn-s.lg{height:42px;padding:0 18px;font-size:14px}
+.btn-s.ic{width:42px;padding:0;position:relative}
+.btn-s .ico{width:16px;height:16px;flex:none}
+.badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--signal);color:#fff;
+  font:600 11px/19px var(--mono);text-align:center}
+.badge[data-n="0"]{display:none}
+/* 文字連結 */
+.lnk{background:none;border:0;padding:2px 0;color:var(--accent);font-weight:500;font-size:13px;text-decoration:underline;text-decoration-thickness:1px;
+  text-underline-offset:3px;text-decoration-color:rgba(35,64,196,.45);transition:color .15s,text-decoration-color .15s}
+.lnk:hover{color:var(--accent-ink);text-decoration-color:currentColor;text-decoration-thickness:2px}
+.lnk.quiet{color:var(--ink-2);text-decoration-color:rgba(69,76,93,.45)}
+.lnk.quiet:hover{color:var(--ink)}
+
+/* ---------- 外框 ---------- */
+.app{max-width:1480px;margin:0 auto;padding:14px 24px 28px}
+.nav{display:flex;align-items:center;gap:14px;height:66px;padding:0 6px}
+.logo{white-space:nowrap;font:700 22px/1 var(--display);letter-spacing:-.03em;margin-right:14px;display:flex;align-items:baseline;gap:1px}
+.logo i{color:var(--signal);font-style:normal}
+.nav .menu{display:inline-flex;align-items:center;gap:10px}
+.nav .menu .bars{width:22px;height:10px;position:relative}
+.nav .menu .bars::before,.nav .menu .bars::after{content:"";position:absolute;left:0;height:1.6px;border-radius:2px;background:currentColor}
+.nav .menu .bars::before{top:1px;width:22px}.nav .menu .bars::after{bottom:1px;width:15px}
+.nav .grow{flex:1}
+.nav .hint{font-size:12.5px;color:var(--ink-2)}
+.pop{position:absolute;z-index:30;top:60px;left:150px;width:340px;padding:10px;background:var(--card);border-radius:20px;box-shadow:0 24px 50px -14px rgba(22,30,52,.35)}
+.pop h4{margin:6px 10px 8px;font:600 12px var(--mono);letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase}
+.pop button{display:flex;justify-content:space-between;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:12px;background:none;text-align:left;font-size:13.5px}
+.pop button:hover{background:var(--group)}
+.pop button small{color:var(--ink-3);font:12px var(--mono);flex:none}
+.pop button.cur{background:var(--blue-soft);font-weight:600}
+.navwrap{position:relative}
+
+.shell{display:grid;grid-template-columns:35% minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--panel);border-radius:30px;box-shadow:var(--sh-panel)}
+.card{background:var(--card);border-radius:22px;box-shadow:var(--sh-card)}
+.eyebrow{font:500 11.5px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ---------- 對話欄 ---------- */
+.chat{position:sticky;top:14px;height:calc(100vh - 108px);min-height:560px;display:flex;flex-direction:column;overflow:hidden}
+.chat-head{display:flex;align-items:flex-end;justify-content:space-between;padding:22px 26px 14px}
+.chat-head h2{margin:0;font:600 22px/1.2 var(--display);letter-spacing:-.02em}
+.chat-head p{margin:3px 0 0;font-size:12.5px;color:var(--ink-2)}
+.chat-scroll{flex:1;overflow-y:auto;padding:6px 22px 18px;scroll-behavior:smooth}
+.msg{margin:0 0 22px}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user .bubble{max-width:86%;padding:12px 16px;border-radius:20px 20px 6px 20px;background:var(--blue-soft);font-size:14px}
+.ai-row{display:flex;gap:12px}
+.ai-ava{flex:none;width:34px;height:34px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--sh-card);font:700 20px/1 var(--display)}
+.ai-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.ai-body > p{margin:0;font-size:14px}
+.heard{padding:12px 14px;border-radius:16px;background:var(--card);box-shadow:var(--sh-card)}
+.heard .eyebrow{margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.heard .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal)}
+.htags{display:flex;flex-wrap:wrap;gap:6px}
+.htag{display:inline-block;padding:3px 9px;border-radius:6px;background:var(--group);font-size:12.5px;color:var(--ink)}
+.heard .delta{margin:10px 0 0;font-size:12.5px;color:var(--ink-2)}
+.heard .delta b{font:600 14px var(--mono);color:var(--ink)}
+/* 對話內推薦卡 */
+.rec{padding:16px 16px 12px}
+.rec-top{display:flex;gap:12px;align-items:center}
+.rec-thumb{flex:none;width:86px;height:62px;border-radius:12px;background:var(--group);display:grid;place-items:center;overflow:hidden}
+.rec-thumb svg{width:100%;height:100%}
+.rec-rank{font:500 11px var(--mono);letter-spacing:.06em;color:var(--signal-ink)}
+.rec h3{margin:1px 0 0;font:600 16px/1.3 var(--display);letter-spacing:-.01em}
+.rec .rprice{font:700 18px/1.2 var(--display);margin-top:3px}
+.pc{margin:12px 0 0;padding:10px 12px;border-radius:14px;background:var(--group);list-style:none;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.pc li{padding-left:16px;position:relative}
+.pc li::before{position:absolute;left:0;font-weight:700}
+.pc .pro::before{content:"+";color:var(--good)}
+.pc .con{color:var(--ink-2)}.pc .con::before{content:"−";color:var(--bad)}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.actions .lnk{margin-left:auto}
+/* 追問卡 */
+.ask{padding:18px}
+.ask .quote{font-size:12.5px;color:var(--ink-3);margin:0 0 6px}
+.ask h3{margin:0;font:600 18px/1.35 var(--display);letter-spacing:-.01em}
+.ask .why{margin:4px 0 14px;font-size:13px;color:var(--ink-2)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:12px 12px 12px 14px;border-radius:16px;background:var(--group);border:1.5px solid transparent;
+  transition:background .15s,border-color .15s,transform .12s;min-height:58px}
+.opt b{display:block;font-size:14px;font-weight:600}
+.opt small{display:block;font-size:12px;color:var(--ink-3)}
+.opt .go{margin-left:auto;flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--card);font-size:13px;transition:transform .15s,background .15s}
+.opt:hover{background:var(--card);border-color:var(--ink)}
+.opt:hover .go{transform:translateX(2px);background:var(--ink);color:#fff}
+.opt:active{transform:scale(.98)}
+.opt[aria-pressed="true"]{background:var(--blue-soft);border-color:var(--accent)}
+.opt[aria-pressed="true"] .go{background:var(--accent);color:#fff}
+.opts.chosen .opt[aria-pressed="false"]{opacity:.6}
+.skip{display:flex;gap:18px;margin-top:12px}
+.ask .note{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--group);font-size:13px}
+.ask .note b{font-family:var(--mono)}
+.fb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.composer{margin:0 16px 16px;padding:10px 10px 10px 18px;display:flex;align-items:flex-end;gap:10px;border-radius:24px;background:var(--card);box-shadow:var(--sh-card);border:1.5px solid transparent;transition:border-color .15s}
+.composer:focus-within{border-color:var(--ink)}
+.composer textarea{flex:1;border:0;outline:0;resize:none;background:none;min-height:44px;max-height:120px;padding:10px 0;font-size:14px;line-height:1.5}
+.composer textarea::placeholder{color:#6A7184}
+
+/* ---------- 結果區 ---------- */
+.results{padding:22px 24px 30px;display:flex;flex-direction:column;gap:26px;min-width:0}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.count{flex:1 1 220px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.count .big{font:600 34px/1 var(--display);letter-spacing:-.03em}
+.count .big small{font:500 14px var(--sans);margin-left:4px}
+.count .meta{font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+.search{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:999px;background:var(--card);border:1.3px solid #2A2F3A;flex:0 1 200px;min-width:120px;transition:background .15s}
+.search:hover{background:#FAFBFD}
+.search:focus-within{outline:2.5px solid var(--accent);outline-offset:2px}
+.search input{border:0;outline:0;background:none;width:100%;font-size:13.5px}
+.search input::placeholder{color:#6A7184}
+.sel{position:relative}
+.sel select{appearance:none;-webkit-appearance:none;height:42px;padding:0 38px 0 16px;border-radius:999px;background:var(--card);border:1.3px solid #2A2F3A;font-size:13.5px;font-weight:500;cursor:pointer;transition:background .15s}
+.sel select:hover{background:var(--group)}
+.sel::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.6px solid var(--ink);border-bottom:1.6px solid var(--ink);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+
+/* 招牌：第一名大焦點區 */
+.hero{position:relative;padding:30px 30px 26px 26px;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-120px;top:-60px;width:620px;height:620px;border-radius:50%;
+  background:radial-gradient(closest-side,#E6ECFA 0%,#F1F4FB 55%,rgba(255,255,255,0) 100%);pointer-events:none}
+.hero-grid{position:relative;display:grid;grid-template-columns:40px 236px minmax(0,1fr);gap:0 18px;min-height:470px}
+.pager{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:120px}
+.pager button{width:32px;height:32px;border-radius:50%;border:1.3px solid #2A2F3A;background:var(--card);font:500 12.5px var(--mono);display:grid;place-items:center;transition:background .15s,transform .12s}
+.pager button:hover{background:var(--group)}
+.pager button:active{transform:scale(.92)}
+.pager button[aria-current="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pager .rail{width:1.5px;height:110px;background:var(--line);margin-top:10px;position:relative;border-radius:2px}
+.pager .rail i{position:absolute;left:0;top:0;width:100%;background:var(--ink);transition:height .35s}
+.pager .idx{font:500 12px var(--mono);color:var(--ink-2)}
+.hero-text{display:flex;flex-direction:column;padding-top:4px;min-width:0}
+.hot{display:flex;align-items:center;gap:12px}
+.ast{flex:none;width:52px;height:52px;border-radius:50%;background:var(--blue-soft);display:grid;place-items:center;font:600 38px/1 var(--display);padding-top:10px}
+.hot b{display:block;font:600 17px/1.2 var(--display)}
+.hot small{display:block;font-size:12.5px;color:var(--ink-2)}
+.hero-brand{margin-top:40px}
+.hero h1{margin:6px 0 0;font:600 44px/1.02 var(--display);letter-spacing:-.035em;overflow-wrap:anywhere}
+.hero .specline{margin:12px 0 0;font-size:13px;color:var(--ink-2)}
+.hero .pricebox{margin-top:22px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.hero .price{font:700 34px/1 var(--display);letter-spacing:-.025em}
+.hero .price small{display:block;font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px}
+.hero .fit{font:600 34px/1 var(--display);letter-spacing:-.02em}
+.hero .fit em{font-style:normal;font-size:15px;color:var(--ink-2);font-weight:500}
+.hero .fit small{display:block;font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px}
+.budget{margin:10px 0 0;font-size:13px;color:var(--good);font-weight:500}
+.budget.over{color:var(--bad)}
+.hero .hero-act{margin-top:auto;padding-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stage{position:relative;min-height:470px}
+.leaders{position:absolute;z-index:2;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.leaders path{fill:none;stroke:var(--ink);stroke-width:1.15}
+.leaders circle.ring{fill:rgba(255,255,255,.65);stroke:var(--ink);stroke-width:1.15}
+.leaders circle.dot{fill:var(--ink)}
+.float{position:absolute;z-index:1;left:6%;right:-12%;top:9%;will-change:transform}
+.float svg{display:block;width:100%;height:auto}
+.callouts{position:absolute;z-index:3;inset:0;pointer-events:none}
+.callout{position:absolute;width:166px;padding:10px 13px 11px;border-radius:16px;background:rgba(236,239,245,.86);
+  -webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 24px -12px rgba(22,30,52,.28);
+  opacity:0;transform:translateY(6px);transition:opacity .45s,transform .45s}
+.callout.in{opacity:1;transform:none}
+.callout .n{font:500 10.5px var(--mono);letter-spacing:.06em;color:var(--signal-ink)}
+.callout b{display:block;font:600 14.5px/1.3 var(--display);letter-spacing:-.005em}
+.callout span{display:block;margin-top:2px;font-size:12px;line-height:1.45;color:var(--ink-2)}
+.co1{left:-2%;top:3%}.co2{left:-4%;top:58%}.co3{right:-2%;top:-1%}.co4{right:-2%;top:72%}.co5{left:26%;bottom:-3%}
+.marker-n{display:none}
+/* 焦點區底部兩塊小組（參考作品的 Materials / AI Assistant） */
+.tiles{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.tile{display:flex;align-items:center;gap:14px;padding:18px 18px 18px 22px;border-radius:22px;background:var(--group);min-height:118px}
+.tile .tx{flex:1;min-width:0}
+.tile h3{margin:0 0 4px;font:600 19px/1.2 var(--display);letter-spacing:-.02em}
+.tile p{margin:0;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+.tile .art{flex:none;width:84px;height:84px}
+.orb{border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0 9%,#CFE0FF 22%,#8DB2FF 46%,#4E6FE0 70%,#2C3F99 100%);
+  box-shadow:0 0 0 8px rgba(255,255,255,.55),0 18px 30px -12px rgba(44,63,153,.55);animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.05) rotate(8deg);filter:hue-rotate(-12deg)}}
+.circ{flex:none;width:48px;height:48px;border-radius:50%;border:1.3px solid #2A2F3A;background:var(--card);display:grid;place-items:center;font-size:18px;transition:background .15s,transform .15s,color .15s}
+.circ:hover{background:var(--ink);color:#fff;transform:rotate(-8deg)}
+.circ:active{transform:scale(.93)}
+
+/* 區段標題 */
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 4px 12px;flex-wrap:wrap}
+.sec-h h2{margin:0;font:600 24px/1.15 var(--display);letter-spacing:-.025em}
+.sec-h p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}
+.sec-h .eyebrow{display:block;margin-bottom:6px}
+
+/* 我聽到的需求 */
+.needs{padding:20px}
+.tags{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.tag{padding:12px 14px;border-radius:14px;background:var(--group);transition:opacity .3s,transform .3s}
+.tag .row{display:flex;align-items:center;gap:8px}
+.tag .row b{font-size:14px;font-weight:600;flex:1;min-width:0}
+.tag .row .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.hi{background:var(--signal)}.dot.mid{background:#E5A43A}.dot.lo{background:#97A0B3}
+.tag .row .lnk{font-size:12.5px}
+.tag small{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
+.tag.gone{opacity:0;transform:scale(.96)}
+
+/* 招牌二：權重儀表 */
+.weights{padding:24px}
+.wgrid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:22px}
+.share{display:flex;height:10px;border-radius:999px;overflow:hidden;margin:2px 0 22px;background:var(--group)}
+.share i{display:block;height:100%;transition:width .25s}
+.wrow{display:grid;grid-template-columns:110px minmax(0,1fr) 64px;align-items:center;gap:14px;padding:10px 0}
+.wrow + .wrow{border-top:1px dashed var(--line)}
+.wrow .lbl b{display:flex;align-items:center;gap:7px;font-size:14.5px;font-weight:600}
+.wrow .lbl b i{width:9px;height:9px;border-radius:3px;flex:none}
+.wrow .lbl small{display:block;font-size:11.5px;color:var(--ink-3);margin-left:16px}
+.wrow output{text-align:right;font:600 24px/1 var(--display);letter-spacing:-.02em}
+.wrow output small{font:500 12px var(--sans);color:var(--ink-3);margin-left:1px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;cursor:pointer;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--ink) 0 var(--p),#D5DAE4 var(--p) 100%)}
+input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:#D5DAE4}
+input[type=range]::-moz-range-progress{height:6px;border-radius:999px;background:var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);
+  box-shadow:0 4px 10px -2px rgba(22,30,52,.35),inset 0 0 0 5px #fff,inset 0 0 0 9px var(--ink);transition:transform .12s}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);box-shadow:0 4px 10px -2px rgba(22,30,52,.35)}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.1)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
+.live{padding:18px;border-radius:18px;background:var(--group);display:flex;flex-direction:column}
+.live ol{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.live li{display:grid;grid-template-columns:30px 54px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px 8px 10px;border-radius:14px;background:var(--card);transition:transform .3s}
+.live li .r{font:600 20px/1 var(--display);text-align:center}
+.live li .th{height:38px;border-radius:8px;background:var(--group);overflow:hidden}
+.live li .th svg{width:100%;height:100%}
+.live li .nm{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
+.live li .nm small{display:block;font:500 11.5px var(--mono);color:var(--ink-3)}
+.mv{font:600 12px var(--mono);white-space:nowrap}
+.mv.up{color:var(--good)}.mv.dn{color:var(--bad)}.mv.eq{color:var(--ink-3)}
+.live .say{margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
+.weights .foot{display:flex;align-items:center;gap:16px;margin-top:10px}
+
+/* 候選卡 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:16px}
+.lc{display:flex;flex-direction:column;padding:12px 12px 14px;transition:opacity .3s,box-shadow .2s}
+.lc:hover{box-shadow:0 1px 2px rgba(22,30,52,.05),0 18px 40px -12px rgba(22,30,52,.22)}
+.photo{position:relative;border-radius:16px;background:linear-gradient(160deg,#F0F3F8,#E3E8F1);aspect-ratio:600/430;overflow:hidden}
+.photo svg{position:absolute;inset:0;width:100%;height:100%}
+.photo .rk{position:absolute;left:12px;bottom:9px;font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--ink-2)}
+.photo .ft{position:absolute;right:12px;bottom:8px;font:600 12px var(--mono);color:var(--ink)}
+.lc .bd{padding:14px 6px 0;flex:1;display:flex;flex-direction:column}
+.lc .brand{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lc h3{margin:2px 0 0;font:600 17px/1.25 var(--display);letter-spacing:-.015em}
+.specs{margin:12px 0 0;padding:0;list-style:none;font-size:12.5px}
+.specs li{display:flex;align-items:baseline;gap:6px;padding:2px 0}
+.specs li span{color:var(--ink-2);flex:none}
+.specs li i{flex:1;border-bottom:1.5px dotted #B9C0CE;transform:translateY(-4px)}
+.specs li b{font-weight:600;font-family:var(--mono);font-size:12px;flex:none}
+.lc .pr{margin-top:12px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.lc .pr strong{font:700 23px/1 var(--display);letter-spacing:-.02em}
+.lc .pr small{font-size:12px;color:var(--ink-3)}
+.lc .actions{margin-top:14px;gap:6px}
+.lc .btn-s{padding:0 11px;font-size:13px}
+.lc.off{opacity:.45}
+.more{display:flex;justify-content:center;margin-top:18px}
+
+/* 次候選池 */
+.pool2{padding:20px;background:var(--group-2);box-shadow:inset 0 2px 6px rgba(22,30,52,.06)}
+.pool2 .sec-h{margin-bottom:12px}
+.sub{display:flex;flex-direction:column;gap:10px}
+.srow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 14px 10px 10px;border-radius:18px;background:rgba(255,255,255,.72)}
+.srow .th{height:68px;border-radius:12px;background:var(--group);overflow:hidden;opacity:.75}
+.srow .th svg{width:100%;height:100%}
+.srow h4{margin:0;font:600 15px/1.3 var(--display);color:var(--ink-2)}
+.srow .why{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12.5px;color:var(--signal-ink);font-weight:500}
+.srow .why::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
+.srow .sp{font-size:12px;color:var(--ink-3)}
+.srow .rt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.srow .rt strong{font:600 16px var(--display);color:var(--ink-2)}
+
+.stamp{margin-right:10px;padding-left:12px;border-left:2px solid var(--signal);font:500 10.5px/1.35 var(--mono);letter-spacing:.06em;color:var(--ink-2);text-align:left}
+.stamp b{font:600 12px var(--sans);letter-spacing:0;color:var(--ink);display:block}
+
+.mtabs,.stamp-m{display:none}
+
+/* ---------- 響應式 ---------- */
+@media (max-width:1180px){
+  .hero-grid{grid-template-columns:38px 220px minmax(0,1fr)}
+  .hero h1{font-size:38px}
+  .callout{width:156px}
+  .wgrid{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .app{padding:8px 12px 70px}
+  .nav{height:58px;gap:8px;padding:0}
+  .logo{font-size:17px;margin-right:auto}
+  .btn-p.new{padding:0 14px;height:42px}.btn-p.new .arw{display:none}
+  .nav .btn-s.ic{width:40px;height:40px}
+  .nav .grow,.nav .menu .lbl{display:none}
+  .nav .menu{width:42px;padding:0;justify-content:center}
+  .btn-p.new .lbl-long{display:none}
+  .pop{left:0;right:0;width:auto;top:56px}
+  .mtabs{display:flex;gap:4px;padding:4px;margin:4px 0 12px;border-radius:999px;background:rgba(255,255,255,.45)}
+  .mtabs button{flex:1;height:40px;border:0;border-radius:999px;background:none;font-weight:600;font-size:14px;color:var(--ink-2)}
+  .mtabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:var(--sh-card)}
+  .shell{display:block}
+  .shell > .off{display:none}
+  .chat{position:relative;top:0;height:calc(100vh - 140px);min-height:520px;border-radius:24px}
+  .chat-head{padding:18px 18px 10px}
+  .chat-scroll{padding:4px 14px 14px}
+  .composer{margin:0 10px 10px}
+  .results{padding:14px 12px 22px;border-radius:24px;gap:22px}
+  .count .big{font-size:28px}
+  .search{flex:1 1 100%;order:5}
+  .hero{padding:20px 16px 18px}
+  .hero::before{width:420px;height:420px;right:-160px;top:120px}
+  .hero-grid{grid-template-columns:1fr;min-height:0}
+  .pager{flex-direction:row;padding:0;order:2;margin:6px 0 2px;justify-content:flex-start}
+  .pager .rail{width:60px;height:1.5px;margin:0 4px}
+  .pager .rail i{height:100% !important}
+  .hero-text,.stage{display:contents}
+  .hot{order:1}.hero-brand{order:2;margin-top:22px}.hero h1{order:3}.hero .specline{order:4}
+  .float{order:5}.pager{order:6}.hero .pricebox{order:7}.budget{order:8}.hero .hero-act{order:9}
+  .callouts{order:10;margin-top:18px}
+  .hero h1{font-size:36px}
+  .float{position:relative;left:0;right:0;top:0;width:100%;margin:10px 0 0}
+  .leaders{display:none}
+  .marker-n{display:block}
+  .callouts{position:static;display:grid;grid-template-columns:1fr 1fr;gap:8px;pointer-events:auto}
+  .callout{position:static;width:auto;opacity:1;transform:none;background:var(--group);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;padding:10px 12px}
+  .callout:last-child{grid-column:1/-1}
+  .hero .hero-act{padding-top:16px}
+  .tiles{grid-template-columns:1fr}
+  .tile .art{width:64px;height:64px}
+  .weights{padding:18px 16px}
+  .wrow{grid-template-columns:80px minmax(0,1fr) 52px;gap:10px}
+  .wrow .lbl small{display:none}
+  .wrow output{font-size:20px}
+  .needs{padding:16px}
+  .tags{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr}
+  .srow{grid-template-columns:72px minmax(0,1fr);gap:12px}
+  .srow .th{height:54px}
+  .srow .rt{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
+  .stamp{display:none}
+  .lnk{padding:7px 0}
+  .callouts::before{content:"為什麼適合你";grid-column:1/-1;font:600 15px var(--display);margin:4px 2px 2px}
+  .ai-row{gap:8px}.ai-ava{width:28px;height:28px;font-size:17px}
+  .composer .btn-p .arw{display:none}.composer .btn-p{padding:0 18px}
+  .tile .art{width:52px;height:52px}
+  .stamp-m{display:block;margin:-2px 2px 2px;font:500 10.5px var(--mono);letter-spacing:.06em;color:var(--ink-2);text-align:right}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="navwrap">
+    <nav class="nav" aria-label="主導覽">
+      <div class="logo">筆電選購助手<i>.</i></div>
+      <button class="btn-s lg menu" id="histBtn" aria-expanded="false" aria-controls="histPop"><span class="bars" aria-hidden="true"></span><span class="lbl">對話紀錄</span><span class="sr">對話紀錄</span></button>
+      <span class="grow"></span>
+      <span class="stamp" aria-hidden="true"><b>精品標註</b>Boutique Callout</span>
+      <button class="btn-s ic lg" id="favNav" aria-label="收藏"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="badge" id="favN" data-n="0">0</span></button>
+      <button class="btn-s ic lg" id="cmpNav" aria-label="對比"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h11M4 7l3-3M4 7l3 3M20 17H9M20 17l-3-3M20 17l-3 3"/></svg><span class="badge" id="cmpN" data-n="0">0</span></button>
+      <button class="btn-p new" id="newChat"><span>＋ 新對話</span><span class="arw" aria-hidden="true">↗</span></button>
+    </nav>
+    <div class="pop" id="histPop" hidden>
+      <h4>最近的對話</h4>
+      <button class="cur">預算 4 萬，上課寫報告、每天背去學校<small>今天</small></button>
+      <button>我要剪 4K 影片，常用 Premiere Pro<small>昨天</small></button>
+      <button>想買一台打遊戲的筆電，3 萬 5 左右<small>11/14</small></button>
+      <button>給讀大學的弟弟買筆電，推薦嗎？<small>11/12</small></button>
+      <button>開會視訊哪台比較好？<small>11/09</small></button>
+    </div>
+  </div>
+
+  <div class="stamp-m" aria-hidden="true">精品標註 · Boutique Callout</div>
+  <div class="mtabs" role="tablist" aria-label="切換畫面">
+    <button role="tab" id="tabChat" aria-selected="false">對話</button>
+    <button role="tab" id="tabRes" aria-selected="true">機型 <span class="mono" style="font-size:12px">24</span></button>
+  </div>
+
+  <div class="shell">
+    <!-- ===== 對話欄 ===== -->
+    <section class="panel chat off" id="paneChat" aria-label="選購對話">
+      <header class="chat-head">
+        <div><span class="eyebrow">Conversation · 03</span><h2>選購對話</h2><p>直接說需求，說錯了隨時改</p></div>
+      </header>
+      <div class="chat-scroll" id="chatScroll">
+        <div class="msg msg-user"><div class="bubble">預算 4 萬，平常上課寫報告，偶爾剪 1080p 影片，每天要背去學校。</div></div>
+        <div class="msg ai-row">
+          <div class="ai-ava" aria-hidden="true">*</div>
+          <div class="ai-body">
+            <div class="heard">
+              <div class="eyebrow">這句話我聽到了</div>
+              <div class="htags"><span class="htag">預算 4 萬以內</span><span class="htag">每天背去學校</span><span class="htag">上課寫報告</span><span class="htag">偶爾剪 1080p</span><span class="htag">續航撐一整天</span></div>
+              <p class="delta">符合的機型從 <b>370</b> 台變成 <b>24</b> 台</p>
+            </div>
+            <p>你最在意的是「每天背著走」，所以我把<b>續航</b>和<b>重量</b>排在前面。目前最適合你的是這台：</p>
+            <article class="card rec">
+              <div class="rec-top">
+                <div class="rec-thumb" data-lap="zen"></div>
+                <div><div class="rec-rank">No.01 · 第 1 名</div><h3>ASUS Zenbook 14 OLED</h3><div class="rprice">NT$ 36,900</div></div>
+              </div>
+              <ul class="pc">
+                <li class="pro">續航 15.5 小時，候選第 2 名——上一整天課不用帶充電器</li>
+                <li class="pro">1.20 公斤，比候選平均輕 0.3 公斤</li>
+                <li class="con">效能 72 分，剪 1080p 沒問題，4K 會比較吃力</li>
+              </ul>
+              <div class="actions">
+                <button class="btn-s" data-fav="zen" aria-pressed="false">♡ 收藏</button>
+                <button class="btn-s" data-cmp="zen" aria-pressed="false">＋ 加入對比</button>
+                <button class="lnk quiet" data-off="zen">不考慮這台</button>
+              </div>
+            </article>
+            <article class="card ask" id="askCard">
+              <p class="quote">你剛剛說：「偶爾剪 1080p 影片」</p>
+              <h3>你剪片大概多常？</h3>
+              <p class="why">剪得越多，效能的比重就會調得越高。</p>
+              <div class="opts" id="opts">
+                <button class="opt" aria-pressed="false" data-perf="9"><span><b>每週好幾次</b><small>社團、作業都要剪</small></span><span class="go" aria-hidden="true">→</span></button>
+                <button class="opt" aria-pressed="false" data-perf="5"><span><b>一個月幾次</b><small>偶爾剪剪 Vlog</small></span><span class="go" aria-hidden="true">→</span></button>
+                <button class="opt" aria-pressed="false" data-perf="2"><span><b>幾乎不剪</b><small>主要寫報告</small></span><span class="go" aria-hidden="true">→</span></button>
+                <button class="opt" aria-pressed="false" data-perf="4"><span><b>不確定</b><small>你先幫我假設</small></span><span class="go" aria-hidden="true">→</span></button>
+              </div>
+              <div class="skip"><button class="lnk">跳過這題</button><button class="lnk">直接看建議</button></div>
+              <p class="note" id="askNote" hidden></p>
+            </article>
+            <div class="fb">這次推薦對你有幫助嗎？
+              <button class="btn-s" data-fb aria-pressed="false">有幫助</button>
+              <button class="btn-s" data-fb aria-pressed="false">沒幫助</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form class="composer" id="composer">
+        <label class="sr" for="say">輸入你的需求</label>
+        <textarea id="say" rows="1" placeholder="例如：預算 5 萬，剪片，每天背去上課"></textarea>
+        <button class="btn-p" type="submit"><span>送出</span><span class="arw" aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+
+    <!-- ===== 結果區 ===== -->
+    <main class="panel results" id="paneRes">
+      <div class="toolbar">
+        <div class="count"><span class="big">24</span><span class="meta">台完全符合（主候選池）<br>另有次候選池 3 台 · 全部 370 台</span></div>
+        <label class="search"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg><span class="sr">搜尋機型</span><input id="q" placeholder="搜尋機型、品牌"></label>
+        <span class="sel"><label class="sr" for="sort">排序</label><select id="sort"><option value="fit">按合適程度</option><option value="pa">價格低到高</option><option value="pd">價格高到低</option><option value="kg">重量輕到重</option></select></span>
+        <button class="btn-s lg" id="filterBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg>篩選</button>
+        <button class="btn-p" id="wBtn" aria-expanded="true" aria-controls="weights"><span>權重</span><span class="arw" aria-hidden="true">↘</span></button>
+      </div>
+
+      <!-- 招牌：第一名大焦點 -->
+      <section class="card hero" aria-labelledby="heroName">
+        <div class="hero-grid">
+          <div class="pager" aria-label="前三名切換">
+            <button data-i="0" aria-current="true" aria-label="看第 1 名">1</button>
+            <button data-i="1" aria-current="false" aria-label="看第 2 名">2</button>
+            <button data-i="2" aria-current="false" aria-label="看第 3 名">3</button>
+            <div class="rail" aria-hidden="true"><i id="railFill" style="height:33%"></i></div>
+            <span class="idx" id="pagerIdx">01</span>
+          </div>
+          <div class="hero-text">
+            <div class="hot"><span class="ast" aria-hidden="true">*</span><div><b id="heroRank">第 1 名 · 最符合你</b><small>依你說的 5 項需求和目前權重</small></div></div>
+            <div class="hero-brand eyebrow" id="heroBrand">ASUS</div>
+            <h1 id="heroName">Zenbook 14 OLED</h1>
+            <p class="specline" id="heroSpec"></p>
+            <div class="pricebox">
+              <div class="price"><small>售價</small><span id="heroPrice"></span></div>
+              <div class="fit"><small>符合度</small><span id="heroFit"></span></div>
+            </div>
+            <p class="budget" id="heroBudget"></p>
+            <div class="hero-act">
+              <button class="btn-s lg" id="heroFav" aria-pressed="false">♡ 收藏</button>
+              <button class="btn-s lg" id="heroCmp" aria-pressed="false">＋ 加入對比</button>
+              <button class="lnk quiet" id="heroOff">不考慮這台</button>
+            </div>
+          </div>
+          <div class="stage" id="stage">
+            <svg class="leaders" id="leaders" aria-hidden="true"></svg>
+            <div class="float" id="heroLap"></div>
+            <div class="callouts" id="callouts" aria-label="為什麼適合你"></div>
+          </div>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <div class="tx"><h3>跟第 2 名比</h3><p id="tileCmp"></p></div>
+            <svg class="art" viewBox="0 0 84 84" aria-hidden="true"><rect x="10" y="22" width="44" height="30" rx="4" fill="#B7C1D3"/><rect x="13" y="25" width="38" height="24" rx="2" fill="#5D6E95"/><rect x="4" y="52" width="56" height="5" rx="2.5" fill="#9AA5BA"/><rect x="30" y="32" width="44" height="30" rx="4" fill="#E2E7F0"/><rect x="33" y="35" width="38" height="24" rx="2" fill="#2E3F86"/><circle cx="58" cy="44" r="7" fill="#8DB2FF" opacity=".8"/><rect x="24" y="62" width="56" height="5" rx="2.5" fill="#C9D0DD"/></svg>
+            <button class="circ" aria-label="看完整比較">↗</button>
+          </div>
+          <div class="tile">
+            <div class="tx"><h3>AI 小提醒</h3><p id="tileTip"></p></div>
+            <div class="art orb" aria-hidden="true"></div>
+            <button class="circ" aria-label="看更多提醒">↗</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 我聽到的需求 -->
+      <section class="card needs" aria-labelledby="needsH">
+        <div class="sec-h"><div><span class="eyebrow">Heard · 5</span><h2 id="needsH">我聽到的需求</h2><p>說錯了可以直接改；圓點顏色是我覺得你多在意</p></div></div>
+        <div class="tags" id="tags">
+          <div class="tag"><div class="row"><i class="dot hi"></i><b>預算 4 萬以內</b><button class="lnk">修改</button><button class="lnk quiet" data-del>刪除</button></div><small>我聽到的：「預算 4 萬」</small></div>
+          <div class="tag"><div class="row"><i class="dot hi"></i><b>每天背去學校</b><button class="lnk">修改</button><button class="lnk quiet" data-del>刪除</button></div><small>我聽到的：「每天要背去學校」</small></div>
+          <div class="tag"><div class="row"><i class="dot mid"></i><b>續航撐一整天</b><button class="lnk">修改</button><button class="lnk quiet" data-del>刪除</button></div><small>從「每天背去學校」推的</small></div>
+          <div class="tag"><div class="row"><i class="dot mid"></i><b>偶爾剪 1080p 影片</b><button class="lnk">修改</button><button class="lnk quiet" data-del>刪除</button></div><small>我聽到的：「偶爾剪 1080p 影片」</small></div>
+          <div class="tag"><div class="row"><i class="dot lo"></i><b>上課寫報告</b><button class="lnk">修改</button><button class="lnk quiet" data-del>刪除</button></div><small>我聽到的：「平常上課寫報告」</small></div>
+        </div>
+      </section>
+
+      <!-- 招牌二：權重 -->
+      <section class="card weights" id="weights" aria-labelledby="wH">
+        <div class="sec-h"><div><span class="eyebrow">Weights · 你的考量</span><h2 id="wH">你的權重</h2><p>拖動滑桿，右邊的排名會跟著變</p></div><button class="lnk" id="wReset">恢復成我猜的</button></div>
+        <div class="wgrid">
+          <div>
+            <div class="share" id="share" aria-hidden="true"></div>
+            <div id="wrows"></div>
+          </div>
+          <div class="live">
+            <span class="eyebrow">Live · 排名即時預覽</span>
+            <ol id="liveList"></ol>
+            <p class="say" id="liveSay"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 候選卡 -->
+      <section aria-labelledby="gridH">
+        <div class="sec-h"><div><span class="eyebrow">Main pool · 主候選池</span><h2 id="gridH">完全符合的 24 台</h2></div><span class="eyebrow" id="sortLbl">按合適程度</span></div>
+        <div class="grid" id="grid"></div>
+        <div class="more"><button class="btn-s lg">再顯示 18 台</button></div>
+      </section>
+
+      <!-- 次候選池 -->
+      <section class="card pool2" aria-labelledby="p2H">
+        <div class="sec-h"><div><span class="eyebrow">Second pool · 次候選池</span><h2 id="p2H" style="font-size:20px">差一點點的 3 台</h2><p>不完全符合，但某些地方很強；原因標在下面</p></div><button class="lnk">看全部</button></div>
+        <div class="sub" id="sub"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BUDGET = 40000;
+const DIMS = [
+  {k:'perf',  n:'效能', d:'剪片、多開', c:'#12151C'},
+  {k:'batt',  n:'續航', d:'不插電多久', c:'#2340C4'},
+  {k:'light', n:'輕便', d:'重量、厚度', c:'#6F8BEA'},
+  {k:'screen',n:'螢幕', d:'色彩、解析度', c:'#F0602A'},
+  {k:'price', n:'價格', d:'越便宜越好', c:'#B4BCCB'},
+];
+const W0 = {perf:4,batt:6,light:5,screen:3,price:2};
+let W = {...W0};
+
+const THEME = {
+  zen:   {b1:'#E3E8F2',b2:'#A9B4C9',f:'#98A4BA',k:'#B7C0D0',w1:'#0E1B45',w2:'#5B86FF',w3:'#C8D8FF'},
+  mac:   {b1:'#E4ECF3',b2:'#B4C4D4',f:'#A3B3C4',k:'#C1CCD8',w1:'#152238',w2:'#3FB6C9',w3:'#B6F0E9'},
+  hp:    {b1:'#EEEEEF',b2:'#C2C4C9',f:'#B1B4BA',k:'#CDD0D5',w1:'#2B1630',w2:'#F28A5B',w3:'#FFD9A8'},
+  msi:   {b1:'#8E949F',b2:'#5A606B',f:'#4D525C',k:'#3D424B',w1:'#130F2C',w2:'#8366F0',w3:'#D9CCFF'},
+  acer:  {b1:'#E6E8EC',b2:'#B9BEC7',f:'#A9AEB8',k:'#C6CAD2',w1:'#0C2622',w2:'#2FA88B',w3:'#BFF2DF'},
+  legion:{b1:'#454952',b2:'#202329',f:'#1A1C21',k:'#121418',w1:'#1A0A05',w2:'#F0602A',w3:'#FFC59E',glow:'#F0602A'},
+  xps:   {b1:'#5B6069',b2:'#33373E',f:'#2C2F35',k:'#24272C',w1:'#0A1320',w2:'#4C7BD9',w3:'#C4D6FF'},
+  yoga:  {b1:'#D9DEE8',b2:'#9EA8BB',f:'#8E98AB',k:'#AEB6C6',w1:'#101B33',w2:'#7AA2F7',w3:'#E3ECFF'},
+  g14:   {b1:'#6B7079',b2:'#3D4148',f:'#33363C',k:'#2A2D33',w1:'#160A1E',w2:'#D24D8A',w3:'#FFC6E0',glow:'#D24D8A'},
+};
+
+const L = [
+ {id:'zen',brand:'ASUS',name:'Zenbook 14 OLED',cpu:'Intel Core Ultra 7 155H',ram:'16GB',ssd:'1TB',scr:'14 吋 2.8K OLED 120Hz',scrS:'2.8K OLED',scrWhy:'寫報告看字銳利，剪片調色也準',kg:1.20,hrs:15.5,perf:72,price:36900,
+  s:{perf:72,batt:92,light:88,screen:94,price:74},ports:'雙 Thunderbolt 4＋HDMI',portsWhy:'上課接投影不用帶轉接頭',best:'OLED 螢幕',
+  tip:'OLED 長時間顯示同一個畫面有輕微烙印風險，建議把工作列設成自動隱藏。'},
+ {id:'mac',brand:'Apple',name:'MacBook Air 13 M4',cpu:'Apple M4 10 核心',ram:'16GB',ssd:'256GB',scr:'13.6 吋 Liquid Retina',scrS:'13.6 吋 Retina',scrWhy:'亮度高，教室窗邊也看得清楚',kg:1.24,hrs:14.5,perf:80,price:35900,
+  s:{perf:80,batt:90,light:87,screen:80,price:70},ports:'雙 Thunderbolt 4',portsWhy:'接投影要另外買轉接頭',best:'效能',
+  tip:'256GB 放 1080p 素材大約一學期就滿，可以考慮加購外接硬碟。'},
+ {id:'hp',brand:'HP',name:'OmniBook X 14',cpu:'Snapdragon X Elite',ram:'16GB',ssd:'1TB',scr:'14 吋 2.2K IPS',scrS:'2.2K IPS',scrWhy:'霧面不反光，但色彩普通',kg:1.35,hrs:18,perf:70,price:34900,
+  s:{perf:70,batt:96,light:80,screen:72,price:76},ports:'雙 USB-C＋USB-A',portsWhy:'沒有 HDMI，接投影要轉接',best:'續航 18 小時',
+  tip:'ARM 處理器，部分學校指定的考試軟體可能不能裝，買前先問老師。'},
+ {id:'msi',brand:'MSI',name:'Prestige 13 AI+',cpu:'Intel Core Ultra 7 258V',ram:'32GB',ssd:'1TB',scr:'13.3 吋 2.8K OLED',scrS:'2.8K OLED',scrWhy:'小而銳利，色彩鮮豔',kg:0.99,hrs:12,perf:68,price:38900,
+  s:{perf:68,batt:76,light:98,screen:88,price:66},ports:'雙 Thunderbolt 4＋HDMI',portsWhy:'接投影不用轉接',best:'最輕 0.99 kg',
+  tip:'機身很輕，但鍵盤鍵程偏短，打長篇報告前最好去門市試打。'},
+ {id:'acer',brand:'Acer',name:'Swift Go 14',cpu:'Intel Core Ultra 5 125H',ram:'16GB',ssd:'512GB',scr:'14 吋 2.8K OLED 90Hz',scrS:'2.8K OLED',scrWhy:'價格不高也有 OLED',kg:1.32,hrs:12,perf:66,price:29900,
+  s:{perf:66,batt:78,light:82,screen:86,price:90},ports:'雙 Thunderbolt 4＋HDMI',portsWhy:'接投影不用轉接',best:'最便宜',
+  tip:'512GB 容量對剪片偏少，若預算還有空間可以升級 1TB 版本。'},
+ {id:'legion',brand:'Lenovo',name:'Legion 5 Gen 9',cpu:'Intel Core i7-14650HX',ram:'16GB',ssd:'1TB',scr:'16 吋 2.5K 165Hz',scrS:'2.5K 165Hz',scrWhy:'大螢幕剪片時間軸好拉',kg:2.40,hrs:5,perf:95,price:39990,
+  s:{perf:95,batt:35,light:30,screen:84,price:72},ports:'HDMI＋USB-C＋RJ45',portsWhy:'接孔最齊全',best:'效能 95',
+  tip:'2.4 公斤加上大變壓器，每天背的話肩膀會很有感。'},
+];
+const SUB = [
+ {id:'yoga',name:'Lenovo Yoga Slim 7i Aura',price:41900,why:'超出預算 NT$ 1,900',sp:'1.28 kg · 續航 17 小時 · 2.8K OLED'},
+ {id:'xps',name:'Dell XPS 13 (9350)',price:45900,why:'超出預算 NT$ 5,900',sp:'1.19 kg · 續航 16 小時 · 你可能會很喜歡它的質感'},
+ {id:'g14',name:'ASUS ROG Zephyrus G14',price:52900,why:'超出預算 NT$ 12,900，而且 1.5 kg 偏重',sp:'RTX 4060 · 效能 92 · 剪 4K 很順'},
+];
+const byId = id => L.find(x => x.id === id);
+const fmt = n => 'NT$ ' + n.toLocaleString('en-US');
+const avgKg = L.reduce((a,b)=>a+b.kg,0)/L.length;
+
+/* ---------- 懸浮筆電（SVG 畫，雙線性內插出鍵盤） ---------- */
+const P = {FL:[60,318],FR:[392,398],BR:[540,292],BL:[208,230]};
+const UP = [30,-212], T = 13;
+const add = (a,b) => [a[0]+b[0],a[1]+b[1]];
+const TL = add(P.BL,UP), TR = add(P.BR,UP);
+const DECK = [P.FL,P.FR,P.BR,P.BL], LID = [P.BL,P.BR,TR,TL];
+function bil(q,u,v){const[a,b,c,d]=q;return[(1-u)*(1-v)*a[0]+u*(1-v)*b[0]+u*v*c[0]+(1-u)*v*d[0],(1-u)*(1-v)*a[1]+u*(1-v)*b[1]+u*v*c[1]+(1-u)*v*d[1]]}
+const pts = a => a.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+function quad(q,u0,v0,u1,v1){return pts([bil(q,u0,v0),bil(q,u1,v0),bil(q,u1,v1),bil(q,u0,v1)])}
+let uid = 0;
+const ANCH = {
+  screen: bil(LID,.74,.72),
+  perf:   bil(DECK,.62,.6),
+  batt:   bil(DECK,.12,.66),
+  weight: [P.FL[0]+(P.FR[0]-P.FL[0])*.4,P.FL[1]+(P.FR[1]-P.FL[1])*.4+T/2],
+  ports:  [P.FR[0]+(P.BR[0]-P.FR[0])*.5,P.FR[1]+(P.BR[1]-P.FR[1])*.5+T/2],
+};
+function laptop(id,{markers=false,shadow=true,callout=null}={}){
+  const t = THEME[id], u = 'g'+(++uid);
+  let keys = '';
+  const cols = 13, rows = 5, u0=.08,u1=.92,v0=.5,v1=.92;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const du=(u1-u0)/cols, dv=(v1-v0)/rows;
+    let a=u0+c*du+du*.12, b=u0+(c+1)*du-du*.12;
+    if(r===0 && c>3 && c<9){ if(c!==4) continue; b=u0+9*du-du*.12; }
+    keys += `<polygon points="${quad(DECK,a,v0+r*dv+dv*.16,b,v0+(r+1)*dv-dv*.16)}" fill="${t.k}"/>`;
+  }
+  const glow = t.glow ? `<polygon points="${quad(DECK,.07,.48,.93,.94)}" fill="${t.glow}" opacity=".22" filter="url(#${u}b)"/>` : '';
+  const frontFace = pts([P.FL,P.FR,add(P.FR,[0,T]),add(P.FL,[0,T])]);
+  const sideFace = pts([P.FR,P.BR,add(P.BR,[0,T]),add(P.FR,[0,T])]);
+  const portA = [0.3,0.45,0.6].map(f=>{const x=P.FR[0]+(P.BR[0]-P.FR[0])*f,y=P.FR[1]+(P.BR[1]-P.FR[1])*f;return `<polygon points="${pts([[x,y+4],[x+12,y-4.6],[x+12,y+2.4],[x,y+11]])}" fill="#2A2F3A" opacity=".55"/>`}).join('');
+  let mk = '';
+  if(markers){
+    ['batt','weight','screen','ports','perf'].forEach((k,i)=>{const [x,y]=ANCH[k];
+      mk += `<g class="anchor" data-a="${k}"><circle cx="${x}" cy="${y}" r="4" fill="#12151C"/><g class="marker-n"><circle cx="${x}" cy="${y}" r="15" fill="#12151C" stroke="#fff" stroke-width="3"/><text x="${x}" y="${y+5.5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="15" font-weight="600" fill="#fff">${i+1}</text></g></g>`;});
+  }
+  let co = '';
+  if(callout){
+    const a0 = bil(LID,.2,.8), a = [60+a0[0]*.88, 34+a0[1]*.88], fs = 33;
+    const tw = [...callout].reduce((n,ch)=>n+(/[\u2E80-\uFFFF]/.test(ch)?fs:ch===' '?fs*.3:fs*.6),0), bw = Math.round(tw+36);
+    co = `<g><rect x="8" y="12" width="${bw}" height="54" rx="16" fill="#fff"/>
+      <circle cx="26" cy="39" r="5" fill="#F0602A"/>
+      <text x="40" y="48" font-family="Inter,PingFang TC,Noto Sans TC,sans-serif" font-size="${fs}" font-weight="600" fill="#12151C">${callout}</text>
+      <path d="M${bw+8} 39 H ${a[0]-22} Q ${a[0]-12} 39 ${a[0]-6} ${a[1]-8} L ${a[0]} ${a[1]}" fill="none" stroke="#12151C" stroke-width="2"/>
+      <circle cx="${a[0]}" cy="${a[1]}" r="7" fill="rgba(255,255,255,.7)" stroke="#12151C" stroke-width="2"/><circle cx="${a[0]}" cy="${a[1]}" r="2.6" fill="#12151C"/></g>`;
+  }
+  return `<svg viewBox="0 0 600 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="示意圖">
+  <defs>
+    <linearGradient id="${u}d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${t.b1}"/><stop offset="1" stop-color="${t.b2}"/></linearGradient>
+    <linearGradient id="${u}l" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${t.b2}"/><stop offset=".6" stop-color="${t.b1}"/></linearGradient>
+    <radialGradient id="${u}w" cx=".62" cy=".42" r=".75"><stop offset="0" stop-color="${t.w3}"/><stop offset=".28" stop-color="${t.w2}"/><stop offset="1" stop-color="${t.w1}"/></radialGradient>
+    <radialGradient id="${u}o" cx=".3" cy=".75" r=".5"><stop offset="0" stop-color="${t.w3}" stop-opacity=".55"/><stop offset="1" stop-color="${t.w2}" stop-opacity="0"/></radialGradient>
+    <filter id="${u}s" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="${u}b" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs>
+  <g ${callout?'transform="translate(60 34) scale(.88)"':''}>
+  ${shadow?`<ellipse class="shd" cx="318" cy="424" rx="230" ry="13" fill="#1B2440" opacity=".22" filter="url(#${u}s)"/>`:''}
+  <polygon points="${pts(LID)}" fill="url(#${u}l)"/>
+  <polygon points="${quad(LID,.018,.02,.982,.985)}" fill="#0B0E14"/>
+  <polygon points="${quad(LID,.04,.07,.96,.95)}" fill="url(#${u}w)"/>
+  <polygon points="${quad(LID,.04,.07,.96,.95)}" fill="url(#${u}o)"/>
+  <polygon points="${pts([bil(LID,.04,.95),bil(LID,.5,.95),bil(LID,.3,.07),bil(LID,.04,.07)])}" fill="#fff" opacity=".07"/>
+  <polygon points="${quad(LID,.47,.965,.53,.975)}" fill="#3A404C"/>
+  <polygon points="${sideFace}" fill="${t.f}" opacity=".85"/>
+  ${portA}
+  <polygon points="${frontFace}" fill="${t.f}"/>
+  <polygon points="${pts(DECK)}" fill="url(#${u}d)"/>
+  <polygon points="${quad(DECK,0,.97,1,1)}" fill="${t.b2}" opacity=".7"/>
+  ${glow}${keys}
+  <polygon points="${quad(DECK,.35,.08,.65,.42)}" fill="${t.k}" opacity=".55"/>
+  <polyline points="${pts([P.FL,P.FR,P.BR])}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.2"/>
+  ${mk}</g>${co}
+</svg>`;
+}
+
+/* ---------- 計分 ---------- */
+function score(l,w=W){let t=0,s=0;for(const d of DIMS){t+=w[d.k];s+=w[d.k]*l.s[d.k]}return t?s/t:0}
+const offSet = new Set();
+function ranked(w=W){return [...L].filter(l=>!offSet.has(l.id)).sort((a,b)=>score(b,w)-score(a,w))}
+const baseRank = ranked(W0).map(l=>l.id);
+
+/* ---------- 收藏／對比狀態 ---------- */
+const fav = new Set(), cmp = new Set();
+function syncToggles(){
+  document.querySelectorAll('[data-fav]').forEach(b=>{const on=fav.has(b.dataset.fav);b.setAttribute('aria-pressed',on);b.textContent=on?'♥ 已收藏':'♡ 收藏'});
+  document.querySelectorAll('[data-cmp]').forEach(b=>{const on=cmp.has(b.dataset.cmp);b.setAttribute('aria-pressed',on);b.textContent=on?'✓ 對比中':'＋ 加入對比'});
+  const h = current(); heroFav.setAttribute('aria-pressed',fav.has(h.id)); heroFav.textContent = fav.has(h.id)?'♥ 已收藏':'♡ 收藏';
+  heroCmp.setAttribute('aria-pressed',cmp.has(h.id)); heroCmp.textContent = cmp.has(h.id)?'✓ 對比中':'＋ 加入對比';
+  favN.textContent=fav.size; favN.dataset.n=fav.size; cmpN.textContent=cmp.size; cmpN.dataset.n=cmp.size;
+}
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-fav]'); if(f){const id=f.dataset.fav;fav.has(id)?fav.delete(id):fav.add(id);syncToggles();return}
+  const c=e.target.closest('[data-cmp]'); if(c){const id=c.dataset.cmp;cmp.has(id)?cmp.delete(id):cmp.add(id);syncToggles();return}
+  const o=e.target.closest('[data-off]'); if(o){toggleOff(o.dataset.off);return}
+});
+function toggleOff(id){offSet.has(id)?offSet.delete(id):offSet.add(id);heroIdx=0;rerank();}
+
+/* ---------- 焦點區 ---------- */
+let heroIdx = 0;
+const $ = id => document.getElementById(id);
+const heroFav=$('heroFav'),heroCmp=$('heroCmp'),favN=$('favN'),cmpN=$('cmpN');
+function current(){return ranked()[heroIdx]}
+function callouts(l){
+  const wDiff = avgKg - l.kg;
+  return [
+    {a:'batt',b:`續航 ${l.hrs} 小時`,s:l.hrs>=12?'每天背去學校，整天不用帶充電器':'上課要記得帶充電器'},
+    {a:'weight',b:`${l.kg.toFixed(2)} 公斤`,s:wDiff>=0?`比候選平均輕 ${wDiff.toFixed(2)} 公斤`:`比候選平均重 ${(-wDiff).toFixed(2)} 公斤`},
+    {a:'screen',b:l.scrS+' 螢幕',s:l.scrWhy},
+    {a:'ports',b:l.ports,s:l.portsWhy},
+    {a:'perf',b:`效能 ${l.perf} 分`,s:l.perf>=85?'剪 4K 也很順':l.perf>=65?'剪 1080p 綽綽有餘':'剪片會有點吃力'},
+  ];
+}
+function compareText(a,b){
+  const bits=[]; const dp=b.price-a.price, dperf=b.perf-a.perf, dkg=b.kg-a.kg, dh=b.hrs-a.hrs;
+  if(dp<0)bits.push(`便宜 NT$ ${(-dp).toLocaleString('en-US')}`);
+  if(dperf>0)bits.push(`效能高 ${dperf} 分`);
+  if(dkg<0)bits.push(`輕 ${(-dkg).toFixed(2)} 公斤`);
+  if(dh>0)bits.push(`續航多 ${dh} 小時`);
+  const cons=[]; if(dp>0)cons.push(`貴 NT$ ${dp.toLocaleString('en-US')}`); if(dh<0)cons.push(`續航少 ${(-dh)} 小時`); if(dkg>0)cons.push(`重 ${dkg.toFixed(2)} 公斤`); if(dperf<0)cons.push(`效能低 ${-dperf} 分`);
+  return `${b.brand} ${b.name}${bits.length?'：'+bits.slice(0,2).join('、'):''}${cons.length?'；但'+cons.slice(0,2).join('、'):''}。`;
+}
+let lastHero = null;
+function renderHero(force){
+  const R = ranked(), l = R[heroIdx], other = R[heroIdx===0?1:0];
+  $('heroRank').textContent = heroIdx===0 ? '第 1 名 · 最符合你' : `第 ${heroIdx+1} 名`;
+  $('heroBrand').textContent = l.brand;
+  $('heroName').textContent = l.name;
+  $('heroSpec').textContent = `${l.cpu} · ${l.ram} · ${l.ssd} · ${l.scr}`;
+  $('heroPrice').textContent = fmt(l.price);
+  $('heroFit').innerHTML = `${Math.round(score(l))}<em> / 100</em>`;
+  const left = BUDGET - l.price, bud = $('heroBudget');
+  bud.textContent = left>=0 ? `✓ 在預算內，還剩 NT$ ${left.toLocaleString('en-US')}` : `超出預算 NT$ ${(-left).toLocaleString('en-US')}`;
+  bud.classList.toggle('over',left<0);
+  $('tileCmp').textContent = (heroIdx===0?'':'跟第 1 名比——')+compareText(l,other);
+  $('tileCmp').previousElementSibling.textContent = heroIdx===0?'跟第 2 名比':'跟第 1 名比';
+  $('tileTip').textContent = l.tip;
+  heroFav.dataset.fav = l.id; heroCmp.dataset.cmp = l.id; $('heroOff').dataset.off = l.id;
+  document.querySelectorAll('.pager button').forEach(b=>b.setAttribute('aria-current',+b.dataset.i===heroIdx));
+  $('pagerIdx').textContent = '0'+(heroIdx+1); $('railFill').style.height = ((heroIdx+1)/3*100)+'%';
+  if(lastHero!==l.id || force){
+    lastHero = l.id;
+    $('heroLap').innerHTML = laptop(l.id,{markers:true});
+    const box = $('callouts');
+    box.innerHTML = callouts(l).map((c,i)=>`<div class="callout co${i+1}" data-a="${c.a}"><span class="n">0${i+1}</span><b>${c.b}</b><span>${c.s}</span></div>`).join('');
+    [...box.children].forEach((el,i)=>RM?el.classList.add('in'):setTimeout(()=>el.classList.add('in'),120+i*90));
+  }
+  syncToggles();
+}
+document.querySelectorAll('.pager button').forEach(b=>b.addEventListener('click',()=>{heroIdx=+b.dataset.i;renderHero()}));
+
+/* 引線：從標註框拉到筆電上的點，跟著懸浮一起動 */
+const stage=$('stage'), leaders=$('leaders'), lap=$('heroLap');
+function drawLeaders(){
+  if(getComputedStyle(leaders).display==='none'){return}
+  const sr = stage.getBoundingClientRect(); let h='';
+  stage.querySelectorAll('.callout').forEach(co=>{
+    const an = lap.querySelector(`.anchor[data-a="${co.dataset.a}"] > circle`); if(!an) return;
+    const ar = an.getBoundingClientRect(), cr = co.getBoundingClientRect();
+    const ax = ar.left+ar.width/2-sr.left, ay = ar.top+ar.height/2-sr.top;
+    const L0=cr.left-sr.left, R0=cr.right-sr.left, T0=cr.top-sr.top, B0=cr.bottom-sr.top, r=10;
+    let d;
+    if(ax>R0+16 || ax<L0-16){            /* 從左右邊水平拉出，再轉彎 */
+      const right = ax>R0, sx = right?R0:L0, sy=(T0+B0)/2;
+      const kx = sx + (right?1:-1)*Math.min(30,Math.abs(ax-sx)*.45);
+      const dx=ax-kx, dy=ay-sy, len=Math.hypot(dx,dy)||1;
+      d = `M${sx} ${sy} H${kx-(right?r:-r)} Q${kx} ${sy} ${kx+dx/len*r} ${sy+dy/len*r} L${ax} ${ay}`;
+    } else {                              /* 錨點在正上／下方：從上下邊垂直拉出 */
+      const down = ay>B0, sy = down?B0:T0, sx = Math.min(Math.max(ax,L0+22),R0-22);
+      const ky = sy + (down?1:-1)*Math.min(26,Math.abs(ay-sy)*.45);
+      const dx=ax-sx, dy=ay-ky, len=Math.hypot(dx,dy)||1;
+      d = `M${sx} ${sy} V${ky-(down?r:-r)} Q${sx} ${ky} ${sx+dx/len*r} ${ky+dy/len*r} L${ax} ${ay}`;
+    }
+    h += `<path d="${d}"/><circle class="ring" cx="${ax}" cy="${ay}" r="7"/><circle class="dot" cx="${ax}" cy="${ay}" r="2.6"/>`;
+  });
+  leaders.innerHTML = h;
+}
+let t0 = performance.now();
+function tick(now){
+  const y = RM?0:Math.sin((now-t0)/1100)*7, rot = RM?0:Math.sin((now-t0)/1700)*.6;
+  lap.style.transform = `translateY(${y}px) rotate(${rot}deg)`;
+  const shd = lap.querySelector('.shd'); if(shd) shd.setAttribute('opacity',(.22 - y*.008).toFixed(3));
+  drawLeaders();
+  if(!RM) requestAnimationFrame(tick);
+}
+addEventListener('resize',drawLeaders);
+
+/* ---------- 候選卡網格（FLIP 換位） ---------- */
+const grid=$('grid');
+function cardHTML(l){
+  return `<article class="card lc" data-id="${l.id}">
+    <div class="photo">${laptop(l.id,{callout:l.best})}<span class="rk">No.0X</span><span class="ft">符合 <span class="fv"></span></span></div>
+    <div class="bd"><span class="brand">${l.brand}</span><h3>${l.name}</h3>
+      <ul class="specs"><li><span>重量</span><i></i><b>${l.kg.toFixed(2)} kg</b></li><li><span>續航</span><i></i><b>${l.hrs} 小時</b></li><li><span>螢幕</span><i></i><b>${l.scrS}</b></li><li><span>效能</span><i></i><b>${l.perf} 分</b></li></ul>
+      <div class="pr"><strong>${fmt(l.price)}</strong><small>${l.price<=BUDGET?'預算內':'超出預算'}</small></div>
+      <div class="actions"><button class="btn-s" data-fav="${l.id}" aria-pressed="false">♡ 收藏</button><button class="btn-s" data-cmp="${l.id}" aria-pressed="false">＋ 加入對比</button><button class="lnk quiet" data-off="${l.id}">不考慮</button></div>
+    </div></article>`;
+}
+grid.innerHTML = L.map(cardHTML).join('');
+function sortList(){
+  const v=$('sort').value, q=$('q').value.trim().toLowerCase();
+  let arr=[...L].sort((a,b)=>score(b)-score(a));
+  if(v==='pa')arr.sort((a,b)=>a.price-b.price); if(v==='pd')arr.sort((a,b)=>b.price-a.price); if(v==='kg')arr.sort((a,b)=>a.kg-b.kg);
+  arr.sort((a,b)=>offSet.has(a.id)-offSet.has(b.id));
+  return {arr,q};
+}
+function layoutGrid(){
+  const {arr,q} = sortList(); const R = ranked();
+  const first = new Map([...grid.children].map(el=>[el,el.getBoundingClientRect()]));
+  arr.forEach(l=>{
+    const el = grid.querySelector(`[data-id="${l.id}"]`); grid.appendChild(el);
+    const off = offSet.has(l.id); el.classList.toggle('off',off);
+    el.hidden = q && !(l.brand+' '+l.name).toLowerCase().includes(q);
+    const r = R.findIndex(x=>x.id===l.id);
+    el.querySelector('.rk').textContent = off?'不考慮':'No.'+String(r+1).padStart(2,'0');
+    el.querySelector('.fv').textContent = Math.round(score(l));
+    el.querySelector('[data-off]').textContent = off?'復原':'不考慮';
+  });
+  if(RM) return;
+  [...grid.children].forEach(el=>{const a=first.get(el),b=el.getBoundingClientRect();if(!a)return;const dx=a.left-b.left,dy=a.top-b.top;if(!dx&&!dy)return;
+    el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.7,.2,1)'});});
+}
+$('sort').addEventListener('change',()=>{$('sortLbl').textContent=$('sort').selectedOptions[0].text;layoutGrid()});
+$('q').addEventListener('input',layoutGrid);
+
+/* ---------- 權重 ---------- */
+const wrows=$('wrows');
+wrows.innerHTML = DIMS.map(d=>`<div class="wrow"><label class="lbl" for="w-${d.k}"><b><i style="background:${d.c}"></i>${d.n}</b><small>${d.d}</small></label>
+  <input type="range" id="w-${d.k}" min="0" max="10" step="1" value="${W[d.k]}" data-k="${d.k}"><output id="o-${d.k}"></output></div>`).join('');
+function renderWeights(){
+  const tot = DIMS.reduce((a,d)=>a+W[d.k],0)||1;
+  DIMS.forEach(d=>{const inp=$('w-'+d.k); inp.value=W[d.k]; inp.style.setProperty('--p',W[d.k]*10+'%'); $('o-'+d.k).innerHTML=`${Math.round(W[d.k]/tot*100)}<small>%</small>`;});
+  $('share').innerHTML = DIMS.map(d=>`<i style="width:${W[d.k]/tot*100}%;background:${d.c}"></i>`).join('');
+  const R = ranked().slice(0,3);
+  $('liveList').innerHTML = R.map((l,i)=>{const b=baseRank.indexOf(l.id), mv=b-i;
+    return `<li><span class="r">${i+1}</span><span class="th">${laptop(l.id,{shadow:false})}</span><span class="nm">${l.brand} ${l.name}<small>符合 ${Math.round(score(l))}</small></span><span class="mv ${mv>0?'up':mv<0?'dn':'eq'}">${mv>0?'↑ '+mv:mv<0?'↓ '+(-mv):'— 持平'}</span></li>`}).join('');
+  const top = DIMS.slice().sort((a,b)=>W[b.k]-W[a.k]).slice(0,2).map(d=>d.n);
+  $('liveSay').textContent = `你現在最看重「${top[0]}」和「${top[1]}」。第 1 名是 ${R[0].brand} ${R[0].name}。`;
+}
+function rerank(){renderWeights();layoutGrid();renderHero()}
+wrows.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;W[k]=+e.target.value;rerank()});
+$('wReset').addEventListener('click',()=>{W={...W0};rerank()});
+$('wBtn').addEventListener('click',()=>{const ws=$('weights');const open=ws.hidden;ws.hidden=!open;$('wBtn').setAttribute('aria-expanded',open);if(open)ws.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'})});
+
+/* ---------- 次候選池、縮圖 ---------- */
+$('sub').innerHTML = SUB.map(s=>`<div class="srow"><div class="th">${laptop(s.id,{shadow:false})}</div><div><h4>${s.name}</h4><div class="why">${s.why}</div><div class="sp">${s.sp}</div></div><div class="rt"><strong>${fmt(s.price)}</strong><button class="btn-s" data-cmp="${s.id}" aria-pressed="false">＋ 加入對比</button></div></div>`).join('');
+document.querySelectorAll('[data-lap]').forEach(el=>el.innerHTML=laptop(el.dataset.lap,{shadow:false}));
+
+/* ---------- 對話互動 ---------- */
+const opts=$('opts');
+opts.addEventListener('click',e=>{const o=e.target.closest('.opt');if(!o)return;
+  opts.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)); opts.classList.add('chosen');
+  W.perf=+o.dataset.perf; rerank();
+  const tot=DIMS.reduce((a,d)=>a+W[d.k],0); const n=$('askNote'); n.hidden=false;
+  n.innerHTML=`好，我把「效能」的比重調成 <b>${Math.round(W.perf/tot*100)}%</b>，右邊排名已經更新。`;
+});
+document.querySelectorAll('[data-fb]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-fb]').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
+$('tags').addEventListener('click',e=>{
+  if(e.target.matches('[data-del]')){const t=e.target.closest('.tag');t.classList.add('gone');setTimeout(()=>t.remove(),RM?0:300);return}
+  if(e.target.matches('.lnk')){const b=e.target.closest('.tag').querySelector('b').textContent;const s=$('say');s.value=`把「${b}」改成：`;showPane('chat');s.focus()}
+});
+$('composer').addEventListener('submit',e=>{e.preventDefault();const s=$('say'),v=s.value.trim();if(!v)return;
+  const sc=$('chatScroll');sc.insertAdjacentHTML('beforeend',`<div class="msg msg-user"><div class="bubble"></div></div><div class="msg ai-row"><div class="ai-ava" aria-hidden="true">*</div><div class="ai-body"><div class="heard"><div class="eyebrow">這句話我聽到了</div><div class="htags"><span class="htag"></span></div></div><p>收到，我會把這句話加進你的需求（這是 Demo，排名不會變）。</p></div></div>`);
+  sc.querySelectorAll('.msg-user .bubble')[sc.querySelectorAll('.msg-user').length-1].textContent=v;
+  const hs=sc.querySelectorAll('.htag'); hs[hs.length-1].textContent=v.slice(0,18);
+  s.value='';sc.scrollTop=sc.scrollHeight;});
+$('say').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('composer').requestSubmit()}});
+const hb=$('histBtn'),hp=$('histPop');
+hb.addEventListener('click',e=>{e.stopPropagation();hp.hidden=!hp.hidden;hb.setAttribute('aria-expanded',!hp.hidden)});
+document.addEventListener('click',e=>{if(!hp.hidden&&!hp.contains(e.target)&&e.target!==hb){hp.hidden=true;hb.setAttribute('aria-expanded','false')}});
+$('newChat').addEventListener('click',()=>{showPane('chat');$('say').focus()});
+
+/* 手機分頁 */
+function showPane(p){
+  $('paneChat').classList.toggle('off',p!=='chat'); $('paneRes').classList.toggle('off',p==='chat');
+  $('tabChat').setAttribute('aria-selected',p==='chat'); $('tabRes').setAttribute('aria-selected',p!=='chat');
+  if(p!=='chat') requestAnimationFrame(drawLeaders);
+}
+$('tabChat').addEventListener('click',()=>showPane('chat'));
+$('tabRes').addEventListener('click',()=>showPane('res'));
+
+/* 啟動 */
+renderWeights(); layoutGrid(); renderHero(true);
+const sc=$('chatScroll'); sc.scrollTop = sc.scrollHeight;
+requestAnimationFrame(tick);
+if(RM) addEventListener('scroll',()=>{},{passive:true});
+document.fonts && document.fonts.ready.then(drawLeaders);
+})();
+</script>
+</body>
+</html>
