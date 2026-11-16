@@ -383,6 +383,25 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
 .ai-body .actions{border-top-color:#DFE3EB}
 .ai-body > .fb{margin-top:2px;padding-top:12px;border-top:1px solid var(--line)}
 @media (max-width:600px){.ai-body{padding:13px 12px 12px;border-radius:18px 18px 18px 5px}}
+
+/* ---------- 泡泡強化（2026-11-17 第 2 次）----------
+   1. 對話區底色加深一階，白泡泡和藍泡泡都更跳
+   2. AI 泡泡：深一點的外框＋更重的陰影＋真的尾巴（左下）
+   3. 泡泡標題：黑底圓形頭像＋粗體名稱＋分隔線 */
+.chat{background:#E1E5EE}
+.chat-head{background:#E1E5EE}
+.ai-row{padding-left:10px}
+.ai-body{position:relative;border:1.5px solid #C3CADB;
+  box-shadow:0 2px 4px rgba(22,30,52,.08),0 22px 44px -16px rgba(22,30,52,.42)}
+.ai-body::after{content:"";position:absolute;left:-9px;bottom:14px;width:16px;height:16px;background:var(--card);
+  border-left:1.5px solid #C3CADB;border-bottom:1.5px solid #C3CADB;transform:rotate(45deg);border-radius:0 0 0 3px}
+.ai-body::before{content:"選購助手";display:block;padding:0 0 10px 32px;margin:0 0 2px;min-height:24px;line-height:24px;
+  font:700 14px/24px var(--display);color:var(--ink);letter-spacing:.01em;border-bottom:1px solid var(--line);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%2312151C'/%3E%3Ctext x='12' y='17.5' font-family='Arial' font-weight='700' font-size='17' fill='white' text-anchor='middle'%3E*%3C/text%3E%3C/svg%3E") no-repeat 0 0/24px 24px}
+.msg-user .bubble{position:relative;box-shadow:0 2px 4px rgba(35,64,196,.25),0 14px 28px -12px rgba(35,64,196,.75)}
+.msg-user .bubble::after{content:"";position:absolute;right:-7px;bottom:10px;width:14px;height:14px;background:var(--accent);transform:rotate(45deg);border-radius:0 3px 0 0}
+.msg-user{padding-right:8px}
+@media (max-width:600px){.ai-row{padding-left:8px}}
 </style>
 </head>
 <body>
