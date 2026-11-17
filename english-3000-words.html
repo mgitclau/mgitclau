@@ -23,6 +23,7 @@
   color-scheme: dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);
   font:15px/1.55 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px)}
@@ -60,30 +61,50 @@ button.icon.on{background:var(--accent-soft);border-color:var(--accent);color:va
 .more{display:block;margin:16px auto 0;padding:10px 20px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-size:.95rem}
 .empty{color:var(--sub);text-align:center;padding:30px 0}
 .foot{color:var(--sub);font-size:.82rem;margin-top:28px;line-height:1.7}
+.tab.recite{border-style:dashed}
+.rc-sum{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex:1 1 120px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.stat span{color:var(--sub);font-size:.85rem}
+.flash{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 20px;text-align:center}
+.flash .fw{font-size:2.2rem;font-weight:700;margin:6px 0}
+.flash .meta{color:var(--sub);font-size:.85rem}
+.flash .ans{margin-top:16px;line-height:1.8}
+.flash .ans .zh{font-size:1.3rem}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.big{padding:12px 22px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.05rem;cursor:pointer;min-width:120px}
+.big.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.stages{display:flex;gap:4px;justify-content:center;margin-top:10px}
+.stages i{width:22px;height:6px;border-radius:4px;background:var(--chip)}
+.stages i.on{background:var(--accent)}
+.rc-list li.w{grid-template-columns:1fr auto}
+.rc-list .due{color:var(--sub);font-size:.85rem}
+h2.sec{font-size:1.05rem;margin:28px 0 8px}
 @media (max-width:480px){ li.w{grid-template-columns:1fr auto} .rank{display:none} .ex{grid-column:1/3} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>生活英文 3000 字</h1>
-  <p class="lead">依照日常生活的使用頻率排序，分三級。點 🔊 聽發音，學會了就打勾 ✓。</p>
+  <p class="lead">依照日常生活的使用頻率排序，分三級。點 🔊 聽發音，學會了就打勾 ✓，想背的字按 📚 加入背誦清單。</p>
 
   <div class="bar">
     <div class="tabs" role="tablist" id="tabs"></div>
-    <div class="row">
+    <div class="row" id="filters">
       <input type="search" id="q" placeholder="搜尋英文或中文，例如 coffee、咖啡" aria-label="搜尋單字">
       <label class="opt"><input type="checkbox" id="hideKnown"> 隱藏已會的字</label>
       <label class="opt"><input type="checkbox" id="quiz"> 測驗模式（遮住中文）</label>
     </div>
-    <div class="progress"><span id="ptext"></span><div class="track"><div class="fill" id="pfill"></div></div></div>
+    <div class="progress" id="prog"><span id="ptext"></span><div class="track"><div class="fill" id="pfill"></div></div></div>
   </div>
 
   <p class="levelnote" id="note"></p>
   <ul class="list" id="list"></ul>
   <button class="more" id="more" hidden>再顯示 100 個</button>
   <p class="empty" id="empty" hidden>找不到符合的單字</p>
+  <div id="recite" hidden></div>
 
-  <p class="foot">說明：排序是依常見詞頻清單（類似 NGSL、Oxford 3000）並偏重日常生活用語整理的，屬於大致順序。發音使用你裝置內建的語音。「已會」的勾選只存在這台裝置的瀏覽器裡。</p>
+  <p class="foot">說明：排序是依常見詞頻清單（類似 NGSL、Oxford 3000）並偏重日常生活用語整理的，屬於大致順序。發音使用你裝置內建的語音。「已會」的勾選和背誦進度只存在這台裝置的瀏覽器裡。<br>背誦依艾賓浩斯遺忘曲線安排：加入當天先背一次，之後在第 1、2、4、7、15、30 天複習；按「忘了」會回到第 1 階段、明天再複習；全部通過就自動標成「已會」。</p>
 </div>
 
 <script>
@@ -98,6 +119,76 @@ let known=new Set();
 try{known=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify([...known]))}catch(e){}}
 let level=0; try{level=+(localStorage.getItem(LKEY)||0)||0}catch(e){}
+if(!(level>=0&&level<=3)) level=0;
+
+// ===== 背誦（艾賓浩斯）=====
+// stage 0：加入當天；之後每次「記得」依 GAPS 往後排；stage 走完就記熟。
+const RKEY='en3000-recite';
+const GAPS=[1,2,4,7,15,30];          // 第 1～6 次複習之間相隔的天數
+const STAGES=GAPS.length+1;          // 共 7 次：加入當天＋6 次複習
+let recite={};                        // { word: {s: 階段, due: 日序號} }
+try{recite=JSON.parse(localStorage.getItem(RKEY)||'{}')||{}}catch(e){}
+function saveR(){try{localStorage.setItem(RKEY,JSON.stringify(recite))}catch(e){}}
+function today(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5)}
+const byWord=new Map(DATA.map((d,i)=>[d.w,i]));
+function toggleRecite(w){ if(recite[w]) delete recite[w]; else recite[w]={s:0,due:today()}; saveR(); }
+function dueList(){const t=today();return Object.keys(recite).filter(w=>byWord.has(w)&&recite[w].due<=t).sort((a,b)=>recite[a].due-recite[b].due||byWord.get(a)-byWord.get(b))}
+let revealed=false;
+function answer(ok){
+  const w=dueList()[0]; if(!w) return;
+  const r=recite[w];
+  if(ok){
+    if(r.s>=STAGES-1){ delete recite[w]; known.add(w); save(); }
+    else { r.due=today()+GAPS[r.s]; r.s++; }
+  } else { r.s=0; r.due=today()+1; }
+  saveR(); revealed=false; renderTabs(); renderRecite(true);
+}
+function dayText(n){return n<=0?'今天':n===1?'明天':n+' 天後'}
+function renderRecite(autoSay){
+  const box=$('recite'), due=dueList(), all=Object.keys(recite).filter(w=>byWord.has(w)), t=today();
+  let h=`<div class="rc-sum">
+    <div class="stat"><b>${due.length}</b><span>今天要複習</span></div>
+    <div class="stat"><b>${all.length}</b><span>背誦清單總數</span></div>
+    <div class="stat"><b>${known.size}</b><span>已會的字</span></div></div>`;
+  if(due.length){
+    const w=due[0], d=DATA[byWord.get(w)], r=recite[w];
+    h+=`<div class="flash">
+      <div class="meta">第 ${r.s+1} / ${STAGES} 次 · 剩 ${due.length} 個</div>
+      <div class="stages">${Array.from({length:STAGES},(_,i)=>`<i class="${i<r.s?'on':''}"></i>`).join('')}</div>
+      <div class="fw">${esc(d.w)}</div>
+      <div><span class="pos">${esc(d.pos)}</span> <button class="icon" id="rcSay" aria-label="念出單字" style="display:inline-grid">🔊</button></div>
+      ${revealed?`<div class="ans"><div class="zh">${esc(d.zh)}</div>
+        <div>${hl(d.ex,d.w)} <button class="icon" id="rcSayEx" aria-label="念出例句" style="display:inline-grid;width:26px;height:26px;font-size:.8rem;vertical-align:middle">🔊</button></div>
+        <div class="meta">${esc(d.ex_zh)}</div></div>
+        <div class="btns"><button class="big" id="rcNo">😣 忘了</button><button class="big primary" id="rcYes">😊 記得</button></div>`
+      :`<div class="btns"><button class="big primary" id="rcShow">先想一想，再看答案</button></div>`}
+    </div>`;
+  } else if(all.length){
+    const next=Math.min(...all.map(w=>recite[w].due));
+    const cnt=all.filter(w=>recite[w].due===next).length;
+    h+=`<div class="flash"><div class="fw">🎉</div><div>今天的複習完成了！</div><div class="meta">下一次：${dayText(next-t)}，${cnt} 個字</div></div>`;
+  } else {
+    h+=`<div class="flash"><div>背誦清單還是空的</div><div class="meta">到第 1～3 級，在想背的單字右邊按 📚 加入</div></div>`;
+  }
+  if(all.length){
+    const sorted=all.sort((a,b)=>recite[a].due-recite[b].due||byWord.get(a)-byWord.get(b));
+    h+=`<h2 class="sec">背誦清單</h2><ul class="list rc-list">`+sorted.map(w=>{
+      const d=DATA[byWord.get(w)],r=recite[w];
+      return `<li class="w"><div><div class="head"><span class="word">${esc(w)}</span><span class="zh">${esc(d.zh)}</span></div>
+        <div class="due">第 ${r.s+1}/${STAGES} 次 · ${dayText(r.due-t)}複習</div></div>
+        <div class="actions"><button class="icon" data-say="${esc(w)}" aria-label="念出 ${esc(w)}">🔊</button><button class="icon on" data-rm="${esc(w)}" aria-label="移出背誦清單" title="移出背誦清單">📚</button></div></li>`}).join('')+`</ul>`;
+  }
+  box.innerHTML=h;
+  const g=id=>box.querySelector('#'+id);
+  if(g('rcSay')) g('rcSay').onclick=()=>speak(due[0]);
+  if(g('rcSayEx')) g('rcSayEx').onclick=()=>speak(DATA[byWord.get(due[0])].ex);
+  if(g('rcShow')) g('rcShow').onclick=()=>{revealed=true;renderRecite(false)};
+  if(g('rcYes')) g('rcYes').onclick=()=>answer(true);
+  if(g('rcNo')) g('rcNo').onclick=()=>answer(false);
+  box.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>speak(b.dataset.say));
+  box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{toggleRecite(b.dataset.rm);renderTabs();renderRecite(false)});
+  if(autoSay&&due.length&&!revealed) speak(due[0]);
+}
 let shown=100;
 
 const $=id=>document.getElementById(id);
@@ -114,6 +205,11 @@ function renderTabs(){
     b.onclick=()=>{level=i;shown=100;try{localStorage.setItem(LKEY,i)}catch(e){};renderTabs();render();window.scrollTo({top:0})};
     tabs.appendChild(b);
   });
+  const r=document.createElement('button');
+  r.className='tab recite'; r.setAttribute('role','tab'); r.setAttribute('aria-selected',level===3);
+  r.innerHTML=`📚 背誦<small>今天 ${dueList().length}</small>`;
+  r.onclick=()=>{level=3;revealed=false;try{localStorage.setItem(LKEY,3)}catch(e){};renderTabs();render();window.scrollTo({top:0})};
+  tabs.appendChild(r);
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function hl(ex,w){
@@ -133,6 +229,10 @@ function current(){
 }
 function levelOf(i){return i<500?1:i<1500?2:3}
 function render(){
+  const isR=level===3;
+  $('recite').hidden=!isR; $('filters').hidden=isR; $('prog').hidden=isR;
+  $('note').hidden=isR; list.hidden=isR;
+  if(isR){ $('more').hidden=true; $('empty').hidden=true; renderRecite(false); return; }
   const {q,idx}=current();
   list.classList.toggle('quiz',$('quiz').checked);
   $('note').textContent = q ? `搜尋「${q}」：共 ${idx.length} 個` : LEVELS[level].note;
@@ -143,10 +243,11 @@ function render(){
     const li=document.createElement('li'); li.className='w'+(k?' known':'');
     li.innerHTML=`<span class="rank">${q?'L'+levelOf(i)+' · ':''}${i+1}</span>
       <div><div class="head"><span class="word">${esc(d.w)}</span><span class="pos">${esc(d.pos)}</span><span class="zh">${esc(d.zh)}</span></div></div>
-      <div class="actions"><button class="icon" data-say aria-label="念出 ${esc(d.w)}">🔊</button><button class="icon ${k?'on':''}" data-k aria-label="標記已會">✓</button></div>
+      <div class="actions"><button class="icon" data-say aria-label="念出 ${esc(d.w)}">🔊</button><button class="icon ${recite[d.w]?'on':''}" data-r aria-label="加入背誦清單" title="${recite[d.w]?'已在背誦清單（再按一次移除）':'加入背誦清單'}">📚</button><button class="icon ${k?'on':''}" data-k aria-label="標記已會">✓</button></div>
       <div class="ex">${hl(d.ex,d.w)} <button class="icon" data-sayex aria-label="念出例句" style="display:inline-grid;width:26px;height:26px;font-size:.8rem;vertical-align:middle">🔊</button><br><span class="exzh">${esc(d.ex_zh)}</span></div>`;
     li.querySelector('[data-say]').onclick=()=>speak(d.w);
     li.querySelector('[data-sayex]').onclick=()=>speak(d.ex);
+    li.querySelector('[data-r]').onclick=()=>{ toggleRecite(d.w); renderTabs(); render(); };
     li.querySelector('[data-k]').onclick=()=>{ known.has(d.w)?known.delete(d.w):known.add(d.w); save(); renderTabs(); render(); };
     li.querySelectorAll('.zh,.exzh').forEach(el=>el.onclick=()=>li.classList.toggle('shown'));
     frag.appendChild(li);
