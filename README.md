@@ -42,3 +42,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 介面風格展覽（8 種風格＋玻璃擬態） | https://mgitclau.github.io/mgitclau/laptop-style-gallery.html | 2026-11-16 |
 | AI 筆電選購助手 · 介面風格第二批（5 種，可用性優先） | https://mgitclau.github.io/mgitclau/laptop-style2-gallery.html | 2026-11-16 |
 | AI 筆電選購助手 · 介面風格第三批（4 個 Dribbble 參考作品重做＋精品標註 A／B／C 方案） | https://mgitclau.github.io/mgitclau/laptop-style3-gallery.html | 2026-11-17 |
+| AI 筆電選購助手 · 精品標註系統版 Demo（v1.0.59 真實畫面＋新風格） | https://mgitclau.github.io/mgitclau/laptop-style-gadgets-system.html | 2026-11-17 |
