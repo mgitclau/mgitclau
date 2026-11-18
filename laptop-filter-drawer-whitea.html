@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>篩選抽屜重新設計（White A）</title>
+<title>篩選抽屜互動設計（White A）</title>
 <style>
 :root{
   --ground:#C6CDDC;--ground-2:#BAC3D5;--panel:#EDF0F5;--card:#fff;--group:#EBEEF4;--group-2:#E2E7F0;--inner:#F2F4F8;
   --ink:#12151C;--ink-2:#454C5D;--ink-3:#5A6174;--edge:#2A2F3A;--line:#D7DCE6;--line-2:#E4E8EF;
-  --accent:#2340C4;--accent-soft:#DDE4F7;--signal:#F0602A;--signal-soft:#FDE7DC;--signal-ink:#A8401A;
-  --bad:#AE3626;--bad-soft:#F8E4E0;--warn-soft:#FBEFD9;--warn-ink:#8A5208;
-  --neutral:#B4BBC9;--faint:#DCE1EA;
+  --accent:#2340C4;--signal:#F0602A;--signal-soft:#FDE7DC;--signal-ink:#A8401A;
+  --warn-soft:#FBEFD9;--warn-ink:#8A5208;--neutral:#B4BBC9;--faint:#DCE1EA;
   --sh-card:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16);
   --sh-panel:0 30px 60px -30px rgba(30,40,70,.35);
   --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
@@ -18,7 +17,7 @@
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC","Noto Sans TC",monospace;
   --ease:cubic-bezier(.2,.7,.2,1);
   --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
-  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235A6174' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E");
   color-scheme:light;
 }
@@ -28,14 +27,14 @@ body{min-height:100vh;font:14px/1.55 var(--sans);color:var(--ink);background:rad
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
-.page{display:flex;gap:16px;align-items:flex-start;max-width:1200px;margin:0 auto;padding:16px}
+.page{display:flex;gap:16px;align-items:flex-start;max-width:1220px;margin:0 auto;padding:16px}
 .eyebrow{display:flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
 
-/* ---------- 左：說明面板 ---------- */
+/* ---------- 左：說明 ---------- */
 .notes{flex:1 1 0;min-width:0;background:var(--panel);border-radius:30px;box-shadow:var(--sh-panel);padding:28px 28px 32px}
 .notes h1{font:600 28px/1.2 var(--display);letter-spacing:-.025em;margin:10px 0 8px}
-.notes .lead{color:var(--ink-2);margin:0 0 24px;max-width:56ch}
+.notes .lead{color:var(--ink-2);margin:0;max-width:62ch}
 .notes h2{font:600 17px/1.3 var(--display);letter-spacing:-.01em;margin:28px 0 12px}
 .box{background:var(--card);border-radius:22px;box-shadow:var(--sh-card);padding:6px 20px}
 .scen{display:flex;gap:14px;align-items:flex-start;width:100%;padding:14px 0;border:0;background:none;text-align:left}
@@ -43,7 +42,7 @@ button{cursor:pointer}
 .scen i{flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;border:1.5px solid var(--edge);background:var(--card)}
 .scen.on i{background:var(--ink);box-shadow:inset 0 0 0 4px var(--card)}
 .scen b{display:block;font-weight:600}
-.scen span{display:block;color:var(--ink-3);font-size:13px}
+.scen span span{color:var(--ink-3);font-size:13px}
 .reopen{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
 .reopen small{color:var(--ink-3);flex:1 1 220px}
 .rules{counter-reset:r;list-style:none;margin:0;padding:0}
@@ -52,14 +51,22 @@ button{cursor:pointer}
 .rules li::before{content:counter(r,decimal-leading-zero);position:absolute;left:0;top:15px;font:500 12px/1 var(--mono);color:var(--signal-ink)}
 .rules b{display:block;font-weight:600;margin-bottom:2px}
 .rules span{color:var(--ink-2)}
-.sw-demo{display:inline-block;vertical-align:-2px;width:12px;height:12px;border-radius:3px;margin:0 3px 0 1px}
-.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
-.tbl th{font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:12px 10px 8px 0}
-.tbl td{padding:11px 10px 11px 0;border-top:1px solid var(--line-2);vertical-align:top}
-.tbl td:first-child{font-weight:600;white-space:nowrap}
+.mini{display:inline-flex;vertical-align:middle;margin:0 2px}
+.mini.seg{border:1.3px solid var(--edge);border-radius:999px;overflow:hidden}
+.mini.seg i{font-style:normal;font-size:11.5px;padding:1px 8px}
+.mini.seg i+i{border-left:1px solid var(--line)}
+.mini.seg i.on{background:var(--ink);color:#fff}
+.mini.chips{gap:4px}
+.mini.chips i{font-style:normal;font-size:11.5px;padding:1px 8px;border:1.3px solid var(--edge);border-radius:999px}
+.mini.chips i.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+.tbl th{font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:12px 12px 8px 0;white-space:nowrap}
+.tbl td{padding:11px 12px 11px 0;border-top:1px solid var(--line-2);vertical-align:top}
+.tbl td:first-child{font-weight:600;white-space:nowrap}
+.tbl td:nth-child(2){color:var(--ink-2)}
 
-/* ---------- 按鈕三級（White A） ---------- */
+/* ---------- 按鈕三級 ---------- */
 .btn-pri{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:0 8px 0 22px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;box-shadow:0 6px 16px -6px rgba(18,21,28,.55);transition:background .18s,scale .12s}
 .btn-pri::after{content:"";flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.14) var(--arrow) no-repeat center/15px;transition:translate .2s var(--ease)}
 .btn-pri:hover:not(:disabled){background:#2C3343}
@@ -73,63 +80,86 @@ button{cursor:pointer}
 .btn-sec:active:not(:disabled){scale:.96}
 .btn-sec:disabled{border-color:var(--line);color:#A3AABA;cursor:default}
 .btn-sec.small{min-height:36px;padding:0 15px;font-size:13.5px}
+.link{border:0;background:none;padding:0;color:var(--accent);font-size:13px;font-weight:500;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(35,64,196,.45);white-space:nowrap}
+.link:hover{text-decoration-color:currentColor;text-decoration-thickness:2px}
 
 /* ---------- 右：抽屜 ---------- */
-.drawer{flex:0 0 460px;position:sticky;top:16px;height:calc(100vh - 32px);min-height:560px;display:flex;flex-direction:column;background:var(--panel);border-radius:30px;box-shadow:0 40px 80px -30px rgba(18,21,28,.55);overflow:hidden}
-.d-head{display:flex;align-items:center;gap:12px;padding:20px 20px 0 26px}
-.d-head h2{flex:1;margin:0;font:600 22px/1.25 var(--display);letter-spacing:-.02em}
+.drawer{flex:0 0 468px;position:sticky;top:16px;height:calc(100vh - 32px);min-height:560px;display:flex;flex-direction:column;background:var(--panel);border-radius:30px;box-shadow:0 40px 80px -30px rgba(18,21,28,.55);overflow:hidden}
+.d-head{display:flex;align-items:center;gap:12px;padding:20px 20px 14px 24px;border-bottom:1px solid var(--line)}
+.d-head h2{margin:0;font:600 22px/1.25 var(--display);letter-spacing:-.02em}
+.d-head .eyebrow{flex:1}
+.d-head .eyebrow::before{display:none}
 .d-close{width:38px;height:38px;border-radius:50%;border:1.3px solid var(--edge);background:var(--card);font-size:18px;line-height:1;display:grid;place-items:center}
 .d-close:hover{background:var(--group)}
-.d-search{position:relative;padding:16px 20px 16px;border-bottom:1px solid var(--line)}
-.d-search input{width:100%;height:44px;padding:0 40px 0 44px;border-radius:999px;border:1.3px solid var(--line);background:var(--card) var(--search) no-repeat 16px center/17px;outline:none;transition:border-color .15s}
-.d-search input:focus{border-color:var(--edge)}
-.d-search input::placeholder{color:#8A91A3}
-.d-search button{position:absolute;right:28px;top:24px;width:28px;height:28px;border-radius:50%;border:0;background:var(--group);color:var(--ink-2)}
-.d-body{flex:1;overflow-y:auto;padding:0 20px 24px;overscroll-behavior:contain}
+.d-body{flex:1;overflow-y:auto;padding:4px 16px 24px;overscroll-behavior:contain}
+.d-zero{padding:14px 20px 0;border-top:1px solid var(--line);background:var(--warn-soft);color:var(--warn-ink)}
+.d-zero b{display:block;font:600 15px var(--display)}
+.d-zero .chips{margin-top:10px}
+.d-zero .chip{border-color:var(--warn-ink);color:var(--warn-ink)}
 .d-foot{display:flex;gap:10px;padding:14px 20px 18px;border-top:1px solid var(--line);background:var(--panel)}
+.d-zero:not([hidden])+.d-foot{border-top:0;background:var(--warn-soft)}
 .d-foot .btn-pri{flex:1}
 
-.grp{margin-top:20px}
-.grp>.eyebrow{margin:0 0 10px 6px}
-.grp>.eyebrow em{font-style:normal;color:var(--ink)}
-.card{background:var(--card);border-radius:20px;box-shadow:var(--sh-card);overflow:hidden}
+.grp-t{margin:20px 0 10px 6px}
+.grp-t em{font-style:normal;color:var(--ink)}
+.cards{display:grid;gap:10px}
 
-/* 一列＝一句話 */
-.item+.item{border-top:1px solid var(--line-2)}
-.row{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:8px 14px 8px 18px;border:0;background:none;text-align:left;transition:background .15s}
-.row:hover{background:var(--inner)}
-.row .name{font:600 15px/1.3 var(--display);letter-spacing:-.01em;white-space:nowrap}
-.src{flex:none;padding:1px 8px;border-radius:999px;background:var(--signal-soft);color:var(--signal-ink);font:500 10.5px/1.6 var(--mono);letter-spacing:.04em}
-.row .val{flex:1;min-width:0;text-align:right;font-size:14px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .val.set{color:var(--ink);font-weight:600}
-.row .val.no{color:var(--bad)}
-.x{flex:none;width:24px;height:24px;border-radius:50%;border:0;background:var(--group);color:var(--ink-2);font-size:13px;line-height:24px;text-align:center;padding:0}
-.x:hover{background:var(--group-2);color:var(--ink)}
-.chev{flex:none;width:18px;height:18px;background:var(--chev) no-repeat center/16px;transition:rotate .2s var(--ease)}
-.item.open .chev{rotate:180deg}
-.item.open>.row{background:none}
+/* 一張卡＝一個條件（或一組相關條件） */
+.card{background:var(--card);border-radius:20px;box-shadow:var(--sh-card);padding:16px 18px 18px}
+.c-head{display:flex;align-items:baseline;gap:8px;min-height:24px}
+.c-head h3{margin:0;font:600 15px/1.35 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.src{flex:none;align-self:center;padding:1px 8px;border-radius:999px;background:var(--signal-soft);color:var(--signal-ink);font:500 10.5px/1.6 var(--mono);letter-spacing:.04em}
+.c-sum{flex:1;min-width:0;text-align:right;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap{margin:4px 0 0;color:var(--ink-3);font-size:12.5px;line-height:1.55}
+.ctl{margin-top:12px}
+.sub+.sub{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.sub-l{display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--ink-2)}
 
-/* 開關列 */
-.row.sw{cursor:pointer}
-.row .cnt{flex:1;text-align:right;font:500 11.5px var(--mono);color:var(--ink-3)}
+/* 單選：連在一起的分段（第一格永遠是「不限」） */
+.seg{display:flex;border:1.3px solid var(--edge);border-radius:16px;overflow:hidden;background:var(--card)}
+.seg button{flex:1 1 0;min-width:0;min-height:50px;padding:6px 4px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.25;transition:background .15s}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button:hover{background:var(--group)}
+.seg b{font-size:13px;font-weight:500;white-space:nowrap}
+.seg em{font:500 10.5px var(--mono);font-style:normal;color:var(--ink-3)}
+.seg button.any{flex:0 0 auto;padding:6px 14px}
+.seg button.any.on{background:var(--group);}
+.seg button.any.on b{font-weight:600}
+.seg button.on:not(.any){background:var(--ink);color:#fff}
+.seg button.on:not(.any) b{font-weight:600}
+.seg button.on:not(.any) em{color:rgba(255,255,255,.72)}
+.seg button.z0:not(.on) b,.seg button.z0:not(.on) em{color:#9AA2B3}
+
+/* 多選：分開的按鈕 */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 14px;border-radius:999px;border:1.3px solid var(--edge);background:var(--card);font-size:13.5px;font-weight:500;transition:background .15s,scale .12s}
+.chip em{font:500 10.5px var(--mono);font-style:normal;color:var(--ink-3)}
+.chip:hover{background:var(--group)}
+.chip:active{scale:.96}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.chip.on em{color:rgba(255,255,255,.72)}
+.chip.z0:not(.on){border-style:dashed;border-color:#9AA2B3;color:#8A91A3}
+.chip.sm{min-height:32px;padding:0 13px;font-size:13px}
+.chip-act{display:flex;gap:16px;margin-top:10px}
+
+/* 開關 */
+.swrow{display:flex;align-items:center;gap:10px;width:100%;padding:0;border:0;background:none;text-align:left}
+.swrow .t{flex:1;font-size:13.5px;font-weight:500}
+.swrow .t small{display:block;color:var(--ink-3);font-size:12px;font-weight:400}
+.swrow em{font:500 11px var(--mono);font-style:normal;color:var(--ink-3)}
 .switch{flex:none;position:relative;width:46px;height:28px;border-radius:999px;background:var(--faint);transition:background .2s}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(22,30,52,.3);transition:translate .2s var(--ease)}
 .switch.on{background:var(--ink)}
 .switch.on::after{translate:18px 0}
 
-/* 展開區：說明 → 圖 → 控件 → 兩端 → 常用選法 */
-.panel{padding:0 18px 18px;display:grid;gap:12px}
-.desc{margin:0;color:var(--ink-2);font-size:13px;line-height:1.6}
-.mode{display:inline-flex;justify-self:start;padding:3px;border-radius:999px;background:var(--group)}
-.mode button{border:0;background:none;padding:5px 14px;border-radius:999px;font-size:13px;color:var(--ink-2)}
-.mode button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(22,30,52,.18)}
-.mode button.on.bad{color:var(--bad)}
-
-.hist{display:flex;align-items:flex-end;gap:2px;height:56px;margin:0 11px;border-bottom:1.5px solid var(--ink)}
-.hist i{flex:1;border-radius:3px 3px 0 0;background:var(--neutral);transition:background .12s}
+/* 價格：分布圖＋雙把手（只有價格有） */
+.p-live{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.p-live b{font:600 20px/1.2 var(--display);letter-spacing:-.02em}
+.p-live span{font:500 11.5px var(--mono);color:var(--ink-3)}
+.hist{display:flex;align-items:flex-end;gap:2px;height:52px;margin:0 11px;border-bottom:1.5px solid var(--ink)}
+.hist i{flex:1;border-radius:3px 3px 0 0;background:var(--neutral)}
 .hist i.out{background:var(--faint)}
 .hist i.in{background:var(--ink)}
-
 .rng{position:relative;height:28px;margin:0 11px}
 .rng .trk,.rng .fill{position:absolute;top:11px;height:6px;border-radius:999px}
 .rng .trk{left:0;right:0;background:var(--faint)}
@@ -138,106 +168,79 @@ button{cursor:pointer}
 .rng input{position:absolute;left:-11px;width:calc(100% + 22px);top:0;height:28px;margin:0;-webkit-appearance:none;appearance:none;background:none;pointer-events:none}
 .rng input::-webkit-slider-runnable-track{height:28px;background:none}
 .rng input::-moz-range-track{background:none}
-.rng input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:22px;height:22px;margin-top:3px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);box-shadow:0 4px 10px -2px rgba(22,30,52,.35);cursor:grab;transition:scale .12s}
+.rng input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:22px;height:22px;margin-top:3px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);box-shadow:0 4px 10px -2px rgba(22,30,52,.35);cursor:grab}
 .rng input::-moz-range-thumb{pointer-events:auto;width:20px;height:20px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);box-shadow:0 4px 10px -2px rgba(22,30,52,.35);cursor:grab}
-.rng input:active::-webkit-slider-thumb{scale:1.15;cursor:grabbing}
-.ends{display:flex;justify-content:space-between;margin:-4px 0 0;padding:0 11px;font:500 11.5px var(--mono);color:var(--ink-3)}
+.ends{display:flex;justify-content:space-between;padding:0 11px;margin:-4px 0 12px;font:500 11.5px var(--mono);color:var(--ink-3)}
 
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 14px;border-radius:999px;border:1.3px solid var(--edge);background:var(--card);font-size:13.5px;font-weight:500;transition:background .15s,scale .12s}
-.chip em{font:500 10.5px var(--mono);font-style:normal;color:var(--ink-3)}
-.chip:hover{background:var(--group)}
-.chip:active{scale:.96}
-.chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
-.chip.on em{color:rgba(255,255,255,.7)}
-.chip.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);text-decoration:line-through;text-decoration-thickness:1.5px}
-.chip.no em{color:var(--bad)}
-.chip.z0:not(.on):not(.no){border-style:dashed;border-color:#9AA2B3;color:var(--ink-3)}
-.chip.sm{min-height:32px;padding:0 13px;font-size:13px}
+.more{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:16px 18px;border:0;border-radius:20px;background:var(--card);box-shadow:var(--sh-card);text-align:left}
+.more:hover{background:var(--inner)}
+.more b{font:600 15px var(--display)}
+.more small{flex:1;color:var(--ink-3);text-align:right}
+.more i{width:18px;height:18px;background:var(--chev) no-repeat center/16px;transition:rotate .2s var(--ease)}
+.more[aria-expanded="true"] i{rotate:180deg}
+.d-search{position:relative;margin-top:10px}
+.d-search input{width:100%;height:44px;padding:0 16px 0 44px;border-radius:999px;border:1.3px solid var(--line);background:var(--card) var(--search) no-repeat 16px center/17px;outline:none}
+.d-search input:focus{border-color:var(--edge)}
+.rest{margin:10px 6px 0;color:var(--ink-3);font-size:12.5px}
 
-.steps{display:flex;border:1.3px solid var(--edge);border-radius:999px;overflow:hidden;background:var(--card)}
-.steps button{flex:1;min-width:0;min-height:46px;padding:4px 6px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;transition:background .15s}
-.steps button+button{border-left:1px solid var(--line)}
-.steps button:hover{background:var(--group)}
-.steps b{font-size:13.5px;font-weight:500}
-.steps em{font:500 10.5px var(--mono);font-style:normal;color:var(--ink-3)}
-.steps button.inc{background:var(--group-2)}
-.steps button.on{background:var(--ink);color:#fff}
-.steps button.on b{font-weight:600}
-.steps button.on em{color:rgba(255,255,255,.7)}
-.steps button.z0:not(.on):not(.inc) b{color:var(--ink-3)}
-
-.presets{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.presets .eyebrow{margin-right:2px}
-.presets .eyebrow::before{display:none}
-
-.d-zero{padding:14px 20px 0;border-top:1px solid var(--line);background:var(--warn-soft);color:var(--warn-ink)}
-.d-zero:not([hidden])+.d-foot{border-top:0;background:var(--warn-soft)}
-.zero{padding:0 0 2px}
-.zero b{display:block;font:600 15px var(--display);margin-bottom:2px}
-.zero .chips{margin-top:10px}
-.zero .chip{border-color:var(--warn-ink);color:var(--warn-ink)}
-.morebtn{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 14px 8px 18px;border:0;background:none;text-align:left}
-.morebtn:hover{background:var(--inner)}
-.morebtn .name{font:600 15px var(--display)}
-.morebtn small{flex:1;text-align:right;color:var(--ink-3)}
-.cat{padding:10px 18px 6px;border-top:1px solid var(--line-2)}
-.cat .eyebrow::before{display:none}
-.rest{margin:0;padding:10px 18px 14px;color:var(--ink-3);font-size:12.5px}
-.empty{padding:24px 18px;color:var(--ink-3);text-align:center}
-
-@media (max-width:900px){
-  .page{flex-direction:column}
-  .drawer{flex:none;position:relative;top:0;width:100%;height:720px;min-height:0}
-  .notes{padding:22px 18px 26px}
+@media (max-width:920px){
+  .page{flex-direction:column;align-items:stretch}
+  .drawer{flex:none;position:relative;top:0;width:100%;height:760px;min-height:0}
+  .notes{flex:none;width:100%;padding:22px 18px 26px}
 }
+@media (max-width:480px){.seg b{font-size:12px}.seg button.any{padding:6px 10px}.d-body{padding:4px 12px 24px}.card{padding:14px 14px 16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="page">
   <section class="notes">
-    <div class="eyebrow">Filter drawer · 從頭重新設計</div>
-    <h1>篩選抽屜：每個條件都是一句話</h1>
-    <p class="lead">不沿用舊抽屜，從「篩選到底在做什麼」重新推出來：篩選只回答一件事——<b>哪些筆電我不看</b>。所以每個條件都寫成一句話（「重量 2 kg 以下」），整個抽屜就是這些句子的清單。右邊可以點，台數和分布圖用資料庫上架中的 370 台真實資料即時計算。</p>
+    <div class="eyebrow">Filter drawer · 互動設計</div>
+    <h1>從「用戶心裡怎麼想」設計每一項</h1>
+    <p class="lead">一般人打開篩選，心裡想的是「1 萬左右」「要輕一點」「要能打遊戲」「不要微星」，不是「Time Spy ≥ 13,000」。所以每一項先問：用戶腦中是哪一種念頭？再決定用什麼控件、選項怎麼寫。常用的全部攤開，點一下就生效，不用先展開。右邊可以點，台數用資料庫上架中的 370 台真實資料即時計算。</p>
 
     <h2>先選一個情境</h2>
     <div class="box" id="scens"></div>
     <div class="reopen">
       <button class="btn-sec small" data-a="reopen">關掉再重新打開抽屜</button>
-      <small>在抽屜裡設幾個條件後按這顆：設過的條件會排到最上面。抽屜開著時順序不會動。</small>
+      <small>在抽屜裡設幾個條件後按這顆：有設定的條件會排到最上面。抽屜開著時順序不動，不會點了就跳走。</small>
     </div>
 
-    <h2>7 條規則（整個抽屜都照這 7 條）</h2>
+    <h2>6 條互動規則</h2>
     <div class="box">
       <ol class="rules">
-        <li><b>每一列都是同一個結構</b><span>左邊名稱、右邊目前的值（沒設是灰色「不限」，設了是黑字＋ ×）、最右一個箭頭。點一下展開，裡面一律照「一句說明 → 分布圖 → 控件 → 兩端數值 → 常用選法」排，沒有的就跳過。</span></li>
-        <li><b>只有 4 種控件，照資料類型決定</b><span>數值用雙把手滑桿；有高低的檔位用「至少」階梯；沒有高低的類別用多選按鈕；有／沒有用開關。同一類資料永遠用同一種，不會這項是按鈕、那項是滑桿。</span></li>
-        <li><b>顏色只有 3 個意思</b><span><i class="sw-demo" style="background:var(--ink)"></i>黑＝你設的；<i class="sw-demo" style="background:var(--group-2)"></i>淺灰＝因為「以上／以下」一起留下的；<i class="sw-demo" style="background:var(--bad)"></i>紅＝排除。沒設的一律是中性的白和灰，不會一打開就滿畫面黑。</span></li>
-        <li><b>起點和終點一致</b><span>每條軸都是左小右大，兩端都寫真實數值和單位，格式相同（「1.0 kg」…「3.0 kg」）。「不限」只出現在目前的值，不出現在軸上，也沒有「不限」按鈕；取消一律按 × 或再點一次。</span></li>
-        <li><b>文字格式固定</b><span>單邊寫「X 以下／X 以上」，兩邊寫「X – Y 單位」，全部條件同一個寫法。</span></li>
-        <li><b>順序：你的條件 → 常用 → 更多</b><span>對話提到的、你設過的排最上面；其他照使用頻率；冷門的分類收在「更多條件」，其餘用搜尋。抽屜開著的時候順序不動，關掉再打開才重排。</span></li>
-        <li><b>一次只展開一項</b><span>收起時一眼看完全部條件和目前設定；只有展開的那一項需要算分布圖，條件再多也不會卡。</span></li>
+        <li><b>常用的全部攤開，一點就生效</b><span>不用先展開、不用按「套用」。點完馬上看到底部「顯示 N 台」變化。冷門的才收在最下面「更多條件」。</span></li>
+        <li><b>單選和多選長得不一樣</b><span>連在一起的一條 <span class="mini seg"><i>不限</i><i class="on">2 kg 以下</i><i>1.5 kg 以下</i></span> ＝只能選一個；第一格永遠是「不限」，越往右越嚴格。分開的按鈕 <span class="mini chips"><i class="on">14 吋</i><i class="on">16 吋</i><i>18 吋</i></span> ＝可以選好幾個。用戶不用讀說明就知道能不能複選。</span></li>
+        <li><b>選項用白話檔位，不用懂規格</b><span>遊戲效能分「網遊／3A 1080p／3A 2K／頂級」，背後由程式用實測分數判斷；重量、續航、噪音也是給常見的檔位。要精確數字（例如 1.7 kg）直接跟助手說。</span></li>
+        <li><b>每個選項都標台數</b><span>點之前就知道會剩幾台，不會一點就變 0 台；0 台的選項變成虛線。台數比分布圖好懂，所以<b style="display:inline">只有價格有分布圖和滑桿</b>（價格是唯一每個人都有自己數字的條件）。</span></li>
+        <li><b>品牌：點你想要的，不另外做「排除模式」</b><span>想看哪幾牌就點哪幾牌。想排除某一牌：按「全選」再點掉它，右上角會寫「除了微星都可以」。對話裡說「不要微星」也顯示成同一個樣子，只有一種邏輯。</span></li>
+        <li><b>你的條件排最上面</b><span>對話提到的（標「對話」）和你設過的，打開抽屜時排在最上面；其他照常用度排。</span></li>
       </ol>
     </div>
 
-    <h2>資料類型 → 控件</h2>
+    <h2>每一項怎麼設計</h2>
     <div class="box tbl-wrap">
       <table class="tbl">
-        <thead><tr><th>控件</th><th>什麼資料</th><th>例子</th><th>怎麼操作</th></tr></thead>
+        <thead><tr><th>條件</th><th>用戶心裡想的</th><th>控件</th><th>為什麼</th></tr></thead>
         <tbody>
-          <tr><td>雙把手滑桿</td><td>連續的數字</td><td>價格、重量、續航、噪音、遊戲效能、亮度、厚度</td><td>拖兩端；上方分布圖；下方常用選法</td></tr>
-          <tr><td>「至少」階梯</td><td>有高低、檔位少</td><td>記憶體、硬碟、更新率、解析度、顯示記憶體</td><td>點一格＝這格以上；右邊幾格自動淺灰</td></tr>
-          <tr><td>多選按鈕</td><td>沒有高低的類別</td><td>品牌、尺寸、顯卡、面板、CPU 品牌、數字鍵盤</td><td>點了＝只看這些；5 個選項以上多一個「只看／排除」切換</td></tr>
-          <tr><td>開關</td><td>有／沒有，或只剩一檔</td><td>廣色域、Thunderbolt、指紋、Wi-Fi 7</td><td>整列就是開關，不用展開</td></tr>
+          <tr><td>價格</td><td>「1 萬以內」「2～3 萬」</td><td>價位分段＋分布圖＋雙把手</td><td>先點價位最快；要微調再拖。分布圖讓人看到錢花在哪一段選擇最多</td></tr>
+          <tr><td>品牌</td><td>「只要華碩或聯想」「不要微星」</td><td>多選按鈕＋全選</td><td>多選是大家最熟的；排除＝全選再點掉，不用學新模式</td></tr>
+          <tr><td>尺寸</td><td>「14 或 16 吋」</td><td>多選按鈕（每吋一顆）</td><td>人會跳著選，連續區間不符合想法</td></tr>
+          <tr><td>重量</td><td>「輕一點」「每天背」</td><td>單選檔位</td><td>沒人會說「1.73 kg」，給 3 個常見門檻就夠</td></tr>
+          <tr><td>遊戲效能</td><td>「能不能玩 3A」</td><td>單選檔位（白話）</td><td>一般人不懂分數；用玩得動什麼來分，括號附上約等於哪張顯卡</td></tr>
+          <tr><td>顯卡</td><td>「要 4060 以上」「要 5070」</td><td>多選按鈕，由弱到強</td><td>懂的人直接點型號；不懂的人用上面的遊戲效能</td></tr>
+          <tr><td>處理器</td><td>「要 AMD」</td><td>多選按鈕</td><td>只有兩種</td></tr>
+          <tr><td>記憶體、硬碟</td><td>「至少 32GB」</td><td>單選檔位（至少）</td><td>越大越好，選一個下限</td></tr>
+          <tr><td>續航、噪音</td><td>「一整天」「安靜」</td><td>單選檔位</td><td>同重量</td></tr>
+          <tr><td>螢幕</td><td>「要 OLED」「要高更新率」</td><td>面板多選、更新率與解析度單選、廣色域開關</td><td>相關的放同一張卡，一起決定</td></tr>
+          <tr><td>有／沒有的功能</td><td>「要有指紋」</td><td>開關</td><td>只有要或不管兩種</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <aside class="drawer" aria-label="篩選">
-    <div class="d-head"><h2>篩選</h2><button class="d-close" aria-label="關閉">×</button></div>
-    <div class="d-search"><input id="q" type="search" placeholder="找條件：重量、雷電、OLED…" autocomplete="off"><button id="qx" hidden aria-label="清除搜尋">×</button></div>
+    <div class="d-head"><h2>篩選</h2><span class="eyebrow">點了就生效</span><button class="d-close" aria-label="關閉">×</button></div>
     <div class="d-body" id="body"></div>
     <div class="d-zero" id="zero" hidden></div>
     <div class="d-foot"><button class="btn-sec" data-a="clearall" id="ca">清除全部</button><button class="btn-pri" id="go"></button></div>
@@ -248,208 +251,219 @@ const D=[["雷神",6000,16,2.43,"RTX 4060",9885,"Intel",16,512,240,"IPS",1600,0,
 /* 欄位：0 品牌 1 價格 2 吋 3 重量 4 顯卡 5 TimeSpy 6 CPU 7 RAM 8 SSD 9 Hz 10 面板 11 解析度高 12 P3 13 續航 14 噪音 15 TB 16 指紋 17 數字鍵盤 18 亮度 19 厚度 20 VRAM 21 WiFi7 */
 const BRANDS=[...new Set(D.map(r=>r[0]))].sort((a,b)=>D.filter(r=>r[0]===b).length-D.filter(r=>r[0]===a).length);
 const GPUS=['內顯','RTX 4050','RTX 5050','RTX 4060','RTX 5060','RTX 4070','RTX 5070','RTX 5070 Ti','RTX 5080','RTX 5090'];
-const n0=v=>v.toLocaleString('en-US');
-const n1=v=>v.toFixed(1);
-/* type: range | steps | chips | switch */
-const ITEMS={
-  price:{label:'價格',type:'range',col:1,min:2000,max:48000,step:1000,unit:'元',f:n0,desc:'目前售價。左右兩個把手都可以拖。',
-    presets:[['1 萬以下',null,10000],['1.5 萬以下',null,15000],['1～2 萬',10000,20000],['2 萬以上',20000,null]]},
-  brand:{label:'品牌',type:'chips',col:0,opts:BRANDS.map(b=>[b,b]),desc:'點了就是只看這些品牌；切到「排除」就是不要這些。'},
-  size:{label:'尺寸',type:'chips',col:2,opts:[13,14,15,16,17,18].map(n=>[n,n+' 吋']),desc:'螢幕對角線。14 吋好帶，16 吋看得舒服，18 吋接近桌機。可以複選，例如 14 和 16。'},
-  weight:{label:'重量',type:'range',col:3,min:0.9,max:3.0,step:0.1,unit:'kg',f:n1,desc:'機身重量，不含充電器。每天背著走，建議 1.5 kg 以下。',
-    presets:[['1.5 kg 以下',null,1.5],['2 kg 以下',null,2]]},
-  gpu:{label:'顯卡',type:'chips',col:4,opts:GPUS.map(g=>[g,g.replace('RTX ','')]),desc:'由弱到強排列。只上網、文書選「內顯」就夠，也比較省電、比較輕。',
-    presets:[['所有獨顯',GPUS.slice(1)],['只要內顯',['內顯']]]},
-  cpu:{label:'CPU 品牌',type:'chips',col:6,opts:[['Intel','Intel'],['AMD','AMD']],desc:'處理器廠牌。不確定就不用選。'},
-  ram:{label:'記憶體',type:'steps',col:7,steps:[[32,'32GB'],[64,'64GB'],[128,'128GB']],unit:'',desc:'同時開很多程式、剪片時需要更多。一般用途 16GB（全部機型都有）就夠。'},
-  ssd:{label:'硬碟',type:'steps',col:8,steps:[[1024,'1TB'],[2048,'2TB'],[4096,'4TB']],desc:'能存多少資料。照片、影片、遊戲多，選 1TB 以上。'},
-  ts:{label:'遊戲效能',type:'range',col:5,min:1000,max:24000,step:500,unit:'分',f:n0,desc:'3DMark Time Spy 分數，越高玩遊戲越順。常用選法用常見顯卡的實測中位數當參考。',
-    presets:[['約 4060 以上',10000,null],['約 5070 以上',13000,null],['約 5080 以上',19000,null]]},
-  batt:{label:'續航',type:'range',col:13,min:6,max:28,step:1,unit:'小時',f:v=>String(v),desc:'實測續航時間。上課或上班一整天，大約需要 8 小時。',
-    presets:[['8 小時以上',8,null],['12 小時以上',12,null]]},
-  hz:{label:'更新率',type:'steps',col:9,steps:[[144,'144Hz'],[165,'165Hz'],[240,'240Hz'],[300,'300Hz']],desc:'螢幕每秒更新幾次。越高畫面越順，打遊戲才明顯；文書用 120Hz（幾乎全部都有）就夠。'},
-  panel:{label:'面板',type:'chips',col:10,opts:[['IPS','IPS'],['OLED','OLED'],['Mini LED','Mini LED']],desc:'OLED 顏色鮮豔、黑色夠深；IPS 價格親民；Mini LED 亮度最高。'},
-  res:{label:'解析度',type:'steps',col:11,steps:[[1600,'2.5K'],[1800,'2.8K'],[2400,'4K']],desc:'畫面細緻程度。2.5K 在 14～16 吋上已經很清楚。'},
-  p3:{label:'廣色域（100% DCI-P3）',type:'switch',col:12,desc:'修圖、調色才需要。'},
-  noise:{label:'滿載噪音',type:'range',col:14,min:37,max:58,step:1,unit:'dB',f:v=>String(v),desc:'打遊戲或剪片時的風扇聲（雙烤實測）。45 dB 以下算安靜，55 dB 以上會明顯吵。',
-    presets:[['45 dB 以下',null,45],['50 dB 以下',null,50]]},
-  vram:{label:'顯示記憶體',type:'steps',col:20,steps:[[8,'8GB'],[12,'12GB'],[16,'16GB'],[24,'24GB']],desc:'顯卡自己的記憶體。大型遊戲、跑 AI 模型需要更多。'},
-  bright:{label:'螢幕亮度',type:'range',col:18,min:350,max:850,step:10,unit:'nits',f:v=>String(v),desc:'最大亮度。常在戶外或窗邊用，選 500 nits 以上。',presets:[['400 nits 以上',400,null],['500 nits 以上',500,null]]},
-  thick:{label:'機身厚度',type:'range',col:19,min:11,max:28,step:0.5,unit:'mm',f:n1,desc:'機身最厚的地方。20 mm 以下算薄。',presets:[['18 mm 以下',null,18],['20 mm 以下',null,20]]},
-  tb:{label:'Thunderbolt／USB4',type:'switch',col:15,desc:'一條線接螢幕、充電、外接硬碟。'},
-  fp:{label:'指紋解鎖',type:'switch',col:16},
-  wifi7:{label:'Wi-Fi 7',type:'switch',col:21},
-  numpad:{label:'數字鍵盤',type:'chips',col:17,opts:[[1,'有'],[0,'沒有']],desc:'常打數字很方便；但會讓觸控板偏左。'},
+// 遊戲效能檔位：程式用資料算（那張顯卡實測最低分，往下取到 500），不是手寫數字。
+const tsOf=g=>{const v=D.filter(r=>r[4]===g).map(r=>r[5]);return Math.floor(Math.min(...v)/500)*500};
+const T_E=Math.min(tsOf('RTX 4050'),tsOf('RTX 5050')),T_60=tsOf('RTX 4060'),T_70=tsOf('RTX 5070'),T_80=tsOf('RTX 5080');
+const ge=(c,x)=>r=>r[c]>=x, le=(c,x)=>r=>r[c]<=x;
+/* 條件：seg＝單選檔位（第一格不限）；multi＝多選；switch＝開關；price＝價格 */
+const C={
+  price:{type:'price',col:1,min:2000,max:48000,step:1000,
+    buckets:[['1 萬以下',null,10000],['1～2 萬',10000,20000],['2～3 萬',20000,30000],['3 萬以上',30000,null]]},
+  brand:{type:'multi',col:0,opts:BRANDS.map(b=>[b,b]),all:true},
+  size:{type:'multi',col:2,opts:[13,14,15,16,17,18].map(n=>[n,n+' 吋'])},
+  weight:{type:'seg',levels:[['2.5 kg 以下',le(3,2.5)],['2 kg 以下',le(3,2)],['1.5 kg 以下',le(3,1.5)]]},
+  game:{type:'seg',levels:[['網遊',ge(5,T_E),'可玩網遊'],['3A 1080p',ge(5,T_60),'3A 1080p 以上'],['3A 2K',ge(5,T_70),'3A 2K 以上'],['頂級',ge(5,T_80),'頂級效能']]},
+  gpu:{type:'multi',col:4,opts:GPUS.map(g=>[g,g.replace('RTX ','')])},
+  cpu:{type:'multi',col:6,opts:[['Intel','Intel'],['AMD','AMD']]},
+  ram:{type:'seg',label:'記憶體',levels:[['32GB 以上',ge(7,32)],['64GB 以上',ge(7,64)]]},
+  ssd:{type:'seg',label:'硬碟',levels:[['1TB 以上',ge(8,1024)],['2TB 以上',ge(8,2048)]]},
+  batt:{type:'seg',levels:[['8 小時以上',ge(13,8)],['10 小時以上',ge(13,10)],['12 小時以上',ge(13,12)]]},
+  panel:{type:'multi',col:10,label:'面板',opts:[['IPS','IPS'],['OLED','OLED'],['Mini LED','Mini LED']]},
+  hz:{type:'seg',label:'更新率',levels:[['144Hz 以上',ge(9,144)],['240Hz 以上',ge(9,240)],['300Hz 以上',ge(9,300)]]},
+  res:{type:'seg',label:'解析度',levels:[['2.5K 以上',ge(11,1600)],['2.8K 以上',ge(11,1800)],['4K',ge(11,2400)]]},
+  p3:{type:'switch',col:12,label:'廣色域',hint:'100% DCI-P3，修圖調色用'},
+  noise:{type:'seg',levels:[['55 dB 以下',le(14,55)],['50 dB 以下',le(14,50)],['45 dB 以下',le(14,45),'安靜（45 dB 以下）']]},
+  vram:{type:'seg',levels:[['8GB 以上',ge(20,8)],['12GB 以上',ge(20,12)],['16GB 以上',ge(20,16)]]},
+  bright:{type:'seg',levels:[['400 nits 以上',ge(18,400)],['500 nits 以上',ge(18,500)]]},
+  thick:{type:'seg',levels:[['22 mm 以下',le(19,22)],['20 mm 以下',le(19,20)]]},
+  tb:{type:'switch',col:15,label:'Thunderbolt／USB4',hint:'一條線接螢幕、充電、外接硬碟'},
+  fp:{type:'switch',col:16,label:'指紋解鎖'},
+  wifi7:{type:'switch',col:21,label:'Wi-Fi 7'},
+  numpad:{type:'multi',col:17,label:'數字鍵盤',opts:[[1,'有'],[0,'沒有']]},
 };
-const COMMON=['price','brand','size','weight','gpu','cpu','ram','ssd','ts','batt','hz','panel','res','p3','noise'];
-const MORE=[['處理器與顯卡',['vram'],6],['螢幕',['bright'],6],['機身',['thick'],5],['接口與功能',['tb','fp','wifi7','numpad'],4]];
-const ALL=[...COMMON,...MORE.flatMap(m=>m[1])];
-const KW={weight:'輕 重 公斤 kg 便攜',ts:'遊戲 打遊戲 3dmark time spy 顯卡 效能',batt:'電池 續航 小時',noise:'安靜 風扇 吵 噪音 db',tb:'雷電 thunderbolt usb4 usb-c 擴充塢',fp:'指紋 解鎖 安全',p3:'色域 色彩 修圖 dci p3',bright:'亮度 戶外 nits',thick:'薄 厚度',vram:'顯存 vram 顯示記憶體 ai',res:'解析度 2k 4k 清楚',hz:'更新率 hz 刷新',panel:'oled ips mini led 面板 螢幕',cpu:'intel amd 處理器 cpu',gpu:'顯卡 獨顯 內顯 rtx nvidia',numpad:'數字鍵盤 鍵盤',wifi7:'wifi 無線 網路',price:'預算 價格 錢 便宜',size:'尺寸 吋 螢幕大小',brand:'品牌 廠牌'};
+/* 卡片：照常用度排；相關的放同一張 */
+const CARDS=[
+  {k:'price',t:'價格',items:['price']},
+  {k:'brand',t:'品牌',items:['brand'],cap:'點你想要的品牌，可以複選。想排除某一牌：先按「全選」，再點掉它。'},
+  {k:'size',t:'螢幕尺寸',items:['size'],cap:'可以複選，例如 14 和 16 吋。'},
+  {k:'weight',t:'重量',items:['weight'],cap:'機身重量，不含充電器。每天背著走建議 1.5 kg 以下。'},
+  {k:'game',t:'遊戲效能',items:['game'],cap:`用 3DMark 實測分數分檔：網遊≈RTX 5050、3A 1080p≈4060、3A 2K≈5070、頂級≈5080。不玩遊戲就不用選。`},
+  {k:'gpu',t:'顯卡',items:['gpu'],cap:'由弱到強，可以複選。不懂型號的話用上面的「遊戲效能」就好。'},
+  {k:'cpu',t:'處理器',items:['cpu']},
+  {k:'mem',t:'記憶體與硬碟',items:['ram','ssd'],cap:'全部機型都至少有 16GB 記憶體、512GB 硬碟，一般用途不用選。'},
+  {k:'batt',t:'續航',items:['batt'],cap:'實測續航。上課或上班一整天大約要 8 小時。'},
+  {k:'screen',t:'螢幕',items:['panel','hz','res','p3']},
+  {k:'noise',t:'安靜程度',items:['noise'],cap:'打遊戲、剪片時的風扇聲（雙烤實測）。45 dB 以下算安靜。'},
+];
+const MORE_CARDS=[
+  {k:'vram',t:'顯示記憶體',items:['vram'],cap:'大型遊戲、跑 AI 模型需要更多。',kw:'vram 顯存'},
+  {k:'bright',t:'螢幕亮度',items:['bright'],cap:'常在戶外或窗邊用，選 500 nits 以上。',kw:'亮度 戶外'},
+  {k:'thick',t:'機身厚度',items:['thick'],cap:'機身最厚的地方。',kw:'薄 厚度'},
+  {k:'ports',t:'接口與功能',items:['tb','fp','wifi7','numpad'],kw:'雷電 thunderbolt usb4 指紋 wifi 數字鍵盤 接口'},
+];
+const ALLC=Object.keys(C);
+const cardOf=k=>[...CARDS,...MORE_CARDS].find(c=>c.items.includes(k));
 
 /* ---------- 狀態 ---------- */
-let s={},src={},pins=[],open=null,moreOpen=false,q='';
-const blank=k=>{const it=ITEMS[k];return it.type==='range'?{lo:null,hi:null}:it.type==='steps'?null:it.type==='switch'?false:{mode:'only',sel:[]}};
-const reset=()=>{s={};for(const k of ALL)s[k]=blank(k)};
-const isSet=k=>{const it=ITEMS[k],v=s[k];return it.type==='range'?(v.lo!==null||v.hi!==null):it.type==='chips'?v.sel.length>0:!!v};
+let s={},src={},pins=[],moreOpen=false,q='';
+const blank=k=>{const t=C[k].type;return t==='price'?{lo:null,hi:null}:t==='seg'?0:t==='switch'?false:[]};
+const reset=()=>{s={};for(const k of ALLC)s[k]=blank(k)};
+const isSet=k=>{const t=C[k].type,v=s[k];return t==='price'?(v.lo!==null||v.hi!==null):t==='multi'?v.length>0:!!v};
 const pass=(k,r)=>{
-  const it=ITEMS[k],v=s[k],x=r[it.col];
-  if(it.type==='range')return (v.lo===null||x>=v.lo-1e-9)&&(v.hi===null||x<=v.hi+1e-9);
-  if(it.type==='steps')return v===null||x>=v;
-  if(it.type==='switch')return !v||!!x;
-  if(!v.sel.length)return true;
-  return v.mode==='only'?v.sel.includes(x):!v.sel.includes(x);
+  const c=C[k],v=s[k];
+  if(c.type==='price')return (v.lo===null||r[1]>=v.lo)&&(v.hi===null||r[1]<=v.hi);
+  if(c.type==='seg')return !v||c.levels[v-1][1](r);
+  if(c.type==='switch')return !v||!!r[c.col];
+  return !v.length||v.includes(r[c.col]);
 };
-const rowsBut=k=>D.filter(r=>ALL.every(j=>j===k||pass(j,r)));
-const total=()=>D.filter(r=>ALL.every(j=>pass(j,r))).length;
+const rowsBut=k=>D.filter(r=>ALLC.every(j=>j===k||pass(j,r)));
+const total=()=>D.filter(r=>ALLC.every(j=>pass(j,r))).length;
+const cardSet=c=>c.items.some(isSet);
 
-/* ---------- 一句話：目前的值 ---------- */
-function summary(k){
-  const it=ITEMS[k],v=s[k];
-  if(!isSet(k))return '不限';
-  if(it.type==='range'){
-    const u=' '+it.unit;
-    if(v.lo!==null&&v.hi!==null)return `${it.f(v.lo)} – ${it.f(v.hi)}${u}`;
-    return v.lo!==null?`${it.f(v.lo)}${u} 以上`:`${it.f(v.hi)}${u} 以下`;
+/* ---------- 一句話 ---------- */
+const n0=v=>v.toLocaleString('en-US');
+function sum(k){
+  const c=C[k],v=s[k];
+  if(c.type==='price'){if(v.lo!==null&&v.hi!==null)return `${n0(v.lo)} – ${n0(v.hi)} 元`;return v.lo!==null?`${n0(v.lo)} 元以上`:`${n0(v.hi)} 元以下`}
+  if(c.type==='seg'){const l=c.levels[v-1];return l[2]||l[0]}
+  if(c.type==='switch')return c.label;
+  const names=c.opts.filter(o=>v.includes(o[0])).map(o=>o[1]);
+  if(c.all){
+    if(v.length===c.opts.length)return '全部品牌';
+    if(v.length>c.opts.length/2)return '除了 '+c.opts.filter(o=>!v.includes(o[0])).map(o=>o[1]).join('、')+' 都可以';
+    return '只看 '+names.join('、');
   }
-  if(it.type==='steps')return it.steps.find(x=>x[0]===v)[1]+' 以上';
-  if(it.type==='switch')return '要';
-  const names=it.opts.filter(o=>v.sel.includes(o[0])).map(o=>o[1]);
-  if(k==='gpu'&&v.mode==='only'&&GPUS.slice(1).every(g=>v.sel.includes(g))&&!v.sel.includes('內顯'))return '所有獨顯';
-  const txt=names.length>3?names.slice(0,3).join('、')+` 等 ${names.length} 個`:names.join('、');
-  return (v.mode==='no'?'排除 ':'')+txt;
+  if(k==='gpu'&&GPUS.slice(1).every(g=>v.includes(g))&&!v.includes('內顯'))return '所有獨顯';
+  return (c.label&&c.type==='multi'&&k!=='size'?c.label+' ':'')+names.join('、');
 }
+const cardSum=c=>c.items.filter(isSet).map(sum).join('、');
 
 /* ---------- 控件 ---------- */
 const esc=t=>String(t).replace(/"/g,'&quot;');
-function rangeCtl(k){
-  const it=ITEMS[k],v=s[k],lo=v.lo??it.min,hi=v.hi??it.max,pct=x=>((x-it.min)/(it.max-it.min)*100).toFixed(2)+'%';
-  return `<div class="hist" id="h-${k}">${histBars(k)}</div>
-  <div class="rng${isSet(k)?' set':''}" id="r-${k}" style="--a:${pct(lo)};--b:${pct(hi)}"><div class="trk"></div><div class="fill"></div>
-    <input type="range" aria-label="${it.label}下限" data-r="${k}" data-e="lo" min="${it.min}" max="${it.max}" step="${it.step}" value="${lo}" style="z-index:${lo>it.min+(it.max-it.min)*.9?3:1}">
-    <input type="range" aria-label="${it.label}上限" data-r="${k}" data-e="hi" min="${it.min}" max="${it.max}" step="${it.step}" value="${hi}" style="z-index:2">
-  </div>
-  <div class="ends"><span>${it.f(it.min)} ${it.unit}</span><span>${it.f(it.max)} ${it.unit}</span></div>
-  ${it.presets?`<div class="presets"><span class="eyebrow">常用</span>${it.presets.map(([t,a,b],i)=>`<button class="chip sm${v.lo===a&&v.hi===b?' on':''}" data-a="preset:${k}:${i}">${t}</button>`).join('')}</div>`:''}`;
+const pct=(x,c)=>((x-c.min)/(c.max-c.min)*100).toFixed(2)+'%';
+function segCtl(k){
+  const c=C[k],v=s[k],rs=rowsBut(k);
+  return `<div class="seg" role="radiogroup" aria-label="${c.label||k}"><button class="any${!v?' on':''}" role="radio" aria-checked="${!v}" data-a="seg:${k}:0"><b>不限</b><em>${rs.length} 台</em></button>${c.levels.map(([t,f],i)=>{
+    const n=rs.filter(f).length,on=v===i+1;
+    return `<button class="${on?'on':''}${n===0?' z0':''}" role="radio" aria-checked="${on}" data-a="seg:${k}:${i+1}"><b>${t}</b><em>${n} 台</em></button>`}).join('')}</div>`;
 }
-function histBars(k){
-  const it=ITEMS[k],v=s[k],n=24,b=Array(n).fill(0),rs=rowsBut(k),set=isSet(k);
-  for(const r of rs){const x=r[it.col];b[Math.max(0,Math.min(n-1,Math.floor((x-it.min)/(it.max-it.min)*n)))]++}
-  const mx=Math.max(1,...b),w=(it.max-it.min)/n;
-  return b.map((c,i)=>{
-    const a=it.min+i*w,z=a+w,mid=(a+z)/2;
-    const inR=(v.lo===null||mid>=v.lo)&&(v.hi===null||mid<=v.hi);
-    const cls=!set?'':inR?'in':'out';
-    return `<i class="${cls}" style="height:${c?Math.max(4,c/mx*100):0}%" title="${it.f(a)}–${it.f(z)} ${it.unit}：${c} 台"></i>`;
-  }).join('');
+function multiCtl(k){
+  const c=C[k],v=s[k],rs=rowsBut(k);
+  const chips=c.opts.map(([val,t])=>{const n=rs.filter(r=>r[c.col]===val).length,on=v.includes(val);
+    return `<button class="chip${on?' on':''}${n===0?' z0':''}" aria-pressed="${on}" data-a="chip:${k}:${esc(val)}">${t}<em>${n}</em></button>`}).join('');
+  let act='';
+  if(c.all)act=`<div class="chip-act">${v.length<c.opts.length?`<button class="link" data-a="all:${k}">全選</button>`:''}${v.length?`<button class="link" data-a="none:${k}">全部取消</button>`:''}</div>`;
+  if(k==='gpu')act=`<div class="chip-act"><button class="link" data-a="gpuall">選所有獨顯</button></div>`;
+  return `<div class="chips">${chips}</div>${act}`;
 }
-function stepsCtl(k){
-  const it=ITEMS[k],v=s[k],rs=rowsBut(k);
-  return `<div class="steps" role="group" aria-label="${it.label}至少">${it.steps.map(([val,t])=>{
-    const c=rs.filter(r=>r[it.col]>=val).length,on=v===val,inc=v!==null&&val>v;
-    return `<button class="${on?'on':inc?'inc':''}${c===0?' z0':''}" aria-pressed="${on}" data-a="step:${k}:${val}"><b>${t}</b><em>${c} 台</em></button>`}).join('')}</div>`;
+function switchCtl(k){
+  const c=C[k],n=rowsBut(k).filter(r=>r[c.col]).length;
+  return `<button class="swrow" role="switch" aria-checked="${!!s[k]}" data-a="sw:${k}"><span class="t">${c.label}${c.hint?`<small>${c.hint}</small>`:''}</span><em>${n} 台有</em><span class="switch${s[k]?' on':''}"></span></button>`;
 }
-function chipsCtl(k){
-  const it=ITEMS[k],v=s[k],rs=rowsBut(k),many=it.opts.length>=5;
-  const mode=many?`<div class="mode" role="group" aria-label="只看或排除"><button class="${v.mode==='only'?'on':''}" data-a="mode:${k}:only">只看</button><button class="${v.mode==='no'?'on bad':''}" data-a="mode:${k}:no">排除</button></div>`:'';
-  const chips=it.opts.map(([val,t])=>{
-    const c=rs.filter(r=>r[it.col]===val).length,sel=v.sel.includes(val);
-    const cls=sel?(v.mode==='no'?' no':' on'):'';
-    return `<button class="chip${cls}${c===0?' z0':''}" aria-pressed="${sel}" data-a="chip:${k}:${esc(val)}">${t}<em>${c}</em></button>`}).join('');
-  const pre=it.presets?`<div class="presets"><span class="eyebrow">常用</span>${it.presets.map(([t,list],i)=>`<button class="chip sm${v.mode==='only'&&v.sel.length===list.length&&list.every(x=>v.sel.includes(x))?' on':''}" data-a="cpreset:${k}:${i}">${t}</button>`).join('')}</div>`:'';
-  return mode+`<div class="chips">${chips}</div>`+pre;
+function histBars(){
+  const c=C.price,v=s.price,n=24,b=Array(n).fill(0),set=isSet('price');
+  for(const r of rowsBut('price'))b[Math.max(0,Math.min(n-1,Math.floor((r[1]-c.min)/(c.max-c.min)*n)))]++;
+  const mx=Math.max(1,...b),w=(c.max-c.min)/n;
+  return b.map((x,i)=>{const a=c.min+i*w,mid=a+w/2,inR=(v.lo===null||mid>=v.lo)&&(v.hi===null||mid<=v.hi);
+    return `<i class="${!set?'':inR?'in':'out'}" style="height:${x?Math.max(4,x/mx*100):0}%" title="${n0(a)}–${n0(a+w)} 元：${x} 台"></i>`}).join('');
 }
-function item(k,showSrc){
-  const it=ITEMS[k],set=isSet(k),tag=showSrc&&src[k]?`<span class="src">對話</span>`:'';
-  if(it.type==='switch'){
-    const c=rowsBut(k).filter(r=>r[it.col]).length;
-    return `<div class="item"><div class="row sw" role="switch" tabindex="0" aria-checked="${!!s[k]}" data-a="sw:${k}" ${it.desc?`title="${it.desc}"`:''}><span class="name">${it.label}</span>${tag}<span class="cnt">${c} 台有</span><span class="switch${s[k]?' on':''}"></span></div></div>`;
-  }
-  const isOpen=open===k;
-  const valCls=set?(it.type==='chips'&&s[k].mode==='no'?'set no':'set'):'';
-  const head=`<button class="row" aria-expanded="${isOpen}" data-a="open:${k}"><span class="name">${it.label}</span>${tag}<span class="val ${valCls}" id="v-${k}">${summary(k)}</span>${set?`<span class="x" role="button" aria-label="清除${it.label}" data-a="clear:${k}">×</span>`:''}<span class="chev"></span></button>`;
-  if(!isOpen)return `<div class="item">${head}</div>`;
-  const ctl=it.type==='range'?rangeCtl(k):it.type==='steps'?stepsCtl(k):chipsCtl(k);
-  return `<div class="item open">${head}<div class="panel">${it.desc?`<p class="desc">${it.desc}</p>`:''}${ctl}</div></div>`;
+function priceCtl(){
+  const c=C.price,v=s.price,lo=v.lo??c.min,hi=v.hi??c.max,rs=rowsBut('price');
+  const bk=c.buckets.map(([t,a,b])=>{const n=rs.filter(r=>(a===null||r[1]>=a)&&(b===null||r[1]<=b)).length,on=v.lo===a&&v.hi===b;
+    return `<button class="${on?'on':''}${n===0?' z0':''}" role="radio" aria-checked="${on}" data-a="pb:${a}:${b}"><b>${t}</b><em>${n} 台</em></button>`}).join('');
+  return `<div class="seg" role="radiogroup" aria-label="價位"><button class="any${!isSet('price')?' on':''}" role="radio" aria-checked="${!isSet('price')}" data-a="pb:null:null"><b>不限</b><em>${rs.length} 台</em></button>${bk}</div>
+  <div class="p-live" style="margin-top:16px"><b id="p-sum">${isSet('price')?sum('price'):'不限'}</b><span>或拖兩端微調</span></div>
+  <div class="hist" id="p-hist">${histBars()}</div>
+  <div class="rng${isSet('price')?' set':''}" id="p-rng" style="--a:${pct(lo,c)};--b:${pct(hi,c)}"><div class="trk"></div><div class="fill"></div>
+    <input type="range" aria-label="價格下限" data-e="lo" min="${c.min}" max="${c.max}" step="${c.step}" value="${lo}" style="z-index:${lo>c.min+(c.max-c.min)*.9?3:1}">
+    <input type="range" aria-label="價格上限" data-e="hi" min="${c.min}" max="${c.max}" step="${c.step}" value="${hi}" style="z-index:2"></div>
+  <div class="ends" style="margin-bottom:0"><span>${n0(c.min)} 元</span><span>${n0(c.max)} 元</span></div>`;
+}
+const ctlOf=k=>({price:priceCtl,seg:segCtl,multi:multiCtl,switch:switchCtl})[C[k].type](k);
+function card(c,showSrc){
+  const set=cardSet(c),tag=showSrc&&c.items.some(k=>src[k])?'<span class="src">對話</span>':'';
+  const many=c.items.length>1;
+  const body=c.items.map(k=>many&&C[k].type!=='switch'?`<div class="sub"><span class="sub-l">${C[k].label}</span>${ctlOf(k)}</div>`:many?`<div class="sub">${ctlOf(k)}</div>`:ctlOf(k)).join('');
+  return `<section class="card" data-card="${c.k}"><div class="c-head"><h3>${c.t}</h3>${tag}<span class="c-sum" id="sum-${c.k}">${set?cardSum(c):''}</span>${set?`<button class="link" data-a="clear:${c.k}">清除</button>`:''}</div>${c.cap?`<p class="cap">${c.cap}</p>`:''}<div class="ctl">${body}</div></section>`;
 }
 
 /* ---------- 畫面 ---------- */
 function render(){
   const body=document.getElementById('body'),top=body.scrollTop;
   let h='';
-  const n=total();
-  const zb=document.getElementById('zero');zb.hidden=!!n;zb.innerHTML='';
-  if(!n){
-    const act=ALL.filter(isSet).map(k=>{const keep=s[k];s[k]=blank(k);const c=total();s[k]=keep;return [k,c]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3);
-    zb.innerHTML=`<div class="zero"><b>沒有完全符合的機型</b>拿掉其中一個條件就有：<div class="chips">${act.map(([k,c])=>`<button class="chip sm" data-a="clear:${k}">拿掉「${ITEMS[k].label} ${summary(k)}」→ ${c} 台</button>`).join('')}</div></div>`;
-  }
-  if(q){
-    const ql=q.toLowerCase(),hit=ALL.filter(k=>(ITEMS[k].label+' '+(KW[k]||'')).toLowerCase().includes(ql));
-    h+=`<div class="grp"><div class="eyebrow">搜尋結果 <em>${hit.length}</em></div><div class="card">${hit.length?hit.map(k=>item(k,true)).join(''):`<div class="empty">找不到「${q.replace(/</g,'&lt;')}」</div>`}</div></div>`;
-  }else{
-    if(pins.length)h+=`<div class="grp"><div class="eyebrow">你的條件 <em>${pins.length}</em></div><div class="card">${pins.map(k=>item(k,true)).join('')}</div></div>`;
-    const rest=COMMON.filter(k=>!pins.includes(k));
-    h+=`<div class="grp"><div class="eyebrow">常用</div><div class="card">${rest.map(k=>item(k,false)).join('')}</div></div>`;
-    const moreSet=MORE.flatMap(m=>m[1]).filter(k=>!pins.includes(k)&&isSet(k)).length;
-    h+=`<div class="grp"><div class="eyebrow">更多條件</div><div class="card"><button class="morebtn" aria-expanded="${moreOpen}" data-a="more"><span class="name">${moreOpen?'收起':'4 類、共 28 項'}</span><small>${moreSet?`已設 ${moreSet} 項`:'處理器與顯卡、螢幕、機身、接口與功能'}</small><span class="chev" style="${moreOpen?'rotate:180deg':''}"></span></button>`;
-    if(moreOpen)h+=MORE.map(([name,keys,others])=>`<div class="cat"><div class="eyebrow">${name}</div></div>${keys.filter(k=>!pins.includes(k)).map(k=>item(k,false)).join('')}<p class="rest">這一類另有 ${others} 項（Demo 省略）</p>`).join('')+`<p class="rest" style="border-top:1px solid var(--line-2);padding-top:14px">其餘約 200 個細項不列出來，用上方搜尋找。</p>`;
-    h+=`</div></div>`;
+  const pinned=pins.map(k=>[...CARDS,...MORE_CARDS].find(c=>c.k===k));
+  if(pinned.length)h+=`<div class="eyebrow grp-t">你的條件 <em>${pinned.length}</em></div><div class="cards">${pinned.map(c=>card(c,true)).join('')}</div>`;
+  h+=`<div class="eyebrow grp-t">常用</div><div class="cards">${CARDS.filter(c=>!pins.includes(c.k)).map(c=>card(c,false)).join('')}</div>`;
+  const ql=q.toLowerCase(),moreList=MORE_CARDS.filter(c=>!pins.includes(c.k)&&(!ql||(c.t+' '+c.kw).toLowerCase().includes(ql)));
+  const moreSet=MORE_CARDS.filter(c=>!pins.includes(c.k)&&cardSet(c)).length;
+  h+=`<button class="more" aria-expanded="${moreOpen}" data-a="more"><b>更多條件</b><small>${moreSet?`已設 ${moreSet} 項 · `:''}顯示記憶體、亮度、厚度、接口…</small><i></i></button>`;
+  if(moreOpen){
+    h+=`<div class="d-search"><input id="q" type="search" placeholder="找條件：雷電、指紋、亮度…" value="${esc(q)}" autocomplete="off"></div>`;
+    h+=`<div class="cards" style="margin-top:10px">${moreList.map(c=>card(c,false)).join('')||'<p class="rest">這個 Demo 找不到，正式版會搜全部約 200 個細項。</p>'}</div><p class="rest">其餘約 200 個細項不列出來，用上面的搜尋找。</p>`;
   }
   body.innerHTML=h;
   body.scrollTop=top;
+  if(moreOpen&&document.activeElement===document.body&&q){const i=document.getElementById('q');i.focus();i.setSelectionRange(i.value.length,i.value.length)}
   foot();
 }
 function foot(){
-  const n=total(),go=document.getElementById('go');
+  const n=total(),go=document.getElementById('go'),zb=document.getElementById('zero');
   go.disabled=n===0;
   go.innerHTML=n?`<span>顯示 <b>${n}</b> 台</span>`:'沒有符合的機型';
-  document.getElementById('ca').disabled=!ALL.some(isSet);
+  document.getElementById('ca').disabled=!ALLC.some(isSet);
+  zb.hidden=!!n;zb.innerHTML='';
+  if(!n){
+    const act=ALLC.filter(isSet).map(k=>{const keep=s[k];s[k]=blank(k);const c=total();s[k]=keep;return [k,c]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    zb.innerHTML=`<b>沒有完全符合的機型</b>拿掉其中一個條件就有：<div class="chips">${act.map(([k,c])=>`<button class="chip sm" data-a="clr1:${k}">拿掉「${cardOf(k).t}：${sum(k)}」→ ${c} 台</button>`).join('')}</div>`;
+  }
 }
-function reopen(){pins=ALL.filter(isSet).sort((a,b)=>(src[b]?1:0)-(src[a]?1:0)||ALL.indexOf(a)-ALL.indexOf(b));open=null;moreOpen=false;q='';document.getElementById('q').value='';document.getElementById('qx').hidden=true;render();document.getElementById('body').scrollTop=0}
+function reopen(){
+  const all=[...CARDS,...MORE_CARDS],set=all.filter(cardSet);
+  pins=set.sort((a,b)=>(b.items.some(k=>src[k])?1:0)-(a.items.some(k=>src[k])?1:0)||all.indexOf(a)-all.indexOf(b)).map(c=>c.k);
+  moreOpen=false;q='';render();document.getElementById('body').scrollTop=0;
+}
 
 /* ---------- 情境 ---------- */
 const SCEN=[
   ['沒有對話','直接打開篩選：全部照常用度排',()=>{}],
-  ['「要 15 或 16 吋，預算 1～3 萬」','尺寸、價格從對話來，排在最上面',()=>{s.size={mode:'only',sel:[15,16]};s.price={lo:10000,hi:30000};src={size:1,price:1}}],
-  ['「不要微星，要有雷電接口，續航 10 小時以上」','品牌排除、續航，以及藏在「更多條件」的 Thunderbolt 都排上來',()=>{s.brand={mode:'no',sel:['微星']};s.tb=true;s.batt={lo:10,hi:null};src={brand:1,tb:1,batt:1}}],
+  ['「要 15 或 16 吋，預算 1～3 萬」','尺寸、價格從對話來，排在最上面',()=>{s.size=[15,16];s.price={lo:10000,hi:30000};src={size:1,price:1}}],
+  ['「不要微星，要有雷電接口，續航 10 小時以上」','品牌顯示成「除了微星都可以」；續航和原本在「更多條件」的接口也排上來',()=>{s.brand=BRANDS.filter(b=>b!=='微星');s.tb=true;s.batt=2;src={brand:1,tb:1,batt:1}}],
 ];
-let scen=1;
-function setScen(i){scen=i;reset();src={};SCEN[i][2]();document.getElementById('scens').innerHTML=SCEN.map((x,j)=>`<button class="scen${j===i?' on':''}" data-a="scen:${j}"><i></i><span><b>${x[0]}</b><span>${x[1]}</span></span></button>`).join('');reopen()}
+function setScen(i){reset();src={};SCEN[i][2]();document.getElementById('scens').innerHTML=SCEN.map((x,j)=>`<button class="scen${j===i?' on':''}" data-a="scen:${j}"><i></i><span><b>${x[0]}</b><span>${x[1]}</span></span></button>`).join('');reopen()}
 
 /* ---------- 互動 ---------- */
+const forget=k=>{delete src[k]};
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-a]');if(!el)return;
   const [a,k,v]=el.dataset.a.split(':');
-  if(a==='clear'){e.stopPropagation();s[k]=blank(k);delete src[k];return render()}
   if(a==='scen')return setScen(+k);
   if(a==='reopen')return reopen();
   if(a==='clearall'){reset();src={};return render()}
-  if(a==='open'){open=open===k?null:k;render();const o=document.querySelector('.item.open');if(o){const b=document.getElementById('body'),r=o.getBoundingClientRect(),br=b.getBoundingClientRect();if(r.bottom>br.bottom)b.scrollTop+=Math.min(r.bottom-br.bottom+12,r.top-br.top-8)}return}
-  if(a==='more'){moreOpen=!moreOpen;return render()}
-  if(a==='sw'){s[k]=!s[k];if(!s[k])delete src[k];return render()}
-  if(a==='step'){s[k]=s[k]===+v?null:+v;return render()}
-  if(a==='mode'){s[k].mode=v;return render()}
-  if(a==='chip'){const it=ITEMS[k],val=it.opts.find(o=>String(o[0])===v)[0],cur=s[k].sel;s[k].sel=cur.includes(val)?cur.filter(x=>x!==val):[...cur,val];return render()}
-  if(a==='cpreset'){const list=ITEMS[k].presets[+v][1];s[k]={mode:'only',sel:[...list]};return render()}
-  if(a==='preset'){const [,lo,hi]=ITEMS[k].presets[+v];const cur=s[k];s[k]=cur.lo===lo&&cur.hi===hi?blank(k):{lo,hi};return render()}
+  if(a==='clear'){const c=[...CARDS,...MORE_CARDS].find(x=>x.k===k);for(const i of c.items){s[i]=blank(i);forget(i)}return render()}
+  if(a==='clr1'){s[k]=blank(k);forget(k);return render()}
+  if(a==='more'){moreOpen=!moreOpen;q='';return render()}
+  if(a==='seg'){s[k]=+v===s[k]?0:+v;if(!s[k])forget(k);return render()}
+  if(a==='pb'){const lo=k==='null'?null:+k,hi=v==='null'?null:+v;s.price=(s.price.lo===lo&&s.price.hi===hi)?blank('price'):{lo,hi};if(!isSet('price'))forget('price');return render()}
+  if(a==='chip'){const c=C[k],val=c.opts.find(o=>String(o[0])===v)[0],cur=s[k];s[k]=cur.includes(val)?cur.filter(x=>x!==val):[...cur,val];if(!s[k].length)forget(k);return render()}
+  if(a==='all'){s[k]=C[k].opts.map(o=>o[0]);return render()}
+  if(a==='none'){s[k]=[];forget(k);return render()}
+  if(a==='gpuall'){s.gpu=GPUS.slice(1);return render()}
+  if(a==='sw'){s[k]=!s[k];if(!s[k])forget(k);return render()}
 });
-document.addEventListener('keydown',e=>{const el=e.target.closest&&e.target.closest('.row.sw');if(el&&(e.key===' '||e.key==='Enter')){e.preventDefault();el.click()}});
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.id==='q'){q=t.value.trim();document.getElementById('qx').hidden=!q;open=null;return render()}
-  const k=t.dataset.r;if(!k)return;
-  const it=ITEMS[k],v=s[k],x=+t.value;
-  let lo=v.lo??it.min,hi=v.hi??it.max;
-  if(t.dataset.e==='lo'){lo=Math.min(x,hi-it.step);t.value=lo}else{hi=Math.max(x,lo+it.step);t.value=hi}
-  const r=y=>Math.round(y/it.step)*it.step;
-  s[k]={lo:r(lo)<=it.min+1e-9?null:+r(lo).toFixed(2),hi:r(hi)>=it.max-1e-9?null:+r(hi).toFixed(2)};
-  const box=document.getElementById('r-'+k),pct=y=>((y-it.min)/(it.max-it.min)*100).toFixed(2)+'%';
-  box.style.setProperty('--a',pct(lo));box.style.setProperty('--b',pct(hi));box.classList.toggle('set',isSet(k));
-  document.getElementById('h-'+k).innerHTML=histBars(k);
-  const vEl=document.getElementById('v-'+k);vEl.textContent=summary(k);vEl.className='val'+(isSet(k)?' set':'');
+  if(t.id==='q'){q=t.value;render();const i=document.getElementById('q');i.focus();i.setSelectionRange(i.value.length,i.value.length);return}
+  if(!t.dataset.e)return;
+  const c=C.price,v=s.price,x=+t.value;
+  let lo=v.lo??c.min,hi=v.hi??c.max;
+  if(t.dataset.e==='lo'){lo=Math.min(x,hi-c.step);t.value=lo}else{hi=Math.max(x,lo+c.step);t.value=hi}
+  s.price={lo:lo<=c.min?null:lo,hi:hi>=c.max?null:hi};
+  const box=document.getElementById('p-rng');box.style.setProperty('--a',pct(lo,c));box.style.setProperty('--b',pct(hi,c));box.classList.toggle('set',isSet('price'));
+  document.getElementById('p-hist').innerHTML=histBars();
+  document.getElementById('p-sum').textContent=isSet('price')?sum('price'):'不限';
   foot();
 });
-document.addEventListener('change',e=>{if(e.target.dataset.r)render()});
-document.getElementById('qx').addEventListener('click',()=>{const i=document.getElementById('q');i.value='';q='';document.getElementById('qx').hidden=true;render();i.focus()});
+document.addEventListener('change',e=>{if(e.target.dataset.e)render()});
 setScen(1);
 </script>
 </body>
