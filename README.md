@@ -45,4 +45,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 精品標註系統版 Demo（v1.0.59 真實畫面＋新風格） | https://mgitclau.github.io/mgitclau/laptop-style-gadgets-system.html | 2026-11-17 |
 | AI 筆電選購助手 · 篩選抽屜方案 Demo（常用度排序＋對話條件置頂＋6 項操作修改） | https://mgitclau.github.io/mgitclau/laptop-filter-order-demo.html | 2026-11-19 |
 | AI 筆電選購助手 · 篩選抽屜互動設計（White A：常用攤開、單選／多選分開、白話檔位） | https://mgitclau.github.io/mgitclau/laptop-filter-drawer-whitea.html | 2026-11-19 |
-| AI 筆電選購助手 · 篩選條件 6 種模板（White A：常用數值分布圖、專業數值、至少階梯、多選、品牌格子、功能清單） | https://mgitclau.github.io/mgitclau/laptop-filter-templates.html | 2026-11-19 |
+| AI 筆電選購助手 · 篩選條件模板（White A：分布圖＋後台設定、一排格子、品牌 4 欄、功能清單） | https://mgitclau.github.io/mgitclau/laptop-filter-templates.html | 2026-11-19 |
