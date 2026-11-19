@@ -46,3 +46,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 篩選抽屜方案 Demo（常用度排序＋對話條件置頂＋6 項操作修改） | https://mgitclau.github.io/mgitclau/laptop-filter-order-demo.html | 2026-11-19 |
 | AI 筆電選購助手 · 篩選抽屜互動設計（White A：常用攤開、單選／多選分開、白話檔位） | https://mgitclau.github.io/mgitclau/laptop-filter-drawer-whitea.html | 2026-11-19 |
 | AI 筆電選購助手 · 篩選條件模板（White A：分布圖＋後台設定、一排格子、品牌 4 欄、功能清單） | https://mgitclau.github.io/mgitclau/laptop-filter-templates.html | 2026-11-19 |
+| AI 筆電選購助手 · 選項條件 3 個方案（電商式標籤列／可點柱狀圖／清單＋比例條） | https://mgitclau.github.io/mgitclau/laptop-filter-cells-options.html | 2026-11-19 |
