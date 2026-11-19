@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>篩選 4 種做法（參考真實網站）</title>
+<style>
+:root{
+  --ground:#C6CDDC;--ground-2:#BAC3D5;--panel:#EDF0F5;--card:#fff;--group:#EBEEF4;--group-2:#E2E7F0;--inner:#F2F4F8;
+  --ink:#12151C;--ink-2:#454C5D;--ink-3:#5A6174;--edge:#2A2F3A;--line:#D7DCE6;--line-2:#E4E8EF;
+  --accent:#2340C4;--accent-soft:#DDE4F7;--signal:#F0602A;--signal-ink:#A8401A;
+  --ghost:#E6E9F0;--mid:#9AA2B3;--off:#D3D8E2;--faint:#DCE1EA;--zero:#B0B6C3;
+  --sh-card:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16);
+  --sh-pop:0 2px 6px rgba(22,30,52,.08),0 24px 48px -12px rgba(22,30,52,.32);
+  --sh-panel:0 30px 60px -30px rgba(30,40,70,.35);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC","Noto Sans TC",monospace;
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E");
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --chevw:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --sliders:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 7h10M18 7h2M4 17h4M12 17h8'/%3E%3Ccircle cx='16' cy='7' r='2'/%3E%3Ccircle cx='10' cy='17' r='2'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;font:14px/1.55 var(--sans);color:var(--ink);background:radial-gradient(1200px 700px at 80% -10%,#D3D9E6 0%,transparent 60%),linear-gradient(180deg,var(--ground),var(--ground-2));background-attachment:fixed;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border-radius:30px;box-shadow:var(--sh-panel);padding:24px 28px}
+.eyebrow{display:flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;color:var(--ink-3)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
+h1{font:600 28px/1.2 var(--display);letter-spacing:-.025em;margin:8px 0 6px}
+.lead{margin:0;color:var(--ink-2);max-width:78ch}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.tab{min-height:44px;padding:0 18px;border-radius:999px;border:1.3px solid var(--edge);background:var(--card);font-weight:600}
+.tab small{font-weight:400;color:var(--ink-3);margin-left:6px}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab.on small{color:rgba(255,255,255,.7)}
+.how{margin:14px 0 0;padding:12px 16px;border-radius:16px;background:var(--card);box-shadow:var(--sh-card);color:var(--ink-2);font-size:13.5px}
+.how b{color:var(--ink)}
+.stage{margin-top:16px;background:var(--card);border-radius:28px;box-shadow:var(--sh-panel);padding:22px;position:relative;min-height:720px}
+.link{border:0;background:none;padding:0;color:var(--ink);font-size:13.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn-ink{min-height:46px;padding:0 22px;border:0;border-radius:12px;background:var(--ink);color:#fff;font-weight:600}
+.btn-ink:hover{background:#2C3343}
+.muted{color:var(--ink-3)}
+
+/* 結果（示意） */
+.res-h{display:flex;align-items:baseline;gap:12px;margin:16px 0 12px}
+.res-h h3{margin:0;font:600 18px var(--display)}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.lap{border-radius:16px;background:var(--inner);padding:12px}
+.lap .img{height:84px;border-radius:10px;background:linear-gradient(135deg,#DDE2EB,#C9D0DC);margin-bottom:10px;display:grid;place-items:center;color:#8C94A5;font:500 11px var(--mono)}
+.lap b{display:block;font-size:13.5px}
+.lap span{display:block;font-size:12px;color:var(--ink-3)}
+.lap em{display:block;margin-top:4px;font:600 13.5px var(--mono);font-style:normal}
+
+/* 共用：分布圖滑桿 */
+.hs .chart{position:relative;margin:0 11px;display:flex;align-items:flex-end;border-bottom:1.5px solid var(--ink)}
+.hs .chart .b{position:relative;flex:1 1 0;height:100%}
+.hs .chart .b i{position:absolute;bottom:0;left:50%;translate:-50% 0;width:80%;border-radius:2px 2px 0 0}
+.hs .chart .b i.g{background:var(--ghost)}
+.hs .chart .b i.f{background:var(--mid)}
+.hs .chart .b.out i.f{background:var(--off)}
+.hs .chart .b.k i.f{background:var(--ink)}
+.marks{position:relative;height:22px;margin:0 11px}
+.marks button{position:absolute;top:4px;translate:-50% 0;padding:1px 6px;border:0;border-radius:6px;background:none;font:500 11px/1.4 var(--mono);color:var(--ink-2);white-space:nowrap}
+.marks button::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--ink)}
+.marks button:hover{background:var(--group)}
+.marks button.on{background:var(--ink);color:#fff}
+.rng{position:relative;height:28px;margin:0 11px}
+.rng .trk,.rng .fill{position:absolute;top:11px;height:6px;border-radius:999px}
+.rng .trk{left:0;right:0;background:var(--faint)}
+.rng .fill{left:var(--a);right:calc(100% - var(--b));background:var(--mid)}
+.rng.set .fill{background:var(--ink)}
+.rng input{position:absolute;left:-11px;width:calc(100% + 22px);top:0;height:28px;margin:0;-webkit-appearance:none;appearance:none;background:none;pointer-events:none}
+.rng input::-webkit-slider-runnable-track{height:28px;background:none}
+.rng input::-moz-range-track{background:none}
+.rng input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:22px;height:22px;margin-top:3px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);box-shadow:0 4px 10px -2px rgba(22,30,52,.35);cursor:grab}
+.rng input::-moz-range-thumb{pointer-events:auto;width:20px;height:20px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);cursor:grab}
+.ends{display:flex;justify-content:space-between;padding:0 11px;margin-top:-2px;font:500 11.5px var(--mono);color:var(--ink-3)}
+
+/* 共用：膠囊按鈕、勾選框、開關 */
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 16px;border-radius:999px;border:1.3px solid var(--line);background:var(--card);font-size:14px;transition:border-color .12s,background .12s}
+.pill:hover{border-color:var(--edge)}
+.pill.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.pill.z:not(.on){color:var(--zero);border-style:dashed}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.cb{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:0;border:0;background:none;text-align:left;font-size:14px}
+.cb i{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #B9C0CE;background:var(--card)}
+.cb.on i{border-color:var(--ink);background:var(--ink) var(--check) no-repeat center/14px}
+.cb:hover i{border-color:var(--ink)}
+.cb.z:not(.on){color:var(--zero)}
+.sw{flex:none;position:relative;width:42px;height:26px;border-radius:999px;background:var(--faint);transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(22,30,52,.3);transition:translate .2s}
+.sw.on{background:var(--ink)}
+.sw.on::after{translate:16px 0}
+
+/* ===== 1. Airbnb 式 ===== */
+.air-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line-2)}
+.air-bar .sep{width:1px;height:28px;background:var(--line)}
+.air-f{position:relative}
+.air-f::before{content:"";width:16px;height:16px;background:var(--sliders) no-repeat center/16px}
+.air-f.on::before{filter:invert(1)}
+.badge{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:#fff;font:600 11px/20px var(--mono);text-align:center}
+.pill.on .badge{background:#fff;color:var(--ink)}
+.modal-bg{position:absolute;inset:0;border-radius:28px;background:rgba(18,21,28,.45);display:flex;justify-content:center;align-items:flex-start;padding:28px 16px}
+.modal{width:min(640px,100%);max-height:calc(100% - 20px);display:flex;flex-direction:column;background:var(--card);border-radius:22px;box-shadow:var(--sh-pop);overflow:hidden}
+.m-head{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line-2)}
+.m-head h2{margin:0;text-align:center;font:600 16px var(--display)}
+.xbtn{width:34px;height:34px;border-radius:50%;border:0;background:none;font-size:18px}
+.xbtn:hover{background:var(--group)}
+.m-body{overflow-y:auto;padding:0 24px}
+.m-sec{padding:24px 0;border-bottom:1px solid var(--line-2)}
+.m-sec:last-child{border-bottom:0}
+.m-sec h3{margin:0 0 4px;font:600 20px/1.3 var(--display);letter-spacing:-.015em}
+.m-sec>p{margin:0 0 14px;color:var(--ink-3);font-size:13.5px}
+.m-row{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:12px;padding:8px 0}
+.m-row>span{font-size:15px}
+.minmax{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;margin-top:12px}
+.minmax div{padding:8px 14px;border-radius:12px;border:1px solid var(--line)}
+.minmax small{display:block;font-size:11.5px;color:var(--ink-3)}
+.minmax b{font:600 15px var(--mono)}
+.minmax i{height:1px;background:var(--line);margin:0 4px}
+.m-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px}
+.m-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--line-2)}
+.m-hist{display:grid;gap:18px}
+.m-hist .lbl{display:flex;justify-content:space-between;margin-bottom:6px;font-size:15px}
+.m-hist .lbl b{font-weight:600}
+
+/* ===== 2. Best Buy／Newegg 式 ===== */
+.bby{display:grid;grid-template-columns:288px minmax(0,1fr);gap:20px;align-items:start}
+.side{border:1px solid var(--line);border-radius:18px;padding:4px 18px}
+.grp{border-bottom:1px solid var(--line-2);padding:4px 0}
+.grp:last-child{border-bottom:0}
+.grp-h{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:0;border:0;background:none;font:600 15px var(--display);text-align:left}
+.grp-h i{width:18px;height:18px;background:var(--chev) no-repeat center/16px;transition:rotate .2s}
+.grp.open .grp-h i{rotate:180deg}
+.grp-b{padding:0 0 12px}
+.grp-b .more{margin-top:4px;border:0;background:none;padding:4px 0;color:var(--accent);font-size:13.5px;font-weight:500}
+.togrow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:0;border:0;background:none;font-size:14px;text-align:left}
+.bby-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bby-top .grow{flex:1}
+.sort{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:10px;font-size:13.5px}
+.sort::after{content:"";width:14px;height:14px;background:var(--chev) no-repeat center/14px}
+.applied{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:13px}
+.ach{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 6px 0 12px;border-radius:999px;background:var(--group);font-size:13px}
+.ach button{width:22px;height:22px;border:0;border-radius:50%;background:none;font-size:13px}
+.ach button:hover{background:var(--group-2)}
+
+/* ===== 3. Zalando 式 ===== */
+.zbar{display:flex;flex-wrap:wrap;gap:8px;position:relative}
+.zp{display:inline-flex;align-items:center;gap:8px;min-height:42px;max-width:240px;padding:0 14px 0 16px;border-radius:999px;border:1.3px solid var(--line);background:var(--card);font-size:14.5px;white-space:nowrap;transition:border-color .12s}
+.zp span{overflow:hidden;text-overflow:ellipsis}
+.zp::after{content:"";flex:none;width:15px;height:15px;background:var(--chev) no-repeat center/15px;transition:rotate .2s}
+.zp:hover{border-color:var(--edge)}
+.zp.open{border-color:var(--ink)}
+.zp.open::after{rotate:180deg}
+.zp.set{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.zp.set::after{background-image:var(--chevw)}
+.zall{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 6px;border:0;background:none;font-weight:600;font-size:14.5px}
+.zall::before{content:"";width:18px;height:18px;background:var(--sliders) no-repeat center/18px}
+.pop{position:absolute;z-index:4;width:360px;max-width:calc(100vw - 48px);background:var(--card);border-radius:18px;box-shadow:var(--sh-pop);border:1px solid var(--line-2)}
+.pop-b{max-height:380px;overflow-y:auto;padding:14px 18px}
+.pop .more{margin-top:4px;border:0;background:none;padding:4px 0;color:var(--accent);font-size:13.5px;font-weight:500}
+.pop-f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-top:1px solid var(--line-2)}
+.pop-f .btn-ink{min-height:40px;border-radius:999px}
+.zcount{margin:12px 0 0;color:var(--ink-3);font-size:13.5px}
+
+/* ===== 4. Apple 式 ===== */
+.apl{max-width:820px;margin:0 auto;padding:8px 8px 96px}
+.apl h2{margin:6px 0 4px;text-align:center;font:600 36px/1.15 var(--display);letter-spacing:-.03em}
+.apl .sub{margin:0 0 24px;text-align:center;color:var(--ink-3);font-size:16px}
+.aq{padding:28px 0;border-top:1px solid var(--line-2)}
+.aq h3{margin:0 0 4px;font:600 24px/1.25 var(--display);letter-spacing:-.02em}
+.aq>p{margin:0 0 16px;color:var(--ink-3);font-size:15px}
+.tiles{display:grid;grid-template-columns:repeat(var(--c,3),minmax(0,1fr));gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:84px;padding:16px 18px;border-radius:16px;border:1.5px solid var(--line);background:var(--card);text-align:left;transition:border-color .12s,box-shadow .12s}
+.tile b{font:600 20px/1.2 var(--display);letter-spacing:-.01em}
+.tile span{font-size:13.5px;color:var(--ink-3)}
+.tile:hover{border-color:#8C94A5}
+.tile.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tile.on::after{content:"";position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:var(--accent) var(--check) no-repeat center/12px}
+.tile.z:not(.on){opacity:.45}
+.tile.sm{min-height:56px;padding:12px 14px}
+.tile.sm b{font-size:16px}
+.amore{margin-top:12px;border:0;background:none;padding:0;color:var(--accent);font-size:14.5px;font-weight:500}
+.amore:hover{text-decoration:underline}
+.apl-hs .hs .chart{height:80px}
+.abar{position:sticky;bottom:16px;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:820px;margin:0 auto;padding:12px 12px 12px 24px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:var(--sh-pop);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.abar b{font:600 18px var(--display)}
+.abar .btn-ink{border-radius:999px;background:var(--accent)}
+.abar .btn-ink:hover{background:#1A2F96}
+.feat-ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
+
+@media (max-width:900px){.bby{grid-template-columns:minmax(0,1fr)}.tiles{--c:2!important}}
+@media (max-width:560px){
+  .wrap{padding:10px}.panel{padding:18px 16px;border-radius:24px}h1{font-size:23px}.stage{padding:14px;border-radius:22px}
+  .m-body{padding:0 16px}.m-row{grid-template-columns:72px minmax(0,1fr)}.m-grid2{grid-template-columns:minmax(0,1fr)}
+  .apl h2{font-size:28px}.aq h3{font-size:20px}.tile b{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="panel">
+    <div class="eyebrow">篩選 · 參考 4 個真實網站的做法</div>
+    <h1>照真實網站的篩選方式重做</h1>
+    <p class="lead">四種都照原網站的操作方式，換成我們的條件和 White A 風格（不用它們的商標和配色）。資訊減到最少：選項旁不標台數，只有一個總台數；0 台的選項變灰。價格、遊戲效能、續航、重量照之前的決定用分布圖。四種用同一份 370 台資料，切換分頁時你選的條件會保留。</p>
+    <div class="tabs" id="tabs"></div>
+    <div class="how" id="how"></div>
+  </section>
+  <section class="stage" id="stage"></section>
+</div>
+<script>
+const D=[["雷神",6000,16,2.43,"RTX 4060",9885,"Intel",16,512,240,"IPS",1600,0,11.0,53.6,1,0,1,426,25.2,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4070",12248,"Intel",16,512,240,"IPS",1600,0,11.0,54.2,1,0,1,377,25.2,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4060",9746,"Intel",16,512,240,"IPS",1600,0,11.0,53.6,1,0,1,426,25.2,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4070",11967,"Intel",16,512,240,"IPS",1600,0,11.0,55.4,1,0,1,393,25.2,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4060",10289,"Intel",16,512,240,"IPS",1600,0,11.0,50.7,1,0,1,412,25.2,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4070",11793,"Intel",16,512,240,"IPS",1600,0,11.0,51.8,1,0,1,399,25.2,8,0,0,0,0,1,1],["宏碁",4300,14,1.38,"內顯",5182,"Intel",16,512,120,"IPS",1200,0,10.0,37.7,0,0,0,394,14.5,0,0,0,0,1,1,0],["微星",7000,17,2.79,"RTX 5060",11246,"Intel",16,512,144,"IPS",1080,0,11.0,53.3,1,0,1,372,26.8,8,0,0,0,0,1,1],["微星",7000,17,2.79,"RTX 5070",13610,"Intel",16,512,144,"IPS",1080,0,11.0,54.0,1,0,1,375,26.8,8,0,0,0,0,1,1],["微星",7800,14,2.15,"RTX 4060",10359,"Intel",32,512,144,"IPS",1200,0,6.67,51.0,1,0,0,376,24.0,8,0,0,0,0,1,1],["機械革命",6000,16,2.43,"RTX 4060",10546,"Intel",16,512,165,"IPS",1600,0,11.0,50.7,1,0,1,421,25.2,8,0,0,0,0,1,1],["機械革命",6000,16,2.43,"RTX 5060",10774,"Intel",16,512,165,"IPS",1600,0,11.0,51.2,1,0,1,423,25.2,8,0,0,0,0,1,1],["機械師",8008,15,2.32,"RTX 4060",10378,"Intel",16,512,144,"IPS",1080,0,6.67,50.9,1,0,1,378,24.7,8,0,0,0,0,1,1],["機械師",8008,15,2.32,"RTX 5060",10768,"Intel",16,512,144,"IPS",1080,0,6.67,54.5,1,0,1,368,24.7,8,0,0,0,0,1,1],["聯想",12899,16,1.78,"內顯",17656,"Intel",32,1024,120,"OLED",1800,1,27.5,46.0,1,1,1,405,15.7,0,1,1,1,1,0,0],["聯想",12899,16,1.72,"內顯",14207,"Intel",32,1024,120,"OLED",1800,1,27.5,41.5,1,1,1,518,16.2,0,1,1,1,1,1,0],["聯想",12999,16,2.04,"RTX 5070",17513,"Intel",32,1024,240,"Mini LED",1800,0,15.2,56.0,1,1,1,634,25.2,8,0,1,0,0,1,1],["華碩",3214,14,1.5,"內顯",17800,"AMD",64,1024,160,"IPS",1600,0,12.0,47.0,0,1,0,384,24.0,0,0,1,1,1,1,0],["機械革命",6549,15,2.0,"RTX 5060",12298,"AMD",32,1024,300,"IPS",1600,0,13.0,50.0,1,0,1,818,24.0,8,0,1,1,0,1,1],["華碩",5900,14,0.99,"內顯",12637,"AMD",32,1024,120,"OLED",1800,1,16.5,41.4,0,0,1,583,14.5,0,0,0,1,1,0,0],["榮耀",16997,16,1.86,"RTX 5070",12917,"Intel",32,1024,165,"IPS",1920,0,11.0,53.2,1,1,1,573,20.1,8,1,1,1,0,1,1],["華碩",6999,16,1.5,"內顯",4187,"AMD",32,1024,120,"OLED",1800,1,12.5,41.4,0,0,1,514,11.5,0,1,1,1,1,1,0],["聯想",5555,14,1.39,"內顯",5190,"Intel",32,1024,120,"OLED",1800,0,10.0,40.8,1,1,1,398,17.2,0,1,1,1,1,1,0],["華碩",27999,16,2.43,"RTX 5090",21626,"Intel",32,2048,240,"Mini LED",1600,1,11.0,58.0,1,0,1,556,25.2,24,0,1,1,0,1,1],["華碩",22999,16,2.43,"RTX 5080",19199,"Intel",32,2048,240,"Mini LED",1600,1,11.0,58.0,1,0,1,644,25.2,16,0,1,1,0,1,1],["華碩",31999,18,2.99,"RTX 5090",23113,"Intel",32,2048,240,"Mini LED",1600,1,11.0,58.0,1,0,1,623,27.6,24,0,1,1,0,1,1],["華碩",23999,18,2.99,"RTX 5080",20247,"Intel",32,2048,240,"Mini LED",1600,1,11.0,58.0,1,0,1,642,27.6,16,0,1,1,0,1,1],["華碩",19999,18,2.99,"RTX 5080",20139,"Intel",32,1024,240,"Mini LED",1600,1,11.0,58.0,1,0,1,599,27.6,16,0,1,1,0,1,1],["華碩",10999,16,2.43,"RTX 5070 Ti",15556,"AMD",16,1024,240,"IPS",1600,1,11.0,56.6,1,0,1,617,25.2,12,0,1,1,0,1,1],["華碩",8999,16,2.43,"RTX 5070",13428,"AMD",16,1024,240,"IPS",1600,1,11.0,54.8,1,0,1,647,25.2,8,0,1,1,0,1,1],["華碩",8999,16,2.43,"RTX 5060",11249,"AMD",16,1024,240,"IPS",1600,1,11.0,54.4,1,0,1,574,25.2,8,0,1,1,0,1,1],["華碩",10799,16,2.43,"RTX 5070 Ti",15580,"AMD",16,1024,165,"IPS",1600,0,11.0,53.1,1,0,1,606,25.2,12,0,1,1,0,1,1],["華碩",7799,16,2.43,"RTX 5060",10988,"AMD",16,1024,165,"IPS",1600,0,11.0,51.9,1,0,1,622,25.2,8,0,1,1,0,1,1],["華碩",8499,16,2.43,"RTX 5060",11295,"Intel",16,1024,165,"IPS",1600,0,11.0,54.6,1,0,1,584,25.2,8,0,1,1,0,1,1],["華碩",11999,13,2.15,"內顯",14053,"AMD",32,1024,180,"IPS",1600,1,6.67,40.6,1,0,0,633,24.0,0,0,1,1,1,1,1],["華碩",12999,13,2.15,"內顯",15693,"AMD",32,1024,180,"IPS",1600,1,6.67,40.8,1,0,0,626,24.0,0,0,1,1,1,1,1],["華碩",14999,13,2.15,"內顯",14816,"AMD",64,1024,180,"IPS",1600,1,6.67,40.6,1,0,0,590,24.0,0,0,1,1,1,1,1],["華碩",18999,13,2.15,"內顯",15446,"AMD",128,1024,180,"IPS",1600,1,6.67,40.6,1,0,0,566,24.0,0,0,1,1,1,1,1],["華碩",18999,14,2.15,"RTX 5080",18570,"AMD",32,1024,120,"OLED",1800,1,6.67,53.8,1,0,0,609,24.0,16,0,1,1,0,1,1],["華碩",14999,14,2.15,"RTX 5070 Ti",15612,"AMD",32,1024,120,"OLED",1800,1,6.67,53.8,1,0,0,598,24.0,12,0,1,1,0,1,1],["華碩",12999,14,2.15,"RTX 5070",13821,"AMD",32,1024,120,"OLED",1800,1,6.67,53.1,1,0,0,626,24.0,8,0,1,1,0,1,1],["華碩",11999,14,2.15,"RTX 5060",11395,"AMD",32,1024,120,"OLED",1800,1,6.67,51.7,1,0,0,642,24.0,8,0,1,1,0,1,1],["華碩",19999,16,2.43,"RTX 5080",19410,"Intel",32,1024,240,"OLED",1600,1,11.0,54.8,1,0,1,571,25.2,16,0,1,1,0,1,1],["華碩",15999,16,2.43,"RTX 5070 Ti",15129,"Intel",32,1024,240,"OLED",1600,1,11.0,55.1,1,0,1,633,25.2,12,0,1,1,0,1,1],["華碩",14599,16,2.43,"RTX 5070",14214,"Intel",32,1024,240,"OLED",1600,1,11.0,54.2,1,0,1,646,25.2,8,0,1,1,0,1,1],["華碩",13599,16,2.43,"RTX 5060",11765,"Intel",32,1024,240,"OLED",1600,1,11.0,54.4,1,0,1,612,25.2,8,0,1,1,0,1,1],["華碩",7989,16,2.43,"RTX 5060",11030,"Intel",16,512,300,"IPS",1600,1,11.0,54.1,1,0,1,389,25.2,8,1,0,0,0,1,1],["華碩",8499,16,2.43,"RTX 5060",11782,"Intel",16,1024,300,"IPS",1600,1,11.0,54.0,1,0,1,412,25.2,8,1,0,0,0,1,1],["華碩",11499,16,2.43,"RTX 5070",13311,"Intel",16,1024,300,"IPS",1600,1,11.0,53.9,1,0,1,391,25.2,8,1,0,0,0,1,1],["華碩",9999,16,2.43,"RTX 5060",11596,"Intel",16,1024,300,"IPS",1600,1,11.0,55.7,1,0,1,384,25.2,8,1,0,0,0,1,1],["華碩",12499,16,2.43,"RTX 5060",10987,"Intel",32,1024,300,"IPS",1600,1,11.0,55.5,1,0,1,373,25.2,8,1,0,0,0,1,1],["華碩",10999,16,2.43,"RTX 5070",13252,"Intel",16,1024,300,"IPS",1600,1,11.0,54.8,1,0,1,419,25.2,8,1,0,0,0,1,1],["華碩",13499,16,2.43,"RTX 5070",13844,"Intel",32,1024,300,"IPS",1600,1,11.0,55.2,1,0,1,397,25.2,8,1,0,0,0,1,1],["華碩",9299,16,2.43,"RTX 5060",11866,"AMD",16,1024,300,"IPS",1600,1,11.0,55.8,1,0,1,388,25.2,8,1,0,0,0,1,1],["華碩",9499,16,2.43,"RTX 5060",11450,"AMD",16,1024,300,"IPS",1600,1,11.0,55.1,1,0,1,378,25.2,8,1,0,0,0,1,1],["華碩",10499,16,2.43,"RTX 5070",13999,"AMD",16,1024,300,"IPS",1600,1,11.0,55.7,1,0,1,380,25.2,8,1,0,0,0,1,1],["華碩",9999,18,2.99,"RTX 5060",11151,"AMD",16,1024,300,"IPS",1600,1,11.0,54.8,1,0,1,386,27.6,8,1,0,0,0,1,1],["華碩",11999,18,2.99,"RTX 5060",11141,"AMD",32,1024,300,"IPS",1600,1,11.0,54.5,1,0,1,382,27.6,8,1,0,0,0,1,1],["華碩",10999,18,2.99,"RTX 5070",13827,"AMD",16,1024,300,"IPS",1600,1,11.0,54.8,1,0,1,414,27.6,8,1,0,0,0,1,1],["華碩",12999,18,2.99,"RTX 5070",13762,"AMD",32,1024,300,"IPS",1600,1,11.0,55.3,1,0,1,428,27.6,8,1,0,0,0,1,1],["華碩",14999,18,2.99,"RTX 5070 Ti",16366,"AMD",32,1024,300,"IPS",1600,1,11.0,56.8,1,0,1,388,27.6,12,1,0,0,0,1,1],["華碩",6799,16,2.43,"RTX 5050",8144,"AMD",16,512,165,"OLED",1600,1,11.0,49.9,1,0,1,647,25.2,8,0,0,0,0,1,1],["華碩",7479,16,2.43,"RTX 5050",8603,"AMD",16,1024,165,"OLED",1600,1,11.0,50.0,1,0,1,613,25.2,8,0,0,0,0,1,1],["華碩",7224,16,2.43,"RTX 5060",11820,"AMD",16,512,165,"OLED",1600,1,11.0,51.9,1,0,1,612,25.2,8,0,0,0,0,1,1],["華碩",7904,16,2.43,"RTX 5060",11151,"AMD",16,1024,165,"OLED",1600,1,11.0,51.5,1,0,1,624,25.2,8,0,0,0,0,1,1],["華碩",8499,14,2.15,"內顯",15642,"AMD",32,1024,165,"IPS",1600,0,6.67,42.9,1,0,0,415,24.0,0,1,0,0,1,1,1],["華碩",10499,14,2.15,"內顯",16187,"AMD",64,1024,165,"IPS",1600,0,6.67,42.8,1,0,0,392,24.0,0,1,0,0,1,1,1],["華碩",9199,14,2.15,"RTX 5060",11198,"AMD",32,1024,165,"IPS",1600,0,6.67,52.7,1,0,0,415,24.0,8,1,0,0,0,1,1],["華碩",9499,14,2.15,"RTX 5060",11117,"AMD",32,1024,165,"IPS",1600,0,6.67,52.8,1,0,0,374,24.0,8,1,0,0,0,1,1],["華碩",29999,16,2.43,"RTX 5090",20178,"AMD",64,4096,120,"OLED",1800,1,11.0,53.0,1,0,1,624,25.2,24,0,1,1,0,1,1],["華碩",25999,16,2.43,"RTX 5080",18686,"AMD",64,4096,120,"OLED",1800,1,11.0,52.4,1,0,1,637,25.2,16,0,1,1,0,1,1],["華碩",16999,16,2.43,"RTX 5070",12767,"AMD",64,2048,120,"OLED",1800,1,11.0,50.0,1,0,1,587,25.2,8,0,1,1,0,1,1],["華碩",16499,16,2.43,"RTX 5060",10950,"AMD",64,2048,120,"OLED",1800,1,11.0,49.3,1,0,1,629,25.2,8,0,1,1,0,1,1],["華碩",13499,13,1.24,"內顯",15591,"AMD",64,1024,60,"OLED",1800,1,10.0,40.9,0,0,0,560,14.5,0,1,1,1,1,1,0],["華碩",28999,13,1.24,"內顯",15281,"AMD",128,1024,60,"OLED",1800,1,10.0,40.3,0,0,0,634,14.5,0,1,1,1,1,1,0],["華碩",5999,14,1.38,"內顯",4940,"Intel",32,1024,120,"OLED",1800,1,10.0,41.1,0,1,0,640,14.5,0,0,1,1,1,1,0],["華碩",12999,14,1.38,"內顯",4963,"Intel",32,1024,120,"OLED",1800,1,10.0,41.0,0,1,0,605,14.5,0,0,1,1,1,1,0],["華碩",14999,14,1.38,"內顯",4804,"Intel",32,2048,120,"OLED",1800,1,10.0,40.9,0,1,0,570,14.5,0,0,1,1,1,1,0],["華碩",14999,14,1.38,"內顯",4880,"Intel",32,1024,120,"OLED",1800,1,10.0,41.6,0,1,0,594,14.5,0,1,1,1,1,1,0],["華碩",16999,14,1.38,"內顯",5141,"Intel",32,2048,120,"OLED",1800,1,10.0,41.8,0,1,0,640,14.5,0,1,1,1,1,1,0],["華碩",7999,16,1.78,"內顯",4967,"Intel",32,1024,120,"OLED",1800,1,12.5,39.3,0,1,1,586,15.7,0,0,1,1,1,1,0],["華碩",4879,14,1.38,"內顯",4857,"Intel",32,1024,60,"IPS",1600,0,10.0,39.2,0,0,0,369,14.5,0,0,0,0,1,1,0],["華碩",4479,16,1.78,"內顯",2991,"AMD",16,1024,144,"IPS",1600,0,12.5,38.8,0,0,1,390,15.7,0,0,0,0,1,1,0],["華碩",5119,16,1.78,"內顯",4785,"Intel",32,1024,144,"IPS",1600,0,12.5,38.7,0,0,1,375,15.7,0,0,0,0,1,1,0],["華碩",5839,16,1.78,"內顯",5117,"Intel",32,1024,144,"IPS",1600,0,12.5,39.7,0,0,1,381,15.7,0,0,0,0,1,1,0],["華碩",5779,14,1.38,"內顯",4226,"AMD",32,1024,120,"OLED",1800,1,10.0,39.0,0,0,0,584,14.5,0,1,0,0,1,1,0],["華碩",5949,16,1.78,"內顯",4099,"AMD",32,1024,165,"OLED",1600,1,12.5,38.9,0,0,1,613,15.7,0,1,0,0,1,1,0],["華碩",6034,14,1.38,"內顯",4348,"AMD",32,1024,120,"OLED",1800,1,10.0,40.6,0,1,0,578,14.5,0,1,1,1,1,1,0],["華碩",6884,14,1.38,"內顯",4352,"AMD",32,1024,120,"OLED",1800,1,10.0,40.4,0,1,0,633,14.5,0,1,1,1,1,1,0],["華碩",7989,16,2.43,"RTX 5060",11313,"Intel",16,512,300,"IPS",1600,1,11.0,54.4,1,0,1,371,25.2,8,1,0,0,0,1,1],["華碩",8799,16,2.43,"RTX 5060",11205,"Intel",16,1024,300,"IPS",1600,1,11.0,54.4,1,0,1,407,25.2,8,1,0,0,0,1,1],["華碩",9999,16,2.43,"RTX 5060",11139,"Intel",16,1024,300,"IPS",1600,1,11.0,55.4,1,0,1,415,25.2,8,1,0,0,0,1,1],["華碩",12499,16,2.43,"RTX 5060",12010,"Intel",32,1024,300,"IPS",1600,1,11.0,55.7,1,0,1,393,25.2,8,1,0,0,0,1,1],["華碩",10999,16,2.43,"RTX 5070",13787,"Intel",16,1024,300,"IPS",1600,1,11.0,54.9,1,0,1,427,25.2,8,1,0,0,0,1,1],["華碩",13499,16,2.43,"RTX 5070",13629,"Intel",32,1024,300,"IPS",1600,1,11.0,55.3,1,0,1,401,25.2,8,1,0,0,0,1,1],["惠普",5999,16,2.43,"RTX 5050",8532,"Intel",16,1024,240,"IPS",1600,0,11.0,52.6,1,0,1,415,25.2,8,0,0,0,0,1,1],["惠普",6319,16,2.43,"RTX 5060",10716,"Intel",16,1024,240,"IPS",1600,0,11.0,54.0,1,0,1,382,25.2,8,0,0,0,0,1,1],["惠普",6959,16,2.43,"RTX 5070",13049,"Intel",16,1024,240,"IPS",1600,0,11.0,54.6,1,0,1,377,25.2,8,0,0,0,0,1,1],["惠普",6719,16,2.43,"RTX 5060",11648,"Intel",16,1024,240,"IPS",1600,0,11.0,55.2,1,0,1,372,25.2,8,0,0,0,0,1,1],["惠普",7119,16,2.43,"RTX 5060",10892,"Intel",32,1024,240,"IPS",1600,0,11.0,55.0,1,0,1,368,25.2,8,0,0,0,0,1,1],["惠普",7999,16,2.43,"RTX 5070",13705,"Intel",32,1024,240,"IPS",1600,0,11.0,55.8,1,0,1,403,25.2,8,0,0,0,0,1,1],["惠普",6319,16,2.43,"RTX 5060",10933,"AMD",16,1024,240,"IPS",1600,0,11.0,53.9,1,0,1,411,25.2,8,0,0,0,0,1,1],["惠普",6719,16,2.43,"RTX 5060",10847,"AMD",32,1024,240,"IPS",1600,0,11.0,53.8,1,0,1,375,25.2,8,0,0,0,0,1,1],["惠普",7199,16,2.43,"RTX 5070",13473,"AMD",16,1024,240,"IPS",1600,0,11.0,54.8,1,0,1,422,25.2,8,0,0,0,0,1,1],["惠普",7599,16,2.43,"RTX 5070",13337,"AMD",32,1024,240,"IPS",1600,0,11.0,54.7,1,0,1,432,25.2,8,0,0,0,0,1,1],["惠普",8999,16,2.43,"RTX 5060",11404,"Intel",32,1024,240,"IPS",1600,0,11.0,53.3,1,0,1,380,25.2,8,0,0,0,0,1,1],["惠普",9999,16,2.43,"RTX 5070",13346,"Intel",32,1024,240,"IPS",1600,0,11.0,54.4,1,0,1,418,25.2,8,0,0,0,0,1,1],["惠普",7099,16,2.43,"RTX 5050",8262,"Intel",16,512,240,"IPS",1600,0,11.0,52.0,1,0,1,375,25.2,8,0,0,0,0,1,1],["惠普",5173,16,2.43,"RTX 4060",10503,"Intel",16,512,240,"IPS",1600,0,11.0,52.9,1,0,1,400,25.2,8,0,0,0,0,1,1],["惠普",12499,14,2.15,"RTX 5060",10873,"Intel",32,1024,120,"OLED",1800,1,6.67,51.1,1,0,0,620,24.0,8,0,0,0,0,1,1],["惠普",13999,14,2.15,"RTX 5070",13112,"Intel",32,1024,120,"OLED",1800,1,6.67,51.4,1,0,0,592,24.0,8,0,0,0,0,1,1],["惠普",16499,14,2.15,"RTX 5070",13085,"Intel",64,2048,120,"OLED",1800,1,6.67,51.5,1,0,0,590,24.0,8,0,0,0,0,1,1],["惠普",8499,16,2.43,"RTX 5060",11650,"Intel",16,1024,240,"IPS",1600,0,11.0,54.0,1,0,1,390,25.2,8,0,0,0,0,1,1],["惠普",8999,16,2.43,"RTX 5060",11890,"Intel",32,1024,240,"IPS",1600,0,11.0,54.0,1,0,1,429,25.2,8,0,0,0,0,1,1],["惠普",16999,16,2.43,"RTX 5080",18880,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,400,25.2,16,0,0,0,0,1,1],["惠普",33799,16,2.43,"RTX 5090",21976,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,392,25.2,24,0,0,0,0,1,1],["惠普",9443,16,2.43,"RTX 5060",11615,"Intel",16,1024,240,"IPS",1600,0,11.0,53.5,1,0,1,376,25.2,8,1,0,0,0,1,1],["惠普",11433,16,2.43,"RTX 5060",10918,"Intel",16,1024,240,"IPS",1600,0,11.0,51.3,1,0,1,420,25.2,8,1,0,0,0,1,1],["惠普",11931,16,2.43,"RTX 5060",11392,"Intel",16,1024,240,"IPS",1600,0,11.0,54.2,1,0,1,391,25.2,8,1,0,0,0,1,1],["惠普",23373,16,2.43,"RTX 5080",19093,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,374,25.2,16,1,0,0,0,1,1],["惠普",9487,16,2.43,"RTX 5060",10850,"AMD",16,1024,240,"IPS",1600,0,11.0,54.5,1,0,1,431,25.2,8,1,0,0,0,1,1],["惠普",5999,14,1.38,"內顯",2525,"Intel",16,512,120,"IPS",1080,0,10.0,38.5,0,1,0,409,14.5,0,1,1,1,1,1,0],["惠普",5999,14,1.38,"內顯",2531,"Intel",16,512,120,"IPS",1080,0,10.0,38.6,0,1,0,371,14.5,0,1,1,1,1,1,0],["惠普",6999,14,1.38,"內顯",2493,"Intel",16,1024,120,"IPS",1080,0,10.0,38.6,0,1,0,420,14.5,0,1,1,1,1,1,0],["惠普",4735,14,1.38,"內顯",2527,"Intel",16,1024,60,"IPS",1080,0,10.0,38.6,0,1,0,407,14.5,0,0,1,1,1,1,0],["惠普",7299,14,1.38,"內顯",2440,"Intel",16,1024,60,"IPS",1080,0,10.0,38.6,0,1,0,407,14.5,0,0,1,1,1,1,0],["惠普",7649,14,1.38,"內顯",5137,"Intel",32,1024,120,"IPS",1600,1,10.0,37.6,0,0,0,631,14.5,0,0,1,1,1,1,0],["惠普",10499,14,1.38,"內顯",4929,"Intel",32,1024,120,"IPS",1600,1,10.0,38.9,0,0,0,594,14.5,0,0,1,1,1,1,0],["惠普",13999,14,1.38,"內顯",4851,"Intel",32,1024,120,"OLED",1800,1,10.0,37.6,0,0,0,638,14.5,0,0,1,1,1,1,0],["惠普",14999,14,1.38,"內顯",5157,"Intel",32,1024,120,"IPS",1600,1,10.0,39.3,0,0,0,564,14.5,0,1,1,1,1,1,0],["惠普",13299,14,1.38,"內顯",4851,"Intel",64,1024,120,"IPS",1600,1,10.0,39.4,0,0,0,574,14.5,0,1,1,1,1,1,0],["惠普",23699,14,1.38,"內顯",4865,"Intel",64,1024,120,"OLED",1800,1,10.0,39.5,0,0,0,616,14.5,0,1,1,1,1,1,0],["惠普",15999,16,2.43,"RTX 5060",11142,"Intel",64,2048,120,"IPS",1600,0,11.0,51.8,1,0,1,375,25.2,8,1,0,0,0,1,1],["惠普",11489,16,2.43,"RTX 5060",11192,"Intel",32,1024,120,"IPS",1600,0,11.0,51.7,1,0,1,409,25.2,8,1,0,0,0,1,1],["惠普",16998,16,2.43,"RTX 5060",11096,"Intel",64,2048,120,"IPS",1600,0,11.0,51.8,1,0,1,416,25.2,8,1,0,0,0,1,1],["惠普",7399,16,1.78,"內顯",2511,"Intel",16,1024,120,"IPS",1600,0,12.5,39.2,0,0,1,426,15.7,0,1,0,0,1,1,0],["惠普",15899,16,2.43,"RTX 5060",10844,"Intel",16,1024,120,"IPS",1600,0,11.0,51.3,1,0,1,368,25.2,8,1,0,0,0,1,1],["惠普",9199,16,1.78,"內顯",2477,"Intel",64,2048,120,"IPS",1600,0,12.5,38.8,0,0,1,381,15.7,0,1,0,0,1,1,0],["惠普",5199,14,1.38,"內顯",5114,"Intel",16,512,120,"OLED",1600,1,10.0,38.7,0,0,0,633,14.5,0,0,0,0,1,1,0],["惠普",5299,14,1.38,"內顯",5150,"Intel",16,1024,120,"OLED",1600,1,10.0,38.8,0,0,0,554,14.5,0,0,0,0,1,1,0],["惠普",7699,14,1.38,"內顯",4971,"Intel",32,1024,120,"OLED",1600,1,10.0,38.8,0,0,0,594,14.5,0,0,0,0,1,1,0],["惠普",7099,14,1.38,"內顯",5086,"Intel",16,2048,120,"OLED",1600,1,10.0,38.9,0,0,0,629,14.5,0,0,0,0,1,1,0],["惠普",7799,14,1.38,"內顯",5043,"Intel",32,1024,120,"OLED",1600,1,10.0,39.3,0,0,0,610,14.5,0,0,0,0,1,1,0],["惠普",4000,16,1.78,"內顯",5141,"Intel",16,1024,240,"IPS",1600,0,12.5,39.5,0,0,1,385,15.7,0,0,0,0,1,1,0],["惠普",6999,16,1.78,"內顯",4900,"Intel",32,1024,240,"IPS",1600,0,12.5,39.5,0,0,1,425,15.7,0,0,0,0,1,1,0],["惠普",7649,16,1.78,"內顯",10195,"Intel",32,1024,240,"IPS",1600,0,12.5,39.7,0,0,1,392,15.7,0,1,0,0,1,1,0],["惠普",5299,16,1.78,"內顯",2393,"Intel",16,512,120,"IPS",1080,0,12.5,39.0,0,0,1,381,15.7,0,0,0,0,1,1,0],["惠普",6699,16,1.78,"內顯",2610,"Intel",32,1024,120,"IPS",1080,0,12.5,39.1,0,0,1,380,15.7,0,0,0,0,1,1,0],["惠普",10199,14,1.38,"內顯",4960,"Intel",32,2048,120,"OLED",1800,1,10.0,39.3,0,1,0,611,14.5,0,0,1,1,1,1,0],["惠普",9199,14,1.38,"內顯",5159,"Intel",32,1024,120,"OLED",1800,1,10.0,39.3,0,1,0,602,14.5,0,0,1,1,1,1,0],["惠普",7799,14,1.38,"內顯",4950,"Intel",16,1024,120,"OLED",1800,1,10.0,39.3,0,1,0,610,14.5,0,0,1,1,1,1,0],["惠普",6949,14,1.38,"內顯",2565,"Intel",16,1024,120,"OLED",1800,1,10.0,39.3,0,1,0,615,14.5,0,0,1,1,1,1,0],["惠普",7949,14,1.38,"內顯",2417,"Intel",16,2048,120,"OLED",1800,1,10.0,39.3,0,1,0,612,14.5,0,0,1,1,1,1,0],["惠普",13178,14,1.38,"內顯",2974,"AMD",16,1024,120,"OLED",1800,1,10.0,40.4,0,1,0,571,14.5,0,0,1,1,1,1,0],["惠普",6399,14,1.38,"內顯",2938,"AMD",16,1024,120,"OLED",1800,1,10.0,40.4,0,1,0,607,14.5,0,0,1,1,1,1,0],["惠普",7699,16,1.78,"內顯",2581,"Intel",16,1024,120,"OLED",1800,1,12.5,40.3,0,1,1,564,15.7,0,0,1,1,1,1,0],["聯想",20999,16,2.43,"RTX 5070 Ti",16146,"Intel",64,1024,240,"OLED",1600,1,11.0,57.4,1,0,1,632,25.2,12,1,0,0,0,1,1],["聯想",37999,16,2.43,"RTX 5090",21987,"Intel",64,1024,240,"OLED",1600,1,11.0,58.0,1,0,1,612,25.2,24,1,0,0,0,1,1],["聯想",39792,16,2.43,"RTX 5090",22931,"Intel",64,2048,240,"OLED",1600,1,11.0,58.0,1,0,1,590,25.2,24,1,0,0,0,1,1],["聯想",41499,16,2.43,"RTX 5090",21734,"Intel",64,2048,240,"OLED",1600,1,11.0,58.0,1,0,1,641,25.2,24,1,0,0,0,1,1],["聯想",11999,16,2.43,"RTX 5060",11144,"Intel",16,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,633,25.2,8,1,0,0,0,1,1],["聯想",15499,16,2.43,"RTX 5060",11061,"Intel",16,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,568,25.2,8,1,0,0,0,1,1],["聯想",13499,16,2.43,"RTX 5060",11299,"Intel",32,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,560,25.2,8,1,0,0,0,1,1],["聯想",9499,16,2.43,"RTX 5060",11702,"Intel",16,1024,240,"OLED",1600,1,11.0,55.2,1,0,1,561,25.2,8,1,0,0,0,1,1],["聯想",11434,16,2.43,"RTX 5060",10789,"Intel",16,1024,240,"OLED",1600,1,11.0,55.2,1,0,1,564,25.2,8,1,0,0,0,1,1],["聯想",10799,16,2.43,"RTX 5060",10780,"Intel",32,1024,240,"OLED",1600,1,11.0,54.5,1,0,1,576,25.2,8,1,0,0,0,1,1],["聯想",16299,16,2.43,"RTX 5070",13531,"Intel",16,1024,240,"OLED",1600,1,11.0,55.7,1,0,1,621,25.2,8,1,0,0,0,1,1],["聯想",14733,16,2.43,"RTX 5070",13873,"Intel",32,1024,240,"OLED",1600,1,11.0,55.8,1,0,1,609,25.2,8,1,0,0,0,1,1],["聯想",23998,16,2.43,"RTX 5070",13771,"Intel",64,1024,240,"OLED",1600,1,11.0,55.1,1,0,1,623,25.2,8,1,0,0,0,1,1],["聯想",8159,16,2.43,"RTX 5060",10879,"Intel",16,1024,240,"IPS",1600,0,11.0,53.9,1,0,1,377,25.2,8,0,0,0,0,1,1],["聯想",9459,16,2.43,"RTX 5060",11097,"Intel",32,1024,240,"IPS",1600,0,11.0,53.6,1,0,1,411,25.2,8,0,0,0,0,1,1],["聯想",8899,16,2.43,"RTX 5060",10707,"Intel",16,1024,240,"IPS",1600,0,11.0,55.2,1,0,1,399,25.2,8,0,0,0,0,1,1],["聯想",10199,16,2.43,"RTX 5060",11462,"Intel",32,1024,240,"IPS",1600,0,11.0,54.4,1,0,1,394,25.2,8,0,0,0,0,1,1],["聯想",10199,16,2.43,"RTX 5060",11477,"Intel",32,1024,240,"IPS",1600,0,11.0,53.8,1,0,1,379,25.2,8,0,0,0,0,1,1],["聯想",8499,16,2.43,"RTX 5060",11569,"Intel",16,1024,240,"IPS",1600,0,11.0,53.6,1,0,1,415,25.2,8,0,0,0,0,1,1],["聯想",9999,16,2.43,"RTX 5060",11347,"Intel",32,1024,240,"IPS",1600,0,11.0,53.8,1,0,1,415,25.2,8,0,0,0,0,1,1],["聯想",13499,16,2.43,"RTX 5070",13127,"Intel",16,1024,240,"IPS",1600,0,11.0,54.0,1,0,1,390,25.2,8,0,0,0,0,1,1],["聯想",10399,16,2.43,"RTX 5060",11612,"AMD",32,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,593,25.2,8,0,0,0,0,1,1],["聯想",11999,16,2.43,"RTX 5070",12826,"AMD",32,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,640,25.2,8,0,0,0,0,1,1],["聯想",12499,16,2.43,"RTX 5070",13184,"AMD",32,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,583,25.2,8,0,0,0,0,1,1],["聯想",8899,16,2.43,"RTX 5060",11321,"AMD",16,1024,240,"OLED",1600,1,11.0,53.8,1,0,1,580,25.2,8,0,0,0,0,1,1],["聯想",9799,16,2.43,"RTX 5060",10808,"AMD",16,1024,240,"OLED",1600,1,11.0,53.8,1,0,1,591,25.2,8,0,0,0,0,1,1],["聯想",10199,16,2.43,"RTX 5060",10794,"AMD",32,1024,240,"OLED",1600,1,11.0,53.7,1,0,1,588,25.2,8,0,0,0,0,1,1],["聯想",7819,16,2.43,"RTX 5060",11614,"AMD",16,1024,165,"IPS",1600,0,11.0,51.1,1,0,1,402,25.2,8,0,0,0,0,1,1],["聯想",8499,15,2.23,"RTX 5060",11486,"Intel",16,1024,165,"OLED",1600,1,6.67,54.0,1,0,0,617,24.4,8,1,0,0,0,1,1],["聯想",9999,15,2.23,"RTX 5060",11211,"Intel",32,1024,165,"OLED",1600,1,6.67,53.5,1,0,0,623,24.4,8,1,0,0,0,1,1],["聯想",14699,15,2.23,"RTX 5070",13989,"Intel",16,1024,165,"OLED",1600,1,6.67,54.1,1,0,0,626,24.4,8,1,0,0,0,1,1],["聯想",15299,15,2.23,"RTX 5060",11417,"AMD",16,1024,165,"OLED",1600,1,6.67,51.2,1,0,0,587,24.4,8,1,0,0,0,1,1],["聯想",12999,16,2.43,"RTX 5060",11135,"Intel",32,1024,240,"OLED",1600,1,11.0,54.9,1,0,1,640,25.2,8,0,0,0,0,1,1],["聯想",12999,16,2.43,"RTX 5070",13384,"Intel",32,1024,240,"OLED",1600,1,11.0,55.4,1,0,1,562,25.2,8,0,0,0,0,1,1],["雷神",25000,18,2.99,"RTX 5090",22943,"Intel",64,2048,240,"IPS",1600,0,11.0,58.0,1,0,1,426,27.6,24,0,0,0,0,1,1],["雷神",18000,18,2.99,"RTX 5080",20075,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,382,27.6,16,0,0,0,0,1,1],["雷神",14999,18,2.99,"RTX 5070 Ti",16063,"Intel",32,1024,240,"IPS",1600,0,11.0,55.9,1,0,1,419,27.6,12,0,0,0,0,1,1],["雷神",16000,16,2.43,"RTX 5080",18878,"Intel",32,1024,360,"IPS",1600,0,11.0,58.0,1,0,1,385,25.2,16,0,0,0,0,1,1],["雷神",12000,16,2.43,"RTX 5070 Ti",16075,"Intel",32,1024,360,"IPS",1600,0,11.0,56.4,1,0,1,378,25.2,12,0,0,0,0,1,1],["雷神",12000,18,2.99,"RTX 5070",13897,"Intel",32,1024,240,"IPS",1600,0,11.0,55.8,1,0,1,421,27.6,8,0,0,0,0,1,1],["雷神",10000,16,2.43,"RTX 5070",13837,"Intel",32,1024,240,"IPS",1600,0,11.0,55.8,1,0,1,407,25.2,8,0,0,0,0,1,1],["雷神",9999,16,2.43,"RTX 5060",11201,"Intel",16,1024,240,"IPS",1600,0,11.0,55.0,1,0,1,378,25.2,8,0,0,0,0,1,1],["雷神",13000,15,2.15,"RTX 5070",12800,"Intel",32,1024,165,"IPS",1600,0,6.67,51.9,1,0,0,418,24.0,8,0,0,0,0,1,1],["雷神",14999,15,2.15,"RTX 5060",10856,"Intel",32,1024,165,"IPS",1600,0,6.67,50.4,1,0,0,378,24.0,8,0,0,0,0,1,1],["雷神",9999,17,2.79,"RTX 5060",11682,"Intel",16,1024,240,"IPS",1600,0,11.0,51.3,1,0,1,381,26.8,8,0,0,0,0,1,1],["雷神",6000,16,2.43,"RTX 4060",9941,"Intel",16,512,165,"IPS",1600,0,11.0,51.0,1,0,1,416,25.2,8,0,0,0,0,1,1],["雷神",15000,16,2.43,"RTX 5080",19554,"Intel",16,1024,300,"IPS",1600,0,11.0,55.0,1,0,1,389,25.2,16,0,0,0,0,1,1],["雷神",14999,16,2.43,"RTX 5070 Ti",16447,"Intel",16,1024,240,"IPS",1600,0,11.0,53.4,1,0,1,388,25.2,12,0,0,0,0,1,1],["雷神",12999,16,2.43,"RTX 5070 Ti",15205,"Intel",16,1024,240,"IPS",1600,0,11.0,53.4,1,0,1,417,25.2,12,0,0,0,0,1,1],["雷神",12000,16,2.43,"RTX 5070 Ti",15530,"AMD",16,1024,240,"IPS",1600,0,11.0,56.9,1,0,1,381,25.2,12,0,0,0,0,1,1],["雷神",9999,16,2.43,"RTX 5070",13993,"Intel",16,1024,300,"IPS",1600,0,11.0,51.8,1,0,1,390,25.2,8,0,0,0,0,1,1],["雷神",9299,16,2.43,"RTX 5070",13710,"Intel",16,1024,240,"IPS",1600,0,11.0,51.6,1,0,1,388,25.2,8,0,0,0,0,1,1],["雷神",9299,16,2.43,"RTX 5070",13310,"AMD",16,1024,240,"IPS",1600,0,11.0,51.8,1,0,1,371,25.2,8,0,0,0,0,1,1],["雷神",9299,16,2.43,"RTX 5070",13719,"Intel",16,1024,300,"IPS",1600,0,11.0,51.7,1,0,1,407,25.2,8,0,0,0,0,1,1],["雷神",9999,16,2.43,"RTX 5070",13479,"Intel",16,1024,240,"IPS",1600,0,11.0,51.7,1,0,1,403,25.2,8,0,0,0,0,1,1],["雷神",9999,16,2.43,"RTX 5060",11086,"Intel",16,1024,240,"IPS",1600,0,11.0,51.1,1,0,1,413,25.2,8,0,0,0,0,1,1],["雷神",10199,16,2.43,"RTX 5060",11016,"Intel",16,1024,180,"IPS",1600,0,11.0,51.1,1,0,1,421,25.2,8,0,0,0,0,1,1],["雷神",10299,16,2.43,"RTX 5060",11018,"Intel",16,1024,300,"IPS",1600,0,11.0,51.3,1,0,1,415,25.2,8,0,0,0,0,1,1],["雷神",10299,16,2.43,"RTX 5060",11219,"Intel",16,1024,240,"IPS",1600,0,11.0,54.0,1,0,1,402,25.2,8,0,0,0,0,1,1],["雷神",7000,15,2.32,"RTX 5060",10797,"Intel",16,1024,165,"IPS",1600,0,6.67,50.8,1,0,1,408,24.7,8,0,0,0,0,1,1],["小米",2999,14,1.38,"內顯",2599,"Intel",16,512,120,"IPS",1800,0,10.0,39.0,0,0,0,405,14.5,0,0,0,0,1,1,0],["小米",3599,14,1.38,"內顯",2606,"Intel",16,512,120,"IPS",1800,0,10.0,39.1,0,0,0,386,14.5,0,0,0,0,1,1,0],["小米",3399,14,1.38,"內顯",2396,"Intel",32,512,120,"IPS",1800,0,10.0,39.1,0,0,0,376,14.5,0,0,0,0,1,1,0],["小米",3509,16,1.78,"內顯",2500,"Intel",16,512,120,"IPS",1080,0,12.5,39.1,0,0,1,377,15.7,0,0,0,0,1,1,0],["小米",2638,16,1.78,"內顯",2605,"Intel",16,512,120,"IPS",1080,0,12.5,39.1,0,0,1,376,15.7,0,0,0,0,1,1,0],["小米",5241,14,1.38,"內顯",5169,"Intel",32,1024,120,"IPS",1800,0,10.0,38.8,0,0,0,417,14.5,0,0,0,0,1,1,0],["小米",5354,14,1.38,"內顯",4871,"Intel",32,1024,120,"IPS",1800,0,10.0,39.5,0,0,0,377,14.5,0,0,0,0,1,1,0],["小米",4478,16,1.78,"內顯",5008,"Intel",32,1024,120,"IPS",1600,0,12.5,39.1,0,0,1,411,15.7,0,0,0,0,1,1,0],["小米",5798,16,1.78,"內顯",5128,"Intel",32,1024,120,"IPS",1600,0,12.5,39.1,0,0,1,405,15.7,0,0,0,0,1,1,0],["小米",5499,14,1.38,"內顯",2550,"Intel",16,512,120,"IPS",1600,0,10.0,38.9,0,0,0,412,14.5,0,1,0,0,1,1,0],["小米",5949,14,1.38,"內顯",2466,"Intel",24,1024,120,"IPS",1800,0,10.0,38.8,0,0,0,418,14.5,0,1,0,0,1,1,0],["小米",7999,14,1.38,"內顯",2588,"Intel",32,1024,120,"IPS",1800,0,10.0,39.5,0,0,0,394,14.5,0,1,0,0,1,1,0],["小米",9499,14,1.38,"內顯",10082,"Intel",32,1024,120,"IPS",1800,0,10.0,39.4,0,0,0,422,14.5,0,1,0,0,1,1,0],["小米",6119,16,1.78,"內顯",2526,"Intel",24,1024,165,"IPS",2000,1,12.5,38.9,0,0,1,423,15.7,0,1,0,0,1,1,0],["小米",8199,16,1.78,"內顯",2567,"Intel",32,1024,165,"IPS",2000,1,12.5,39.4,0,0,1,382,15.7,0,1,0,0,1,1,0],["小米",9699,16,1.78,"內顯",9853,"Intel",32,1024,165,"IPS",2000,1,12.5,39.8,0,0,1,373,15.7,0,1,0,0,1,1,0],["小米",8499,14,1.5,"內顯",2611,"Intel",24,1024,120,"OLED",2080,1,10.0,38.8,0,0,0,621,14.9,0,1,0,0,1,1,0],["小米",9699,14,1.5,"內顯",2388,"Intel",32,1024,120,"OLED",2080,1,10.0,39.7,0,0,0,646,14.9,0,1,0,0,1,1,0],["小米",10499,14,1.5,"內顯",10519,"Intel",32,1024,120,"OLED",2080,1,10.0,39.7,0,0,0,555,14.9,0,1,0,0,1,1,0],["宏碁",21299,16,2.43,"RTX 5060",11157,"Intel",32,2048,240,"OLED",1600,1,11.0,53.3,1,0,1,625,25.2,8,0,0,0,0,1,1],["宏碁",23699,16,2.43,"RTX 5070 Ti",16422,"Intel",32,2048,240,"OLED",1600,1,11.0,56.9,1,0,1,602,25.2,12,0,0,0,0,1,1],["宏碁",20199,16,2.43,"RTX 5070",12859,"Intel",64,2048,165,"OLED",1600,1,11.0,52.5,1,0,1,591,25.2,8,1,0,0,0,1,1],["宏碁",32000,18,2.99,"RTX 5090",22755,"Intel",192,6144,240,"Mini LED",2400,0,11.0,58.0,1,0,1,386,27.6,24,1,0,0,0,1,1],["宏碁",5839,16,2.43,"RTX 5060",11500,"AMD",16,1024,240,"IPS",1600,0,11.0,50.9,1,0,1,403,25.2,8,0,0,0,0,1,1],["宏碁",17999,18,2.99,"RTX 5080",19679,"Intel",128,4096,240,"IPS",1600,0,11.0,58.0,1,0,1,379,27.6,16,0,0,0,0,1,1],["宏碁",16599,16,2.43,"RTX 5080",19821,"Intel",32,1024,240,"IPS",1600,1,11.0,57.3,1,0,1,400,25.2,16,0,0,0,0,1,1],["宏碁",16599,16,2.43,"RTX 5080",19515,"Intel",32,1024,240,"IPS",1600,1,11.0,58.0,1,0,1,418,25.2,16,0,0,0,0,1,1],["宏碁",11000,16,2.43,"RTX 5070",12864,"Intel",16,1024,240,"IPS",1600,0,11.0,54.2,1,0,1,373,25.2,8,0,0,0,0,1,1],["宏碁",5460,16,2.43,"RTX 4060",10142,"Intel",16,1024,240,"IPS",1600,0,11.0,53.6,1,0,1,383,25.2,8,0,0,0,0,1,1],["宏碁",17899,16,2.43,"RTX 5070",13559,"Intel",32,2048,180,"IPS",1200,0,11.0,52.0,1,0,1,402,25.2,8,1,0,0,0,1,1],["宏碁",19299,16,2.43,"RTX 5070",12637,"Intel",32,2048,180,"IPS",1200,0,11.0,52.1,1,0,1,411,25.2,8,1,0,0,0,1,1],["宏碁",12999,14,1.38,"內顯",5093,"Intel",32,1024,120,"OLED",1800,1,10.0,41.0,0,1,0,642,14.5,0,0,1,1,1,1,0],["宏碁",6599,16,1.78,"內顯",4819,"Intel",32,1024,120,"OLED",1800,1,12.5,39.3,0,1,1,628,15.7,0,0,1,1,1,1,0],["宏碁",7299,16,1.78,"內顯",4960,"Intel",32,1024,120,"OLED",1800,1,12.5,40.6,0,1,1,633,15.7,0,0,1,1,1,1,0],["宏碁",8000,16,1.78,"內顯",1682,"AMD",16,512,120,"IPS",1200,0,12.5,39.0,0,0,1,387,15.7,0,1,0,0,1,1,0],["宏碁",8000,16,1.78,"內顯",2912,"AMD",16,512,120,"IPS",1200,0,12.5,39.1,0,0,1,427,15.7,0,1,0,0,1,1,0],["宏碁",5000,16,1.78,"內顯",5131,"Intel",16,1024,120,"IPS",1800,0,12.5,38.9,0,0,1,378,15.7,0,0,0,0,1,1,0],["神舟",4999,15,2.32,"RTX 5060",11185,"Intel",16,1024,165,"IPS",1080,0,6.67,51.4,1,0,1,384,24.7,8,0,0,0,0,1,1],["神舟",5899,15,2.32,"RTX 5070",13490,"Intel",16,1024,165,"IPS",1080,0,6.67,52.1,1,0,1,401,24.7,8,0,0,0,0,1,1],["神舟",7500,15,2.32,"RTX 5070",13707,"Intel",16,1024,165,"IPS",1080,0,6.67,52.1,1,0,1,390,24.7,8,0,0,0,0,1,1],["神舟",4239,15,2.32,"RTX 4060",10582,"Intel",16,512,144,"IPS",1080,0,6.67,50.9,1,0,1,379,24.7,8,0,0,0,0,1,1],["神舟",7399,15,2.32,"RTX 4060",10295,"Intel",16,512,165,"IPS",1600,0,6.67,50.9,1,0,1,371,24.7,8,1,0,0,0,1,1],["神舟",5599,16,2.43,"RTX 5060",11670,"Intel",16,1024,180,"IPS",1600,0,11.0,53.6,1,0,1,399,25.2,8,0,0,0,0,1,1],["神舟",7999,16,2.43,"RTX 5060",11088,"Intel",16,1024,180,"IPS",1600,0,11.0,51.2,1,0,1,431,25.2,8,0,0,0,0,1,1],["神舟",8499,16,2.43,"RTX 5060",10746,"Intel",16,1024,180,"IPS",1600,0,11.0,53.7,1,0,1,368,25.2,8,0,0,0,0,1,1],["神舟",7649,16,2.43,"RTX 5060",10786,"Intel",16,1024,180,"IPS",1600,0,11.0,55.2,1,0,1,428,25.2,8,0,0,0,0,1,1],["神舟",6799,16,2.43,"RTX 5070",13048,"Intel",16,1024,180,"IPS",1600,0,11.0,54.6,1,0,1,401,25.2,8,0,0,0,0,1,1],["神舟",7899,16,2.43,"RTX 5070 Ti",16208,"Intel",32,1024,300,"IPS",1600,0,11.0,55.7,1,0,1,395,25.2,12,0,0,0,0,1,1],["神舟",10499,16,2.43,"RTX 5070 Ti",15550,"Intel",16,1024,300,"IPS",1600,0,11.0,56.9,1,0,1,402,25.2,12,1,0,0,0,1,1],["神舟",13999,16,2.43,"RTX 5080",19416,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,406,25.2,16,1,0,0,0,1,1],["神舟",15999,16,2.43,"RTX 5080",19133,"Intel",32,1024,300,"IPS",1600,0,11.0,58.0,1,0,1,407,25.2,16,1,0,0,0,1,1],["神舟",17999,16,2.43,"RTX 5090",23445,"Intel",32,1024,240,"IPS",1600,0,11.0,58.0,1,0,1,429,25.2,24,0,0,0,0,1,1],["神舟",8899,16,2.43,"RTX 5060",11502,"Intel",16,1024,240,"IPS",1600,0,11.0,53.7,1,0,1,409,25.2,8,1,0,0,0,1,1],["微星",47999,18,2.99,"RTX 5090",23432,"Intel",96,2048,240,"Mini LED",2400,1,11.0,58.0,1,0,1,628,27.6,24,1,1,1,0,1,1],["微星",30999,18,2.99,"RTX 5080",19781,"Intel",32,2048,120,"Mini LED",2400,1,11.0,58.0,1,0,1,556,27.6,16,1,1,1,0,1,1],["微星",45000,18,2.99,"RTX 5090",23233,"Intel",64,6144,240,"Mini LED",2400,1,11.0,58.0,1,0,1,560,27.6,24,0,1,1,0,1,1],["微星",36999,18,2.99,"RTX 5090",21732,"Intel",64,4096,240,"Mini LED",2400,1,11.0,58.0,1,0,1,560,27.6,24,0,1,1,0,1,1],["微星",32999,18,2.99,"RTX 5080",19497,"AMD",64,2048,240,"Mini LED",2400,1,11.0,58.0,1,0,1,619,27.6,16,0,1,1,0,1,1],["微星",32999,18,2.99,"RTX 5090",22202,"AMD",64,2048,240,"Mini LED",2400,1,11.0,58.0,1,0,1,613,27.6,24,0,1,1,0,1,1],["微星",26999,18,2.99,"RTX 5080",18106,"Intel",64,2048,120,"Mini LED",2400,0,11.0,56.1,1,0,1,381,27.6,16,0,0,0,0,1,1],["微星",26999,18,2.99,"RTX 5090",20264,"Intel",64,2048,120,"Mini LED",2400,0,11.0,57.1,1,0,1,427,27.6,24,0,0,0,0,1,1],["微星",15000,16,2.43,"RTX 5070",12140,"Intel",32,1024,240,"IPS",1600,0,11.0,53.6,1,0,1,373,25.2,8,0,0,0,0,1,1],["微星",15000,16,2.43,"RTX 5080",18449,"Intel",32,1024,240,"IPS",1600,0,11.0,56.1,1,0,1,372,25.2,16,0,0,0,0,1,1],["微星",6000,15,2.32,"RTX 4050",7712,"Intel",16,512,144,"IPS",1080,0,6.67,50.1,1,0,1,430,24.7,6,0,0,0,0,1,1],["微星",6000,15,2.32,"RTX 4060",10151,"Intel",16,512,144,"IPS",1080,0,6.67,50.8,1,0,1,422,24.7,8,0,0,0,0,1,1],["微星",6800,15,2.32,"RTX 5060",10700,"Intel",16,512,144,"IPS",1080,0,6.67,51.2,1,0,1,406,24.7,8,0,0,0,0,1,1],["微星",9999,14,2.15,"內顯",10070,"Intel",32,1024,120,"OLED",1800,1,6.67,39.0,1,0,0,559,24.0,0,1,0,0,1,1,1],["微星",9999,14,2.15,"內顯",9898,"Intel",32,1024,120,"OLED",1800,1,6.67,40.2,1,0,0,553,24.0,0,1,0,0,1,1,1],["微星",10999,14,2.15,"內顯",4850,"Intel",32,1024,120,"OLED",1200,1,6.67,39.7,1,0,0,632,24.0,0,1,0,0,1,1,1],["微星",8199,16,2.43,"內顯",4871,"Intel",32,1024,240,"OLED",1600,1,11.0,39.8,1,0,1,574,25.2,0,1,0,0,1,1,1],["微星",7499,13,2.15,"內顯",4913,"Intel",32,1024,165,"OLED",1600,1,6.67,38.8,1,0,0,586,24.0,0,1,0,0,1,1,1],["機械革命",6300,16,2.43,"RTX 5060",10742,"AMD",16,512,180,"IPS",1600,0,11.0,51.1,1,0,1,417,25.2,8,0,0,0,0,1,1],["機械革命",8500,16,2.43,"RTX 5070 Ti",15807,"AMD",32,1024,300,"IPS",1600,0,11.0,53.3,1,0,1,395,25.2,12,0,0,0,0,1,1],["機械革命",7224,16,2.43,"RTX 5060",11281,"Intel",16,1024,240,"IPS",1600,0,11.0,51.2,1,0,1,426,25.2,8,1,0,0,0,1,1],["機械革命",10499,16,2.43,"RTX 5070",12871,"Intel",16,1024,240,"IPS",1600,0,11.0,51.8,1,0,1,395,25.2,8,1,0,0,0,1,1],["機械革命",7999,16,2.43,"RTX 5060",11276,"Intel",16,512,180,"IPS",1600,0,11.0,51.1,1,0,1,389,25.2,8,1,0,0,0,1,1],["機械革命",7999,16,2.43,"RTX 5060",11215,"Intel",16,512,180,"IPS",1600,0,11.0,51.2,1,0,1,418,25.2,8,0,0,0,0,1,1],["機械革命",5400,15,2.32,"RTX 5050",8371,"Intel",16,512,165,"IPS",1080,0,6.67,49.8,1,0,1,381,24.7,8,0,0,0,0,1,1],["機械革命",7564,16,2.43,"RTX 5060",10865,"Intel",16,512,240,"IPS",1600,0,11.0,54.0,1,0,1,424,25.2,8,0,0,0,0,1,1],["機械革命",25000,16,2.43,"RTX 5090",22015,"Intel",32,2048,240,"OLED",1600,1,11.0,58.0,1,0,1,586,25.2,24,1,0,0,0,1,1],["機械革命",12000,16,2.43,"RTX 5070 Ti",15427,"Intel",32,1024,300,"IPS",1600,0,11.0,57.5,1,0,1,377,25.2,12,0,0,0,0,1,1],["機械革命",15000,18,2.99,"RTX 5080",19716,"AMD",64,2048,180,"IPS",1600,0,11.0,58.0,1,0,1,432,27.6,16,1,0,0,0,1,1],["機械革命",15000,18,2.99,"RTX 5090",22706,"AMD",64,2048,180,"IPS",1600,0,11.0,58.0,1,0,1,372,27.6,24,1,0,0,0,1,1],["機械革命",15000,18,2.99,"RTX 5070 Ti",15179,"AMD",64,2048,180,"IPS",1600,0,11.0,57.1,1,0,1,386,27.6,12,1,0,0,0,1,1],["機械革命",13000,16,2.43,"RTX 5080",20248,"AMD",64,2048,300,"IPS",1600,0,11.0,54.7,1,0,1,380,25.2,16,0,0,0,0,1,1],["機械革命",13000,16,2.43,"RTX 5090",22909,"AMD",64,2048,300,"IPS",1600,0,11.0,55.5,1,0,1,396,25.2,24,0,0,0,0,1,1],["惠普",12499,14,2.15,"RTX 5060",10363,"Intel",32,1024,120,"OLED",1800,1,6.67,51.0,1,0,0,631,24.0,8,0,0,0,0,1,1],["惠普",12699,14,2.15,"RTX 5060",10826,"Intel",32,1024,120,"OLED",1800,1,6.67,51.0,1,0,0,567,24.0,8,0,0,0,0,1,1],["惠普",13999,14,2.15,"RTX 5070",12888,"Intel",32,1024,120,"OLED",1800,1,6.67,51.5,1,0,0,617,24.0,8,0,0,0,0,1,1],["惠普",14199,14,2.15,"RTX 5070",12941,"Intel",32,1024,120,"OLED",1800,1,6.67,51.5,1,0,0,629,24.0,8,0,0,0,0,1,1],["惠普",16499,14,2.15,"RTX 5070",12014,"Intel",64,2048,120,"OLED",1800,1,6.67,51.5,1,0,0,620,24.0,8,0,0,0,0,1,1],["惠普",16699,14,2.15,"RTX 5070",12444,"Intel",64,2048,120,"OLED",1800,1,6.67,51.5,1,0,0,563,24.0,8,0,0,0,0,1,1],["惠普",5999,16,2.43,"RTX 5050",8232,"Intel",16,1024,240,"IPS",1600,0,11.0,52.5,1,0,1,405,25.2,8,0,0,0,0,1,1],["惠普",6319,16,2.43,"RTX 5060",10962,"Intel",16,1024,240,"IPS",1600,0,11.0,53.3,1,0,1,429,25.2,8,0,0,0,0,1,1],["惠普",6959,16,2.43,"RTX 5070",13400,"Intel",16,1024,240,"IPS",1600,0,11.0,54.5,1,0,1,389,25.2,8,0,0,0,0,1,1],["惠普",6719,16,2.43,"RTX 5060",11183,"Intel",16,1024,240,"IPS",1600,0,11.0,54.6,1,0,1,402,25.2,8,0,0,0,0,1,1],["惠普",7119,16,2.43,"RTX 5060",11362,"Intel",32,1024,240,"IPS",1600,0,11.0,54.3,1,0,1,410,25.2,8,0,0,0,0,1,1],["惠普",7999,16,2.43,"RTX 5070",13024,"Intel",32,1024,240,"IPS",1600,0,11.0,55.4,1,0,1,401,25.2,8,0,0,0,0,1,1],["機械師",10445,16,2.43,"RTX 5070 Ti",15272,"Intel",16,1024,240,"IPS",1600,0,11.0,53.3,1,0,1,409,25.2,12,0,0,0,0,1,1],["機械師",5539,16,2.43,"RTX 5060",10804,"AMD",16,1024,300,"IPS",1600,0,11.0,54.2,1,0,1,428,25.2,8,0,0,0,0,1,1],["機械師",8199,16,2.43,"RTX 5060",10946,"Intel",16,1024,240,"IPS",1600,0,11.0,51.3,1,0,1,416,25.2,8,0,0,0,0,1,1],["機械師",9000,16,2.43,"RTX 5070",13403,"Intel",16,1024,240,"IPS",1600,0,11.0,51.7,1,0,1,392,25.2,8,0,0,0,0,1,1],["機械師",11000,16,2.43,"RTX 5070 Ti",16268,"Intel",16,1024,240,"IPS",1600,0,11.0,53.5,1,0,1,420,25.2,12,0,0,0,0,1,1],["機械師",9446,16,2.43,"內顯",5216,"Intel",32,1024,240,"IPS",1600,0,11.0,38.8,1,0,1,414,25.2,0,0,0,0,1,1,1],["機械師",9446,16,2.43,"其他",2502,"Intel",32,1024,240,"IPS",1600,0,11.0,38.7,1,0,1,414,25.2,8,0,0,0,0,1,1],["機械師",20000,16,2.43,"RTX 5090",22593,"Intel",32,1024,300,"IPS",1600,0,11.0,58.0,1,0,1,407,25.2,24,0,0,0,0,1,1],["機械師",12000,16,2.43,"RTX 5070 Ti",15414,"Intel",32,1024,300,"IPS",1600,0,11.0,55.6,1,0,1,393,25.2,12,0,0,0,0,1,1],["機械師",13999,16,2.43,"RTX 5080",19299,"AMD",32,1024,300,"IPS",1600,0,11.0,58.0,1,0,1,385,25.2,16,0,0,0,0,1,1],["機械師",15000,18,2.99,"RTX 5070 Ti",15326,"Intel",64,2048,240,"IPS",1600,0,11.0,57.0,1,0,1,394,27.6,12,0,0,0,0,1,1],["機械師",15000,18,2.99,"RTX 5080",19894,"Intel",64,2048,240,"IPS",1600,0,11.0,58.0,1,0,1,390,27.6,16,0,0,0,0,1,1],["機械師",15000,18,2.99,"RTX 5090",23079,"Intel",64,2048,240,"IPS",1600,0,11.0,58.0,1,0,1,370,27.6,24,0,0,0,0,1,1],["機械革命",7499,16,2.43,"RTX 5060",11273,"AMD",16,1024,300,"IPS",1600,0,11.0,53.7,1,0,1,392,25.2,8,0,0,0,0,1,1],["機械革命",19399,16,2.43,"RTX 5060",11014,"AMD",32,1024,300,"IPS",1600,0,11.0,53.6,1,0,1,414,25.2,8,0,0,0,0,1,1],["機械革命",6799,16,2.43,"RTX 5060",10902,"AMD",16,1024,300,"IPS",1600,0,11.0,54.6,1,0,1,371,25.2,8,0,0,0,0,1,1],["機械革命",5995,16,2.43,"RTX 5060",10742,"AMD",16,1024,300,"IPS",1600,0,11.0,51.2,1,0,1,422,25.2,8,0,0,0,0,1,1],["機械革命",8999,16,2.43,"RTX 5060",10887,"AMD",16,1024,240,"IPS",1600,0,11.0,51.3,1,0,1,381,25.2,8,0,0,0,0,1,1],["機械革命",6159,15,2.23,"RTX 5060",11096,"Intel",16,1024,165,"IPS",1600,0,6.67,51.4,1,0,0,406,24.4,8,0,0,0,0,1,1],["機械革命",6239,16,2.43,"RTX 5060",10979,"AMD",16,1024,240,"IPS",1600,0,11.0,51.1,1,0,1,374,25.2,8,0,0,0,0,1,1],["機械革命",5599,14,2.15,"內顯",2402,"Intel",32,1024,165,"IPS",1600,0,6.67,39.4,1,0,0,405,24.0,0,0,0,0,1,1,1],["神舟",4239,15,2.32,"RTX 4050",8035,"Intel",16,512,144,"IPS",1080,0,6.67,49.7,1,0,1,431,24.7,6,0,0,0,0,1,1],["神舟",4999,15,2.32,"RTX 4060",10454,"Intel",16,512,144,"IPS",1080,0,6.67,50.7,1,0,1,417,24.7,8,0,0,0,0,1,1],["神舟",5499,15,2.32,"RTX 4060",9987,"Intel",16,512,144,"IPS",1080,0,6.67,50.9,1,0,1,423,24.7,8,0,0,0,0,1,1],["神舟",6999,16,2.43,"RTX 5060",11004,"Intel",16,1024,165,"IPS",1600,0,11.0,53.3,1,0,1,401,25.2,8,0,0,0,0,1,1],["神舟",7999,16,2.43,"RTX 5060",10988,"Intel",16,1024,165,"IPS",1600,0,11.0,54.9,1,0,1,399,25.2,8,0,0,0,0,1,1],["神舟",9999,16,2.43,"RTX 5070",13718,"Intel",32,1024,240,"IPS",1600,0,11.0,55.2,1,0,1,372,25.2,8,0,0,0,0,1,1],["神舟",11999,16,2.43,"RTX 5070",13875,"Intel",32,1024,240,"IPS",1600,0,11.0,53.8,1,0,1,417,25.2,8,1,0,0,0,1,1],["神舟",17999,16,2.43,"RTX 5080",18977,"Intel",32,2048,240,"IPS",1600,0,11.0,58.0,1,0,1,410,25.2,16,1,0,0,0,1,1],["宏碁",9999,16,2.43,"RTX 5060",11603,"Intel",16,1024,165,"OLED",1600,1,11.0,53.2,1,0,1,609,25.2,8,0,0,0,0,1,1],["宏碁",14999,16,2.43,"RTX 5070 Ti",15628,"Intel",32,1024,165,"OLED",1600,1,11.0,57.3,1,0,1,644,25.2,12,0,0,0,0,1,1],["宏碁",16999,16,2.43,"RTX 5070 Ti",15122,"Intel",32,2048,165,"OLED",1600,1,11.0,56.7,1,0,1,616,25.2,12,0,0,0,0,1,1],["宏碁",12999,16,2.43,"RTX 5070",12828,"Intel",32,1024,165,"OLED",1600,1,11.0,53.1,1,0,1,581,25.2,8,0,0,0,0,1,1],["宏碁",15999,16,2.43,"RTX 5070",13855,"Intel",64,2048,165,"OLED",1600,1,11.0,53.0,1,0,1,594,25.2,8,0,0,0,0,1,1],["宏碁",7904,16,2.43,"RTX 5060",10884,"Intel",16,1024,300,"IPS",1600,0,11.0,53.8,1,0,1,417,25.2,8,0,0,0,0,1,1],["宏碁",8999,16,2.43,"RTX 5060",10872,"Intel",16,1024,300,"IPS",1600,0,11.0,53.8,1,0,1,408,25.2,8,0,0,0,0,1,1],["微星",28999,18,2.99,"RTX 5080",19802,"Intel",64,2048,120,"Mini LED",2400,1,11.0,58.0,1,0,1,568,27.6,16,0,1,1,0,1,1],["微星",41999,18,2.99,"RTX 5090",22076,"Intel",64,6144,120,"Mini LED",2400,1,11.0,58.0,1,0,1,555,27.6,24,0,1,1,0,1,1],["微星",41999,18,2.99,"RTX 5090",22347,"Intel",64,4096,120,"Mini LED",2400,1,11.0,58.0,1,0,1,582,27.6,24,0,1,1,0,1,1],["微星",28999,18,2.99,"RTX 5080",18670,"Intel",32,2048,240,"IPS",2400,1,11.0,58.0,1,0,1,606,27.6,16,0,1,1,0,1,1],["微星",15999,18,2.99,"RTX 5080",19043,"Intel",32,1024,240,"IPS",2400,1,11.0,58.0,1,0,1,627,27.6,16,0,1,1,0,1,1],["微星",18699,16,2.43,"RTX 5070",13526,"Intel",32,1024,240,"OLED",1600,1,11.0,52.5,1,0,1,633,25.2,8,0,0,0,0,1,1],["雷神",20899,16,2.43,"RTX 5060",10861,"Intel",16,1024,240,"IPS",1600,0,11.0,50.8,1,0,1,414,25.2,8,0,0,0,0,1,1],["雷神",5359,16,2.43,"RTX 5060",11312,"Intel",16,1024,240,"IPS",1600,0,11.0,50.9,1,0,1,368,25.2,8,0,0,0,0,1,1],["雷神",19199,16,2.43,"RTX 5070",13075,"Intel",16,1024,240,"IPS",1600,0,11.0,51.6,1,0,1,400,25.2,8,0,0,0,0,1,1],["雷神",8999,16,2.43,"RTX 5060",11696,"Intel",16,1024,240,"IPS",1600,0,11.0,53.4,1,0,1,377,25.2,8,0,0,0,0,1,1],["雷神",11999,16,2.43,"RTX 5080",19335,"Intel",32,1024,300,"IPS",1600,0,11.0,54.9,1,0,1,378,25.2,16,0,0,0,0,1,1],["雷神",3659,14,2.15,"內顯",2222,"AMD",16,512,165,"IPS",1600,0,6.67,40.3,1,0,0,394,24.0,0,0,0,0,1,1,1],["戴爾",16739,13,1.24,"內顯",5214,"Intel",32,1024,120,"IPS",1200,0,10.0,37.7,0,0,0,608,14.5,0,0,1,1,1,1,0],["戴爾",12488,14,1.38,"內顯",4409,"Intel",32,1024,120,"OLED",1800,1,10.0,37.6,0,0,0,627,14.5,0,0,1,1,1,1,0],["戴爾",20900,14,1.38,"內顯",10272,"Intel",32,1024,120,"OLED",1600,1,10.0,39.2,0,0,0,619,14.5,0,1,1,1,1,1,0],["戴爾",31799,14,2.15,"RTX PRO 2000",10613,"Intel",32,1024,165,"IPS",1600,1,6.67,49.9,1,0,0,604,24.0,8,0,1,1,0,1,1],["機械師",7499,15,2.32,"RTX 5060",10925,"Intel",16,1024,165,"IPS",1440,0,6.67,53.3,1,0,1,376,24.7,8,0,0,0,0,1,1],["機械師",8499,15,2.32,"RTX 5060",11584,"Intel",16,1024,165,"IPS",1440,0,6.67,55.0,1,0,1,431,24.7,8,0,0,0,0,1,1],["機械師",9999,16,2.43,"RTX 5070",13120,"Intel",32,1024,240,"IPS",1600,0,11.0,54.9,1,0,1,389,25.2,8,0,0,0,0,1,1],["機械師",14999,16,2.43,"RTX 5080",19828,"Intel",32,2048,240,"IPS",1600,0,11.0,58.0,1,0,1,382,25.2,16,0,0,0,0,1,1]];
+/* 欄位：0 品牌 1 價格 2 吋 3 重量 4 顯卡 5 TimeSpy 6 CPU 7 RAM 8 SSD 9 Hz 10 面板 11 解析度高 12 P3 13 續航 14 噪音 15 TB 16 指紋 17 數字鍵盤 18 亮度 19 厚度 20 VRAM 21 WiFi7 22 人臉 23 杜比 24 USB-C 充電 25 讀卡機 26 2.5G 網口 */
+const n0=v=>Math.round(v).toLocaleString('en-US'),n1=v=>(+v).toFixed(1),ni=v=>String(+(+v).toFixed(2));
+const tsMin=g=>Math.floor(Math.min(...D.filter(r=>r[4]===g).map(r=>r[5]))/500)*500;
+const NUM={
+  price:{t:'價格',col:1,min:2000,max:48000,step:1000,bin:2000,dual:true,unit:'元',f:n0},
+  ts:{t:'遊戲效能',col:5,min:1000,max:24000,step:500,bin:1000,dir:'gte',unit:'分',f:n0,marks:[[tsMin('RTX 4060'),'≈4060'],[tsMin('RTX 5070'),'≈5070'],[tsMin('RTX 5080'),'≈5080']]},
+  batt:{t:'續航',col:13,min:6,max:16,step:0.5,bin:1,dir:'gte',unit:'小時',f:ni,plus:true,marks:[[8,'8h 一整天'],[12,'12h']]},
+  weight:{t:'重量',col:3,min:0.9,max:3.0,step:0.1,bin:0.1,dir:'lte',unit:'kg',f:n1,marks:[[1.5,'1.5 輕薄'],[2,'2.0 可通勤']]},
+};
+const BRANDS=[...new Set(D.map(r=>r[0]))].sort((a,b)=>D.filter(r=>r[0]===b).length-D.filter(r=>r[0]===a).length);
+const LIST={
+  brand:{t:'品牌',col:0,opts:BRANDS.map(b=>[b,b])},
+  size:{t:'尺寸',col:2,opts:[13,14,15,16,17,18].map(v=>[v,v+' 吋'])},
+  ram:{t:'記憶體',col:7,opts:[16,24,32,64,96,128,192].map(v=>[v,v+'GB'])},
+  ssd:{t:'硬碟',col:8,opts:[[512,'512GB'],[1024,'1TB'],[2048,'2TB'],[4096,'4TB'],[6144,'6TB']]},
+  hz:{t:'更新率',col:9,opts:[60,120,144,160,165,180,240,300,360].map(v=>[v,v+'Hz'])},
+  panel:{t:'面板',col:10,opts:[['IPS','IPS'],['OLED','OLED'],['Mini LED','Mini LED']]},
+  cpu:{t:'處理器',col:6,opts:[['Intel','Intel'],['AMD','AMD']]},
+};
+const IC={
+  fp:'<path d="M12 11v3a6 6 0 0 1-1.2 3.6"/><path d="M8.5 9.5A3.5 3.5 0 0 1 15.5 11v2.5"/><path d="M5.5 13V11a6.5 6.5 0 0 1 13 0v2a11 11 0 0 1-.6 3.6"/><path d="M8.5 13v1a9 9 0 0 1-1 4"/><path d="M4.5 6.5A9 9 0 0 1 19.5 6.5"/>',
+  face:'<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10v1M15 10v1M12 10v3h-1M9.5 16a3.5 3.5 0 0 0 5 0"/>',
+  tb:'<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.2" r=".9" fill="currentColor"/>',
+  usbc:'<rect x="5" y="9" width="14" height="6" rx="3"/><path d="M8.5 12h7M12 5v4M12 15v4"/>',
+  p3:'<circle cx="9" cy="10" r="5"/><circle cx="15" cy="10" r="5"/><circle cx="12" cy="15" r="5"/>',
+  dolby:'<path d="M4 9v6h3l5 4V5L7 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
+  pad:'<rect x="3" y="4" width="18" height="16" rx="2"/><rect x="8" y="12" width="8" height="5" rx="1"/><path d="M6 8h12"/>',
+};
+const FEATS=[['tb','雷電／USB4',r=>r[15]===1],['fp','指紋解鎖',r=>r[16]===1],['face','人臉解鎖',r=>r[22]===1],['wifi','Wi-Fi 7',r=>r[21]===1],['usbc','USB-C 充電',r=>r[24]===1],['p3','廣色域 P3',r=>r[12]===1],['dolby','杜比全景聲',r=>r[23]===1],['pad','無數字鍵盤',r=>r[17]===0]];
+const RARE=5;
+
+/* ---------- 狀態 ---------- */
+let s,ui={tab:'air',modal:true,pop:'price',acc:{price:1,brand:1,size:1,ram:1,ts:1},more:{}};
+function reset(){s={price:{lo:null,hi:null},ts:null,batt:null,weight:null,feats:[]};for(const k in LIST)s[k]=[]}
+const P={
+  price:r=>(s.price.lo===null||r[1]>=s.price.lo)&&(s.price.hi===null||r[1]<=s.price.hi),
+  feats:r=>s.feats.every(f=>FEATS.find(x=>x[0]===f)[2](r)),
+};
+for(const k of ['ts','batt','weight']){const c=NUM[k];P[k]=r=>s[k]===null||(c.dir==='gte'?r[c.col]>=s[k]-1e-9:r[c.col]<=s[k]+1e-9)}
+for(const k in LIST){const c=LIST[k];P[k]=r=>!s[k].length||s[k].includes(r[c.col])}
+const KEYS=Object.keys(P);
+const others=k=>D.filter(r=>KEYS.every(j=>j===k||P[j](r)));
+const matched=()=>D.filter(r=>KEYS.every(j=>P[j](r)));
+const isSet=k=>k==='price'?(s.price.lo!==null||s.price.hi!==null):Array.isArray(s[k])?s[k].length>0:s[k]!==null;
+const nActive=()=>KEYS.filter(isSet).length;
+const ALLC={};for(const k in LIST){ALLC[k]={};for(const r of D){const v=r[LIST[k].col];ALLC[k][v]=(ALLC[k][v]||0)+1}}
+const rare=(k,x)=>(ALLC[k][x]||0)<RARE;
+const zeroSet=k=>{const m=new Set(others(k).map(r=>r[LIST[k].col]));return x=>!m.has(x)};
+const fZero=()=>{const rs=others('feats');return f=>!rs.some(f[2])};
+
+/* ---------- 文字 ---------- */
+const U=u=>/[一-鿿]/.test(u)?' '+u:' '+u+' ';
+function txt(k){
+  if(!isSet(k))return '';
+  if(k==='price'){const {lo,hi}=s.price;if(lo!==null&&hi!==null)return `${n0(lo)} – ${n0(hi)} 元`;return lo!==null?`${n0(lo)} 元以上`:`${n0(hi)} 元以下`}
+  if(NUM[k]){const c=NUM[k];return `${c.f(s[k])}${U(c.unit)}${c.dir==='gte'?'以上':'以下'}`.replace('  ',' ')}
+  if(k==='feats')return FEATS.filter(f=>s.feats.includes(f[0])).map(f=>f[1]).join('、');
+  return LIST[k].opts.filter(o=>s[k].includes(o[0])).map(o=>o[1]).join('、');
+}
+const title=k=>k==='feats'?'功能':(NUM[k]||LIST[k]).t;
+
+/* ---------- 分布圖滑桿（共用） ---------- */
+const binsOf=k=>{const c=NUM[k],n=Math.max(1,Math.ceil((c.max-c.min)/c.bin-1e-9));return {n,b:c.bin,max:c.min+n*c.bin}};
+const pctK=(k,x)=>{const c=NUM[k],{max}=binsOf(k);return ((x-c.min)/(max-c.min)*100).toFixed(2)+'%'};
+const kept=k=>{if(k==='price')return [s.price.lo??-Infinity,s.price.hi??Infinity];if(s[k]===null)return [-Infinity,Infinity];return NUM[k].dir==='gte'?[s[k],Infinity]:[-Infinity,s[k]]};
+function bars(k){
+  const c=NUM[k],{n,b}=binsOf(k),all=Array(n).fill(0),cur=Array(n).fill(0),bin=x=>Math.max(0,Math.min(n-1,Math.floor((x-c.min)/b+1e-9)));
+  for(const r of D)all[bin(r[c.col])]++;for(const r of others(k))cur[bin(r[c.col])]++;
+  const mx=Math.sqrt(Math.max(1,...all)),[lo,hi]=kept(k),set=isSet(k),h=x=>x?Math.min(100,Math.max(4,Math.sqrt(x)/mx*100)):0;
+  return cur.map((x,i)=>{const mid=c.min+(i+.5)*b,kp=mid>=lo&&mid<=hi;return `<span class="b ${set?(kp?'k':'out'):''}"><i class="g" style="height:${h(all[i])}%"></i><i class="f" style="height:${h(x)}%"></i></span>`}).join('');
+}
+function hs(k,h=56,thin=false){
+  const c=NUM[k],{max}=binsOf(k),set=isSet(k);
+  let rng;
+  if(c.dual){const lo=s.price.lo??c.min,hi=s.price.hi??max;
+    rng=`<div class="rng${set?' set':''}" style="--a:${pctK(k,lo)};--b:${pctK(k,hi)}"><div class="trk"></div><div class="fill"></div><input type="range" aria-label="價格下限" data-n="${k}" data-e="lo" min="${c.min}" max="${max}" step="${c.step}" value="${lo}" style="z-index:${lo>c.min+(max-c.min)*.9?3:1}"><input type="range" aria-label="價格上限" data-n="${k}" data-e="hi" min="${c.min}" max="${max}" step="${c.step}" value="${hi}" style="z-index:2"></div>`}
+  else{const v=s[k]??(c.dir==='gte'?c.min:max),[a,b]=c.dir==='gte'?[v,max]:[c.min,v];
+    rng=`<div class="rng${set?' set':''}" style="--a:${pctK(k,a)};--b:${pctK(k,b)}"><div class="trk"></div><div class="fill"></div><input type="range" aria-label="${c.t}" data-n="${k}" min="${c.min}" max="${max}" step="${c.step}" value="${v}"></div>`}
+  const mk=c.marks?(thin?c.marks.filter((m,i,a)=>i===0||Math.abs(parseFloat(pctK(k,m[0]))-parseFloat(pctK(k,a[i-1][0])))>=18):c.marks):null;
+  const marks=mk?`<div class="marks">${mk.map(([x,t])=>`<button style="left:${pctK(k,x)}" class="${s[k]===x?'on':''}" data-a="mark:${k}:${x}">${t}</button>`).join('')}</div>`:'<div style="height:8px"></div>';
+  return `<div class="hs" data-hk="${k}"><div class="chart" style="height:${h}px">${bars(k)}</div>${marks}${rng}<div class="ends"><span>${c.f(c.min)} ${c.unit}</span><span>${c.f(max)}${c.plus?'+':''} ${c.unit}</span></div></div>`;
+}
+const vspan=k=>`<span class="js-v" data-v="${k}">${txt(k)||'不限'}</span>`;
+
+/* ---------- 共用小元件 ---------- */
+function visible(k,scope){const c=LIST[k];return c.opts.filter(o=>ui.more[scope+k]||!rare(k,o[0])||s[k].includes(o[0]))}
+function moreBtn(k,scope,cls){const c=LIST[k],hid=c.opts.length-visible(k,scope).length,has=c.opts.some(o=>rare(k,o[0]));
+  return hid?`<button class="${cls}" data-a="more:${scope+k}">顯示全部（${c.opts.length}）</button>`:ui.more[scope+k]&&has?`<button class="${cls}" data-a="more:${scope+k}">收起</button>`:''}
+const pills=(k,scope)=>{const z=zeroSet(k);return `<div class="pills">${visible(k,scope).map(([x,t])=>`<button class="pill${s[k].includes(x)?' on':''}${z(x)?' z':''}" aria-pressed="${s[k].includes(x)}" data-a="pick:${k}:${x}">${t}</button>`).join('')}${moreBtn(k,scope,'link')}</div>`};
+const checks=(k,scope)=>{const z=zeroSet(k);return visible(k,scope).map(([x,t])=>`<button class="cb${s[k].includes(x)?' on':''}${z(x)?' z':''}" aria-pressed="${s[k].includes(x)}" data-a="pick:${k}:${x}"><i></i>${t}</button>`).join('')+moreBtn(k,scope,'more')};
+const featChecks=()=>{const z=fZero();return FEATS.map(f=>`<button class="cb${s.feats.includes(f[0])?' on':''}${z(f)?' z':''}" aria-pressed="${s.feats.includes(f[0])}" data-a="feat:${f[0]}"><i></i>${f[1]}</button>`).join('')};
+function results(n=8){
+  const rs=matched().slice().sort((a,b)=>a[1]-b[1]).slice(0,n);
+  return `<div class="res">${rs.map(r=>`<div class="lap"><div class="img">筆電照片</div><b>${r[0]} ${r[2]} 吋</b><span>${r[7]}GB · ${r[8]>=1024?r[8]/1024+'TB':r[8]+'GB'} · ${r[4]}</span><em>NT$ ${n0(r[1])}</em></div>`).join('')}</div>`;
+}
+const QUICK=[
+  ['1.5 kg 以下',()=>s.weight===1.5,()=>{s.weight=s.weight===1.5?null:1.5}],
+  ['OLED',()=>s.panel.includes('OLED'),()=>tog('panel','OLED')],
+  ['32GB',()=>s.ram.includes(32),()=>tog('ram',32)],
+  ['16 吋',()=>s.size.includes(16),()=>tog('size',16)],
+  ['雷電／USB4',()=>s.feats.includes('tb'),()=>{s.feats=s.feats.includes('tb')?s.feats.filter(x=>x!=='tb'):[...s.feats,'tb']}],
+];
+function tog(k,x){s[k]=s[k].includes(x)?s[k].filter(y=>y!==x):[...s[k],x]}
+const quickPills=()=>QUICK.map(([t,on],i)=>`<button class="pill${on()?' on':''}" data-a="quick:${i}">${t}</button>`).join('');
+const N=()=>`<span class="js-n">${matched().length}</span>`;
+
+/* ===== 1. Airbnb 式：一排快捷膠囊＋一個大面板 ===== */
+function vAir(){
+  const na=nActive();
+  const sec=(h,p,body)=>`<section class="m-sec"><h3>${h}</h3>${p?`<p>${p}</p>`:''}${body}</section>`;
+  const row=(k)=>`<div class="m-row"><span>${LIST[k].t}</span>${pills(k,'air')}</div>`;
+  const modal=ui.modal?`<div class="modal-bg" data-a="closebg"><div class="modal" role="dialog" aria-label="篩選">
+    <div class="m-head"><button class="xbtn" data-a="modal" aria-label="關閉">×</button><h2>篩選</h2><span></span></div>
+    <div class="m-body">
+      ${sec('價格','售價，左右兩端都可以拖',hs('price',72)+`<div class="minmax"><div><small>最低</small><b>${s.price.lo===null?'不限':'NT$ '+n0(s.price.lo)}</b></div><i></i><div><small>最高</small><b>${s.price.hi===null?'不限':'NT$ '+n0(s.price.hi)}</b></div></div>`)}
+      ${sec('效能與攜帶','',`<div class="m-hist">${['ts','batt','weight'].map(k=>`<div><div class="lbl"><span>${NUM[k].t}</span><b>${vspan(k)}</b></div>${hs(k,48)}</div>`).join('')}</div>`)}
+      ${sec('規格','',['size','ram','ssd','hz','panel','cpu'].map(row).join(''))}
+      ${sec('品牌','',pills('brand','air'))}
+      ${sec('功能','勾選的都必須有',`<div class="m-grid2">${featChecks()}</div>`)}
+    </div>
+    <div class="m-foot"><button class="link" data-a="clearall">清除全部</button><button class="btn-ink" data-a="modal">顯示 ${N()} 台</button></div>
+  </div></div>`:'';
+  return `<div class="air-bar"><button class="pill air-f${na?' on':''}" data-a="modal">篩選${na?`<span class="badge">${na}</span>`:''}</button><span class="sep"></span>${quickPills()}</div>
+    <div class="res-h"><h3>${N()} 台符合</h3><span class="muted">價格為目前售價</span></div>${results()}${modal}`;
+}
+
+/* ===== 2. Best Buy／Newegg 式：左側勾選清單 ===== */
+function vBby(){
+  const g=(k,body)=>`<div class="grp${ui.acc[k]?' open':''}"><button class="grp-h" data-a="acc:${k}" aria-expanded="${!!ui.acc[k]}">${title(k)}<i></i></button>${ui.acc[k]?`<div class="grp-b">${body}</div>`:''}</div>`;
+  const side=[
+    g('price',`<div style="margin:2px 0 6px;font-weight:600">${vspan('price')}</div>`+hs('price',48)),
+    g('brand',checks('brand','bby')),g('size',checks('size','bby')),g('ram',checks('ram','bby')),g('ssd',checks('ssd','bby')),
+    g('ts',`<div style="margin:2px 0 6px;font-weight:600">${vspan('ts')}</div>`+hs('ts',44,true)),
+    g('batt',`<div style="margin:2px 0 6px;font-weight:600">${vspan('batt')}</div>`+hs('batt',44,true)),
+    g('weight',`<div style="margin:2px 0 6px;font-weight:600">${vspan('weight')}</div>`+hs('weight',44,true)),
+    g('hz',checks('hz','bby')),g('panel',checks('panel','bby')),g('cpu',checks('cpu','bby')),
+    g('feats',(()=>{const z=fZero();return FEATS.map(f=>`<button class="togrow${z(f)&&!s.feats.includes(f[0])?' muted':''}" data-a="feat:${f[0]}" role="switch" aria-checked="${s.feats.includes(f[0])}">${f[1]}<span class="sw${s.feats.includes(f[0])?' on':''}"></span></button>`).join('')})()),
+  ].join('');
+  const chips=KEYS.filter(isSet).map(k=>`<span class="ach">${title(k)}：${txt(k)}<button data-a="clear:${k}" aria-label="拿掉">×</button></span>`).join('');
+  return `<div class="bby"><aside class="side">${side}</aside><div>
+    <div class="bby-top">${quickPills()}<span class="grow"></span><span class="sort">排序：最適合你</span></div>
+    ${chips?`<div class="applied"><span class="muted">已選：</span>${chips}<button class="link" data-a="clearall">清除全部</button></div>`:''}
+    <div class="res-h"><h3>${N()} 台符合</h3></div>${results(9)}</div></div>`;
+}
+
+/* ===== 3. Zalando 式：一排下拉膠囊 ===== */
+const ZKEYS=['price','brand','size','ram','ssd','ts','batt','weight','hz','panel','feats'];
+function vZal(){
+  const pill=k=>`<button class="zp${ui.pop===k?' open':''}${isSet(k)?' set':''}" data-a="pop:${k}" aria-expanded="${ui.pop===k}" data-pk="${k}"><span>${isSet(k)?title(k)+'：'+txt(k):title(k)}</span></button>`;
+  let pop='';
+  if(ui.pop){const k=ui.pop;
+    const body=NUM[k]?`<div style="margin-bottom:8px;font-weight:600">${vspan(k)}</div>`+hs(k,56,true):k==='feats'?featChecks():checks(k,'zal');
+    pop=`<div class="pop" id="pop"><div class="pop-b">${body}</div><div class="pop-f"><button class="link" data-a="clear:${k}">清除</button><button class="btn-ink" data-a="pop:${k}">看 ${N()} 台</button></div></div>`;
+  }
+  return `<div class="zbar" id="zbar"><span class="pill" style="pointer-events:none">排序：最適合你</span>${ZKEYS.map(pill).join('')}<button class="zall" data-a="noop">所有篩選</button>${pop}</div>
+    <p class="zcount">${N()} 台${nActive()?` · <button class="link" data-a="clearall">清除全部</button>`:''}</p>${results(8)}`;
+}
+
+/* ===== 4. Apple 式：幾個大問題、大按鈕 ===== */
+const SIZE_DESC={13:'最好帶',14:'好帶、最多人選',15:'剛剛好',16:'看得舒服',17:'接近桌機',18:'接近桌機'};
+const RAM_DESC={16:'日常、上課夠用',32:'多工、剪片',64:'專業、跑 AI'};
+const SSD_DESC={512:'文件為主',1024:'照片影片',2048:'遊戲、素材多'};
+function vApl(){
+  const tiles=(k,main,desc,c=3)=>{const z=zeroSet(k),list=LIST[k].opts.filter(o=>main.includes(o[0])||s[k].includes(o[0])||ui.more['apl'+k]);
+    const hasMore=LIST[k].opts.length>list.length;
+    return `<div class="tiles" style="--c:${c}">${list.map(([x,t])=>`<button class="tile${s[k].includes(x)?' on':''}${z(x)?' z':''}" aria-pressed="${s[k].includes(x)}" data-a="pick:${k}:${x}"><b>${t}</b>${desc&&desc[x]?`<span>${desc[x]}</span>`:''}</button>`).join('')}</div>${hasMore?`<button class="amore" data-a="more:apl${k}">其他選項 ›</button>`:ui.more['apl'+k]?`<button class="amore" data-a="more:apl${k}">收起</button>`:''}`};
+  const q=(h,p,body)=>`<section class="aq"><h3>${h}</h3>${p?`<p>${p}</p>`:''}${body}</section>`;
+  const fz=fZero();
+  return `<div class="apl"><h2>找到適合你的筆電。</h2><p class="sub">回答幾個問題就好，都可以跳過。</p>
+    ${q('預算多少？','拖兩端調整範圍。',`<div class="apl-hs"><div style="text-align:center;font:600 22px var(--display);margin-bottom:10px">${vspan('price')}</div>${hs('price',80)}</div>`)}
+    ${q('螢幕要多大？','可以選不只一個。',tiles('size',[14,16,18],SIZE_DESC))}
+    ${q('會打遊戲嗎？','點刻度最快：≈4060 能玩大部分 3A 遊戲。',`<div class="apl-hs"><div style="text-align:center;font:600 20px var(--display);margin-bottom:10px">${vspan('ts')}</div>${hs('ts',64)}</div>`)}
+    ${q('要多輕？','',`<div class="apl-hs"><div style="text-align:center;font:600 20px var(--display);margin-bottom:10px">${vspan('weight')}</div>${hs('weight',64)}</div>`)}
+    ${q('記憶體','',tiles('ram',[16,32,64],RAM_DESC))}
+    ${q('儲存空間','',tiles('ssd',[512,1024,2048],SSD_DESC))}
+    ${q('喜歡的品牌？','不選就是都可以。',tiles('brand',BRANDS.slice(0,8),null,4))}
+    ${q('一定要有的功能','',`<div class="tiles" style="--c:4">${FEATS.map(f=>`<button class="tile sm${s.feats.includes(f[0])?' on':''}${fz(f)?' z':''}" aria-pressed="${s.feats.includes(f[0])}" data-a="feat:${f[0]}"><svg class="feat-ic" viewBox="0 0 24 24">${IC[f[0]]}</svg><b>${f[1]}</b></button>`).join('')}</div>`)}
+  </div><div class="abar"><span><b>${N()} 台</b> <span class="muted">符合</span></span><span>${nActive()?`<button class="link" data-a="clearall" style="margin-right:14px">全部重來</button>`:''}<button class="btn-ink">看結果</button></span></div>`;
+}
+
+/* ---------- 版面 ---------- */
+const TABS=[
+  ['air','Airbnb 式','快捷膠囊＋大面板',vAir,'<b>怎麼用：</b>結果上方一排常用條件膠囊，點一下就開／關。要更多就按「篩選」，跳出一個大面板，從上往下：價格（分布圖）→ 效能與攜帶 → 規格（每列左邊名稱、右邊膠囊）→ 品牌 → 功能（勾選）。最下面「清除全部」和「顯示 N 台」。'],
+  ['bby','Best Buy 式','左側勾選清單',vBby,'<b>怎麼用：</b>左邊一長串分組，每組可以收合；選項是勾選框，功能是開關（Newegg 的做法）。右邊上方是快捷膠囊和排序，下面一排「已選：… ×」可以單獨拿掉。最熟悉、最傳統。'],
+  ['zal','Zalando 式','一排下拉膠囊',vZal,'<b>怎麼用：</b>結果上方一排膠囊，每顆是一個條件。點哪顆就在它下面彈出那一項的選項，選完按「看 N 台」收起。有設定的膠囊變黑，直接寫出你選了什麼（例：「記憶體：32GB」）。不用打開整個抽屜。'],
+  ['apl','Apple 式','幾個大問題',vApl,'<b>怎麼用：</b>像 Apple 選機器：一題一題往下，每題幾個大按鈕，附一句白話（「14 吋：好帶、最多人選」）。只放最常用的選項，其他按「其他選項」。選中是藍框加勾，底部一直有「N 台符合」。最不像篩選、最像被引導。'],
+];
+function render(){
+  const y=window.scrollY,t=TABS.find(x=>x[0]===ui.tab);
+  document.getElementById('tabs').innerHTML=TABS.map(([id,n,sub])=>`<button class="tab${id===ui.tab?' on':''}" data-a="tab:${id}">${n}<small>${sub}</small></button>`).join('');
+  document.getElementById('how').innerHTML=t[4];
+  document.getElementById('stage').innerHTML=t[3]();
+  if(ui.tab==='zal'&&ui.pop){const p=document.getElementById('pop'),btn=document.querySelector(`.zp[data-pk="${ui.pop}"]`),bar=document.getElementById('zbar');
+    if(p&&btn){const br=bar.getBoundingClientRect(),r=btn.getBoundingClientRect();let left=r.left-br.left;left=Math.max(0,Math.min(left,br.width-p.offsetWidth));p.style.left=left+'px';p.style.top=(r.bottom-br.top+8)+'px'}}
+  window.scrollTo(0,y);
+}
+function live(k){
+  document.querySelectorAll(`.hs[data-hk="${k}"] .chart`).forEach(el=>el.innerHTML=bars(k));
+  document.querySelectorAll(`.js-v[data-v="${k}"]`).forEach(el=>el.textContent=txt(k)||'不限');
+  document.querySelectorAll('.js-n').forEach(el=>el.textContent=matched().length);
+  document.querySelectorAll(`.hs[data-hk="${k}"] .marks button`).forEach(b=>b.classList.toggle('on',+b.dataset.a.split(':')[2]===s[k]));
+}
+
+/* ---------- 互動 ---------- */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-a]');
+  if(!el){if(ui.tab==='zal'&&ui.pop&&!e.target.closest('#pop')){ui.pop=null;render()}return}
+  const [a,k,v]=el.dataset.a.split(':');
+  if(a==='closebg'){if(e.target===el){ui.modal=false;render()}return}
+  if(a==='tab'){ui.tab=k;ui.pop=null}
+  else if(a==='modal')ui.modal=!ui.modal;
+  else if(a==='pop')ui.pop=ui.pop===k?null:k;
+  else if(a==='acc')ui.acc[k]=!ui.acc[k];
+  else if(a==='more')ui.more[k]=!ui.more[k];
+  else if(a==='pick'){const x=LIST[k].opts.find(o=>String(o[0])===v)[0];tog(k,x)}
+  else if(a==='feat')s.feats=s.feats.includes(k)?s.feats.filter(x=>x!==k):[...s.feats,k];
+  else if(a==='mark')s[k]=s[k]===+v?null:+v;
+  else if(a==='quick')QUICK[+k][2]();
+  else if(a==='clear'){if(k==='price')s.price={lo:null,hi:null};else if(Array.isArray(s[k]))s[k]=[];else s[k]=null}
+  else if(a==='clearall')reset();
+  else return;
+  render();
+});
+document.addEventListener('input',e=>{
+  const t=e.target,k=t.dataset.n;if(!k)return;
+  const c=NUM[k],{max}=binsOf(k),x=+t.value,box=t.closest('.rng');
+  if(c.dual){let lo=s.price.lo??c.min,hi=s.price.hi??max;if(t.dataset.e==='lo'){lo=Math.min(x,hi-c.step);t.value=lo}else{hi=Math.max(x,lo+c.step);t.value=hi}
+    s.price={lo:lo<=c.min?null:lo,hi:hi>=max?null:hi};box.style.cssText=`--a:${pctK(k,lo)};--b:${pctK(k,hi)}`}
+  else{const v=+(Math.round(x/c.step)*c.step).toFixed(2);s[k]=(c.dir==='gte'?v<=c.min:v>=max)?null:v;const [a,b]=c.dir==='gte'?[x,max]:[c.min,x];box.style.cssText=`--a:${pctK(k,a)};--b:${pctK(k,b)}`}
+  box.classList.toggle('set',isSet(k));
+  live(k);
+});
+document.addEventListener('change',e=>{if(e.target.dataset.n)render()});
+window.addEventListener('resize',()=>{if(ui.tab==='zal'&&ui.pop)render()});
+reset();render();
+</script>
+</body>
+</html>
