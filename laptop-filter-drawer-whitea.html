@@ -214,6 +214,67 @@ button{cursor:pointer}
 .sh-foot{display:flex;gap:10px;padding:14px 20px 18px;border-top:1px solid var(--line)}
 .sh-foot .btn-pri{flex:1}
 
+/* 處理器 E／F／G／H 共用 */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cell.nav{flex-direction:row;justify-content:flex-start;align-items:center;gap:8px;min-height:52px;padding:6px 8px 6px 12px;text-align:left}
+.cell.nav span{flex:1;min-width:0}
+.cell.nav span b{display:block}
+.cell.nav small{display:block;font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell.nav i{flex:none;width:16px;height:16px;background:var(--chev-r) no-repeat center/14px}
+.cell.nav.sel{border-color:var(--ink);border-width:1.6px}
+.cell.nav.sel em{color:var(--ink);font-weight:600}
+.lvl-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.crumb{flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:13.5px;flex-wrap:wrap}
+.crumb button{border:0;background:none;padding:2px 0;color:var(--accent);font-weight:500;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(35,64,196,.45)}
+.crumb button:hover{text-decoration-color:currentColor}
+.crumb span{color:var(--ink-3)}
+.crumb b{font-weight:600}
+.lvl-head .cell.sm{flex:none;padding:0 12px}
+.fsearch{margin-top:10px}
+.sugg{margin-top:6px;padding:4px;border-radius:14px;background:var(--inner);box-shadow:inset 0 0 0 1px var(--line)}
+.sg{display:flex;align-items:center;gap:8px;width:100%;min-height:38px;padding:4px 10px;border:0;border-radius:10px;background:none;text-align:left}
+.sg:hover{background:var(--card)}
+.sg small{flex:none;font:500 10.5px/1.7 var(--mono);color:var(--signal-ink);background:var(--signal-soft);border-radius:999px;padding:0 7px}
+.sg b{flex:1;min-width:0;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg.on b{font-weight:600}
+.sg em{font:500 11px var(--mono);font-style:normal;color:var(--ink-3)}
+.sg-empty{margin:8px 10px;color:var(--ink-3);font-size:12.5px}
+.fcommon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.fcommon .cell{justify-content:space-between;padding:0 10px}
+.gpane{display:grid;grid-template-columns:minmax(0,48%) minmax(0,1fr);height:300px;margin-top:10px;border-radius:14px;box-shadow:inset 0 0 0 1.3px var(--line);overflow:hidden}
+.gp-l{overflow-y:auto;background:var(--inner);padding:6px;border-right:1px solid var(--line);overscroll-behavior:contain}
+.gp-r{overflow-y:auto;padding:6px;overscroll-behavior:contain}
+.ck.gb{margin-top:8px}
+.ck.gb:first-child{margin-top:0}
+.ck.gb b{font-weight:600}
+.gf{display:flex;align-items:center;gap:6px;width:100%;min-height:34px;padding:4px 8px 4px 36px;border:0;border-radius:9px;background:none;text-align:left}
+.gf b{flex:1;min-width:0;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gf em{font:500 11px var(--mono);font-style:normal;color:var(--ink-3)}
+.gf:hover{background:var(--group)}
+.gf.act{background:var(--card);box-shadow:0 1px 3px rgba(22,30,52,.14)}
+.gf.act b{font-weight:600}
+.gf .mk{flex:none;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;line-height:1}
+.gf .mk.part{background:var(--group-2);color:var(--ink)}
+.gf.z:not(.act) b,.gf.z em{color:#A3AABA}
+.gr-h{padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid var(--line-2)}
+.gr-h small{display:block;padding:0 8px 0 36px;font-size:12px;color:var(--ink-3)}
+.gr-h .ck b{font-weight:600}
+.gp-r .ck b{font-size:13px}
+.drill.hx i{background-image:var(--chev);transition:rotate .2s var(--ease)}
+.drill.hx.open i{rotate:180deg}
+.hx-sec{margin-top:14px}
+.hx-sec+.hx-sec{padding-top:12px;border-top:1px dashed var(--line)}
+.hx-b{margin:8px 0 6px;font:500 11px var(--mono);letter-spacing:.06em;color:var(--ink-3)}
+.cell.tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;justify-items:start;gap:0 6px;padding:7px 10px 8px 12px;text-align:left}
+.cell.tile em{justify-self:end}
+.cell.tile small{grid-column:1/-1;font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cell.tile.on small{color:rgba(255,255,255,.75)}
+.hx-close{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:12px;min-height:40px;border:0;border-radius:12px;background:var(--group);font-size:13px;font-weight:600}
+.hx-close i{width:14px;height:14px;background:var(--chev) no-repeat center/14px;rotate:180deg}
+.hx-close:hover{background:var(--group-2)}
+.cfg-note{margin:8px 0 0;font-size:12px;color:var(--ink-3)}
+
 /* 分布圖＋雙把手 */
 .nb+.nb{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
 .nb-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
@@ -298,6 +359,10 @@ button{cursor:pointer}
   .gmx .cell{padding:4px 1px}
   .gmx .cell b{font-size:11.5px;white-space:normal;text-align:center;line-height:1.15}
   .fgrid,.mods{grid-template-columns:minmax(0,1fr)}
+  .grid3,.fcommon{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .gpane{grid-template-columns:minmax(0,1fr);grid-template-rows:200px 240px;height:auto}
+  .gp-l{border-right:0;border-bottom:1px solid var(--line)}
   .chip-act .hint{margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -308,7 +373,7 @@ button{cursor:pointer}
   <section class="notes">
     <div class="eyebrow">Filter drawer · 第四版</div>
     <h1>數值看分布圖，選項用普通按鈕</h1>
-    <p class="lead">照 10 點意見改：價格、重量、遊戲效能、續航、安靜程度、亮度、厚度、色域一律是「分布圖＋雙把手」；其他選項一律是等寬、一排、可複選的普通按鈕。處理器細項用彈出面板（方案 D），色域用三張小分布圖（方案 C）。右邊可以直接點，台數用資料庫上架中的 370 台真實資料即時計算。</p>
+    <p class="lead">照 10 點意見改：價格、重量、遊戲效能、續航、安靜程度、亮度、厚度、色域一律是「分布圖＋雙把手」；其他選項一律是等寬、一排、可複選的普通按鈕。處理器細項有 5 種操作方式可以在後台切換（預設 H），色域用三張小分布圖（方案 C）。右邊可以直接點，台數用資料庫上架中的 370 台真實資料即時計算。</p>
 
     <h2>先選一個情境</h2>
     <div class="box" id="scens"></div>
@@ -331,7 +396,7 @@ button{cursor:pointer}
           <tr><td>04</td><td>分段控件</td><td>全部刪掉。記憶體、硬碟、面板、更新率、解析度、顯示記憶體改成普通按鈕：直接點數值，可以複選。</td></tr>
           <tr><td>05</td><td>重量、遊戲效能</td><td>分布圖＋雙把手。遊戲效能下面保留 ≈4060／≈5070 Ti／≈5090 刻度（可以點，間距夠不會疊在一起），後台可關。</td></tr>
           <tr><td>06</td><td>顯卡</td><td>排成表格：RTX 50 一排、RTX 40 一排，同等級上下對齊，越右越強；內顯和其他獨顯另一排。</td></tr>
-          <tr><td>07</td><td>處理器</td><td>方案 D：卡片只放 Intel／AMD 和「選等級、架構或型號」；點了從右邊滑出全高面板，可以搜尋，依品牌 → 架構 → 型號分組，最上面還有 5／7／9 級。選好的細項在卡片上顯示成可移除的標籤。</td></tr>
+          <tr><td>07</td><td>處理器</td><td>後台「處理器」可切換 5 種操作方式：<b>D</b> 彈出全高面板（搜尋＋分組勾選）；<b>E</b> 卡片內逐層換頁（品牌 → 架構 → 型號，上方路徑可返回）；<b>F</b> 搜尋框＋常見選擇；<b>G</b> 左右兩欄（左架構、右型號）；<b>H</b> 只放 Intel／AMD，點「展開」列出依架構、依系列兩組按鈕（預設）。選好的細項都在卡片上顯示成可移除的標籤。</td></tr>
           <tr><td>08</td><td>色域</td><td>方案 C：sRGB、DCI-P3、AdobeRGB 各一張小分布圖＋雙把手，三個一起符合。每張圖寫用途：上網文書／剪片 HDR／印刷攝影。</td></tr>
           <tr><td>09</td><td>亮度、厚度</td><td>分布圖＋雙把手（在「更多條件」裡）。</td></tr>
           <tr><td>10</td><td>接口與功能</td><td>項目從 4 個補到 11 個。後台切換版面（標準一項一行／緊湊兩欄）和控件（開關／勾選框）。</td></tr>
@@ -400,6 +465,23 @@ const FAMS=[];
 for(const b of CPU_BRANDS)for(const f of FAM_ORDER){const mods=MODS.filter(m=>CPUS[m][0]===b&&CPUS[m][1]===f);if(mods.length)FAMS.push({b,arch:f,name:FAMI[f][0],sub:FAMI[f][1],mods})}
 const brandMods=b=>MODS.filter(m=>CPUS[m][0]===b);
 const tierOf=r=>CPUS[r[6]][2];
+const famKey=f=>f.b+'|'+f.arch;
+const keyOfMod=m=>CPUS[m][0]+'|'+CPUS[m][1];
+// 系列：從型號名稱推（Core Ultra 7、Core i9、Ryzen AI 9…）
+const serOf=m=>{let x;
+  if(x=m.match(/^Core Ultra X(\d)/))return 'Core Ultra X'+x[1];
+  if(x=m.match(/^Core Ultra (\d)/))return 'Core Ultra '+x[1];
+  if(x=m.match(/^Core i(\d)/))return 'Core i'+x[1];
+  if(x=m.match(/^Core (\d)/))return 'Core '+x[1];
+  if(/^Ryzen AI Max/.test(m))return 'Ryzen AI Max';
+  if(x=m.match(/^Ryzen AI (\d)/))return 'Ryzen AI '+x[1];
+  if(x=m.match(/^Ryzen (\d)/))return 'Ryzen '+x[1];
+  return '';
+};
+const SER=Object.fromEntries(MODS.map(m=>[m,serOf(m)]));
+const SER_ORDER=['Core Ultra X9','Core Ultra 9','Core Ultra X7','Core Ultra 7','Core Ultra 5','Core i9','Core i7','Core i5','Core 7','Core 5','Ryzen AI Max','Ryzen AI 9','Ryzen AI 7','Ryzen AI 5','Ryzen 9','Ryzen 7','Ryzen 5'];
+const SERIES=SER_ORDER.filter(x=>MODS.some(m=>SER[m]===x)).map(x=>({key:x,b:x.startsWith('Ryzen')?'AMD':'Intel'}));
+const SERB=Object.fromEntries(SERIES.map(x=>[x.key,x.b]));
 
 /* ---------- 分布圖（數值條件） ---------- */
 const NUM={
@@ -474,17 +556,31 @@ const ALLCARDS=[...CARDS,...MORE_CARDS];
 const cardOf=k=>ALLCARDS.find(c=>c.items.includes(k));
 
 /* ---------- 狀態 ---------- */
-let s={},src={},pins=[],moreOpen=false,q='',sheetOpen=false,sq='',cfgKey='price';
-const UI={brandMode:'btn',featLayout:'std',featCtl:'switch'};
-const blank=k=>NUM[k]?{lo:null,hi:null}:k==='cpu'?{m:[],t:[]}:[];
+let s={},src={},pins=[],moreOpen=false,q='',sheetOpen=false,sq='',fq='',cfgKey='price',gResetR=false;
+const UI={brandMode:'btn',featLayout:'std',featCtl:'switch',cpuStyle:'H',eB:null,eF:null,gF:null,hOpen:false};
+const blank=k=>NUM[k]?{lo:null,hi:null}:k==='cpu'?{m:[],t:[],b:[],a:[],r:[],p:[]}:[];
 const P={};
 for(const k in NUM){const c=NUM[k];P[k]=r=>{const v=s[k];return (v.lo===null||r[c.col]>=v.lo-1e-9)&&(v.hi===null||r[c.col]<=v.hi+1e-9)}}
 for(const k in CELLS){const c=CELLS[k];P[k]=r=>!s[k].length||s[k].includes(r[c.col])}
-P.cpu=r=>(!s.cpu.m.length||s.cpu.m.includes(r[6]))&&(!s.cpu.t.length||s.cpu.t.includes(tierOf(r)));
+// 處理器：m 型號集合（D／E／F／G）、t 等級、b 品牌、a 架構、r 系列（F／H）；彼此「而且」
+function hOk(r){ // H：每個品牌各自算——整個品牌，或只要它的某些架構／系列（架構和系列之間「而且」）；品牌之間「或」
+  const c=s.cpu,mod=r[6],[b,arch]=CPUS[mod],act=CPU_BRANDS.filter(hActive);
+  if(!act.length)return true;
+  if(!act.includes(b))return false;
+  if(c.b.includes(b))return true;
+  const aX=c.a.filter(k=>k.startsWith(b+'|')),rX=c.r.filter(y=>SERB[y]===b);
+  return (!aX.length||aX.includes(b+'|'+arch))&&(!rX.length||rX.includes(SER[mod]));
+}
+const hSubs=x=>s.cpu.a.some(k=>k.startsWith(x+'|'))||s.cpu.r.some(y=>SERB[y]===x);
+const hActive=x=>s.cpu.b.includes(x)||hSubs(x);
+function cpuOk(r,skip){const c=s.cpu,mod=r[6],i=CPUS[mod];
+  if(UI.cpuStyle==='H')return hOk(r);
+  return (skip==='m'||!c.m.length||c.m.includes(mod))&&(skip==='t'||!c.t.length||c.t.includes(i[2]))&&(skip==='b'||!c.b.length||c.b.includes(i[0]))&&(skip==='a'||!c.a.length||c.a.includes(i[0]+'|'+i[1]))&&(skip==='r'||!c.r.length||c.r.includes(SER[mod]))}
+P.cpu=r=>cpuOk(r,'');
 P.feats=r=>s.feats.every(id=>FEAT[id].f(r));
 const KEYS=Object.keys(P);
 const reset=()=>{s={};for(const k of KEYS)s[k]=blank(k)};
-const isSet=k=>NUM[k]?(s[k].lo!==null||s[k].hi!==null):k==='cpu'?(s.cpu.m.length+s.cpu.t.length>0):s[k].length>0;
+const isSet=k=>NUM[k]?(s[k].lo!==null||s[k].hi!==null):k==='cpu'?['m','t','b','a','r'].some(x=>s.cpu[x].length):s[k].length>0;
 let OC={};
 const others=k=>OC[k]||(OC[k]=D.filter(r=>KEYS.every(j=>j===k||P[j](r))));
 const total=()=>OC.__t??(OC.__t=D.filter(r=>KEYS.every(j=>P[j](r))).length);
@@ -493,19 +589,39 @@ const cardSet=c=>c.items.some(isSet);
 /* ---------- 處理器選取（只存型號；品牌、架構＝一組型號） ---------- */
 const selState=ms=>{const n=ms.filter(m=>s.cpu.m.includes(m)).length;return n===0?0:n===ms.length?2:1};
 const toggleMods=ms=>{s.cpu.m=selState(ms)===2?s.cpu.m.filter(m=>!ms.includes(m)):[...new Set([...s.cpu.m,...ms])]};
-function cpuTokens(){
-  const out=[];
+function msTokens(){ // 型號集合 → 盡量合併成品牌／架構
+  const out=[],c=s.cpu,rmMs=ms=>()=>{c.m=c.m.filter(m=>!ms.includes(m))};
   for(const b of CPU_BRANDS){
     const bm=brandMods(b);if(!bm.length||!selState(bm))continue;
-    if(selState(bm)===2){out.push({lab:b,ms:bm,brand:true});continue}
+    if(selState(bm)===2){out.push({lab:b,brand:true,rm:rmMs(bm)});continue}
     const fs=FAMS.filter(x=>x.b===b),sts=fs.map(f=>selState(f.mods));
     if(!sts.includes(1)){const off=fs.filter((f,i)=>sts[i]===0),on=fs.filter((f,i)=>sts[i]===2);
-      if(on.length>off.length){out.push({lab:`${b}（除了 ${off.map(f=>f.name).join('、')}）`,ms:on.flatMap(f=>f.mods)});continue}}
-    for(const f of FAMS.filter(x=>x.b===b)){const st=selState(f.mods);if(!st)continue;
-      if(st===2&&f.mods.length>1)out.push({lab:f.name,ms:f.mods});else for(const m of f.mods)if(s.cpu.m.includes(m))out.push({lab:m,ms:[m]})}
+      if(on.length>off.length){out.push({lab:`${b}（除了 ${off.map(f=>f.name).join('、')}）`,rm:rmMs(bm)});continue}}
+    for(const f of fs){const st=selState(f.mods);if(!st)continue;
+      if(st===2&&f.mods.length>1)out.push({lab:f.name,rm:rmMs(f.mods)});else for(const m of f.mods)if(c.m.includes(m))out.push({lab:m,rm:rmMs([m])})}
   }
-  for(const t of [...s.cpu.t].sort())out.push({lab:t+' 級',tier:t});
   return out;
+}
+function cpuTokens(){
+  const c=s.cpu,out=[];
+  for(const b of c.b)out.push({lab:b,brand:true,rm:()=>hBrandOff(b)});
+  if(UI.cpuStyle==='F')c.p.forEach((p,i)=>out.push({lab:p.lab,rm:()=>{c.p.splice(i,1);syncF()}}));
+  else{
+    out.push(...msTokens());
+    for(const t of [...c.t].sort())out.push({lab:t+' 級',rm:()=>{c.t=c.t.filter(x=>x!==t)}});
+  }
+  for(const k of c.a){const f=FAMS.find(x=>famKey(x)===k);out.push({lab:f?f.name:k,rm:()=>{c.a=c.a.filter(x=>x!==k)}})}
+  for(const r of c.r)out.push({lab:r,rm:()=>{c.r=c.r.filter(x=>x!==r)}});
+  return out;
+}
+function hBrandOff(b){const c=s.cpu;c.b=c.b.filter(x=>x!==b);c.a=c.a.filter(k=>!k.startsWith(b+'|'));c.r=c.r.filter(r=>SERB[r]!==b)}
+const hNarrow=b=>{s.cpu.b=s.cpu.b.filter(x=>x!==b)}; // H：選了某品牌的架構／系列＝這個品牌只要這些
+function syncF(){const c=s.cpu;c.m=[...new Set(c.p.filter(p=>p.ms).flatMap(p=>p.ms))];c.t=c.p.filter(p=>p.tier).map(p=>p.tier)}
+function cpuPickFams(archs){ // 情境用：各樣式用自己的方式選「這幾個架構」
+  const fs=FAMS.filter(f=>archs.includes(f.arch));
+  if(UI.cpuStyle==='H')s.cpu.a=fs.map(famKey);
+  else if(UI.cpuStyle==='F'){s.cpu.p=fs.map(f=>({lab:f.name,ms:f.mods}));syncF()}
+  else s.cpu.m=fs.flatMap(f=>f.mods);
 }
 const ariaSt=st=>st===2?'true':st===1?'mixed':'false';
 const stCls=st=>st===2?' on':st===1?' part':'';
@@ -594,15 +710,112 @@ function gpuCtl(){
     <span class="gl gap">其他</span>${c('內顯','內顯（無獨顯）',' style="grid-column:span 3;margin-top:6px"')}${c('其他獨顯','',' style="grid-column:span 3;margin-top:6px"')}
   </div><div class="chip-act"><button class="link" data-a="gpuall">選所有獨顯</button>${s.gpu.length?'<button class="link" data-a="none:gpu">全部取消</button>':''}</div>`;
 }
-function cpuCtl(){
-  const rs=others('cpu').filter(r=>!s.cpu.t.length||s.cpu.t.includes(tierOf(r)));
-  const bc=b=>{const st=selState(brandMods(b)),n=rs.filter(r=>CPUS[r[6]][0]===b).length;
-    return `<button class="cell row${stCls(st)}${n===0?' z':''}" aria-pressed="${ariaSt(st)}" data-a="cpub:${b}"><b>${b}</b><em>${st===1?'部分':n}</em></button>`};
+const tagsHTML=()=>{const tk=cpuTokens().filter(t=>!t.brand);return tk.length?`<div class="tags">${tk.map((t,i)=>`<button class="tag" data-a="untok:${i}" aria-label="移除 ${esc(t.lab)}">${esc(t.lab)}<i>×</i></button>`).join('')}</div>`:''};
+const cntBy=rs=>{const o={};for(const r of rs)o[r[6]]=(o[r[6]]||0)+1;return o};
+const bcM=(b,rs)=>{const st=selState(brandMods(b)),n=rs.filter(r=>CPUS[r[6]][0]===b).length; // 品牌＝一組型號
+  return `<button class="cell row${stCls(st)}${n===0?' z':''}" aria-pressed="${ariaSt(st)}" data-a="cpub:${b}"><b>${b}</b><em>${st===1?'部分':n}</em></button>`};
+const bcF=b=>{const on=s.cpu.b.includes(b),n=others('cpu').filter(r=>cpuOk(r,'b')&&CPUS[r[6]][0]===b).length; // 品牌＝獨立條件
+  return `<button class="cell row${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" data-a="hb:${b}"><b>${b}</b><em>${n}</em></button>`};
+/* D：彈出面板 */
+function cpuD(){
+  const rs=others('cpu').filter(r=>cpuOk(r,'m'));
   const tk=cpuTokens().filter(t=>!t.brand);
-  return `<div class="cells" style="--n:2">${bc('Intel')}${bc('AMD')}</div>
-    <button class="drill" data-a="sheet" aria-haspopup="dialog"><span><b>選等級、架構或型號</b><small>${tk.length?`已選 ${tk.length} 項`:'例如 i7 等級、Lunar Lake、Ryzen AI 9 HX 370'}</small></span><i></i></button>
-    ${tk.length?`<div class="tags">${tk.map((t,i)=>`<button class="tag" data-a="untok:${i}" aria-label="移除 ${esc(t.lab)}">${t.lab}<i>×</i></button>`).join('')}</div>`:''}`;
+  return `<div class="cells" style="--n:2">${bcM('Intel',rs)}${bcM('AMD',rs)}</div>
+    <button class="drill" data-a="sheet" aria-haspopup="dialog"><span><b>選等級、架構或型號</b><small>${tk.length?`已選 ${tk.length} 項`:'例如 i7 等級、Lunar Lake、Ryzen AI 9 HX 370'}</small></span><i></i></button>${tagsHTML()}`;
 }
+/* E：卡片內逐層換頁 */
+function cpuE(){
+  const cnt=cntBy(others('cpu').filter(r=>cpuOk(r,'m'))),n=ms=>ms.reduce((a,m)=>a+(cnt[m]||0),0);
+  const stTxt=ms=>{const st=selState(ms);return st===2?'✓ 全選':st===1?`已選 ${ms.filter(m=>s.cpu.m.includes(m)).length}／${ms.length}`:String(n(ms))};
+  const B=UI.eB,F=UI.eF!=null?FAMS[UI.eF]:null;
+  let h;
+  if(!B){
+    h=`<p class="cap" style="margin:0 0 8px">點品牌，往下選架構和型號。</p><div class="grid2">${['Intel','AMD'].map(b=>{const ms=brandMods(b),st=selState(ms);
+      return `<button class="cell nav${st?' sel':''}" data-a="enav:b:${b}"><span><b>${b}</b></span><em>${stTxt(ms)}</em><i></i></button>`}).join('')}</div>`;
+  }else{
+    const ms=F?F.mods:brandMods(B),st=selState(ms);
+    h=`<div class="lvl-head"><nav class="crumb" aria-label="處理器層級"><button data-a="enav:root">全部</button><span>›</span>${F?`<button data-a="enav:b:${B}">${B}</button><span>›</span><b>${F.name}</b>`:`<b>${B}</b>`}</nav><button class="cell sm${stCls(st)}" aria-pressed="${ariaSt(st)}" data-a="${F?'fam:'+UI.eF:'cpub:'+B}"><b>整個 ${F?F.name:B}</b></button></div>`;
+    if(!F)h+=`<div class="grid2">${FAMS.filter(f=>f.b===B).map(f=>{const fi=FAMS.indexOf(f),fs=selState(f.mods),c=n(f.mods);
+      return `<button class="cell nav${fs?' sel':''}${c===0&&!fs?' z':''}" data-a="enav:f:${fi}"><span><b>${f.name}</b><small>${f.sub}</small></span><em>${stTxt(f.mods)}</em><i></i></button>`}).join('')}</div>`;
+    else h+=`<div class="grid2">${F.mods.map(m=>{const on=s.cpu.m.includes(m),c=cnt[m]||0;
+      return `<button class="cell row${on?' on':''}${c===0&&!on?' z':''}" aria-pressed="${on}" title="${esc(m)}" data-a="mod:${MODS.indexOf(m)}"><b>${m}</b><em>${c}</em></button>`}).join('')}</div>`;
+  }
+  return h+tagsHTML();
+}
+/* F：搜尋框＋常見選擇 */
+const FCOMMON=[
+  {lab:'i7 等級',tier:7,tip:'i7、Ultra 7、Ryzen 7 都算'},
+  {lab:'i9 等級',tier:9,tip:'i9、Ultra 9、Ryzen 9 都算'},
+  {lab:'Core Ultra',ms:MODS.filter(m=>/^Core Ultra/.test(m)),tip:'Intel 新命名的處理器'},
+  {lab:'HX 電競',ms:MODS.filter(m=>/HX/.test(m)),tip:'型號有 HX：功耗高、效能最強'},
+  {lab:'Lunar Lake',ms:FAMS.filter(f=>f.arch==='Lunar Lake').flatMap(f=>f.mods),tip:'Core Ultra 200V：長續航輕薄'},
+  {lab:'Ryzen AI',ms:MODS.filter(m=>/^Ryzen AI/.test(m)),tip:'AMD 新命名的處理器'},
+];
+const fPickIdx=lab=>s.cpu.p.findIndex(p=>p.lab===lab);
+function fToggle(x){const i=fPickIdx(x.lab);if(i>=0)s.cpu.p.splice(i,1);else s.cpu.p.push(x.tier?{lab:x.lab,tier:x.tier}:{lab:x.lab,ms:x.ms});syncF()}
+function fSugg(){
+  const ql=fq.trim().toLowerCase();if(!ql)return [];
+  const out=[];
+  for(const f of FAMS)if((f.b+' '+f.name+' '+f.sub+' '+f.arch).toLowerCase().includes(ql))out.push({kind:'架構',lab:f.name,ms:f.mods});
+  for(const x of SERIES)if(x.key.toLowerCase().includes(ql))out.push({kind:'系列',lab:x.key,ms:MODS.filter(m=>SER[m]===x.key)});
+  for(const m of MODS)if(m.toLowerCase().includes(ql))out.push({kind:'型號',lab:m,ms:[m]});
+  return out.slice(0,8);
+}
+function fSuggHTML(){
+  if(!fq.trim())return '';
+  const list=fSugg();
+  if(!list.length)return `<div class="sugg"><p class="sg-empty">找不到「${esc(fq)}」。試試型號後幾碼，例如 258V、9955HX。</p></div>`;
+  const rs=others('cpu').filter(r=>cpuOk(r,'m'));
+  return `<div class="sugg" role="listbox">${list.map((x,i)=>{const on=fPickIdx(x.lab)>=0,n=rs.filter(r=>x.ms.includes(r[6])).length;
+    return `<button class="sg${on?' on':''}" role="option" aria-selected="${on}" data-a="fsg:${i}"><i class="cb"></i><small>${x.kind}</small><b>${esc(x.lab)}</b><em>${n} 台</em></button>`}).join('')}</div>`;
+}
+function cpuF(){
+  const base=others('cpu');
+  const chip=(x,i)=>{const on=fPickIdx(x.lab)>=0,n=x.tier?base.filter(r=>cpuOk(r,'t')&&CPUS[r[6]][2]===x.tier).length:base.filter(r=>cpuOk(r,'m')&&x.ms.includes(r[6])).length;
+    return `<button class="cell sm${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" title="${x.tip}" data-a="fcm:${i}"><b>${x.lab}</b><em>${n}</em></button>`};
+  return `<div class="cells" style="--n:2">${bcF('Intel')}${bcF('AMD')}</div>
+    <div class="d-search fsearch"><input id="fq" type="search" placeholder="輸入型號或系列：258V、HX 370、i9…" value="${esc(fq)}" autocomplete="off" aria-label="搜尋處理器"></div>
+    <div id="fsugg">${fSuggHTML()}</div>
+    <span class="sub-l" style="margin:12px 0 6px">常見選擇</span><div class="fcommon">${FCOMMON.map(chip).join('')}</div>${tagsHTML()}`;
+}
+/* G：左右兩欄 */
+function cpuG(){
+  const cnt=cntBy(others('cpu').filter(r=>cpuOk(r,'m'))),n=ms=>ms.reduce((a,m)=>a+(cnt[m]||0),0);
+  if(UI.gF==null)UI.gF=FAMS.findIndex(f=>f.b==='Intel');
+  const F=FAMS[UI.gF];
+  let left='';
+  for(const b of ['Intel','AMD']){const bm=brandMods(b),bst=selState(bm);
+    left+=`<button class="ck gb${stCls(bst)}" role="checkbox" aria-checked="${ariaSt(bst)}" data-a="cpub:${b}"><i class="cb"></i><b>${b} 全部</b><em>${n(bm)}</em></button>`;
+    for(const f of FAMS.filter(x=>x.b===b)){const fi=FAMS.indexOf(f),st=selState(f.mods),c=n(f.mods);
+      left+=`<button class="gf${fi===UI.gF?' act':''}${c===0&&!st?' z':''}" aria-current="${fi===UI.gF}" title="${f.sub}" data-a="gfam:${fi}"><b>${f.name}</b>${st?`<span class="mk${st===1?' part':''}">${st===2?'✓':'•'}</span>`:''}<em>${c}</em></button>`}
+  }
+  const fst=selState(F.mods);
+  const right=`<div class="gr-h"><button class="ck${stCls(fst)}" role="checkbox" aria-checked="${ariaSt(fst)}" data-a="fam:${UI.gF}"><i class="cb"></i><b>整個 ${F.name}</b><em>${n(F.mods)}</em></button><small>${F.sub}</small></div>${F.mods.map(m=>{const on=s.cpu.m.includes(m),c=cnt[m]||0;
+    return `<button class="ck${on?' on':''}${c===0&&!on?' z':''}" role="checkbox" aria-checked="${on}" title="${esc(m)}" data-a="mod:${MODS.indexOf(m)}"><i class="cb"></i><b>${m}</b><em>${c}</em></button>`}).join('')}`;
+  return `<div class="gpane"><div class="gp-l" id="gp-l">${left}</div><div class="gp-r" id="gp-r">${right}</div></div>${tagsHTML()}`;
+}
+/* H：展開架構與系列 */
+function cpuH(){
+  const base=others('cpu'),c=s.cpu,sel=c.a.length+c.r.length;
+  const bcH=b=>{const st=c.b.includes(b)?2:hSubs(b)?1:0,n=base.filter(r=>CPUS[r[6]][0]===b).length;
+    return `<button class="cell row${stCls(st)}${n===0&&!st?' z':''}" aria-pressed="${ariaSt(st)}" data-a="hb:${b}"><b>${b}</b><em>${st===1?'部分':n}</em></button>`};
+  let h=`<div class="cells" style="--n:2">${bcH('Intel')}${bcH('AMD')}</div>
+    <button class="drill hx${UI.hOpen?' open':''}" data-a="hopen" aria-expanded="${UI.hOpen}"><span><b>${UI.hOpen?'收起架構與系列':'展開架構與系列'}</b><small>${sel?`已選 ${sel} 項`:'例如 Lunar Lake、Arrow Lake-HX、Core Ultra 7、Ryzen AI 9'}</small></span><i></i></button>`;
+  if(UI.hOpen){
+    const aX=b=>c.a.filter(k=>k.startsWith(b+'|')),rX=b=>c.r.filter(y=>SERB[y]===b);
+    const aCnt=(b,k)=>{const rs=rX(b);return base.filter(r=>keyOfMod(r[6])===k&&(!rs.length||rs.includes(SER[r[6]]))).length};
+    const rCnt=(b,y)=>{const as=aX(b);return base.filter(r=>SER[r[6]]===y&&(!as.length||as.includes(keyOfMod(r[6])))).length};
+    h+=`<div class="hx-sec"><span class="sub-l">依架構<small>可複選</small></span>`;
+    for(const b of ['Intel','AMD'])h+=`<div class="hx-b">${b}</div><div class="grid2">${FAMS.filter(f=>f.b===b).map(f=>{const k=famKey(f),on=c.a.includes(k),n=aCnt(b,k);
+      return `<button class="cell tile${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" data-a="ha:${esc(k)}"><b>${f.name}</b><em>${n}</em><small>${f.sub}</small></button>`}).join('')}</div>`;
+    h+=`</div><div class="hx-sec"><span class="sub-l">依系列<small>可複選；和架構一起選＝兩個都要符合</small></span>`;
+    for(const b of ['Intel','AMD'])h+=`<div class="hx-b">${b}</div><div class="grid3">${SERIES.filter(x=>x.b===b).map(x=>{const on=c.r.includes(x.key),n=rCnt(b,x.key);
+      return `<button class="cell row${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" data-a="hr:${x.key}"><b>${x.key}</b><em>${n}</em></button>`}).join('')}</div>`;
+    h+=`</div><button class="hx-close" data-a="hopen">收起<i></i></button>`;
+  }
+  return h+tagsHTML();
+}
+function cpuCtl(){return ({D:cpuD,E:cpuE,F:cpuF,G:cpuG,H:cpuH})[UI.cpuStyle]()}
 function featCtl(){
   const rs=others('feats'),cmp=UI.featLayout==='cmp',sw=UI.featCtl==='switch';
   return `<div class="${cmp?'fgrid':'flist'}">${FEATS.map(f=>{const on=s.feats.includes(f.id),n=rs.filter(f.f).length;
@@ -682,8 +895,11 @@ function render(){
     h+=`<div class="d-search"><input id="q" type="search" placeholder="找條件：雷電、指紋、亮度…" value="${esc(q)}" autocomplete="off"></div>`;
     h+=`<div class="cards" id="more-list" style="margin-top:10px">${moreListHTML()}</div><p class="rest">其餘約 200 個細項不列出來，用上面的搜尋找。</p>`;
   }
+  const keep=['gp-l','gp-r'].map(id=>{const e=document.getElementById(id);return [id,e?e.scrollTop:0]});
   body.innerHTML=h;
   body.scrollTop=top;
+  for(const [id,y] of keep){const e=document.getElementById(id);if(e)e.scrollTop=id==='gp-r'&&gResetR?0:y}
+  gResetR=false;
   if(sheetOpen)renderSheet();
   refocus(f);
   foot();
@@ -737,6 +953,7 @@ function cfgHTML(){
     ${c.marks?sw('marks','顯示參考刻度（可以點）'):''}
     <div class="cfg-foot"><button class="link" data-a="cfgall">外觀套用到全部 ${Object.keys(NUM).length} 張圖（柱寬、灰底、透明度、刻度）</button><button class="link" data-a="cfgreset">全部恢復預設</button></div>
   </div>
+  <div class="cfg-sec"><h3>處理器<small>操作方式</small></h3><div class="opt">${opt('cpuStyle','D','D 彈出面板')}${opt('cpuStyle','E','E 逐層換頁')}${opt('cpuStyle','F','F 搜尋＋常見')}${opt('cpuStyle','G','G 左右兩欄')}${opt('cpuStyle','H','H 展開架構與系列')}</div><p class="cfg-note">切換時，處理器已選的條件會清空。</p></div>
   <div class="cfg-sec"><h3>品牌<small>控件樣式</small></h3><div class="opt">${opt('brandMode','btn','按鈕')}${opt('brandMode','check','勾選框')}</div></div>
   <div class="cfg-sec"><h3>接口與功能</h3>
     <div class="cfg-line"><span>版面</span><div class="opt">${opt('featLayout','std','標準（一項一行）')}${opt('featLayout','cmp','緊湊（兩欄）')}</div></div>
@@ -758,7 +975,7 @@ const SCEN=[
   ['沒有對話','直接打開篩選：全部照常用度排',()=>{}],
   ['「要 15 或 16 吋，預算 1～3 萬」','尺寸、價格從對話來，排在最上面',()=>{s.size=[15,16];s.price={lo:10000,hi:30000};src={size:1,price:1}}],
   ['「不要微星，要有雷電接口，續航 10 小時以上」','品牌顯示成「除了微星都可以」；續航和接口也排上來',()=>{s.brand=BRANDS.filter(b=>b!=='微星');s.feats=['tb'];s.batt={lo:10,hi:null};src={brand:1,feats:1,batt:1}}],
-  ['「想要 Lunar Lake 或 Panther Lake 的輕薄機，P3 要 95% 以上」','處理器卡片出現架構標籤；色域的 DCI-P3 圖只留 95% 以上',()=>{s.cpu.m=FAMS.filter(f=>f.arch==='Lunar Lake'||f.arch==='Panther Lake').flatMap(f=>f.mods);s.p3={lo:95,hi:null};src={cpu:1,p3:1}}],
+  ['「想要 Lunar Lake 或 Panther Lake 的輕薄機，P3 要 95% 以上」','處理器卡片出現架構標籤；色域的 DCI-P3 圖只留 95% 以上',()=>{cpuPickFams(['Lunar Lake','Panther Lake']);s.p3={lo:95,hi:null};src={cpu:1,p3:1}}],
 ];
 function setScen(i){reset();src={};SCEN[i][2]();document.getElementById('scens').innerHTML=SCEN.map((x,j)=>`<button class="scen${j===i?' on':''}" data-a="scen:${j}"><i></i><span><b>${x[0]}</b><span>${x[1]}</span></span></button>`).join('');reopen()}
 
@@ -775,7 +992,9 @@ document.addEventListener('click',e=>{
   if(a==='cfgk'){cfgKey=k;renderCfg();return reveal(cardOf(k).k,`[data-nb="${k}"]`)}
   if(a==='cfgall'){const g=CFG[cfgKey];for(const x in CFG)Object.assign(CFG[x],{bw:g.bw,ghost:g.ghost,ghostT:g.ghostT,outShow:g.outShow,outT:g.outT,unsetT:g.unsetT,marks:g.marks});renderCfg();return render()}
   if(a==='cfgreset'){for(const x in NUM)CFG[x]=CFG_DEF(x);renderCfg();return render()}
-  if(a==='ui'){UI[k]=v;renderCfg();render();return reveal(k==='brandMode'?'brand':'feats','')}
+  if(a==='ui'){UI[k]=v;
+    if(k==='cpuStyle'){s.cpu=blank('cpu');forget('cpu');UI.eB=UI.eF=UI.gF=null;UI.hOpen=false;fq='';if(sheetOpen)openSheet(false)}
+    renderCfg();render();return reveal({brandMode:'brand',featLayout:'feats',featCtl:'feats',cpuStyle:'cpu'}[k],'')}
   if(a==='clearall'){reset();src={};return render()}
   if(a==='clear'){const c=ALLCARDS.find(x=>x.k===k);for(const i of c.items){s[i]=blank(i);forget(i)}return render()}
   if(a==='clr1'){s[k]=blank(k);forget(k);return render()}
@@ -790,7 +1009,18 @@ document.addEventListener('click',e=>{
   if(a==='fam'){toggleMods(FAMS[+k].mods);forget('cpu');return render()}
   if(a==='mod'){toggleMods([MODS[+k]]);forget('cpu');return render()}
   if(a==='tier'){const t=+k;s.cpu.t=s.cpu.t.includes(t)?s.cpu.t.filter(x=>x!==t):[...s.cpu.t,t];forget('cpu');return render()}
-  if(a==='untok'){const t=cpuTokens().filter(x=>!x.brand)[+k];if(t){if(t.tier)s.cpu.t=s.cpu.t.filter(x=>x!==t.tier);else s.cpu.m=s.cpu.m.filter(m=>!t.ms.includes(m))}forget('cpu');return render()}
+  if(a==='untok'){const t=cpuTokens().filter(x=>!x.brand)[+k];if(t)t.rm();forget('cpu');return render()}
+  if(a==='enav'){if(k==='root'){UI.eB=null;UI.eF=null}else if(k==='b'){UI.eB=v;UI.eF=null}else{UI.eF=+v;UI.eB=FAMS[+v].b}return render()}
+  if(a==='gfam'){UI.gF=+k;gResetR=true;return render()}
+  if(a==='hopen'){UI.hOpen=!UI.hOpen;return render()}
+  if(a==='hb'){const c=s.cpu; // F：品牌是獨立條件；H：整個品牌 ↔ 不選（部分 → 整個）
+    if(UI.cpuStyle==='H'){if(c.b.includes(k))c.b=c.b.filter(x=>x!==k);else{hBrandOff(k);c.b.push(k)}}
+    else c.b=c.b.includes(k)?c.b.filter(x=>x!==k):[...c.b,k];
+    forget('cpu');return render()}
+  if(a==='ha'){const c=s.cpu;if(c.a.includes(k))c.a=c.a.filter(x=>x!==k);else{c.a.push(k);hNarrow(k.split('|')[0])}forget('cpu');return render()}
+  if(a==='hr'){const c=s.cpu;if(c.r.includes(k))c.r=c.r.filter(x=>x!==k);else{c.r.push(k);hNarrow(SERB[k])}forget('cpu');return render()}
+  if(a==='fcm'){fToggle(FCOMMON[+k]);forget('cpu');return render()}
+  if(a==='fsg'){const x=fSugg()[+k];if(x)fToggle(x);fq='';forget('cpu');render();const i=document.getElementById('fq');if(i)i.focus({preventScroll:true});return}
   if(a==='feat'){s.feats=s.feats.includes(k)?s.feats.filter(x=>x!==k):[...s.feats,k];forget('feats');return render()}
 });
 document.addEventListener('input',e=>{
@@ -806,6 +1036,7 @@ document.addEventListener('input',e=>{
   }
   if(t.id==='q'){q=t.value;OC={};document.getElementById('more-list').innerHTML=moreListHTML();return}
   if(t.id==='sq'){sq=t.value;renderSheet();return}
+  if(t.id==='fq'){fq=t.value;OC={};document.getElementById('fsugg').innerHTML=fSuggHTML();return}
   const k=t.dataset.n;if(!k)return;
   const c=NUM[k],{max}=binsOf(k),x=+t.value,v=s[k];
   let lo=v.lo??c.min,hi=v.hi??max;
@@ -814,7 +1045,10 @@ document.addEventListener('input',e=>{
   live(k);
 });
 document.addEventListener('change',e=>{if(e.target.dataset.n){forget(e.target.dataset.n);render()}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetOpen)openSheet(false)});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&sheetOpen)openSheet(false);
+  if(e.target.id==='fq'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();const l=fSugg();if(l.length){fToggle(l[0]);fq='';forget('cpu');render();document.getElementById('fq').focus({preventScroll:true})}}
+});
 renderCfg();
 setScen(1);
 </script>
