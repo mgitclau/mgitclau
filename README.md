@@ -48,3 +48,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 篩選條件模板（White A：分布圖＋後台設定、一排格子、品牌 4 欄、功能清單） | https://mgitclau.github.io/mgitclau/laptop-filter-templates.html | 2026-11-19 |
 | AI 筆電選購助手 · 選項條件 3 個方案（電商式標籤列／可點柱狀圖／清單＋比例條） | https://mgitclau.github.io/mgitclau/laptop-filter-cells-options.html | 2026-11-19 |
 | AI 筆電選購助手 · 篩選 4 種做法（參考 Airbnb／Best Buy／Zalando／Apple） | https://mgitclau.github.io/mgitclau/laptop-filter-real-sites.html | 2026-11-19 |
+| AI 筆電選購助手 · 需求區 9 種方案 Demo（現狀對照＋折疊一行／標籤浮層／吸頂／抽屜／對話欄／一句話／漏斗／分主次／推薦組合，即時量需求區高度） | https://mgitclau.github.io/mgitclau/laptop-requirements-area-demo.html | 2026-11-21 |

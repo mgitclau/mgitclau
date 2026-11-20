@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>需求區 9 種方案</title>
+<style>
+:root{
+  --ground:#C6CDDC;--ground-2:#BAC3D5;--panel:#EDF0F5;--chatbg:#E1E5EE;--card:#fff;--group:#EBEEF4;--group-2:#E2E7F0;--inner:#F2F4F8;
+  --ink:#12151C;--ink-2:#454C5D;--ink-3:#5A6174;--edge:#2A2F3A;--line:#D7DCE6;--line-2:#E4E8EF;--soft-line:#B9C0CE;
+  --accent:#2340C4;--accent-soft:#DDE4F7;--accent-ink:#1A2F96;--signal:#F0602A;--signal-ink:#A8401A;--good:#1D7349;--good-soft:#DDF0E5;
+  --sh-card:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16);
+  --sh-hi:0 1px 2px rgba(22,30,52,.05),0 18px 40px -12px rgba(22,30,52,.24);
+  --sh-pop:0 2px 6px rgba(22,30,52,.08),0 24px 48px -16px rgba(22,30,52,.38);
+  --sh-panel:0 30px 60px -30px rgba(30,40,70,.35);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC","Noto Sans TC",monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
+  --arrow-down:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 8 16 16M16 9v7H9'/%3E%3C/svg%3E");
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --filter:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6h16M7 12h10M10 18h4'/%3E%3C/svg%3E");
+  --search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{font:14px/1.55 var(--sans);color:var(--ink);background:radial-gradient(1200px 700px at 80% -10%,#D3D9E6 0%,transparent 60%),linear-gradient(180deg,var(--ground),var(--ground-2));-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+::selection{background:rgba(35,64,196,.22)}
+.mono{font-family:var(--mono)}
+
+/* ---------- 三欄：和系統一樣（側欄 236px｜對話 35%｜結果） ---------- */
+.shell{height:100vh;display:grid;grid-template-columns:236px minmax(320px,35%) minmax(0,1fr);column-gap:16px;padding:14px}
+.col{border-radius:30px;box-shadow:var(--sh-panel);overflow:hidden;min-height:0;display:flex;flex-direction:column;position:relative}
+
+/* 共用按鈕 */
+.btn-sec{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:0 18px;border-radius:999px;background:var(--card);border:1.3px solid var(--edge);font-weight:500;font-size:14px;white-space:nowrap;transition:background .15s,scale .12s}
+.btn-sec:hover{background:var(--group)}
+.btn-sec:active{scale:.97}
+.btn-sec.sm{min-height:32px;padding:0 13px;font-size:13px}
+.btn-pri{display:inline-flex;align-items:center;gap:10px;min-height:42px;padding:0 8px 0 20px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;box-shadow:0 6px 16px -6px rgba(18,21,28,.55);white-space:nowrap}
+.btn-pri::after{content:"";flex:none;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14) var(--arrow) no-repeat center/14px;transition:translate .2s var(--ease)}
+.btn-pri:hover{background:#2C3343}
+.btn-pri:hover::after{translate:2px -2px}
+.btn-pri.sm{min-height:34px;padding:0 6px 0 15px;font-size:13px}
+.btn-pri.sm::after{width:22px;height:22px;background-size:12px}
+.lnk{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;text-decoration-color:rgba(35,64,196,.45);text-underline-offset:3px;font-size:13px;white-space:nowrap}
+.lnk:hover{text-decoration-color:currentColor}
+.lnk-2{color:var(--ink-2);text-decoration-color:rgba(69,76,93,.45)}
+.eyebrow{display:flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
+.dot{flex:none;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--signal)}
+.dot.mid{background:#E5A43A}.dot.low{background:#97A0B3}
+
+/* ---------- 左：說明＋切換 ---------- */
+.notes{background:var(--panel);overflow-y:auto;padding:20px 14px 24px;scrollbar-width:thin}
+.notes h1{font:600 20px/1.25 var(--display);letter-spacing:-.02em;margin:10px 0 6px}
+.notes .lead{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+.met{margin:14px 0 12px;padding:10px 12px 8px;border-radius:18px;background:var(--card);box-shadow:var(--sh-card)}
+.met-t{font:500 10.5px/1.3 var(--mono);letter-spacing:.06em;color:var(--ink-3);margin-bottom:2px}
+.met-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:2px 8px;padding:7px 0}
+.met-row+.met-row{border-top:1px solid var(--line-2)}
+.met-row span{font-size:12px;color:var(--ink-2);line-height:1.35}
+.met-row b{font:600 19px/1.1 var(--mono);letter-spacing:-.02em;text-align:right}
+.met-row b small{font-size:11px;font-weight:500;margin-left:2px;color:var(--ink-3)}
+.met-row em{grid-column:1/-1;font-style:normal;font:500 11px/1.3 var(--mono);color:var(--ink-3)}
+.met-row em.up{color:var(--good)}.met-row em.down{color:var(--signal-ink)}
+.met-note{font-size:11.5px;color:var(--ink-3);margin:4px 0 0;line-height:1.45}
+.ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 8px}
+.ctl > span{font-size:12px;color:var(--ink-2)}
+.seg{display:flex;padding:3px;border-radius:999px;background:var(--group-2)}
+.seg button{border:0;background:none;min-width:32px;height:28px;border-radius:999px;font:600 12px var(--mono);color:var(--ink-2)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(22,30,52,.18)}
+.reset{margin:0 0 14px;font-size:12px}
+.list-t{margin:14px 0 6px}
+.sch{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;padding:8px 9px;border:1.3px solid transparent;border-radius:14px;background:transparent;text-align:left;transition:background .15s}
+.sch:hover{background:rgba(18,21,28,.05)}
+.sch.on{background:var(--card);border-color:var(--edge);box-shadow:var(--sh-card)}
+.sch .no{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:600 11px var(--mono);background:var(--group-2);color:var(--ink-2)}
+.sch.on .no{background:var(--ink);color:#fff}
+.sch b{display:block;font-size:13px;font-weight:600;line-height:1.3}
+.sch small{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.sch .h{font:500 11px/1.35 var(--mono);color:var(--ink-2);text-align:right;white-space:nowrap}
+.sch .h i{display:block;font-style:normal;color:var(--ink-3)}
+.det{margin:6px 0 10px;padding:12px 12px 10px;border-radius:16px;background:var(--card);box-shadow:var(--sh-card);font-size:12.5px;line-height:1.55}
+.det p{margin:0 0 8px}
+.det .k{display:block;font:500 10.5px/1.3 var(--mono);letter-spacing:.06em;color:var(--ink-3);margin-bottom:2px}
+.det ul{margin:0 0 8px;padding:0;list-style:none}
+.det li{position:relative;padding-left:16px}
+.det li::before{position:absolute;left:0;top:0;font:600 12px var(--mono)}
+.det .pro li::before{content:"+";color:var(--good)}
+.det .con li::before{content:"−";color:var(--signal-ink)}
+.det :last-child{margin-bottom:0}
+.foot{margin:14px 2px 0;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+
+/* ---------- 中：對話欄 ---------- */
+.chat{background:var(--chatbg)}
+.chat-head{flex:none;display:flex;align-items:baseline;gap:10px;padding:20px 22px 12px}
+.chat-head b{font:600 17px var(--display);letter-spacing:-.01em}
+.chat-head small{color:var(--ink-3);font-size:12.5px}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:4px 18px 16px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin}
+.msg{max-width:88%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.6}
+.msg.u{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--card);border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(22,30,52,.05)}
+.chatcard{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--inner)}
+.chatcard h4{margin:0 0 8px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;color:var(--ink-3)}
+.cpills{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.cpills li{padding:2px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-size:12.5px}
+.composer{flex:none;margin:0 14px 14px;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:22px;background:var(--card);box-shadow:var(--sh-card)}
+.composer textarea{flex:1;border:0;resize:none;background:none;outline:none;font-size:14px;height:24px}
+.send{width:38px;height:38px;border:0;border-radius:50%;background:var(--ink);color:#fff;font-size:17px}
+
+/* 方案 5：對話欄頂部的需求列 */
+.cstrip{flex:none;margin:0 14px 8px;padding:8px 8px 8px 14px;border-radius:18px;background:var(--card);box-shadow:var(--sh-card)}
+.cstrip-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}
+.hscroll{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding:2px 18px 2px 0}
+.hscroll::-webkit-scrollbar{display:none}
+.cstrip .wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2)}
+
+/* ---------- 右：結果欄 ---------- */
+.res{background:var(--panel)}
+.res-head{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 14px;padding:20px 24px 10px 28px}
+.count{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;color:var(--ink-2)}
+.count .big{font:600 22px/1.15 var(--display);letter-spacing:-.025em;color:var(--ink)}
+.count .big b{font-family:var(--mono);font-weight:600;letter-spacing:-.02em}
+.count .sm2{font-size:13px}
+.count small{flex-basis:100%;font:500 11px/1.3 var(--mono);letter-spacing:.08em;color:var(--ink-3)}
+.tools{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;align-items:center;margin-left:auto}
+.search{width:42px;height:42px;border:1.3px solid var(--edge);border-radius:999px;background:var(--card) var(--search) no-repeat 13px center/15px}
+.sel{height:42px;border:1.3px solid var(--edge);border-radius:999px;padding:0 38px 0 16px;-webkit-appearance:none;appearance:none;background:var(--card) var(--chev) no-repeat right 14px center/14px;font-weight:500;font-size:13.5px}
+.btn-filter::before{content:"";width:16px;height:16px;background:var(--filter) no-repeat center/16px}
+.btn-filter{padding:0 18px 0 14px}
+.req-btn em{font:600 12px/1 var(--mono);font-style:normal;background:var(--ink);color:#fff;border-radius:999px;padding:3px 7px}
+.wbtn{display:inline-flex;align-items:center;gap:10px;min-height:42px;padding:0 8px 0 18px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;box-shadow:0 6px 16px -6px rgba(18,21,28,.55)}
+.wbtn::after{content:"";width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14) var(--arrow-down) no-repeat center/14px}
+.res-wrap{position:relative;flex:1;min-height:0}
+.rb{position:absolute;inset:0;overflow-y:auto;padding:10px 24px 28px;scrollbar-width:thin;scrollbar-color:#B9C0CE transparent}
+
+.head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;margin:0 0 12px;font:600 24px/1.15 var(--display);letter-spacing:-.025em}
+.head::before{content:attr(data-eb);display:block;flex-basis:100%;margin-bottom:6px;font:500 11px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.head.h20{font-size:20px}
+
+/* 需求區：現在的卡片 */
+.brief{margin-bottom:14px;padding:20px;border-radius:22px;background:var(--card);box-shadow:var(--sh-card)}
+.brief-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tags{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.tags.one{grid-template-columns:1fr}
+.tag{padding:12px 14px;border-radius:14px;background:var(--group);border:1.3px solid transparent;min-width:0}
+.tag.soft{background:var(--card);border:1.3px dashed var(--soft-line)}
+.tag-main{display:flex;align-items:center;gap:8px}
+.tag-label{font-size:14px;font-weight:600;flex:1;min-width:0}
+.tag-acts{display:flex;gap:8px;flex:none}
+.tag-acts .lnk{font-size:12.5px}
+.tag-src{margin:3px 0 0;font-size:12px;color:var(--ink-3);overflow-wrap:anywhere}
+.tag-eff{color:var(--accent-ink)}
+.editor{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.editor .row{display:flex;align-items:center;gap:12px}
+.inp{width:100%;height:38px;padding:0 12px;border:1.3px solid var(--edge);border-radius:12px;background:var(--card);font-size:14px}
+.empty{margin:0;color:var(--ink-3);font-size:13px}
+
+/* 小標籤 */
+.pill{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border-radius:999px;background:var(--group);border:1.3px solid transparent;font-size:13px;font-weight:500;white-space:nowrap;max-width:100%;color:var(--ink)}
+.pill > span{overflow:hidden;text-overflow:ellipsis}
+.pill.soft{background:var(--card);border:1.3px dashed var(--soft-line)}
+button.pill.click::after{content:"";flex:none;width:10px;height:10px;margin-right:-3px;background:var(--chev) no-repeat center/10px;opacity:.55}
+button.pill.click:hover{border-color:var(--edge);border-style:solid}
+button.pill.click.open{border-color:var(--edge);border-style:solid;background:var(--card);box-shadow:0 4px 12px -6px rgba(22,30,52,.4)}
+.pill.more{background:var(--ink);color:#fff;border-color:var(--ink);font:600 12px var(--mono);padding:0 11px}
+button.pill.more:hover{background:#2C3343}
+.pill.xs{height:26px;padding:0 10px;font-size:12px}
+.line-k{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.line-k b{font:700 15px var(--mono);color:var(--ink);margin:0 1px}
+.hint{font-size:12px;color:var(--ink-3);white-space:nowrap}
+
+/* 方案 1：一行 */
+.brief-line{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 12px 12px 18px}
+.fit{position:relative;display:flex;flex-wrap:wrap;gap:6px;max-height:32px;overflow:hidden}
+.fit.xs{max-height:26px}
+
+/* 方案 2、9：標籤列 */
+.brief-pills{padding:14px 16px}
+.pills{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pills .line-k{margin-right:6px}
+.pills .hint{margin-left:4px}
+.pills-foot{display:flex;justify-content:flex-end;margin-top:8px}
+.expand-area{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-2)}
+
+/* 方案 6：一句話 */
+.brief-sent{padding:16px 20px 18px}
+.sent-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.sentence{margin:0;font:500 17px/1.95 var(--display);letter-spacing:-.005em;color:var(--ink-2)}
+.ph{border:0;background:none;padding:0 1px;margin:0;border-radius:6px;font:inherit;font-weight:650;color:var(--ink);text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:rgba(35,64,196,.5);text-underline-offset:5px;transition:background .15s}
+.ph.soft{text-decoration-style:dashed;text-decoration-color:rgba(69,76,93,.55)}
+.ph:hover,.ph.open{background:var(--accent-soft)}
+
+/* 方案 7：漏斗 */
+.brief-funnel{padding:14px 16px}
+.funnel{display:flex;align-items:stretch;gap:5px}
+.f-node{flex:none;display:flex;flex-direction:column;justify-content:center;min-height:50px;padding:5px 12px;border-radius:14px;background:var(--group);border:1.3px solid transparent;text-align:left}
+.f-step{flex:0 1 auto;min-width:84px}
+.f-node span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.f-node b em{margin-left:6px;font:500 11px var(--mono);font-style:normal;letter-spacing:0;color:var(--signal-ink)}
+.f-node b{font:700 16px/1.2 var(--mono);letter-spacing:-.02em;white-space:nowrap}
+.f-node b small{font:500 11px var(--sans);color:var(--ink-3);margin-left:2px}
+button.f-node:hover,button.f-node.open{border-color:var(--edge);background:var(--card)}
+.f-start{background:transparent;border:1.3px solid var(--line)}
+.f-end{background:var(--ink);color:#fff}
+.f-end span{color:rgba(255,255,255,.75)}
+.f-end b small{color:rgba(255,255,255,.75)}
+.f-arrow{flex:none;align-self:center;font:500 16px/1 var(--mono);color:var(--ink-3)}
+.f-rest{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2)}
+
+/* 方案 8：分主次 */
+.rest-line{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;margin-top:12px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--inner)}
+.rest-k{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.tags-rest .tag{background:var(--inner)}
+
+/* 吸頂條（方案 3、9） */
+.mini{position:absolute;left:0;right:0;top:0;z-index:6;padding:6px 16px 10px;background:linear-gradient(var(--panel) 72%,rgba(237,240,245,0));transform:translateY(-100%);opacity:0;pointer-events:none;transition:transform .25s var(--ease),opacity .2s}
+.mini-in{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 7px 7px 16px;border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 12px 28px -12px rgba(22,30,52,.4),0 0 0 1px rgba(22,30,52,.05)}
+.mini.show{transform:none;opacity:1;pointer-events:auto}
+.mini .mid{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .mid b{font:700 14px var(--mono);color:var(--ink)}
+.mini-drop{position:absolute;left:16px;right:16px;top:62px;z-index:6;max-height:64%;overflow-y:auto;padding:16px;border-radius:20px;background:var(--card);box-shadow:var(--sh-pop)}
+
+/* 候選卡 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;padding:10px 10px 4px;border-radius:22px;background:var(--card);box-shadow:var(--sh-card);overflow:hidden;transition:box-shadow .2s,translate .2s var(--ease)}
+.card:hover{box-shadow:var(--sh-hi);translate:0 -2px}
+.photo{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#F0F3F8,#E3E8F1);display:grid;place-items:center}
+.photo svg{width:78%;height:auto}
+.score{position:absolute;top:10px;left:10px;height:26px;padding:0 10px;border-radius:999px;background:var(--ink);color:#fff;font:600 13px/26px var(--mono)}
+.cbody{display:flex;flex-direction:column;gap:9px;padding:14px 6px 10px;flex:1}
+.brand{display:block;margin-bottom:4px;font:500 10.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.model{font:600 15.5px/1.25 var(--display);letter-spacing:-.015em}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips span{padding:1px 8px;border-radius:6px;background:var(--group);font-size:11.5px}
+.price{margin-top:auto;font:400 13px var(--display);color:var(--ink-2)}
+.price strong{font-size:21px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.reason{font-size:12px;color:var(--signal-ink);font-weight:500}
+.acts{display:flex;gap:6px;align-items:center;margin:0 6px;padding:12px 0 8px;border-top:1px solid var(--line-2)}
+.acts .btn-sec{min-height:30px;padding:0 11px;font-size:12.5px}
+.acts .lnk{margin-left:auto;font-size:12.5px}
+.more-link{display:inline-block;margin-top:14px;font-size:14px}
+.secondary{margin-top:30px;padding:22px 20px 20px;border-radius:26px;background:var(--group-2);box-shadow:inset 0 2px 6px rgba(22,30,52,.06)}
+.secondary .note{margin:-6px 0 14px;font-size:13px;color:var(--ink-2)}
+.faded{opacity:.62;filter:grayscale(.7)}
+
+/* 浮層、抽屜、提示 */
+.pop{position:fixed;z-index:60;width:300px;padding:14px 16px 14px;border-radius:18px;background:var(--card);box-shadow:var(--sh-pop);font-size:13px}
+.pop-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pop-head b{font-size:14.5px;flex:1;min-width:0}
+.kind{flex:none;padding:1px 8px;border-radius:999px;font-size:11px;background:var(--group);color:var(--ink-2)}
+.kind.hard{background:var(--ink);color:#fff}
+.x{flex:none;width:26px;height:26px;border:0;border-radius:50%;background:var(--group);font-size:15px;line-height:1;color:var(--ink-2)}
+.x:hover{background:var(--group-2)}
+.pop dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;margin:0 0 12px}
+.pop dt{font:500 10.5px/1.7 var(--mono);letter-spacing:.04em;color:var(--ink-3);white-space:nowrap}
+.pop dd{margin:0;color:var(--ink-2);line-height:1.55}
+.pop dd.eff{color:var(--accent-ink)}
+.pop-act{display:flex;align-items:center;gap:14px;padding-top:10px;border-top:1px solid var(--line-2)}
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(30,40,70,.32)}
+.drawer{position:fixed;top:14px;right:14px;bottom:14px;z-index:41;width:440px;display:flex;flex-direction:column;border-radius:30px;background:var(--panel);box-shadow:var(--sh-pop)}
+.drawer.anim{animation:slide .25s var(--ease)}
+@keyframes slide{from{transform:translateX(40px);opacity:0}}
+.drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:22px 22px 6px}
+.drawer-body{flex:1;min-height:0;overflow-y:auto;padding:8px 22px 22px}
+.drawer-body .note{margin:0 0 12px;font-size:12.5px;color:var(--ink-3)}
+.toast{position:absolute;left:50%;bottom:18px;z-index:30;translate:-50% 0;display:flex;align-items:center;gap:14px;padding:10px 14px 10px 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;box-shadow:0 12px 26px -10px rgba(18,21,28,.6);white-space:nowrap}
+.toast .lnk{color:#fff;text-decoration-color:rgba(255,255,255,.6)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- 左：說明與切換（寬度和系統側欄一樣 236px，右邊兩欄才會和真實畫面同寬） -->
+  <aside class="col notes" aria-label="方案切換">
+    <div class="eyebrow">Requirements · 需求區</div>
+    <h1>需求區 9 種方案</h1>
+    <p class="lead">右邊照用戶端 White A 畫。需求是你 11/21 那段對話的真實 9 條；台數和效果是示意。修改、刪除只在這頁模擬。</p>
+
+    <div class="met" aria-live="polite">
+      <div class="met-t" id="met-t">目前畫面</div>
+      <div class="met-row"><span>需求區高度</span><b id="m-ah">–</b><em id="m-ah-d"></em></div>
+      <div class="met-row"><span>第一張機型卡離頂端</span><b id="m-top">–</b><em id="m-top-d"></em></div>
+      <div class="met-row"><span>第一屏完整看到的機型卡</span><b id="m-full">–</b><em id="m-full-d"></em></div>
+      <p class="met-note" id="m-note"></p>
+    </div>
+
+    <div class="ctl"><span>需求條數</span><div class="seg" id="seg"></div></div>
+    <button class="lnk reset" data-act="reset">恢復原本的需求（刪除、修改都還原）</button>
+
+    <div class="eyebrow list-t">切換方案 · 右邊數字＝需求區高度</div>
+    <div id="schemes"></div>
+    <p class="foot">量的是預設狀態（沒展開時）。視窗大小會影響數字，換視窗大小會自動重量。</p>
+  </aside>
+
+  <!-- 中：對話欄 -->
+  <section class="col chat" aria-label="選購對話">
+    <header class="chat-head"><b>選購對話</b><small>直接說需求，說錯了隨時改</small></header>
+    <div id="cstrip" class="cstrip" hidden></div>
+    <div class="msgs" id="msgs">
+      <div class="msg u">預算 4 萬，平常上課寫報告，每天要背去學校</div>
+      <div class="msg a">了解，你是學生，每天都要帶著走，我會先把重量放在前面考慮。除了寫報告，還會用到什麼軟體嗎？
+        <div class="chatcard"><h4>這句話我聽到了</h4><ul class="cpills"><li>上課寫報告的文書用途</li><li>每天背去學校，要好帶</li><li>學生，天天帶去學校</li><li>特別重視好帶（重量）</li></ul></div>
+      </div>
+      <div class="msg u">我用 3ds Max 這個軟體</div>
+      <div class="msg a">3ds Max 建模吃處理器和顯示卡。算圖的話，你用哪一種引擎？</div>
+      <div class="msg u">V-Ray，用 CPU。場景大、算圖常要等</div>
+      <div class="msg a">那多核心效能很重要。我把效能權重調高，算圖跑不動的機型先放到次候選池。
+        <div class="chatcard"><h4>這句話我聽到了</h4><ul class="cpills"><li>用 V-Ray 算圖（CPU 引擎）</li><li>V-Ray 算圖用 CPU（多核吃重）</li><li>場景大、算圖常要等（算圖量大）</li></ul></div>
+      </div>
+      <div class="msg u">我之前預算說錯了，應該是 8000以內。</div>
+      <div class="msg a">好，預算改成 8000 以內。右邊的主候選池已經照你的權重排好了。</div>
+    </div>
+    <div class="composer"><textarea rows="1" placeholder="說說你的需求" readonly aria-label="輸入你的需求（示意）"></textarea><button class="send" aria-label="送出（示意）" data-act="noop">↑</button></div>
+  </section>
+
+  <!-- 右：結果欄 -->
+  <section class="col res" id="res" aria-label="候選池">
+    <header class="res-head">
+      <div class="count" id="count"></div>
+      <div class="tools">
+        <input class="search" type="search" aria-label="搜尋（示意）" readonly>
+        <select class="sel" aria-label="排序方式（示意）"><option>依權重分</option><option>價格由低到高</option></select>
+        <span id="tools-extra" style="display:contents"></span>
+        <button class="btn-sec btn-filter" data-act="noop">篩選</button>
+        <button class="wbtn" data-act="noop">權重</button>
+      </div>
+    </header>
+    <div class="res-wrap">
+      <div class="mini" id="mini" aria-hidden="true"></div>
+      <div class="mini-drop" id="mini-drop" hidden></div>
+      <div class="rb" id="rb">
+        <div id="area"></div>
+        <section>
+          <h3 class="head" data-eb="Main pool · 主候選池" id="main-h"></h3>
+          <div class="grid" id="main-grid"></div>
+          <button class="lnk more-link" id="main-more" data-act="noop"></button>
+        </section>
+        <section class="secondary">
+          <h3 class="head h20" data-eb="Second pool · 次候選池" id="sec-h"></h3>
+          <p class="note">不符合你的某些需求，但也許值得看看。</p>
+          <div class="grid" id="sec-grid"></div>
+        </section>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </section>
+</div>
+<div id="drawer"></div>
+<div class="pop" id="pop" role="dialog" aria-label="需求細節" hidden></div>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const TOTAL = 371;
+const CONF = { high: '很確定', mid: '大概是這樣', low: '不太確定，請幫我確認' };
+
+/* 需求：前 9 條是 2026-11-21 那段對話的真實需求（標籤、原句照抄）；cut＝這條放到次候選池的台數（示意）。後 3 條只給「12 條」測試用。 */
+const ALL = [
+  { id: 'r1', label: '預算 8000 以內', field: 'budget', hard: true, conf: 'high', quote: '我之前預算說錯了，應該是 8000以內。', cut: 237, effect: '237 台放到次候選池', phrase: '8000 元以內' },
+  { id: 'r2', label: '上課寫報告的文書用途', field: 'purpose', conf: 'high', quote: '平常上課寫報告', phrase: '上課寫報告' },
+  { id: 'r3', label: '每天背去學校，要好帶', field: 'portability', conf: 'high', quote: '每天要背去學校', weight: true, effect: '便攜權重 24%', phrase: '天天要帶著走' },
+  { id: 'r4', label: '學生，天天帶去學校', field: 'other', conf: 'high', quote: '平常上課寫報告，每天要背去學校', phrase: '學生' },
+  { id: 'r5', label: '特別重視好帶（重量）', field: 'priority', conf: 'high', quote: '每天要背去學校', cut: 37, poolNote: '會把全庫這一項最差 20% 的機型放進次候選池', effect: '照候選池規則，便攜最差 20% 放到次候選池（37 台）', phrase: '特別重視重量' },
+  { id: 'r6', label: '用 3ds Max 建模', field: 'software', conf: 'high', quote: '我用 3ds Max 這個軟體', weight: true, effect: '效能權重 38%', phrase: '用 3ds Max 建模' },
+  { id: 'r7', label: '用 V-Ray 算圖（CPU 引擎）', field: 'software', conf: 'high', quote: 'V-Ray，用 CPU', cut: 59, effect: '59 台放到次候選池', phrase: '用 V-Ray 以 CPU 算圖' },
+  { id: 'r8', label: 'V-Ray 算圖用 CPU（多核吃重）', field: 'other', conf: 'high', quote: 'V-Ray，用 CPU', phrase: '多核心吃重' },
+  { id: 'r9', label: '場景大、算圖常要等（算圖量大）', field: 'other', conf: 'high', quote: '場景大、算圖常要等', phrase: '場景大、算圖常要等' },
+  { id: 'r10', label: '螢幕 14 吋左右', field: 'size', conf: 'mid', quote: '14 吋就好', softNote: '僅供參考，沒有當作篩選條件', phrase: '14 吋左右' },
+  { id: 'r11', label: 'Windows 系統', field: 'os', hard: true, conf: 'high', quote: '要 Windows', cut: 6, effect: '6 台放到次候選池', phrase: 'Windows' },
+  { id: 'r12', label: '電池要撐一整天', field: 'other', conf: 'mid', quote: '一整天不插電', weight: true, effect: '續航權重 15%', phrase: '電池撐一整天' },
+];
+
+const MAIN = [
+  ['華碩 ASUS', 'a豆14 Air 2026', ['Ryzen AI 9 H465', '0.99 kg', '14 吋', '32 GB'], 5900, 91],
+  ['聯想 Lenovo', '小新 Pro 14 GT', ['Core Ultra 5 338H', '1.39 kg', '14 吋', '32 GB'], 5555, 88],
+  ['華碩 ASUS', '無畏 Pro14 2026 銳龍版', ['Ryzen AI 9 H465', '1.38 kg', '14 吋', '32 GB'], 5779, 87],
+  ['惠普 HP', '戰X 2025 酷睿 Ultra', ['Core Ultra 7 258V', '1.38 kg', '14 吋', '32 GB'], 7649, 85],
+  ['華碩 ASUS', '靈耀14 2025', ['Core Ultra 9 285H', '1.38 kg', '14 吋', '32 GB'], 5999, 84],
+  ['惠普 HP', '戰66 2026 酷睿版', ['Core Ultra 5 336H', '1.38 kg', '14 吋', '16 GB'], 6999, 82],
+  ['小米 Xiaomi', 'REDMI Book 14 2025', ['Core i5-13500H', '1.38 kg', '14 吋', '32 GB'], 3399, 80],
+  ['華碩 ASUS', '無畏 Pro14 2025', ['Core Ultra 5 225H', '1.38 kg', '14 吋', '32 GB'], 4879, 79],
+  ['惠普 HP', '星Book Pro 14 2025', ['Core Ultra 5 225H', '1.38 kg', '14 吋', '16 GB'], 5199, 77],
+  ['宏碁 Acer', 'Aspire 14 AI 2025', ['Core Ultra 5 226V', '1.38 kg', '14 吋', '16 GB'], 4300, 75],
+  ['惠普 HP', '戰66 2025', ['Core i7-1360P', '1.38 kg', '14 吋', '16 GB'], 7299, 73],
+  ['惠普 HP', '戰66 2026 Ultra 7', ['Core Ultra 7 256V', '1.38 kg', '14 吋', '16 GB'], 5999, 72],
+];
+const SECOND = [
+  ['機械師 Machenike', '曙光15 2025', ['Core i9-14900HX', '2.32 kg', '15.6 吋', '16 GB'], 8008, '超過預算 8000'],
+  ['聯想 Lenovo', '拯救者 Y7000P 2025', ['Core i7-14650HX', '2.43 kg', '16 吋', '16 GB'], 8159, '超過預算 8000、太重'],
+  ['神舟 Hasee', '戰神 Z8 D63', ['Core i7-13620H', '2.32 kg', '15.6 吋', '16 GB'], 7399, '便攜在全庫最差 20%'],
+  ['雷神 Thunderobot', 'aibook 14 Air', ['Ryzen 7 8745HS', '2.15 kg', '14 吋', '16 GB'], 3659, '便攜在全庫最差 20%'],
+];
+const SCREEN = ['#9FB3E6', '#B9C6E2', '#A9C4D8', '#C3B9DE', '#9EC2C4', '#B5C0D6', '#C9C2B4', '#A7B8D9', '#B7CBE0', '#BCB3D3', '#A9BFCF', '#C1C8DA'];
+
+const SCHEMES = [
+  { id: 's0', no: '0', name: '現狀', sub: '每條需求一張卡（現在的樣子）', how: '「修改」「刪除」可以點。', pros: ['每條的來源、效果一眼看完'], cons: ['需求一多，機型卡就被擠到第一屏外面'] },
+  { id: 's1', no: '1', name: '折疊成一行', sub: '平常一行標籤，按了才展開', how: '按「展開詳情」或黑色的「+N 項」。', pros: ['最簡單，內容一樣不少', '高度固定一行，不管幾條需求'], cons: ['一行放不下的要點開才看得到', '看來源、效果要多按一下'] },
+  { id: 's2', no: '2', name: '標籤＋小浮層', sub: '點標籤看細節、修改、刪除', how: '點任一個標籤，旁邊會彈出小浮層。', pros: ['一直看得到全部標籤', '想看哪條點哪條，修改、刪除都在浮層裡'], cons: ['需求多時標籤會變兩、三行', '浮層會暫時蓋住下面的卡片'] },
+  { id: 's3', no: '3', name: '往下滑時吸頂', sub: '頂部照舊，滑下去縮成一條', how: '在右邊往下滑，頂端會出現一條；按「展開需求」。', pros: ['看機型時也記得系統聽到了什麼'], cons: ['第一屏和現在一樣大', '單獨用效果有限，適合搭配別的方案'] },
+  { id: 's4', no: '4', name: '收進抽屜', sub: '工具列多一顆「你的需求」按鈕', how: '按工具列的「你的需求」。', pros: ['最省空間，機型卡直接頂上來', '和篩選、權重抽屜是同一套用法'], cons: ['平常看不到，少了「它懂我」的感覺', '用戶可能不知道要去按'] },
+  { id: 's5', no: '5', name: '搬到對話欄頂部', sub: '對話欄頂端一條可橫滑的標籤列', how: '看中間對話欄頂部：左右滑、點標籤、按「全部」。', pros: ['需求和說出它的對話放在一起', '右邊全部留給機型'], cons: ['對話欄只有 35% 寬，訊息區會變矮', '看機型時要往左看才知道條件'] },
+  { id: 's6', no: '6', name: '一句話摘要', sub: '用一句話說出系統聽到的', how: '點句子裡有底線的詞。實線＝必要條件，虛線＝偏好。', pros: ['「被理解」的感覺最強', '讀起來像人在複述，不像表單'], cons: ['需求多時句子會變長', '句子要靠程式模板拼，新類型的需求要補模板'] },
+  { id: 's7', no: '7', name: '漏斗條', sub: '一行看出每條需求刷掉幾台', how: '點漏斗裡的步驟，或下面一行的標籤。', pros: ['一眼看出哪條需求讓台數變少', '最容易回答「為什麼只剩這幾台」'], cons: ['只適合真的有篩選作用的需求', '其餘需求要放到第二行'] },
+  { id: 's8', no: '8', name: '分主次', sub: '會影響結果的照常顯示，其他收起', how: '按下面一行的「展開」看收起來的需求。', pros: ['規則簡單：有沒有效果由程式判斷', '重要的照舊一目了然'], cons: ['只省一半左右', '用戶可能覺得有些話被冷落'] },
+  { id: 's9', no: '9', name: '推薦：2＋3 組合', sub: '標籤＋浮層，往下滑時吸頂', how: '點標籤看浮層；往下滑看吸頂條；按「展開全部」看完整卡片。', pros: ['平常很矮，細節點得到', '滑到哪都看得到系統聽到什麼'], cons: ['兩種互動要一起維護', '吸頂條會蓋住一點點機型區'] },
+];
+
+const freshUi = () => ({ s1: false, s5: false, s7: false, s8: false, s9: false, mini: false, drawer: false });
+const st = { scheme: 's0', count: 9, removed: new Set(), edits: {}, editing: null, ui: freshUi(), mini: null, base: null, popId: null, popEdit: false, popAnchor: null, undo: null };
+
+function reqs() {
+  const base = st.count === 12 ? ALL : ALL.slice(0, st.count);
+  return base.filter((r) => !st.removed.has(r.id)).map((r) => (st.edits[r.id] ? { ...r, label: st.edits[r.id], phrase: st.edits[r.id] } : r));
+}
+const counts = (rs) => { const sec = rs.reduce((a, r) => a + (r.cut || 0), 0); return { primary: TOTAL - sec, secondary: sec }; };
+const isSoft = (r) => !r.hard && r.field !== 'software';
+const affects = (r) => !!(r.hard || r.cut || r.weight);
+const dot = (r) => `<i class="dot ${r.conf}" title="${CONF[r.conf]}" aria-label="${CONF[r.conf]}" role="img"></i>`;
+const byId = (id) => reqs().find((r) => r.id === id);
+
+/* ---------- 共用小元件 ---------- */
+function editor(r, act = 'save', cancel = 'cancel') {
+  return `<div class="editor"><input class="inp" data-input="${r.id}" value="${esc(r.label)}" aria-label="修改需求"><div class="row"><button class="btn-pri sm" data-act="${act}" data-id="${r.id}">儲存</button><button class="lnk" data-act="${cancel}" data-id="${r.id}">取消</button></div></div>`;
+}
+function tagCard(r) {
+  return `<li class="tag${isSoft(r) ? ' soft' : ''}" data-id="${r.id}">
+    <div class="tag-main">${dot(r)}<span class="tag-label">${esc(r.label)}</span><span class="tag-acts"><button class="lnk" data-act="edit" data-id="${r.id}">修改</button><button class="lnk lnk-2" data-act="del" data-id="${r.id}">刪除</button></span></div>
+    <p class="tag-src">我聽到的：「${esc(r.quote)}」</p>
+    ${r.poolNote ? `<p class="tag-src">${r.poolNote}</p>` : ''}
+    ${r.softNote ? `<p class="tag-src">${r.softNote}</p>` : ''}
+    ${r.effect ? `<p class="tag-src tag-eff">${r.effect}</p>` : ''}
+    ${st.editing === r.id ? editor(r) : ''}
+  </li>`;
+}
+const tagList = (rs, cls = '') => (rs.length ? `<ul class="tags ${cls}">${rs.map(tagCard).join('')}</ul>` : '<p class="empty">還沒有需求。</p>');
+function pill(r, { click = true, fit = false, xs = false } = {}) {
+  const cls = `pill${isSoft(r) ? ' soft' : ''}${click ? ' click' : ''}${xs ? ' xs' : ''}${st.popId === r.id && click ? ' open' : ''}`;
+  const attrs = `${click ? `type="button" data-pop="${r.id}"` : ''} ${fit ? 'data-fit' : ''}`;
+  const tag = click ? 'button' : 'span';
+  return `<${tag} class="${cls}" ${attrs} title="${esc(r.label)}">${dot(r)}<span>${esc(r.label)}</span></${tag}>`;
+}
+const fitBox = (rs, opts, act, xs = false) => `<div class="fit${xs ? ' xs' : ''}" data-fitbox>${rs.map((r) => pill(r, { ...opts, fit: true, xs })).join('')}<button type="button" class="pill more${xs ? ' xs' : ''}" data-act="${act}" hidden></button></div>`;
+const heard = (n) => `<span class="line-k">我聽到的 <b>${n}</b> 項</span>`;
+const briefFull = (rs, right = '') => `<section class="brief"><div class="brief-top"><h2 class="head" data-eb="Heard · 我聽到的">你的需求</h2>${right}</div>${tagList(rs)}</section>`;
+
+/* 一行放不下的標籤藏起來，換成「+N 項」。 */
+function fitLine(box) {
+  const items = [...box.querySelectorAll('[data-fit]')];
+  const more = box.querySelector('.more');
+  items.forEach((i) => { i.hidden = false; });
+  more.hidden = true;
+  if (!items.length || box.offsetParent === null) return;
+  const top = items[0].offsetTop;
+  let k = items.findIndex((i) => i.offsetTop > top + 2);
+  if (k < 0) return;
+  for (let i = k; i < items.length; i++) items[i].hidden = true;
+  more.hidden = false;
+  more.textContent = `+${items.length - k} 項`;
+  while (more.offsetTop > top + 2 && k > 1) { k--; items[k].hidden = true; more.textContent = `+${items.length - k} 項`; }
+}
+const fitAll = () => $$('[data-fitbox]').forEach(fitLine);
+
+/* 方案 6：句子模板（只用這 12 條示範；正式版依需求種類寫模板）。 */
+function sentence(rs) {
+  const has = (id) => rs.find((r) => r.id === id);
+  const P = (id) => { const r = has(id); return `<button type="button" class="ph${isSoft(r) ? ' soft' : ''}${st.popId === id ? ' open' : ''}" data-pop="${id}">${esc(r.phrase)}</button>`; };
+  const out = [];
+  out.push(`${has('r4') ? `你是${P('r4')}，` : '你'}想找一台${has('r1') ? `${P('r1')}的` : ''}筆電。`);
+  const b = [];
+  if (has('r2')) b.push(`平常${P('r2')}`);
+  if (has('r3')) b.push(P('r3'));
+  if (has('r5')) b.push(`所以${P('r5')}`);
+  if (b.length) out.push(`${b.join('，')}。`);
+  const c = [];
+  const sw = ['r6', 'r7'].filter(has).map(P);
+  if (sw.length) c.push(`另外你會${sw.join('、')}`);
+  if (has('r8')) c.push(P('r8'));
+  if (has('r9')) c.push(`而且${P('r9')}`);
+  if (c.length) out.push(`${c.join('，')}。`);
+  const d = [];
+  if (has('r10')) d.push(`螢幕${P('r10')}`);
+  if (has('r11')) d.push(`用 ${P('r11')}`);
+  if (has('r12')) d.push(P('r12'));
+  if (d.length) out.push(`也希望${d.join('、')}。`);
+  return out.join('');
+}
+
+/* ---------- 每個方案畫什麼：area＝結果欄頂部、tool＝工具列多的按鈕、chat＝對話欄頂部、mini＝吸頂條 ---------- */
+const R = {
+  s0: (rs) => ({ area: briefFull(rs) }),
+  s1: (rs) => ({
+    area: st.ui.s1
+      ? briefFull(rs, '<button class="btn-sec sm" data-act="s1">收起 ▴</button>')
+      : `<section class="brief brief-line">${heard(rs.length)}${fitBox(rs, { click: false }, 's1')}<button class="btn-sec sm" data-act="s1">展開詳情 ▾</button></section>`,
+  }),
+  s2: (rs) => ({ area: `<section class="brief brief-pills"><div class="pills">${heard(rs.length)}${rs.map((r) => pill(r)).join('')}<span class="hint">點標籤看細節</span></div></section>` }),
+  s3: (rs, c) => ({
+    area: briefFull(rs),
+    mini: { bar: `${heard(rs.length)}<span class="mid">· 主候選池 <b>${c.primary}</b> 台</span><button class="btn-sec sm" data-act="mini">${st.ui.mini ? '收起 ▴' : '展開需求 ▾'}</button>`, drop: tagList(rs) },
+  }),
+  s4: (rs) => ({ area: '', tool: `<button class="btn-sec req-btn" data-act="drawer">你的需求 <em>${rs.length}</em></button>` }),
+  s5: (rs) => ({
+    area: '',
+    chat: `<div class="cstrip-row">${heard(rs.length)}<div class="hscroll">${st.ui.s5 ? '<span class="hint">全部列在下面</span>' : rs.map((r) => pill(r)).join('')}</div><button class="btn-sec sm" data-act="s5">${st.ui.s5 ? '收起 ▴' : '全部 ▾'}</button></div>${st.ui.s5 ? `<div class="wrap">${rs.map((r) => pill(r)).join('')}</div>` : ''}`,
+  }),
+  s6: (rs) => ({ area: `<section class="brief brief-sent"><div class="sent-top">${heard(rs.length)}<span class="hint">點有底線的詞可以看細節、修改</span></div><p class="sentence">${rs.length ? sentence(rs) : '還沒有需求。'}</p></section>` }),
+  s7: (rs, c) => {
+    const steps = rs.filter((r) => r.cut);
+    const rest = rs.filter((r) => !r.cut);
+    let left = TOTAL;
+    const nodes = steps.map((r) => { left -= r.cut; return `<span class="f-arrow" aria-hidden="true">›</span><button type="button" class="f-node f-step${st.popId === r.id ? ' open' : ''}" data-pop="${r.id}" title="${esc(r.label)}"><span>${esc(r.label)}</span><b>${left}<small>台</small><em>−${r.cut}</em></b></button>`; }).join('');
+    const restRow = rest.length
+      ? `<div class="f-rest"><span class="line-k">另外 <b>${rest.length}</b> 項只影響排序或先記下：</span>${st.ui.s7 ? `<div class="pills">${rest.map((r) => pill(r, { xs: true })).join('')}<button class="lnk" data-act="s7">收起</button></div>` : fitBox(rest, { click: true }, 's7', true)}</div>`
+      : '';
+    return { area: `<section class="brief brief-funnel"><div class="funnel"><div class="f-node f-start"><span>全部</span><b>${TOTAL}<small>台</small></b></div>${nodes}<span class="f-arrow" aria-hidden="true">›</span><div class="f-node f-end"><span>主候選池</span><b>${c.primary}<small>台</small></b></div></div>${restRow}</section>` };
+  },
+  s8: (rs) => {
+    const main = rs.filter(affects);
+    const rest = rs.filter((r) => !affects(r));
+    const restRow = rest.length
+      ? (st.ui.s8
+        ? `<div class="expand-area"><div class="brief-top"><span class="rest-k">我也記下了這 ${rest.length} 項（沒有篩選、也沒改權重）</span><button class="lnk" data-act="s8">收起</button></div>${tagList(rest, 'tags-rest')}</div>`
+        : `<div class="rest-line"><span class="rest-k">＋${rest.length} 項我也記下了</span>${fitBox(rest, { click: false }, 's8', true)}<button class="lnk" data-act="s8">展開</button></div>`)
+      : '';
+    return { area: `<section class="brief"><h2 class="head" data-eb="Heard · 我聽到的">你的需求</h2>${tagList(main)}${restRow}</section>` };
+  },
+  s9: (rs, c) => ({
+    area: `<section class="brief brief-pills"><div class="pills">${heard(rs.length)}${rs.map((r) => pill(r)).join('')}</div><div class="pills-foot"><button class="lnk" data-act="s9">${st.ui.s9 ? '收起 ▴' : '展開全部 ▾'}</button></div>${st.ui.s9 ? `<div class="expand-area">${tagList(rs)}</div>` : ''}</section>`,
+    mini: { bar: `${heard(rs.length)}${fitBox(rs, { click: true }, 'mini')}<button class="btn-sec sm" data-act="mini">${st.ui.mini ? '收起 ▴' : '全部 ▾'}</button>`, drop: tagList(rs) },
+  }),
+};
+
+/* ---------- 機型卡 ---------- */
+const laptopSvg = (i) => `<svg viewBox="0 0 200 130" aria-hidden="true"><rect x="38" y="12" width="124" height="84" rx="7" fill="#2A2F3A"/><rect x="44" y="18" width="112" height="72" rx="2" fill="${SCREEN[i % SCREEN.length]}"/><path d="M44 18h60l-38 72H44z" fill="#fff" opacity=".16"/><path d="M20 98h160l-11 16H31z" fill="#CBD2DE"/><path d="M20 98h160v3H20z" fill="#B3BBC9"/><rect x="88" y="98" width="24" height="3" rx="1.5" fill="#9AA3B4"/></svg>`;
+function card(l, i, second) {
+  return `<article class="card${second ? ' faded' : ''}"><div class="photo">${second ? '' : `<span class="score" title="權重分">${l[4]}</span>`}${laptopSvg(i + (second ? 5 : 0))}</div>
+    <div class="cbody"><div><span class="brand">${l[0]}</span><div class="model">${l[1]}</div></div>
+    <div class="chips">${l[2].map((s) => `<span>${s}</span>`).join('')}</div>
+    ${second ? `<div class="reason">${l[4]}</div>` : ''}
+    <div class="price">NT$ <strong>${l[3].toLocaleString('en-US')}</strong></div></div>
+    <div class="acts"><button class="btn-sec" data-act="noop">☆ 收藏</button><button class="btn-sec" data-act="noop">＋ 對比</button><button class="lnk lnk-2" data-act="noop">不考慮</button></div></article>`;
+}
+function renderCards(c) {
+  const n = Math.min(c.primary, MAIN.length);
+  $('#main-h').textContent = `主候選池：${c.primary} 台`;
+  $('#main-grid').innerHTML = MAIN.slice(0, n).map((l, i) => card(l, i, false)).join('');
+  $('#main-more').hidden = c.primary <= n;
+  $('#main-more').textContent = `看全部 ${c.primary} 台`;
+  $('#sec-h').textContent = `次候選池：${c.secondary} 台`;
+  $('#sec-grid').innerHTML = SECOND.map((l, i) => card(l, i, true)).join('');
+  $('#count').innerHTML = `<span class="big">主候選池：<b>${c.primary}</b> 台</span><span class="sm2">次候選池：${c.secondary} 台</span><small>全部 ${TOTAL} 台</small>`;
+}
+
+/* ---------- 畫面 ---------- */
+function render(measuring = false) {
+  closePop();
+  const rs = reqs();
+  const c = counts(rs);
+  const out = R[st.scheme](rs, c);
+  $('#area').innerHTML = out.area || '';
+  $('#tools-extra').innerHTML = out.tool || '';
+  const strip = $('#cstrip');
+  strip.innerHTML = out.chat || '';
+  strip.hidden = !out.chat;
+  renderCards(c);
+  st.mini = out.mini || null;
+  renderMini();
+  renderDrawer(rs);
+  fitAll();
+  if (!measuring) { updateMetrics(); paintList(); }
+}
+function renderMini() {
+  const mini = $('#mini'), drop = $('#mini-drop');
+  if (!st.mini) { mini.innerHTML = ''; mini.classList.remove('show'); drop.hidden = true; return; }
+  mini.innerHTML = `<div class="mini-in">${st.mini.bar}</div>`;
+  drop.innerHTML = st.ui.mini ? st.mini.drop : '';
+  drop.hidden = !st.ui.mini;
+  onScroll();
+}
+function renderDrawer(rs, anim = false) {
+  const box = $('#drawer');
+  if (st.scheme !== 's4' || !st.ui.drawer) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="scrim" data-act="drawer"></div><aside class="drawer${anim ? ' anim' : ''}" role="dialog" aria-label="你的需求"><div class="drawer-head"><h2 class="head" data-eb="Heard · 我聽到的">你的需求</h2><button class="x" data-act="drawer" aria-label="關閉">×</button></div><div class="drawer-body"><p class="note">說錯了可以在這裡改，也可以直接在對話裡說。</p>${tagList(rs, 'one')}</div></aside>`;
+}
+function onScroll() {
+  const mini = $('#mini');
+  if (!st.mini) return;
+  const rb = $('#rb'), area = $('#area');
+  const past = rb.scrollTop > area.offsetTop + area.offsetHeight - 6;
+  mini.classList.toggle('show', past);
+  mini.setAttribute('aria-hidden', past ? 'false' : 'true');
+  if (past) fitAll();
+  if (!past && st.ui.mini) { st.ui.mini = false; renderMini(); }
+}
+
+/* ---------- 量測 ---------- */
+function metrics() {
+  const rb = $('#rb');
+  const prev = rb.scrollTop;
+  rb.scrollTop = 0;
+  const col = $('#res').getBoundingClientRect();
+  const view = rb.getBoundingClientRect();
+  const ah = Math.round($('#area').getBoundingClientRect().height);
+  const cards = $$('#main-grid .card');
+  const top = cards.length ? Math.round(cards[0].getBoundingClientRect().top - col.top) : 0;
+  const full = cards.filter((el) => el.getBoundingClientRect().bottom <= view.bottom + 1).length;
+  const strip = $('#cstrip');
+  const sh = strip.hidden ? 0 : Math.round(strip.getBoundingClientRect().height + 8);
+  rb.scrollTop = prev;
+  return { ah, top, full, sh };
+}
+function measureAll() {
+  const keep = { scheme: st.scheme, ui: st.ui, editing: st.editing };
+  const scroll = $('#rb').scrollTop;
+  st.editing = null;
+  const res = {};
+  for (const s of SCHEMES) { st.scheme = s.id; st.ui = freshUi(); render(true); res[s.id] = metrics(); }
+  Object.assign(st, keep);
+  st.base = res;
+  render();
+  $('#rb').scrollTop = scroll;
+}
+function diff(el, now, base, unit, better) {
+  const d = now - base;
+  if (st.scheme === 's0' || d === 0) { el.textContent = st.scheme === 's0' ? '（對照組）' : '和現狀一樣'; el.className = ''; return; }
+  const good = better === 'less' ? d < 0 : d > 0;
+  el.textContent = `比現狀 ${d > 0 ? '+' : '−'}${Math.abs(d)} ${unit}`;
+  el.className = good ? 'up' : 'down';
+}
+function updateMetrics() {
+  if (!st.base) return;
+  const m = metrics();
+  const b = st.base.s0;
+  $('#met-t').textContent = `目前畫面 · 視窗 ${innerWidth}×${innerHeight}`;
+  $('#m-ah').innerHTML = `${m.ah}<small>px</small>`;
+  $('#m-top').innerHTML = `${m.top}<small>px</small>`;
+  $('#m-full').innerHTML = `${m.full}<small>張</small>`;
+  diff($('#m-ah-d'), m.ah, b.ah, 'px', 'less');
+  diff($('#m-top-d'), m.top, b.top, 'px', 'less');
+  diff($('#m-full-d'), m.full, b.full, '張', 'more');
+  $('#m-note').textContent = m.sh ? `需求搬到對話欄：對話欄頂部多佔 ${m.sh}px，訊息區變矮。` : st.scheme === 's3' || st.scheme === 's9' ? '往下滑時吸頂條會蓋住機型區頂端約 50px。' : '';
+}
+
+/* ---------- 左欄 ---------- */
+function paintList() {
+  $('#seg').innerHTML = [3, 6, 9, 12].map((n) => `<button data-count="${n}" class="${st.count === n ? 'on' : ''}" aria-pressed="${st.count === n}">${n}</button>`).join('');
+  $('#schemes').innerHTML = SCHEMES.map((s) => {
+    const m = st.base?.[s.id];
+    const on = st.scheme === s.id;
+    const h = m ? `${m.ah}px<i>看到 ${m.full} 張</i>` : '';
+    const det = on ? `<div class="det"><p><span class="k">怎麼試</span>${s.how}</p><span class="k">優點</span><ul class="pro">${s.pros.map((x) => `<li>${x}</li>`).join('')}</ul><span class="k">缺點</span><ul class="con">${s.cons.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : '';
+    return `<button class="sch${on ? ' on' : ''}" data-scheme="${s.id}" aria-pressed="${on}"><span class="no">${s.no}</span><span><b>${s.name}</b><small>${s.sub}</small></span><span class="h">${h}</span></button>${det}`;
+  }).join('');
+}
+
+/* ---------- 浮層 ---------- */
+const pop = $('#pop');
+function popHtml(r) {
+  const kind = r.hard ? '<span class="kind hard">必要條件</span>' : r.field === 'software' ? '<span class="kind">軟體</span>' : '<span class="kind">偏好</span>';
+  const head = `<div class="pop-head">${dot(r)}<b>${esc(r.label)}</b>${kind}<button class="x" data-act="pclose" aria-label="關閉">×</button></div>`;
+  if (st.popEdit) return head + editor(r, 'psave', 'pcancel');
+  const eff = r.effect || '先記下來，這一輪沒有篩選，也沒有改權重';
+  return `${head}<dl><dt>你說的</dt><dd>「${esc(r.quote)}」</dd><dt>把握</dt><dd>${CONF[r.conf]}</dd><dt>影響</dt><dd class="${r.effect ? 'eff' : ''}">${esc(eff)}</dd>${r.poolNote ? `<dt>怎麼篩</dt><dd>${r.poolNote}</dd>` : ''}${r.softNote ? `<dt>注意</dt><dd>${r.softNote}</dd>` : ''}</dl><div class="pop-act"><button class="btn-sec sm" data-act="pedit" data-id="${r.id}">修改</button><button class="lnk lnk-2" data-act="del" data-id="${r.id}">刪除</button></div>`;
+}
+function placePop() {
+  const a = st.popAnchor;
+  if (!a || !a.isConnected) { closePop(); return; }
+  const r = a.getBoundingClientRect();
+  pop.hidden = false;
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  const left = Math.min(Math.max(12, r.left), innerWidth - w - 12);
+  let top = r.bottom + 8;
+  if (top + h > innerHeight - 12) top = Math.max(12, r.top - h - 8);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+}
+function openPop(id, anchor) {
+  const r = byId(id);
+  if (!r) return;
+  $$('.open[data-pop]').forEach((e) => e.classList.remove('open'));
+  st.popId = id; st.popEdit = false; st.popAnchor = anchor;
+  anchor.classList.add('open');
+  pop.innerHTML = popHtml(r);
+  placePop();
+}
+function closePop() {
+  if (pop.hidden && !st.popId) return;
+  pop.hidden = true;
+  $$('.open[data-pop]').forEach((e) => e.classList.remove('open'));
+  st.popId = null; st.popEdit = false; st.popAnchor = null;
+}
+
+/* ---------- 提示 ---------- */
+let toastTimer;
+function toast(text, undo) {
+  const el = $('#toast');
+  el.innerHTML = `<span>${esc(text)}</span>${undo ? '<button class="lnk" data-act="undo">復原</button>' : ''}`;
+  el.hidden = false;
+  st.undo = undo || null;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; st.undo = null; }, 3400);
+}
+
+/* ---------- 操作 ---------- */
+function saveEdit(id, input) {
+  const v = input?.value.trim();
+  if (!v) { input?.focus(); return false; }
+  st.edits[id] = v;
+  return true;
+}
+function remove(id) {
+  const r = byId(id);
+  if (!r) return;
+  st.removed.add(id);
+  st.editing = null;
+  measureAll();
+  toast(`已刪除「${r.label}」`, () => { st.removed.delete(id); measureAll(); });
+}
+document.addEventListener('mousedown', (e) => {
+  if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('[data-pop]')) closePop();
+  if (st.ui.mini && !e.target.closest('#mini, #mini-drop, #pop')) { st.ui.mini = false; renderMini(); fitAll(); }
+});
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-act],[data-pop],[data-scheme],[data-count]');
+  if (!t) return;
+  if (t.dataset.scheme) {
+    st.scheme = t.dataset.scheme; st.ui = freshUi(); st.editing = null;
+    $('#rb').scrollTop = 0;
+    render();
+    return;
+  }
+  if (t.dataset.count) { st.count = Number(t.dataset.count); st.editing = null; measureAll(); return; }
+  if (t.dataset.pop) {
+    if (st.popId === t.dataset.pop && !pop.hidden) closePop(); else openPop(t.dataset.pop, t);
+    return;
+  }
+  const id = t.dataset.id;
+  switch (t.dataset.act) {
+    case 'noop': toast('Demo：這裡不模擬'); break;
+    case 'reset': st.removed.clear(); st.edits = {}; st.editing = null; measureAll(); toast('已恢復原本的需求'); break;
+    case 's1': case 's5': case 's7': case 's8': case 's9': st.ui[t.dataset.act] = !st.ui[t.dataset.act]; render(); break;
+    case 'mini': st.ui.mini = !st.ui.mini; renderMini(); fitAll(); break;
+    case 'drawer': st.ui.drawer = !st.ui.drawer; renderDrawer(reqs(), true); break;
+    case 'edit': st.editing = st.editing === id ? null : id; rerenderKeepScroll(); focusInput(id); break;
+    case 'cancel': st.editing = null; rerenderKeepScroll(); break;
+    case 'save': if (saveEdit(id, document.querySelector(`[data-input="${id}"]`))) { st.editing = null; measureAll(); toast('已修改'); } break;
+    case 'del': closePop(); remove(id); break;
+    case 'pclose': closePop(); break;
+    case 'pedit': st.popEdit = true; pop.innerHTML = popHtml(byId(st.popId)); placePop(); pop.querySelector('.inp')?.focus(); break;
+    case 'pcancel': st.popEdit = false; pop.innerHTML = popHtml(byId(st.popId)); placePop(); break;
+    case 'psave': if (saveEdit(id, pop.querySelector('.inp'))) { closePop(); measureAll(); toast('已修改'); } break;
+    case 'undo': { const u = st.undo; $('#toast').hidden = true; st.undo = null; u?.(); break; }
+  }
+});
+function rerenderKeepScroll() {
+  const rb = $('#rb'), y = rb.scrollTop;
+  const scrollers = $$('.drawer-body, #mini-drop').map((el) => el.scrollTop);
+  render();
+  rb.scrollTop = y;
+  $$('.drawer-body, #mini-drop').forEach((el, i) => { el.scrollTop = scrollers[i] ?? 0; });
+}
+function focusInput(id) { const i = document.querySelector(`[data-input="${id}"]`); if (i) { i.focus(); i.select(); } }
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!pop.hidden) closePop();
+    else if (st.ui.drawer) { st.ui.drawer = false; renderDrawer(reqs()); }
+    else if (st.ui.mini) { st.ui.mini = false; renderMini(); fitAll(); }
+  }
+  if (e.key === 'Enter' && e.target.matches('.inp')) {
+    e.preventDefault();
+    const id = e.target.dataset.input;
+    if (pop.contains(e.target)) { if (saveEdit(id, e.target)) { closePop(); measureAll(); toast('已修改'); } }
+    else if (saveEdit(id, e.target)) { st.editing = null; measureAll(); toast('已修改'); }
+  }
+});
+document.addEventListener('scroll', (e) => { if (!pop.hidden && !pop.contains(e.target)) closePop(); }, true);
+$('#rb').addEventListener('scroll', onScroll, { passive: true });
+let resizeTimer;
+addEventListener('resize', () => { closePop(); clearTimeout(resizeTimer); resizeTimer = setTimeout(measureAll, 180); });
+
+measureAll();
+</script>
+</body>
+</html>
