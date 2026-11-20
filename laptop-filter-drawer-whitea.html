@@ -261,8 +261,25 @@ button{cursor:pointer}
 .gr-h small{display:block;padding:0 8px 0 36px;font-size:12px;color:var(--ink-3)}
 .gr-h .ck b{font-weight:600}
 .gp-r .ck b{font-size:13px}
-.drill.hx i{background-image:var(--chev);transition:rotate .2s var(--ease)}
-.drill.hx.open i{rotate:180deg}
+.hx-ar{flex:none;width:14px;height:14px;background:var(--chev) no-repeat center/14px;transition:rotate .2s var(--ease)}
+.open>.hx-ar{rotate:180deg}
+/* H 展開按鈕 A：標題列「簡單・詳細」 */
+.hmode{flex:none;align-self:center;display:inline-flex;gap:4px;margin-left:2px}
+.hmode button{height:24px;padding:0 9px;border-radius:8px;border:1.2px solid var(--btn);background:var(--card);font-size:12px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.hmode button:hover{background:var(--inner)}
+.hmode button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+/* B：品牌同一排的「細分」 */
+.cells.hrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+.cell.hx-more{gap:6px;padding:0 12px}
+/* C：品牌按鈕右邊的箭頭（只展開這個品牌） */
+.hsplit{display:flex;min-width:0}
+.hsplit>.cell.row{flex:1;min-width:0;border-radius:11px 0 0 11px}
+.cell.hx-arr{flex:none;width:44px;min-height:40px;margin-left:-1.3px;padding:0;border-radius:0 11px 11px 0}
+/* D：品牌下方靠右 */
+.hx-dl{display:flex;justify-content:flex-end;margin-top:8px}
+.hx-mini{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 12px;border-radius:10px;border:1.3px solid var(--btn);background:var(--card);font-size:12.5px}
+.hx-mini b{font-weight:600}
+.hx-mini:hover{background:var(--inner)}
 .hx-sec{margin-top:14px}
 .hx-sec+.hx-sec{padding-top:12px;border-top:1px dashed var(--line)}
 .hx-b{margin:8px 0 6px;font:500 11px var(--mono);letter-spacing:.06em;color:var(--ink-3)}
@@ -270,8 +287,10 @@ button{cursor:pointer}
 .cell.tile em{justify-self:end}
 .cell.tile small{grid-column:1/-1;font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cell.tile.on small{color:rgba(255,255,255,.75)}
-.hx-close{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:12px;min-height:40px;border:0;border-radius:12px;background:var(--group);font-size:13px;font-weight:600}
-.hx-close i{width:14px;height:14px;background:var(--chev) no-repeat center/14px;rotate:180deg}
+.hx-cl{display:flex;justify-content:flex-end;margin-top:12px}
+.hx-close{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 12px;border:0;border-radius:10px;background:var(--group);font-size:12.5px;font-weight:600}
+.hx-close .hx-ar{rotate:180deg}
+.cfg-sub{margin:14px 0 6px;font-size:13px;color:var(--ink-2)}
 .hx-close:hover{background:var(--group-2)}
 .cfg-note{margin:8px 0 0;font-size:12px;color:var(--ink-3)}
 
@@ -396,7 +415,7 @@ button{cursor:pointer}
           <tr><td>04</td><td>分段控件</td><td>全部刪掉。記憶體、硬碟、面板、更新率、解析度、顯示記憶體改成普通按鈕：直接點數值，可以複選。</td></tr>
           <tr><td>05</td><td>重量、遊戲效能</td><td>分布圖＋雙把手。遊戲效能下面保留 ≈4060／≈5070 Ti／≈5090 刻度（可以點，間距夠不會疊在一起），後台可關。</td></tr>
           <tr><td>06</td><td>顯卡</td><td>排成表格：RTX 50 一排、RTX 40 一排，同等級上下對齊，越右越強；內顯和其他獨顯另一排。</td></tr>
-          <tr><td>07</td><td>處理器</td><td>後台「處理器」可切換 5 種操作方式：<b>D</b> 彈出全高面板（搜尋＋分組勾選）；<b>E</b> 卡片內逐層換頁（品牌 → 架構 → 型號，上方路徑可返回）；<b>F</b> 搜尋框＋常見選擇；<b>G</b> 左右兩欄（左架構、右型號）；<b>H</b> 只放 Intel／AMD，點「展開」列出依架構、依系列兩組按鈕（預設）。選好的細項都在卡片上顯示成可移除的標籤。</td></tr>
+          <tr><td>07</td><td>處理器</td><td>後台「處理器」可切換 5 種操作方式：<b>D</b> 彈出全高面板（搜尋＋分組勾選）；<b>E</b> 卡片內逐層換頁（品牌 → 架構 → 型號，上方路徑可返回）；<b>F</b> 搜尋框＋常見選擇；<b>G</b> 左右兩欄（左架構、右型號）；<b>H</b> 只放 Intel／AMD，用一顆小按鈕展開依架構、依系列兩組按鈕（預設）。H 的展開按鈕位置也能切換：A 標題列「簡單・詳細」、B 品牌同一排「細分」（預設，展開後變成「收起」）、C 品牌按鈕右邊的箭頭（只展開那個品牌）、D 品牌下方小按鈕；展開後最下面有小的「收起」。選好的細項都在卡片上顯示成可移除的標籤。</td></tr>
           <tr><td>08</td><td>色域</td><td>方案 C：sRGB、DCI-P3、AdobeRGB 各一張小分布圖＋雙把手，三個一起符合。每張圖寫用途：上網文書／剪片 HDR／印刷攝影。</td></tr>
           <tr><td>09</td><td>亮度、厚度</td><td>分布圖＋雙把手（在「更多條件」裡）。</td></tr>
           <tr><td>10</td><td>接口與功能</td><td>項目從 4 個補到 11 個。後台切換版面（標準一項一行／緊湊兩欄）和控件（開關／勾選框）。</td></tr>
@@ -557,7 +576,7 @@ const cardOf=k=>ALLCARDS.find(c=>c.items.includes(k));
 
 /* ---------- 狀態 ---------- */
 let s={},src={},pins=[],moreOpen=false,q='',sheetOpen=false,sq='',fq='',cfgKey='price',gResetR=false;
-const UI={brandMode:'btn',featLayout:'std',featCtl:'switch',cpuStyle:'H',eB:null,eF:null,gF:null,hOpen:false};
+const UI={brandMode:'btn',featLayout:'std',featCtl:'switch',cpuStyle:'H',eB:null,eF:null,gF:null,hOpen:false,hPos:'B',hOpenC:[]};
 const blank=k=>NUM[k]?{lo:null,hi:null}:k==='cpu'?{m:[],t:[],b:[],a:[],r:[],p:[]}:[];
 const P={};
 for(const k in NUM){const c=NUM[k];P[k]=r=>{const v=s[k];return (v.lo===null||r[c.col]>=v.lo-1e-9)&&(v.hi===null||r[c.col]<=v.hi+1e-9)}}
@@ -794,24 +813,32 @@ function cpuG(){
     return `<button class="ck${on?' on':''}${c===0&&!on?' z':''}" role="checkbox" aria-checked="${on}" title="${esc(m)}" data-a="mod:${MODS.indexOf(m)}"><i class="cb"></i><b>${m}</b><em>${c}</em></button>`}).join('')}`;
   return `<div class="gpane"><div class="gp-l" id="gp-l">${left}</div><div class="gp-r" id="gp-r">${right}</div></div>${tagsHTML()}`;
 }
-/* H：展開架構與系列 */
+/* H：展開架構與系列（展開按鈕的位置 A／B／C／D 後台可切換） */
+const hAr='<i class="hx-ar"></i>';
+const hModeHTML=()=>{const o=UI.hOpen;return `<span class="hmode" role="group" aria-label="處理器顯示方式"><button class="${o?'':'on'}" aria-pressed="${!o}" data-a="hmode:0">簡單</button><button class="${o?'on':''}" aria-pressed="${o}" data-a="hmode:1">詳細</button></span>`};
 function cpuH(){
-  const base=others('cpu'),c=s.cpu,sel=c.a.length+c.r.length;
+  const base=others('cpu'),c=s.cpu,pos=UI.hPos;
+  const opened=b=>pos==='C'?UI.hOpenC.includes(b):UI.hOpen;
   const bcH=b=>{const st=c.b.includes(b)?2:hSubs(b)?1:0,n=base.filter(r=>CPUS[r[6]][0]===b).length;
     return `<button class="cell row${stCls(st)}${n===0&&!st?' z':''}" aria-pressed="${ariaSt(st)}" data-a="hb:${b}"><b>${b}</b><em>${st===1?'部分':n}</em></button>`};
-  let h=`<div class="cells" style="--n:2">${bcH('Intel')}${bcH('AMD')}</div>
-    <button class="drill hx${UI.hOpen?' open':''}" data-a="hopen" aria-expanded="${UI.hOpen}"><span><b>${UI.hOpen?'收起架構與系列':'展開架構與系列'}</b><small>${sel?`已選 ${sel} 項`:'例如 Lunar Lake、Arrow Lake-HX、Core Ultra 7、Ryzen AI 9'}</small></span><i></i></button>`;
-  if(UI.hOpen){
+  const o=UI.hOpen;
+  let h;
+  if(pos==='B')h=`<div class="cells hrow">${bcH('Intel')}${bcH('AMD')}<button class="cell row hx-more${o?' open':''}" aria-expanded="${o}" title="${o?'收起':'展開'}架構與系列" data-a="hopen"><b>${o?'收起':'細分'}</b>${hAr}</button></div>`;
+  else if(pos==='C')h=`<div class="cells" style="--n:2">${['Intel','AMD'].map(b=>{const ob=opened(b),lab=`${ob?'收起':'展開'} ${b} 的架構與系列`;
+    return `<div class="hsplit">${bcH(b)}<button class="cell hx-arr${ob?' open':''}" aria-expanded="${ob}" aria-label="${lab}" title="${lab}" data-a="hopenb:${b}">${hAr}</button></div>`}).join('')}</div>`;
+  else h=`<div class="cells" style="--n:2">${bcH('Intel')}${bcH('AMD')}</div>`+(pos==='D'?`<div class="hx-dl"><button class="hx-mini${o?' open':''}" aria-expanded="${o}" data-a="hopen"><b>架構與系列</b>${hAr}</button></div>`:'');
+  const show=['Intel','AMD'].filter(opened);
+  if(show.length){
     const aX=b=>c.a.filter(k=>k.startsWith(b+'|')),rX=b=>c.r.filter(y=>SERB[y]===b);
     const aCnt=(b,k)=>{const rs=rX(b);return base.filter(r=>keyOfMod(r[6])===k&&(!rs.length||rs.includes(SER[r[6]]))).length};
     const rCnt=(b,y)=>{const as=aX(b);return base.filter(r=>SER[r[6]]===y&&(!as.length||as.includes(keyOfMod(r[6])))).length};
     h+=`<div class="hx-sec"><span class="sub-l">依架構<small>可複選</small></span>`;
-    for(const b of ['Intel','AMD'])h+=`<div class="hx-b">${b}</div><div class="grid2">${FAMS.filter(f=>f.b===b).map(f=>{const k=famKey(f),on=c.a.includes(k),n=aCnt(b,k);
+    for(const b of show)h+=`<div class="hx-b">${b}</div><div class="grid2">${FAMS.filter(f=>f.b===b).map(f=>{const k=famKey(f),on=c.a.includes(k),n=aCnt(b,k);
       return `<button class="cell tile${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" data-a="ha:${esc(k)}"><b>${f.name}</b><em>${n}</em><small>${f.sub}</small></button>`}).join('')}</div>`;
     h+=`</div><div class="hx-sec"><span class="sub-l">依系列<small>可複選；和架構一起選＝兩個都要符合</small></span>`;
-    for(const b of ['Intel','AMD'])h+=`<div class="hx-b">${b}</div><div class="grid3">${SERIES.filter(x=>x.b===b).map(x=>{const on=c.r.includes(x.key),n=rCnt(b,x.key);
+    for(const b of show)h+=`<div class="hx-b">${b}</div><div class="grid3">${SERIES.filter(x=>x.b===b).map(x=>{const on=c.r.includes(x.key),n=rCnt(b,x.key);
       return `<button class="cell row${on?' on':''}${n===0&&!on?' z':''}" aria-pressed="${on}" data-a="hr:${x.key}"><b>${x.key}</b><em>${n}</em></button>`}).join('')}</div>`;
-    h+=`</div><button class="hx-close" data-a="hopen">收起<i></i></button>`;
+    h+=`</div><div class="hx-cl"><button class="hx-close open" data-a="${pos==='C'?'hclose':pos==='A'?'hmode:0':'hopen'}">收起${hAr}</button></div>`;
   }
   return h+tagsHTML();
 }
@@ -829,7 +856,7 @@ function card(c,showSrc){
   if(c.k==='gamut')body=c.items.map(k=>numBlock(k,true)).join('');
   else if(c.items.length>1)body=c.items.map(k=>`<div class="sub"><span class="sub-l">${CELLS[k].label}${CELLS[k].unit?`<small>${CELLS[k].unit}</small>`:''}</span>${ctlOf(k)}</div>`).join('');
   else body=ctlOf(c.items[0]);
-  return `<section class="card" data-card="${c.k}"><div class="c-head"><h3>${c.t}</h3>${c.sub?`<small>${c.sub}</small>`:''}${tag}<span class="c-sum" id="sum-${c.k}">${set?esc(cardSum(c)):''}</span>${set?`<button class="link" data-a="clear:${c.k}">清除</button>`:''}</div>${c.cap?`<p class="cap">${c.cap}</p>`:''}<div class="ctl">${body}</div></section>`;
+  return `<section class="card" data-card="${c.k}"><div class="c-head"><h3>${c.t}</h3>${c.sub?`<small>${c.sub}</small>`:''}${c.k==='cpu'&&UI.cpuStyle==='H'&&UI.hPos==='A'?hModeHTML():''}${tag}<span class="c-sum" id="sum-${c.k}">${set?esc(cardSum(c)):''}</span>${set?`<button class="link" data-a="clear:${c.k}">清除</button>`:''}</div>${c.cap?`<p class="cap">${c.cap}</p>`:''}<div class="ctl">${body}</div></section>`;
 }
 
 /* ---------- 處理器面板 ---------- */
@@ -953,7 +980,7 @@ function cfgHTML(){
     ${c.marks?sw('marks','顯示參考刻度（可以點）'):''}
     <div class="cfg-foot"><button class="link" data-a="cfgall">外觀套用到全部 ${Object.keys(NUM).length} 張圖（柱寬、灰底、透明度、刻度）</button><button class="link" data-a="cfgreset">全部恢復預設</button></div>
   </div>
-  <div class="cfg-sec"><h3>處理器<small>操作方式</small></h3><div class="opt">${opt('cpuStyle','D','D 彈出面板')}${opt('cpuStyle','E','E 逐層換頁')}${opt('cpuStyle','F','F 搜尋＋常見')}${opt('cpuStyle','G','G 左右兩欄')}${opt('cpuStyle','H','H 展開架構與系列')}</div><p class="cfg-note">切換時，處理器已選的條件會清空。</p></div>
+  <div class="cfg-sec"><h3>處理器<small>操作方式</small></h3><div class="opt">${opt('cpuStyle','D','D 彈出面板')}${opt('cpuStyle','E','E 逐層換頁')}${opt('cpuStyle','F','F 搜尋＋常見')}${opt('cpuStyle','G','G 左右兩欄')}${opt('cpuStyle','H','H 展開架構與系列')}</div><p class="cfg-note">切換時，處理器已選的條件會清空。</p>${UI.cpuStyle==='H'?`<p class="cfg-sub">H 的展開按鈕位置</p><div class="opt">${opt('hPos','A','A 標題列「簡單・詳細」')}${opt('hPos','B','B 品牌同一排「細分」')}${opt('hPos','C','C 品牌按鈕右邊的箭頭')}${opt('hPos','D','D 品牌下方小按鈕')}</div><p class="cfg-note">換位置不會清空已選條件；C 只展開點到的那個品牌。</p>`:''}</div>
   <div class="cfg-sec"><h3>品牌<small>控件樣式</small></h3><div class="opt">${opt('brandMode','btn','按鈕')}${opt('brandMode','check','勾選框')}</div></div>
   <div class="cfg-sec"><h3>接口與功能</h3>
     <div class="cfg-line"><span>版面</span><div class="opt">${opt('featLayout','std','標準（一項一行）')}${opt('featLayout','cmp','緊湊（兩欄）')}</div></div>
@@ -961,6 +988,10 @@ function cfgHTML(){
   </div>`;
 }
 const renderCfg=()=>{document.getElementById('cfg').innerHTML=cfgHTML()};
+function keepCard(k){ // 從最下面收起後，卡片頂端如果跑到畫面外，就捲回來
+  const b=document.getElementById('body'),el=b.querySelector(`[data-card="${k}"]`);if(!el)return;
+  const top=el.getBoundingClientRect().top-b.getBoundingClientRect().top;if(top<0)b.scrollTop+=top-16;
+}
 function reveal(cardKey,sel){ // 後台改了哪一項，就把抽屜捲到那裡
   if(MORE_CARDS.some(c=>c.k===cardKey)&&!pins.includes(cardKey)&&!moreOpen){moreOpen=true;q='';render()}
   if(sheetOpen)openSheet(false);
@@ -993,8 +1024,9 @@ document.addEventListener('click',e=>{
   if(a==='cfgall'){const g=CFG[cfgKey];for(const x in CFG)Object.assign(CFG[x],{bw:g.bw,ghost:g.ghost,ghostT:g.ghostT,outShow:g.outShow,outT:g.outT,unsetT:g.unsetT,marks:g.marks});renderCfg();return render()}
   if(a==='cfgreset'){for(const x in NUM)CFG[x]=CFG_DEF(x);renderCfg();return render()}
   if(a==='ui'){UI[k]=v;
-    if(k==='cpuStyle'){s.cpu=blank('cpu');forget('cpu');UI.eB=UI.eF=UI.gF=null;UI.hOpen=false;fq='';if(sheetOpen)openSheet(false)}
-    renderCfg();render();return reveal({brandMode:'brand',featLayout:'feats',featCtl:'feats',cpuStyle:'cpu'}[k],'')}
+    if(k==='cpuStyle'){s.cpu=blank('cpu');forget('cpu');UI.eB=UI.eF=UI.gF=null;UI.hOpen=false;UI.hOpenC=[];fq='';if(sheetOpen)openSheet(false)}
+    if(k==='hPos'){UI.hOpen=false;UI.hOpenC=[]}
+    renderCfg();render();return reveal({brandMode:'brand',featLayout:'feats',featCtl:'feats',cpuStyle:'cpu',hPos:'cpu'}[k],'')}
   if(a==='clearall'){reset();src={};return render()}
   if(a==='clear'){const c=ALLCARDS.find(x=>x.k===k);for(const i of c.items){s[i]=blank(i);forget(i)}return render()}
   if(a==='clr1'){s[k]=blank(k);forget(k);return render()}
@@ -1012,7 +1044,10 @@ document.addEventListener('click',e=>{
   if(a==='untok'){const t=cpuTokens().filter(x=>!x.brand)[+k];if(t)t.rm();forget('cpu');return render()}
   if(a==='enav'){if(k==='root'){UI.eB=null;UI.eF=null}else if(k==='b'){UI.eB=v;UI.eF=null}else{UI.eF=+v;UI.eB=FAMS[+v].b}return render()}
   if(a==='gfam'){UI.gF=+k;gResetR=true;return render()}
-  if(a==='hopen'){UI.hOpen=!UI.hOpen;return render()}
+  if(a==='hopen'||a==='hmode'||a==='hopenb'||a==='hclose'){ // H 的展開／收起
+    if(a==='hopen')UI.hOpen=!UI.hOpen;else if(a==='hmode')UI.hOpen=k==='1';
+    else if(a==='hopenb')UI.hOpenC=UI.hOpenC.includes(k)?UI.hOpenC.filter(x=>x!==k):[...UI.hOpenC,k];else UI.hOpenC=[];
+    const bottom=el.classList.contains('hx-close');render();if(bottom)keepCard('cpu');return}
   if(a==='hb'){const c=s.cpu; // F：品牌是獨立條件；H：整個品牌 ↔ 不選（部分 → 整個）
     if(UI.cpuStyle==='H'){if(c.b.includes(k))c.b=c.b.filter(x=>x!==k);else{hBrandOff(k);c.b.push(k)}}
     else c.b=c.b.includes(k)?c.b.filter(x=>x!==k):[...c.b,k];
