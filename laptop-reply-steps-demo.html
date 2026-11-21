@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回覆改版階梯</title>
+<style>
+/* 版面：以「上一版」為底，6 欄並排（第 0～5 步）。每一步只多改一件事，而且是累積的：
+   第 N 欄同時帶有 s1…sN 這些 class，每個 class 只管自己那一步的改變。
+   參考：ChatGPT 與 Perplexity 的購物回覆（大商品圖、白底細框、三級字、細節收起、追問用細線＋一行行選項）。
+   字型只用電腦內建字。 */
+:root{
+  --ground:#C6CDDC; --ground2:#BAC3D5; --panel:#EDF0F5; --chatbg:#E1E5EE; --inner:#F2F4F8;
+  --ink:#12151C; --ink2:#454C5D; --ink3:#626A7D; --line:#D7DCE6; --hair:rgba(18,21,28,.08); --frame:#E0E4EB;
+  --accent:#2340C4; --signal:#F0602A; --good:#1D7349; --warn:#9A5B0B;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.6 var(--sans);color:var(--ink);background:linear-gradient(180deg,var(--ground),var(--ground2)) fixed;-webkit-font-smoothing:antialiased}
+button,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ============ 頁面外框 ============ */
+.intro{padding:22px max(20px,env(safe-area-inset-right,0px)) 12px max(20px,env(safe-area-inset-left,0px));max-width:980px}
+.intro h1{font-size:22px;line-height:1.3;margin:0 0 6px}
+.intro p{margin:0;color:var(--ink2);font-size:13.5px;line-height:1.7}
+.intro p+p{margin-top:4px}
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  padding:10px max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));background:rgba(237,240,245,.95);backdrop-filter:blur(12px);border-bottom:1px solid #C3CADB}
+.tgroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tgroup>span{font-size:12.5px;color:var(--ink3);margin-right:2px}
+.tg{display:inline-flex;align-items:center;gap:7px;border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:4px 13px 4px 9px;font-size:13px;font-weight:600}
+.tg i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--ink);display:grid;place-items:center}
+.tg[aria-pressed=true]{background:var(--ink);color:#fff}
+.tg[aria-pressed=true] i{border-color:#fff;background:#fff}
+.tg[aria-pressed=true] i::after{content:"";width:6px;height:6px;border-radius:1px;background:var(--ink)}
+.jp{border:1px solid #B9C0CE;background:#fff;border-radius:999px;padding:2px 11px;font-size:12.5px;font-weight:600}
+.jp:hover{border-color:var(--ink)}
+.tools .sp{flex:1}
+.tools output{font-size:13.5px;font-weight:700}
+.copy{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:6px 16px;font-weight:600;font-size:13px}
+.copy:disabled{background:#B4BBC9;cursor:default}
+.scroller{overflow-x:auto;scroll-behavior:smooth}
+.cols{display:flex;gap:16px;padding:18px max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));width:max-content;align-items:flex-start}
+.col{width:min(470px,calc(100vw - 40px));flex:none;scroll-margin-left:20px}
+.colhead{padding:12px 14px;background:var(--panel);border-radius:20px 20px 0 0;border:2px solid transparent;border-bottom:0;display:flex;gap:10px;align-items:flex-start}
+.colhead div{flex:1;min-width:0}
+.colhead b{display:block;font-size:15.5px;line-height:1.35}
+.colhead small{display:block;font-size:12.5px;color:var(--ink2);line-height:1.5;margin-top:3px}
+.colhead small em{font-style:normal;font-weight:700;color:var(--ink)}
+.choose{border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:4px 13px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.colbody{position:relative;background:var(--chatbg);padding:16px 10px 20px;border:2px solid transparent;border-top:0;border-bottom:0}
+.colfoot{background:var(--panel);border-radius:0 0 20px 20px;padding:12px 14px 14px;border:2px solid transparent;border-top:0}
+.colfoot label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:5px}
+.colfoot textarea{width:100%;min-height:58px;resize:vertical;border:1.3px solid #B4BBC9;border-radius:12px;padding:8px 10px;font-size:13.5px;background:#fff}
+.colfoot textarea:focus{border-color:var(--ink);outline:none}
+.col.on .colhead,.col.on .colbody,.col.on .colfoot{border-color:var(--signal)}
+.col.on .choose{background:var(--signal);border-color:var(--signal);color:#fff}
+.order-layer{position:absolute;inset:0;pointer-events:none;z-index:5}
+.order-layer b{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--signal);color:#fff;font:700 13px/24px var(--sans);text-align:center;box-shadow:0 0 0 3px #fff,0 4px 10px rgba(0,0,0,.25)}
+.cols{--f-blur:blur(0);--f-gray:grayscale(0)}
+.cols.blur{--f-blur:blur(4px)}
+.cols.gray{--f-gray:grayscale(1)}
+.bot{filter:var(--f-blur) var(--f-gray);transition:filter .25s}
+
+/* ============ 對話 ============ */
+.me{margin:0 2px 14px auto;max-width:86%;width:fit-content;background:var(--accent);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px;font-size:14.5px;line-height:1.6}
+.bot p,.bot h3,.bot h4,.bot ul{margin:0}
+.bot ul{list-style:none;padding:0}
+.n{font-variant-numeric:tabular-nums}
+.bot table{width:100%;border-collapse:collapse}
+.bot th,.bot td{text-align:left;font-weight:400}
+.lb{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lb em{font-style:normal;text-align:right}
+.lap{display:flex;align-items:center;gap:12px}
+.lap-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.price{white-space:nowrap;text-align:right}
+.th{flex:none;display:grid;place-items:center;overflow:hidden}
+.th svg{width:100%;height:100%;display:block}
+.pc{display:grid;grid-template-columns:1fr 1fr}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;white-space:nowrap;transition:background .15s}
+.btn.pri{background:var(--ink);color:#fff;border:0}
+.btn.pri:hover{background:#2C3343}
+.btn.sec{background:#fff;color:var(--ink);border:1.3px solid #2A2F3A}
+.btn.sec:hover{background:var(--inner)}
+.lnk{border:0;background:none;padding:2px 0;color:var(--accent);font-size:13.5px;font-weight:500;text-decoration:underline;text-decoration-color:rgba(35,64,196,.5);text-underline-offset:3px}
+.fact{color:var(--accent);text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
+.mk{cursor:pointer;white-space:nowrap}
+details>summary{cursor:pointer;list-style:none;width:fit-content}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";display:inline-block;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:translateY(-3px) rotate(45deg);margin-left:8px}
+details[open]>summary::after{transform:translateY(1px) rotate(-135deg)}
+.op{display:flex;text-align:left;cursor:pointer}
+.bar{display:flex;align-items:center}
+.bar u{display:block;text-decoration:none;width:calc(var(--v) * 1%)}
+.lg{display:flex;flex-wrap:wrap}
+.lg-i{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;flex:none}
+.scroll{overflow-x:auto}
+
+/* =====================================================================
+   第 0 步：上一版（所有欄的底）
+   ===================================================================== */
+.bot{background:#fff;border-radius:20px 20px 20px 4px;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;box-shadow:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16)}
+.count{align-self:center;font-size:12px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 14px}
+.tx{font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.key{color:var(--ink);font-weight:700}
+.mk{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:#B4BBC9;text-underline-offset:3px}
+.card{background:var(--inner);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.lb{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--ink3);margin-bottom:8px}
+.hl{font-size:15px;font-weight:700;line-height:1.45;color:var(--ink);margin-bottom:10px}
+.rec .lap{margin-bottom:10px}
+.th{width:44px;height:32px;background:#fff;border:1px solid var(--line);border-radius:8px}
+.th .body{fill:#8E97AB} .th .scr{fill:#1E2433} .th .glare{fill:#fff;opacity:.14}
+.lap-n{font-size:14px;color:var(--ink)}
+.lap-s{font-size:12px;color:var(--ink3)}
+.price{font-weight:700;color:var(--ink)}
+.price small{font-size:inherit;margin-right:3px}
+.pc{gap:14px}
+.pc h4{font-size:11px;letter-spacing:.06em;font-weight:600;margin-bottom:4px}
+.pros h4{color:var(--good)} .cons h4{color:var(--warn)}
+.pc li{color:var(--ink);line-height:1.6}
+.acts{margin-top:12px}
+.btn.pri{padding:5px 15px;font-size:13px}
+.btn.sec{padding:4px 15px;font-size:13px}
+.fit th,.fit td{padding:6px;border-top:1px solid var(--hair)}
+.fit thead th{border:0;font-size:11px;letter-spacing:.06em;font-weight:600;color:var(--ink3);padding-top:0}
+.got{font-weight:600;color:var(--ink);white-space:nowrap}
+.ok{color:var(--good);font-weight:700;margin-right:4px}
+.meta{font-size:12px;color:var(--ink3);line-height:1.5;margin-top:8px}
+.cmp .lg{gap:4px 14px;font-size:12px;color:var(--ink2);margin-bottom:6px}
+.sw{width:10px;height:10px;border-radius:3px}
+[data-m="2"]{--c:#12151C} [data-m="4"]{--c:#2340C4} [data-m="3"]{--c:#9AA5C0}
+.sw,.bar u{background:var(--c)}
+.dim{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--hair);align-items:center}
+.dim-n{font-weight:700;color:var(--ink)}
+.bar{gap:7px;height:13px}
+.bar u{height:7px;border-radius:3px;max-width:calc(100% - 36px)}
+.bar .n{font-size:12px;color:var(--ink3)}
+.bar.w .n{color:var(--ink);font-weight:700}
+.more,.fold{margin-top:8px}
+.more summary,.fold summary{color:var(--accent);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.more table{margin-top:8px;font-size:12.5px}
+.more th,.more td{padding:5px;border-top:1px solid var(--hair);text-align:center}
+.more th:first-child,.more td:first-child{text-align:left;color:var(--ink3)}
+.fold>div{margin-top:8px}
+.choice{background:#fff;border:1.5px solid var(--ink)}
+.choice .lb span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal);margin-right:6px;vertical-align:1px}
+.q{font-size:16px;font-weight:700;line-height:1.5;color:var(--ink);margin-bottom:12px}
+.q small{display:block;font-size:13.5px;font-weight:400;color:var(--ink2);margin-top:2px}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.op{flex-direction:column;justify-content:space-between;gap:4px;min-height:76px;border:1.3px solid #B4BBC9;background:#fff;border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px;color:var(--ink)}
+.op:hover{border-color:var(--ink)}
+.op.wide{grid-column:1/-1;min-height:0}
+.op-c{font-size:12px;font-weight:400;color:var(--ink3)}
+.hero{display:none}
+
+/* =====================================================================
+   第 1 步：推薦卡加一張大機身圖（取代原本的小圖示）
+   ===================================================================== */
+.s1 .hero{display:grid;place-items:center;height:150px;margin:2px 0 12px;background:#fff;border-radius:12px;overflow:hidden}
+.s1 .hero svg{width:82%;max-width:320px;height:auto;display:block}
+.s1 .rec .lap .th{display:none}
+.s1 .rec .lap-n{font-size:15px}
+
+/* =====================================================================
+   第 2 步：卡片從淺灰底改成白底＋淡細框（追問卡維持黑框）
+   ===================================================================== */
+.s2 .card:not(.choice){background:#fff;border:1px solid var(--frame)}
+.s2 .hero{background:#F4F5F8}
+.s2 .th{background:#F4F5F8;border-color:transparent}
+.s2 .pc{grid-template-columns:1.4fr 1fr}  /* 加了細框後強項那欄變窄，避免「都夠用」斷行 */
+
+/* =====================================================================
+   第 3 步：卡片裡只留三級字
+   一級：15.5 粗黑（結論、名稱、價格、問題）／二級：14 一般深灰／三級：12.5 灰（標籤、說明、表頭）
+   ===================================================================== */
+.s3 .card{font-size:14px;line-height:1.6}
+.s3 .lb{font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--ink3)}
+.s3 .hl,.s3 .lap-n,.s3 .rec .lap-n,.s3 .price{font-size:15.5px;font-weight:700}
+.s3 .price small{font-size:12.5px;font-weight:500;color:var(--ink3)}
+.s3 .lap-s,.s3 .meta,.s3 .op-c{font-size:12.5px;color:var(--ink3)}
+.s3 .pc h4{font-size:12.5px;letter-spacing:0;font-weight:600}
+.s3 .pc li{color:var(--ink2)}
+.s3 .fit thead th{font-size:12.5px;letter-spacing:0;font-weight:500}
+.s3 .got{font-weight:600}
+.s3 .cmp .lg{font-size:12.5px}
+.s3 .dim-n{font-weight:600}
+.s3 .bar .n{font-size:12.5px}
+.s3 .q{font-size:15.5px}
+.s3 .q small{font-size:14px}
+.s3 .op{font-size:14px}
+
+/* =====================================================================
+   第 4 步：需求對照、對比的明細收起來（結論句留著，點了才展開）
+   （這一步改的是內容排法，由下方程式依步驟輸出）
+   ===================================================================== */
+.s4 .fold summary{font-size:13.5px}
+
+/* =====================================================================
+   第 5 步：追問改成細線分隔＋一行一行的選項
+   ===================================================================== */
+.ask{border-top:1px solid var(--line);padding-top:14px;margin-top:2px}
+.ask .lb{margin-bottom:6px}
+.ask .lb span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal);margin-right:6px;vertical-align:1px}
+.ask .q{margin-bottom:8px}
+.rows{display:flex;flex-direction:column;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--hair);background:none;padding:11px 6px;text-align:left;font-size:14.5px;font-weight:600;color:var(--ink);border-radius:0;transition:background .12s}
+.row:first-child{border-top:1px solid var(--hair)}
+.row:hover{background:var(--inner)}
+.row span{flex:1}
+.row small{font-size:12.5px;font-weight:400;color:var(--ink3);white-space:nowrap}
+.row i{font-style:normal;color:var(--ink3);font-size:18px;line-height:1;width:12px;text-align:center}
+.row:hover i{color:var(--ink)}
+</style>
+</head>
+<body>
+<header class="intro">
+  <h1>回覆改版階梯</h1>
+  <p>以「上一版」為底，往右每一步只多改一件事，而且會保留前面的改變。你只要看<b>從哪一步開始變好、哪一步開始變差</b>。這些改變學自 ChatGPT 和 Perplexity 的購物回覆。</p>
+  <p>覺得停在哪一步最好就按那一欄的「停在這步」；某一步變差了可以寫在那欄下面。最後按「複製」貼給 Claude。大機身圖是畫的示意圖，「剩 86 台」「剩 47 台」是示意數字，其他取自真實對話。</p>
+</header>
+<div class="tools">
+  <div class="tgroup"><span>跳到：</span><span id="jumps"></span></div>
+  <div class="tgroup"><span>檢查：</span>
+    <button class="tg" id="t-blur" aria-pressed="false"><i></i>瞇眼看</button>
+    <button class="tg" id="t-gray" aria-pressed="false"><i></i>黑白看</button>
+    <button class="tg" id="t-order" aria-pressed="false"><i></i>標出閱讀順序</button>
+  </div>
+  <span class="sp"></span>
+  <output id="out">還沒選</output>
+  <button class="copy" id="copy" disabled>複製</button>
+</div>
+<div class="scroller" id="scroller"><div class="cols" id="cols"></div></div>
+
+<script>
+const STEPS=[
+  ["上一版","不動，當起點。"],
+  ["大機身圖","推薦卡上方放一張大機身圖。"],
+  ["白底細框","卡片從淺灰底改成白底＋淡細框。"],
+  ["三級字","卡片裡只留三種字：粗黑、深灰、灰色小字。"],
+  ["明細收起","需求對照和對比的明細收起來，點了才看。"],
+  ["追問一行行","追問改成細線分隔，選項一行一行。"],
+];
+
+/* ---------- 內容（取自真實對話與你選的結構） ---------- */
+const M={1:"華碩a豆14 Air 2026",2:"a豆14 Air 風信子藍",3:"無畏Pro14",4:"惠普星Book Pro 16"};
+const P={2:"6,034",3:"5,779",4:"7,649"};
+const th=()=>`<span class="th"><svg viewBox="0 0 56 40" aria-hidden="true"><rect class="body" x="10" y="5" width="36" height="24" rx="2.6"/><rect class="scr" x="12.4" y="7.4" width="31.2" height="19.2" rx="1"/><path class="glare" d="M12.4 7.4h14l-9 19.2h-5z"/><path class="body" d="M4 30.2h48l-3.2 3.8H7.2z"/></svg></span>`;
+/* 大機身圖（示意）：銀色機身、OLED 螢幕的深色漸層 */
+let heroN=0;
+function hero(){const g="h"+(++heroN);return `<div class="hero" aria-hidden="true"><svg viewBox="0 0 360 200">
+  <defs>
+    <linearGradient id="${g}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2550"/><stop offset=".55" stop-color="#3B3F8F"/><stop offset="1" stop-color="#C46FA8"/></linearGradient>
+    <linearGradient id="${g}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3E6EC"/><stop offset="1" stop-color="#BFC5D0"/></linearGradient>
+    <radialGradient id="${g}sh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#12151C" stop-opacity=".22"/><stop offset="1" stop-color="#12151C" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="180" cy="181" rx="168" ry="10" fill="url(#${g}sh)"/>
+  <rect x="74" y="14" width="212" height="138" rx="9" fill="#CDD2DB"/>
+  <rect x="79" y="19" width="202" height="128" rx="5" fill="#14171F"/>
+  <rect x="85" y="25" width="190" height="116" rx="2" fill="url(#${g}s)"/>
+  <path d="M85 25h96l-52 116H85z" fill="#fff" opacity=".07"/>
+  <circle cx="180" cy="22" r="1.3" fill="#3A3F4B"/>
+  <path d="M40 152h280l26 22H14z" fill="url(#${g}d)"/>
+  <path d="M74 155h212l8 8H66z" fill="#12151C" opacity=".07"/>
+  <rect x="14" y="174" width="332" height="5" rx="2.5" fill="#A9B0BD"/>
+  <rect x="156" y="174" width="48" height="2.6" rx="1.3" fill="#8E96A5"/>
+</svg></div>`}
+const mk=i=>`<span class="mk">${M[i]}</span>`;
+const fact=t=>`<span class="fact">${t}</span>`;
+const CMP=[2,4,3];
+const TOP=[["性能",68,71,66],["螢幕",88,78,87],["便攜",82,69,82]];
+const REST=[["續航",36,45,36],["散熱",74,78,76],["安靜",93,95,96],["擴充",60,67,60],["性價比",25,9,28],["權重分",72.8,70.7,72.1],["尺寸","14 吋","16 吋","14 吋"],["重量","1.38 公斤","1.78 公斤","1.38 公斤"]];
+const win=r=>{const m=Math.max(r[1],r[2],r[3]);return [1,2,3].map(k=>r[k]===m)};
+
+function reply(step){
+  const fitBody=`<table><thead><tr><th>你要的</th><th>這台</th></tr></thead><tbody>
+      <tr><td>常用軟體：Photoshop</td><td class="got"><span class="ok">✓</span>夠用</td></tr>
+      <tr><td>常用軟體：Illustrator</td><td class="got"><span class="ok">✓</span>夠用</td></tr>
+      <tr><td>預算 8000 以內</td><td class="got"><span class="ok">✓</span><span class="n">5,900</span> 元</td></tr>
+    </tbody></table>
+    <p class="meta">用途、設計類型、主要工具這 3 項沒辦法用單一數字比，改看整體分數：這台排第 1／133。</p>`;
+  const cmpBody=`<div class="lg">${CMP.map(i=>`<span class="lg-i" data-m="${i}"><i class="sw"></i>${M[i]}</span>`).join("")}</div>
+    <div class="dims" data-order="3">${TOP.map(r=>{const w=win(r);return `<div class="dim"><span class="dim-n">${r[0]}</span><div class="bars">${CMP.map((i,k)=>`<div class="bar${w[k]?" w":""}" data-m="${i}"><u style="--v:${r[k+1]}"></u><span class="n">${r[k+1]}</span></div>`).join("")}</div></div>`}).join("")}</div>
+    <details class="more"><summary>看其他 8 項</summary><div class="scroll"><table><thead><tr><th></th>${CMP.map(i=>`<th>${M[i]}<br><span class="n">${P[i]}</span></th>`).join("")}</tr></thead><tbody>${REST.map(r=>`<tr><td>${r[0]}</td>${[1,2,3].map(k=>`<td class="n">${r[k]}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+  const fold=(label,body)=>step>=4?`<details class="fold"><summary>${label}</summary><div>${body}</div></details>`:body;
+  const ask=step>=5
+    ?`<section class="ask">
+        <header class="lb"><span>想問你一件事</span></header>
+        <p class="q" data-order="4">你修圖時會外接大螢幕嗎？<small>這會決定值不值得為 16 吋犧牲顏色。</small></p>
+        <div class="rows">
+          <button class="row"><span>幾乎都外接大螢幕</span><small>剩 86 台</small><i>›</i></button>
+          <button class="row"><span>都在筆電螢幕上修</span><small>剩 47 台</small><i>›</i></button>
+          <button class="row"><span>還沒想過，先看哪台最適合</span><i>›</i></button>
+        </div>
+        <button class="lnk">都可以，你幫我決定</button>
+      </section>`
+    :`<section class="card choice">
+        <header class="lb"><span>想問你一件事</span></header>
+        <p class="q" data-order="4">你修圖時會外接大螢幕嗎？<small>這會決定值不值得為 16 吋犧牲顏色。</small></p>
+        <div class="ops">
+          <button class="op"><span>幾乎都外接大螢幕</span><span class="op-c">剩 86 台</span></button>
+          <button class="op"><span>都在筆電螢幕上修</span><span class="op-c">剩 47 台</span></button>
+          <button class="op wide"><span>還沒想過，先看哪台最適合</span></button>
+        </div>
+        <button class="lnk">都可以，你幫我決定</button>
+      </section>`;
+  return `
+  <div class="count">133 台符合・和上一輪一樣</div>
+  <div class="tx"><p><span class="key" data-order="1">要挑一台最好的，主候選池第 1 名就是 ${mk(1)}，77.2 分，這四台裡最高。</span>它也是這四台裡最輕、續航最久、${fact("P3 覆蓋 100%")}，亮度也最高，等你晚上在房間修圖會很有感。代價是 14 吋畫面較小，${fact("擴充性是四台最弱（51 分）")}，以後想加東西比較受限；會不會被這點影響，就看你平常用不用外接螢幕。</p></div>
+  <section class="card rec">
+    <header class="lb"><span>最推薦</span><em>主候選池 第 1／133</em></header>
+    ${hero()}
+    <div class="lap">${th()}<div class="lap-t"><b class="lap-n">華碩a豆14 Air 2026</b><span class="lap-s"><span class="n">77.2</span> 分</span></div><div class="price"><small>NT$</small><span class="n">5,900</span></div></div>
+    <h3 class="hl" data-order="2">顏色最準、最輕，照你的用法分數最高</h3>
+    <div class="pc">
+      <div class="pros"><h4>強項</h4><ul><li>四台裡最輕、續航最久</li><li>P3 覆蓋 100%，亮度最高</li><li>Photoshop、Illustrator 都夠用</li></ul></div>
+      <div class="cons"><h4>要接受的</h4><ul><li>14 吋畫面較小</li><li>擴充 51 分，四台最弱</li></ul></div>
+    </div>
+    <div class="acts"><button class="btn pri">看詳情</button><button class="btn sec">收藏</button><button class="lnk">不考慮</button></div>
+  </section>
+  <section class="card fit">
+    <header class="lb"><span>對照你的需求</span><em>華碩a豆14 Air 2026</em></header>
+    <h3 class="hl">你的 3 項需求，這台全部符合</h3>
+    ${fold("看 3 項怎麼對上",fitBody)}
+  </section>
+  <div class="tx"><p>你看到 72 分的那台，我猜是 ${mk(2)}（72.8 分）或是 ${mk(3)}（72.1 分），這兩台規格幾乎同一組：14 吋 2.8K OLED、32G／1T、1.38 公斤、續航約 10 小時，差在無畏Pro14 再安靜一點、再便宜一些。<span class="key">跟 ${mk(4)} 最大的差別在螢幕</span>：惠普是 16 吋 IPS 2.5K、240Hz，面板大、畫面滑順，但 ${fact("P3 覆蓋只有 78.5%")}、${fact("最高亮度 392 nits")}，是這幾台最低的，修圖時顏色會比較淡，暗部細節也吃虧；240Hz 對畫圖沒幫助，那是玩遊戲、拉視窗用的。惠普的長處是散熱和擴充（78／67 分，這幾台最好）、16 吋看很多面板舒服、續航 12.5 小時，但價格 7,649 也是這幾台最貴的。</p></div>
+  <section class="card cmp">
+    <header class="lb"><span>三台比一比</span></header>
+    <h3 class="hl">兩台 14 吋贏在螢幕和便攜；惠普贏在性能、續航、散熱，但最貴</h3>
+    ${fold("看三台的分數",cmpBody)}
+  </section>
+  ${ask}`;
+}
+
+/* ---------- 畫面 ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let pick=store.get("replyStepsPick");
+const cols=document.getElementById("cols");
+cols.innerHTML=STEPS.map(([name,desc],i)=>{
+  const cls=["col"].concat([1,2,3,4,5].filter(k=>k<=i).map(k=>"s"+k)).join(" ");
+  const head=i===0?`<b>第 0 步　上一版</b><small>${desc}</small>`:`<b>第 ${i} 步　${name}</b><small>這一步只多改：<em>${desc}</em></small>`;
+  return `<section class="${cls}" id="col-${i}">
+    <div class="colhead"><div>${head}</div><button class="choose" data-choose="${i}">停在這步</button></div>
+    <div class="colbody"><div class="me">我主要用 PS 和 AI，預算 8000 以內。哪台最好？我看到一台 72 分的，跟惠普那台差在哪？</div><div class="bot">${reply(i)}</div><div class="order-layer"></div></div>
+    <div class="colfoot"><label for="note-${i}">${i===0?"上一版哪裡最不清楚？（可不填）":"這一步變好還是變差？（可不填）"}</label><textarea id="note-${i}" data-note="${i}"></textarea></div>
+  </section>`}).join("");
+document.getElementById("jumps").innerHTML=STEPS.map((s,i)=>`<button class="jp" data-jump="${i}">${i}</button>`).join("");
+document.querySelectorAll("[data-note]").forEach(t=>{t.value=store.get("replyStepsNote-"+t.dataset.note)||""});
+
+function summary(){
+  const lines=[pick!==null&&STEPS[pick]?`停在：第 ${pick} 步（${STEPS[pick][0]}）`:"停在：還沒選"];
+  STEPS.forEach((s,i)=>{const v=document.getElementById("note-"+i).value.trim();if(v) lines.push(`第 ${i} 步（${s[0]}）備註：${v}`)});
+  return lines.join("\n");
+}
+function show(){
+  document.querySelectorAll(".col").forEach(c=>c.classList.toggle("on",c.id==="col-"+pick));
+  document.querySelectorAll("[data-choose]").forEach(b=>b.textContent=b.dataset.choose===pick?"已選":"停在這步");
+  const ok=pick!==null&&STEPS[pick];
+  document.getElementById("out").textContent=ok?`停在：第 ${pick} 步　${STEPS[pick][0]}`:"還沒選";
+  const anyNote=[...document.querySelectorAll("[data-note]")].some(t=>t.value.trim());
+  document.getElementById("copy").disabled=!ok&&!anyNote;
+}
+
+/* 閱讀順序：編號畫在模糊層上方；收起來看不到的就不標 */
+let orderOn=false;
+function drawOrder(){
+  document.querySelectorAll(".colbody").forEach(body=>{
+    const layer=body.querySelector(".order-layer");
+    if(!orderOn){layer.innerHTML="";return}
+    const base=body.getBoundingClientRect();
+    layer.innerHTML=[...body.querySelectorAll("[data-order]")].map(el=>{
+      const r=el.getClientRects()[0];
+      if(!r||!r.width) return "";
+      return `<b style="left:${Math.max(2,r.left-base.left-14)}px;top:${r.top-base.top-12}px">${el.dataset.order}</b>`;
+    }).join("");
+  });
+}
+function toggle(btn,fn){const on=btn.getAttribute("aria-pressed")!=="true";btn.setAttribute("aria-pressed",on);fn(on)}
+document.getElementById("t-blur").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("blur",on));
+document.getElementById("t-gray").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("gray",on));
+document.getElementById("t-order").onclick=e=>toggle(e.currentTarget,on=>{orderOn=on;drawOrder()});
+window.addEventListener("resize",drawOrder);
+document.addEventListener("toggle",drawOrder,true);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(drawOrder);
+
+document.addEventListener("click",e=>{
+  const j=e.target.closest("[data-jump]");
+  if(j){document.getElementById("col-"+j.dataset.jump).scrollIntoView({behavior:"smooth",inline:"start",block:"nearest"});return}
+  const c=e.target.closest("[data-choose]");
+  if(c){pick=c.dataset.choose;store.set("replyStepsPick",pick);show();return}
+  if(e.target.id==="copy"){const b=e.target;(navigator.clipboard?navigator.clipboard.writeText(summary()):Promise.reject()).then(()=>{b.textContent="已複製";setTimeout(()=>b.textContent="複製",1600)},()=>{b.textContent="無法複製，請截圖";})}
+});
+document.addEventListener("input",e=>{const t=e.target.closest("[data-note]");if(t){store.set("replyStepsNote-"+t.dataset.note,t.value);show()}});
+
+/* 網址參數（截圖檢查用）：?blur=1&gray=1&order=1 */
+const q=new URLSearchParams(location.search);
+if(q.get("blur")) document.getElementById("t-blur").click();
+if(q.get("gray")) document.getElementById("t-gray").click();
+if(q.get("order")) document.getElementById("t-order").click();
+show();
+</script>
+</body>
+</html>
