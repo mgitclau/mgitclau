@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 筆電選購助手 · 回覆卡片 19 種 Demo</title>
+<style>
+:root {
+  --ground: #C6CDDC; --ground-2: #BAC3D5; --panel: #EDF0F5; --chatbg: #E1E5EE; --card: #fff; --group: #EBEEF4; --group-2: #E2E7F0;
+  --edge: #2A2F3A; --ink: #12151C; --ink-2: #454C5D; --ink-3: #5A6174; --line: #D7DCE6; --line-2: #E4E8EF;
+  --accent: #2340C4; --accent-soft: #DDE4F7; --accent-ink: #1A2F96; --signal: #F0602A; --signal-ink: #A8401A;
+  --good: #1D7349; --good-soft: #DFF1E7; --warn: #8A5208; --warn-soft: #FBEFD9; --bad: #AE3626; --bad-soft: #F8E4E0;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang TC", "Noto Sans TC", monospace;
+  --sh: 0 1px 2px rgba(22, 30, 52, .05), 0 12px 32px -10px rgba(22, 30, 52, .16);
+  --chatw: 460px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; font: 14px/1.55 var(--sans); color: var(--ink); color-scheme: light;
+  background: radial-gradient(1200px 700px at 80% -10%, #D3D9E6 0%, transparent 60%), linear-gradient(180deg, var(--ground), var(--ground-2)) fixed; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, h4, p, ul, ol { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px 140px; }
+
+/* 頁首 */
+.top { padding: 40px 0 22px; }
+.top h1 { font-size: 30px; line-height: 1.2; letter-spacing: -.02em; }
+.top p { margin-top: 10px; max-width: 62ch; color: var(--ink-2); font-size: 15px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 7px; font: 500 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--signal); flex: none; }
+.bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; margin: 0 -14px;
+  background: rgba(237, 240, 245, .9); backdrop-filter: blur(14px); border-radius: 0 0 18px 18px; box-shadow: 0 10px 24px -18px rgba(30, 40, 70, .5); }
+.bar nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.bar a { padding: 5px 13px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 500; }
+.bar a:hover { background: var(--group); }
+.seg { margin-left: auto; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--group-2); }
+.seg button { border: 0; background: none; padding: 5px 13px; border-radius: 999px; font-size: 13px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; font-weight: 600; }
+
+/* 分組與每一格 */
+.grp { margin-top: 44px; }
+.grp > h2 { font-size: 21px; letter-spacing: -.01em; }
+.grp > p { color: var(--ink-2); margin-top: 4px; }
+.spec { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; margin-top: 18px; padding: 20px; border-radius: 30px; background: var(--panel); box-shadow: 0 30px 60px -40px rgba(30, 40, 70, .45); }
+.meta .no { font: 600 12px/1 var(--mono); letter-spacing: .08em; color: var(--signal-ink); }
+.meta h3 { margin-top: 8px; font-size: 18px; line-height: 1.3; }
+.meta dl { margin: 12px 0 0; display: grid; gap: 9px; }
+.meta dt { font: 500 10.5px/1.3 var(--mono); letter-spacing: .08em; color: var(--ink-3); }
+.meta dd { margin: 2px 0 0; color: var(--ink-2); font-size: 13.5px; }
+.tagrow { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.tag { padding: 2px 9px; border-radius: 999px; font-size: 12px; background: var(--group-2); color: var(--ink-2); }
+.tag.first { background: var(--ink); color: #fff; font-weight: 600; }
+.tag.up { background: var(--accent-soft); color: var(--accent-ink); }
+.want { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; min-height: 38px; padding: 0 15px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; font-weight: 500; font-size: 13.5px; }
+.want::before { content: ""; width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--edge); flex: none; }
+.want[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
+.want[aria-pressed="true"]::before { border-color: #fff; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / 11px no-repeat; }
+
+/* 模擬對話欄 */
+.chat { justify-self: start; width: min(100%, var(--chatw)); padding: 16px 14px; border-radius: 24px; background: var(--chatbg); display: grid; gap: 10px; align-content: start; transition: width .25s cubic-bezier(.2, .7, .2, 1); }
+.me { justify-self: end; max-width: 86%; padding: 9px 14px; border-radius: 18px 18px 4px 18px; background: var(--accent); color: #fff; }
+.ai { justify-self: start; max-width: 94%; padding: 9px 14px; border-radius: 18px 18px 18px 4px; background: #fff; border: 1px solid #C3CADB; }
+.c { background: var(--card); border-radius: 22px; box-shadow: var(--sh); padding: 16px; }
+.c > .eyebrow { margin-bottom: 10px; }
+.c h4 { font-size: 15.5px; line-height: 1.35; }
+.sub { color: var(--ink-3); font-size: 12.5px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 15px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; font-size: 13.5px; font-weight: 500; }
+.btn:hover { background: var(--group); }
+.btn:active { scale: .97; }
+.btn.pri { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
+.btn.pri:hover { background: #2C3343; }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.lnk { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; background: var(--group); color: var(--ink-2); white-space: nowrap; }
+.pill.acc { background: var(--accent-soft); color: var(--accent-ink); }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.dash { background: none; border: 1.2px dashed #B9C0CE; }
+.lap { display: block; width: 100%; height: auto; border-radius: 14px; background: linear-gradient(160deg, #F2F4F8, #DDE2EC); }
+.role { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 11.5px; font-weight: 600; }
+.pro, .con { position: relative; padding-left: 20px; font-size: 13.5px; }
+.pro::before, .con::before { position: absolute; left: 0; top: 0; font-weight: 700; }
+.pro::before { content: "✓"; color: var(--good); }
+.con::before { content: "！"; color: var(--warn); }
+
+/* 1 理解回放 */
+.hear li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 11px 0; border-top: 1px solid var(--line-2); }
+.hear li:first-child { border-top: 0; padding-top: 0; }
+.hear q { quotes: "「" "」"; color: var(--ink-3); font-size: 13px; grid-column: 1 / -1; }
+.hear b { font-size: 14.5px; }
+.hear .fx { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
+/* 2 權重變化 */
+.wt li { display: grid; grid-template-columns: 54px minmax(0, 1fr) 92px; gap: 3px 10px; align-items: center; padding: 8px 0; }
+.wt .track { position: relative; height: 10px; border-radius: 999px; background: var(--group); }
+.wt .old, .wt .new { position: absolute; inset: 0 auto 0 0; border-radius: 999px; }
+.wt .old { background: #B9C0CE; } .wt .new { background: var(--accent); }
+.wt .down .new { background: var(--ink-3); z-index: 1; } .wt .down .old { background: repeating-linear-gradient(135deg, #C9CFDB 0 4px, #E2E7F0 4px 8px); }
+.wt .v { font: 12.5px var(--mono); text-align: right; }
+.wt .why { grid-column: 2 / -1; font-size: 12.5px; color: var(--ink-3); }
+/* 3 場景 */
+.scene li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--line-2); }
+.scene li:first-child { border-top: 0; padding-top: 0; }
+.scene .ico { width: 40px; height: 40px; border-radius: 12px; background: var(--group); display: grid; place-items: center; }
+.scene .ico svg { width: 20px; height: 20px; }
+.scene .need { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+/* 4 衝突 */
+.tri { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px; border-radius: 14px; background: var(--warn-soft); }
+.tri span.x { color: var(--warn); font-weight: 700; }
+.opt { display: grid; gap: 7px; margin-top: 12px; }
+.opt button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 8px 14px; border-radius: 14px; border: 1.3px solid var(--edge); background: #fff; text-align: left; }
+.opt button:hover { background: var(--group); }
+.opt button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.opt small { color: var(--ink-3); font-size: 12px; display: block; }
+.opt em { font: normal 600 12.5px var(--mono); color: var(--good); white-space: nowrap; }
+/* 5 進度 */
+.prog { display: grid; gap: 12px; }
+.prog div { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.meter { display: flex; gap: 3px; margin-bottom: 12px; }
+.meter i { height: 6px; flex: 1; border-radius: 999px; background: var(--group-2); }
+.meter i.on { background: var(--good); } .meter i.half { background: #B9C0CE; }
+/* 6 推薦 */
+.hero { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 14px; }
+.hero .pic { position: relative; }
+.score { position: absolute; left: 7px; top: 7px; min-width: 30px; padding: 2px 7px; border-radius: 999px; background: var(--ink); color: #fff; font: 600 12px var(--mono); text-align: center; }
+.price { font: 600 16px var(--mono); }
+.alts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.alts button { display: grid; gap: 3px; padding: 10px; border-radius: 14px; border: 0; background: var(--group); text-align: left; align-content: start; }
+.alts button:hover { background: var(--group-2); }
+.alts b { font-size: 13px; line-height: 1.3; }
+.alts .role { justify-self: start; background: #fff; color: var(--ink); border: 1.2px solid var(--edge); }
+/* 7 對照 */
+.fit li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line-2); }
+.fit li:first-child { border-top: 0; }
+.st { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; align-self: center; }
+.st.ok { background: var(--good-soft); color: var(--good); } .st.mid { background: var(--warn-soft); color: var(--warn); } .st.no { background: var(--bad-soft); color: var(--bad); }
+.fit .n { font: 13px var(--mono); text-align: right; }
+/* 8 取捨 */
+.trade li { padding: 10px 0; border-top: 1px solid var(--line-2); }
+.trade li:first-child { border-top: 0; padding-top: 0; }
+.pos { position: relative; height: 8px; margin: 9px 0 4px; border-radius: 999px; background: linear-gradient(90deg, var(--bad-soft), var(--group) 50%, var(--good-soft)); }
+.pos i { position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+.pos u { position: absolute; top: -2px; left: 50%; width: 1px; height: 12px; background: var(--ink-3); opacity: .5; }
+.posl { display: flex; justify-content: space-between; font: 10.5px var(--mono); color: var(--ink-3); }
+/* 9 證據 */
+.ev { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: center; }
+.thumb { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; background: linear-gradient(140deg, #2C3343, #12151C); display: grid; place-items: center; }
+.thumb::before { content: ""; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, .92) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6v12l10-6z' fill='%2312151C'/%3E%3C/svg%3E") center / 18px no-repeat; }
+.thumb span { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 6px; background: rgba(0, 0, 0, .7); color: #fff; font: 11px var(--mono); }
+.big { font: 600 26px/1.1 var(--mono); letter-spacing: -.02em; }
+.big small { font-size: 13px; font-weight: 500; color: var(--ink-3); }
+/* 10 差一點 */
+.over { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font: 600 12.5px var(--mono); }
+/* 11 次池 */
+.faded { background: rgba(255, 255, 255, .62); box-shadow: none; border: 1.3px dashed #B9C0CE; }
+/* 12 對比 */
+.tblw { overflow-x: auto; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cmp th, .cmp td { padding: 8px 8px; text-align: left; border-top: 1px solid var(--line-2); vertical-align: top; }
+.cmp thead th { border-top: 0; font-size: 13px; line-height: 1.3; }
+.cmp tbody th { font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.cmp td { font-family: var(--mono); }
+.cmp .win { background: var(--good-soft); color: var(--good); font-weight: 600; border-radius: 8px; }
+.care::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 5px; border-radius: 50%; background: var(--signal); vertical-align: middle; }
+.verdict { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--group); font-size: 13.5px; }
+/* 13 對決 */
+.duelh { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
+.duelh b:last-child { text-align: right; }
+.duel li { display: grid; grid-template-columns: 1fr 62px 1fr; gap: 6px; align-items: center; padding: 5px 0; }
+.duel .l, .duel .r { height: 12px; display: flex; }
+.duel .l { justify-content: flex-end; }
+.duel .l i { background: var(--accent); border-radius: 999px 3px 3px 999px; }
+.duel .r i { background: var(--signal); border-radius: 3px 999px 999px 3px; }
+.duel .m { text-align: center; font-size: 12.5px; line-height: 1.2; }
+.duel .m small { display: block; font: 10px var(--mono); color: var(--ink-3); }
+/* 14 名次 */
+.rank li { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-top: 1px solid var(--line-2); }
+.rank li:first-child { border-top: 0; padding-top: 0; }
+.mv { font: 600 13px var(--mono); padding: 3px 0; border-radius: 10px; text-align: center; align-self: start; }
+.mv.up { background: var(--good-soft); color: var(--good); } .mv.dn { background: var(--bad-soft); color: var(--bad); } .mv.eq { background: var(--group); color: var(--ink-3); }
+/* 15 漏斗 */
+.fun li { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 10px; align-items: center; padding: 4px 0; }
+.fun .n { font: 600 14px var(--mono); text-align: right; }
+.fun .b { height: 30px; border-radius: 9px; background: var(--accent-soft); display: flex; align-items: center; padding: 0 10px; font-size: 12.5px; color: var(--accent-ink); white-space: nowrap; min-width: max-content; }
+.fun li:last-child .b { background: var(--accent); color: #fff; font-weight: 600; }
+/* 16 名詞 */
+.term { font: 600 20px/1.2 var(--sans); letter-spacing: -.01em; }
+.foryou { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-ink); font-size: 13.5px; }
+/* 17 軟體 */
+.sw li { padding: 10px 0; border-top: 1px solid var(--line-2); }
+.sw li:first-child { border-top: 0; padding-top: 0; }
+.sw .h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.lvl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 7px; }
+.lvl i { height: 22px; border-radius: 7px; background: var(--group); font: normal 11.5px/22px var(--sans); text-align: center; color: var(--ink-3); }
+.lvl i.on.g { background: var(--good); color: #fff; font-weight: 600; } .lvl i.on.w { background: #C98A1B; color: #fff; font-weight: 600; } .lvl i.on.b { background: var(--bad); color: #fff; font-weight: 600; }
+/* 18 選項 */
+.pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.pick button { display: grid; gap: 3px; justify-items: center; padding: 12px 6px 10px; border-radius: 16px; border: 1.3px solid var(--edge); background: #fff; }
+.pick button:hover { background: var(--group); }
+.pick button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.pick .sil { height: 44px; display: grid; align-items: end; }
+.pick .sil i { display: block; border: 2px solid var(--ink); border-bottom-width: 5px; border-radius: 4px 4px 2px 2px; }
+.pick b { font-size: 13.5px; } .pick small { font: 11.5px var(--mono); color: var(--ink-3); }
+/* 19 收尾 */
+.done { background: var(--ink); color: #fff; }
+.done .eyebrow, .done .sub { color: rgba(255, 255, 255, .7); }
+.done ol { counter-reset: r; display: grid; gap: 6px; margin-top: 10px; }
+.done ol li { counter-increment: r; padding-left: 26px; position: relative; font-size: 13.5px; }
+.done ol li::before { content: counter(r); position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; background: var(--signal); font: 600 11px/18px var(--mono); text-align: center; }
+.chk { margin-top: 12px; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, .1); display: grid; gap: 7px; }
+.chk label { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; cursor: pointer; }
+.chk input { margin-top: 3px; width: 15px; height: 15px; accent-color: var(--signal); }
+.done .btn { border-color: rgba(255, 255, 255, .6); background: none; color: #fff; }
+.done .btn.pri { background: #fff; color: var(--ink); border-color: #fff; }
+
+/* 底部已選列 */
+.dock { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 30; width: min(calc(100% - 32px), 720px); display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 10px 10px 10px 18px; border-radius: 22px; background: var(--ink); color: #fff; box-shadow: 0 20px 40px -14px rgba(18, 21, 28, .6); }
+.dock p { flex: 1 1 220px; font-size: 13.5px; }
+.dock p b { font-family: var(--mono); }
+.dock button { min-height: 38px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: var(--ink); font-weight: 600; font-size: 13.5px; }
+.dock button.ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+
+@media (max-width: 820px) {
+  .spec { grid-template-columns: 1fr; padding: 16px; border-radius: 24px; }
+  .chat { width: 100%; }
+  .seg { display: none; }
+  .top h1 { font-size: 24px; }
+}
+@media (max-width: 440px) {
+  .wrap { padding-inline: 16px; }
+  .hero { grid-template-columns: 96px minmax(0, 1fr); }
+  .ev { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lap" viewBox="0 0 160 110">
+    <rect x="34" y="20" width="92" height="58" rx="5" fill="#fff" stroke="#12151C" stroke-width="2.5"/>
+    <rect x="40" y="26" width="80" height="46" rx="2" fill="currentColor"/>
+    <path d="M22 80h116l-6 9a4 4 0 0 1-3 2H31a4 4 0 0 1-3-2z" fill="#12151C"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">回覆卡片 Demo · 示意資料</span>
+    <h1>回覆卡片 19 種</h1>
+    <p>每一格左邊是卡片的編號、什麼時候出現、內容從哪裡來；右邊是它在對話欄裡的樣子。機型與數字都是示意資料。看到想要的就按「我要這張」，最後把底部那一行編號貼給我。</p>
+  </header>
+
+  <div class="bar">
+    <nav aria-label="分組">
+      <a href="#ga">A 被理解</a><a href="#gb">B 推薦</a><a href="#gc">C 比較</a><a href="#gd">D 解釋與引導</a>
+    </nav>
+    <div class="seg" role="group" aria-label="對話欄寬度">
+      <button type="button" data-w="460px" aria-pressed="true">桌機對話欄</button>
+      <button type="button" data-w="340px" aria-pressed="false">手機寬度</button>
+    </div>
+  </div>
+
+  <!-- ================= A ================= -->
+  <section class="grp" id="ga">
+    <h2>A　讓用戶覺得被理解</h2>
+    <p>現在只有一張需求卡在說「我怎麼理解你」，這一組補這一塊。</p>
+
+    <article class="spec" data-n="1" data-name="理解回放卡" data-when="用戶說了新需求的那一輪，放在回覆最前面" data-src="需求清單、needEffects、權重來源" data-tags="first,up:需求卡升級">
+      <div class="chat">
+        <p class="me">預算 4 萬，主要拿來修圖，常常要帶出門，最好是滿血顯卡</p>
+        <div class="c">
+          <span class="eyebrow">我聽到的</span>
+          <ul class="hear">
+            <li><q>預算 4 萬</q><b>售價 NT$40,000 以內</b><button class="lnk" type="button">修改</button>
+              <div class="fx"><span class="pill">硬條件</span><span class="pill">排除 251 台</span></div></li>
+            <li><q>主要拿來修圖</q><b>螢幕顏色要準</b><button class="lnk" type="button">修改</button>
+              <div class="fx"><span class="pill acc">螢幕比重 10% → 18%</span><span class="pill">sRGB 低於 95% 的往後排</span></div></li>
+            <li><q>常常要帶出門</q><b>重量 1.5 公斤以下</b><button class="lnk" type="button">修改</button>
+              <div class="fx"><span class="pill acc">便攜比重 12% → 20%</span><span class="pill">排除 78 台</span></div></li>
+            <li><q>滿血顯卡</q><b style="color:var(--ink-3)">這個詞我還沒有資料可以比對</b><span></span>
+              <div class="fx"><span class="pill dash">先不當作條件</span></div></li>
+          </ul>
+        </div>
+        <p class="ai">照這樣挑，還剩 42 台。我先給你看最適合的三台。</p>
+      </div>
+    </article>
+
+    <article class="spec" data-n="2" data-name="權重變化卡" data-when="這一輪權重有變動時" data-src="weightChanges（程式算好的前後值與原因）" data-tags="first">
+      <div class="chat">
+        <p class="me">我還會剪 4K 影片</p>
+        <div class="c">
+          <span class="eyebrow">我調整了你的重視程度</span>
+          <ul class="wt">
+            <li><b>性能</b><span class="track"><i class="old" style="width:30%"></i><i class="new" style="width:44%"></i></span><span class="v">15% → <b>22%</b></span><span class="why">因為你說要剪 4K 影片</span></li>
+            <li><b>散熱</b><span class="track"><i class="old" style="width:16%"></i><i class="new" style="width:24%"></i></span><span class="v">8% → <b>12%</b></span><span class="why">長時間輸出影片，機身溫度會影響速度</span></li>
+            <li class="down"><b>續航</b><span class="track"><i class="old" style="width:32%"></i><i class="new" style="width:22%"></i></span><span class="v">16% → <b>11%</b></span><span class="why">其他項目變重要，這項相對下降</span></li>
+          </ul>
+          <p class="sub" style="margin-top:6px">其他 5 項不變</p>
+          <div class="acts"><button class="btn" type="button">自己調整比重</button><button class="lnk" type="button">復原這次調整</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="3" data-name="使用場景卡" data-when="第一次推薦之前，需求累積到 3 條以上" data-src="需求清單＋代理寫的場景句，數字讀實測欄位門檻" data-tags="">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">我想像你會這樣用</span>
+          <ul class="scene">
+            <li><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#12151C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
+              <div><h4>背著去上課、跑咖啡店</h4><div class="need"><span class="pill">1.5 公斤以下</span><span class="pill">實測續航 9 小時以上</span></div></div></li>
+            <li><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#12151C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="m7 14 3-3 3 2 4-5M8 21h8"/></svg></span>
+              <div><h4>回家修圖交作業</h4><div class="need"><span class="pill">sRGB 95% 以上</span><span class="pill">色準 ΔE 2 以下</span></div></div></li>
+            <li><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#12151C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></span>
+              <div><h4>偶爾剪 4K 短片</h4><div class="need"><span class="pill">記憶體 16GB 以上</span><span class="pill">性能在前段</span></div></div></li>
+          </ul>
+          <div class="acts"><button class="btn" type="button">差不多是這樣</button><button class="btn" type="button">有一點不對</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="4" data-name="需求衝突卡" data-when="幾條需求同時成立時剩不到幾台" data-src="pool_what_if 試算每條放寬後多幾台" data-tags="up:放寬卡的代理 2.0 版">
+      <div class="chat">
+        <p class="me">要 1.2 公斤以下、有獨顯、預算 3 萬 5</p>
+        <div class="c">
+          <span class="eyebrow">這三條同時要，只剩 1 台</span>
+          <div class="tri"><span class="pill">1.2 公斤以下</span><span class="x">×</span><span class="pill">獨立顯卡</span><span class="x">×</span><span class="pill">3 萬 5 以內</span></div>
+          <p class="sub" style="margin-top:10px">放寬其中一條，選擇會多很多：</p>
+          <div class="opt">
+            <button type="button" aria-pressed="false"><span>重量放寬到 1.5 公斤<small>最好的一台：Nova 14 Pro</small></span><em>+14 台</em></button>
+            <button type="button" aria-pressed="false"><span>預算放寬到 4 萬<small>最好的一台：Aero 14 Studio</small></span><em>+9 台</em></button>
+            <button type="button" aria-pressed="false"><span>不一定要獨顯<small>內顯也跑得動你說的修圖</small></span><em>+23 台</em></button>
+          </div>
+          <div class="acts"><button class="lnk" type="button">都不放寬，先看那 1 台</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="5" data-name="進度小結卡" data-when="聊了幾輪、或用戶問「你現在知道什麼」" data-src="需求清單的信心度、代理的假設" data-tags="">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">到目前為止</span>
+          <div class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="half"></i><i></i><i></i></div>
+          <div class="prog">
+            <section><b>已經確定 4 項</b><div><span class="pill good">預算 4 萬內</span><span class="pill good">修圖</span><span class="pill good">1.5 公斤以下</span><span class="pill good">Windows</span></div></section>
+            <section><b>我先這樣假設 1 項</b><div><span class="pill dash">螢幕 14～16 吋都可以</span><button class="lnk" type="button">不是</button></div></section>
+            <section><b>還不確定 2 項</b><div><span class="pill warn">會不會打遊戲</span><span class="pill warn">在意風扇聲嗎</span></div></section>
+          </div>
+          <p class="sub" style="margin-top:10px">不確定的不回答也可以，我會照一般人的習慣來挑。</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section class="grp" id="gb">
+    <h2>B　推薦</h2>
+    <p>把「為什麼是它」從一段話，變成一條一條對上用戶的需求。</p>
+
+    <article class="spec" data-n="6" data-name="推薦卡：主推＋備選" data-when="每一次推薦" data-src="主候選池名次、權重分、代理寫的說明、程式算的角色（最便宜、最輕）" data-tags="first,up:推薦卡升級">
+      <div class="chat">
+        <p class="ai">照你說的修圖和常帶出門，我最推薦這一台。</p>
+        <div class="c">
+          <div class="hero">
+            <div class="pic"><svg class="lap" viewBox="0 0 160 110" style="color:#9DB2F2"><use href="#lap"/></svg><span class="score" title="權重分">87</span></div>
+            <div>
+              <span class="role">最適合你</span>
+              <h4 style="margin-top:6px">Aero 14 Studio</h4>
+              <p class="price">NT$38,900</p>
+              <p class="pro" style="margin-top:6px">螢幕顏色準（sRGB 100%）、1.32 公斤</p>
+              <p class="con">續航只有中等，外出一整天要帶充電器</p>
+            </div>
+          </div>
+          <div class="acts"><button class="btn pri" type="button">看這台的細節</button><button class="btn" type="button">為什麼是它</button></div>
+          <div class="alts">
+            <button type="button"><span class="role">最省錢</span><b>Lite 14</b><span class="sub num">NT$32,900</span></button>
+            <button type="button"><span class="role">最輕</span><b>Feather 13</b><span class="sub num">1.09 公斤</span></button>
+            <button type="button"><span class="role">性能最強</span><b>Nova 14 Pro</b><span class="sub num">NT$39,900</span></button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="7" data-name="需求對照卡" data-when="用戶問「為什麼是它」或點開某一台" data-src="每條需求對這台的判定（程式算）＋實測欄位" data-tags="first">
+      <div class="chat">
+        <p class="me">為什麼是 Aero 14 Studio？</p>
+        <div class="c">
+          <span class="eyebrow">Aero 14 Studio 對上你的需求</span>
+          <h4>5 條裡符合 4 條</h4>
+          <ul class="fit" style="margin-top:6px">
+            <li><span class="st ok">✓</span><span>預算 4 萬以內</span><span class="n">NT$38,900</span></li>
+            <li><span class="st ok">✓</span><span>修圖：螢幕顏色準</span><span class="n">sRGB 100%</span></li>
+            <li><span class="st ok">✓</span><span>1.5 公斤以下</span><span class="n">1.32 公斤</span></li>
+            <li><span class="st ok">✓</span><span>剪 4K 影片</span><span class="n">性能排第 5／42</span></li>
+            <li><span class="st mid">△</span><span>帶出門用一整天<br><span class="sub">比候選的中間值短 1 小時</span></span><span class="n">7.5 小時</span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="8" data-name="取捨卡" data-when="跟在推薦卡後面，或用戶問缺點" data-src="tradeoffs（程式算）、全庫百分位" data-tags="">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">選 Aero 14 Studio 要接受的</span>
+          <ul class="trade">
+            <li><h4>續航中等</h4><p class="sub">實測 7.5 小時，42 台候選裡排第 26</p>
+              <div class="pos"><u></u><i style="left:38%"></i></div><div class="posl"><span>最短 4.2</span><span>中間 8.5</span><span>最長 14.1</span></div></li>
+            <li><h4>高負載時風扇聲明顯</h4><p class="sub">實測 46 分貝，42 台候選裡排第 31</p>
+              <div class="pos"><u></u><i style="left:27%"></i></div><div class="posl"><span>最吵 52</span><span>中間 42</span><span>最安靜 33</span></div></li>
+          </ul>
+          <p class="verdict">如果這兩點你很在意，第 2 名的 Lite 14 續航多 3 小時。</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="9" data-name="實測證據卡" data-when="回覆裡提到某個實測數字時" data-src="實測資料庫的數值、影片連結與時間點（各有開關）" data-tags="first">
+      <div class="chat">
+        <p class="ai">它的螢幕是這批裡顏色最準的幾台之一，這是實測的畫面：</p>
+        <div class="c">
+          <span class="eyebrow">實測 · 螢幕色域</span>
+          <div class="ev">
+            <div class="thumb"><span>12:34</span></div>
+            <div>
+              <p class="big">100% <small>sRGB</small></p>
+              <p class="sub" style="margin-top:4px">42 台候選裡並列第 1　·　色準 ΔE 1.1</p>
+              <div class="acts" style="margin-top:8px"><button class="lnk" type="button">看影片的這一段（12:34）</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="10" data-name="差一點卡" data-when="有一台稍微超出條件，但換到的東西很多" data-src="越界建議（StretchPolicy）、和主推那台的差距" data-tags="up:越界卡的代理 2.0 版">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">超出一點點，但值得看一眼</span>
+          <h4>Nova 16 Pro　<span class="over">比預算多 NT$1,900</span></h4>
+          <p class="sub" style="margin-top:8px">多出的錢換到：</p>
+          <ul style="display:grid;gap:4px;margin-top:4px">
+            <li class="pro">性能高 22%，4K 輸出快約 3 分鐘</li>
+            <li class="pro">記憶體 32GB（主推那台是 16GB）</li>
+            <li class="con">重 300 克（1.62 公斤，超過你說的 1.5）</li>
+          </ul>
+          <div class="acts"><button class="btn pri" type="button">加進來比較</button><button class="btn" type="button">不用，守住預算</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="11" data-name="次候選池亮點卡" data-when="被排除的機型裡，有一項特別突出時" data-src="次候選池、排除原因、explainSecondary" data-tags="">
+      <div class="chat">
+        <div class="c faded">
+          <span class="eyebrow">沒進名單，但有一項很突出</span>
+          <h4>Marathon 14</h4>
+          <p class="con" style="margin-top:6px">沒進名單：1.58 公斤，比你要的重 80 克</p>
+          <p class="pro">續航 14.1 小時，是全部機型的第 1 名</p>
+          <div class="acts"><button class="btn" type="button">重新考慮這台</button><button class="lnk" type="button">不用</button></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section class="grp" id="gc">
+    <h2>C　比較</h2>
+    <p>比較時只講有差別的、先講用戶在意的。</p>
+
+    <article class="spec" data-n="12" data-name="對比卡升級" data-when="比較 2～3 台" data-src="現有 CompareTable 的資料，加上「有沒有差別」「誰贏」「用戶在意哪幾維」" data-tags="first,up:對比卡升級">
+      <div class="chat">
+        <p class="me">第 1 名和第 2 名差在哪？</p>
+        <div class="c">
+          <span class="eyebrow">只列有差別的 5 項</span>
+          <div class="tblw">
+            <table class="cmp">
+              <thead><tr><th></th><th>Aero 14 Studio</th><th>Lite 14</th></tr></thead>
+              <tbody>
+                <tr><th class="care">螢幕色域</th><td class="win">sRGB 100%</td><td>sRGB 97%</td></tr>
+                <tr><th class="care">重量</th><td class="win">1.32 公斤</td><td>1.45 公斤</td></tr>
+                <tr><th class="care">性能</th><td class="win">第 5 名</td><td>第 14 名</td></tr>
+                <tr><th>續航</th><td>7.5 小時</td><td class="win">10.5 小時</td></tr>
+                <tr><th>售價</th><td>NT$38,900</td><td class="win">NT$32,900</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="sub" style="margin-top:8px"><span class="care"></span>　你在意的項目排在前面</p>
+          <p class="verdict">你在意的 3 項 Aero 都贏；Lite 便宜 6,000 元、續航多 3 小時。</p>
+          <div class="acts"><button class="lnk" type="button">顯示相同的 9 項</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="13" data-name="兩台對決卡" data-when="用戶在兩台之間猶豫" data-src="兩台的各維分數 × 用戶權重" data-tags="">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">照你的重視程度來比</span>
+          <div class="duelh"><b style="color:var(--accent)">Aero 14 Studio</b><span class="sub">比重</span><b style="color:var(--signal-ink)">Lite 14</b></div>
+          <ul class="duel">
+            <li><span class="l"><i style="width:70%"></i></span><span class="m">性能<small>22%</small></span><span class="r"></span></li>
+            <li><span class="l"><i style="width:36%"></i></span><span class="m">便攜<small>20%</small></span><span class="r"></span></li>
+            <li><span class="l"><i style="width:28%"></i></span><span class="m">螢幕<small>18%</small></span><span class="r"></span></li>
+            <li><span class="l"></span><span class="m">續航<small>11%</small></span><span class="r"><i style="width:40%"></i></span></li>
+            <li><span class="l"></span><span class="m">價格<small>10%</small></span><span class="r"><i style="width:32%"></i></span></li>
+          </ul>
+          <p class="verdict">橫條越長，代表對你越有感的差距。整體 Aero 領先，主要贏在性能。</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="14" data-name="名次變化卡" data-when="改了需求或比重之後，前幾名有變動" data-src="上一輪與這一輪的名次、權重變化原因" data-tags="">
+      <div class="chat">
+        <p class="me">其實續航對我很重要</p>
+        <div class="c">
+          <span class="eyebrow">續航比重 11% → 24%，名次變了</span>
+          <ul class="rank">
+            <li><span class="mv up">3 → 1 ↑</span><div><h4>Lite 14</h4><p class="sub">續航 10.5 小時，這一項現在占比最高</p></div></li>
+            <li><span class="mv dn">1 → 2 ↓</span><div><h4>Aero 14 Studio</h4><p class="sub">續航 7.5 小時拉低了總分</p></div></li>
+            <li><span class="mv up">新進 3</span><div><h4>Marathon 13</h4><p class="sub">原本第 9 名，續航 13 小時</p></div></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="15" data-name="候選數量卡：漏斗" data-when="候選台數有變化時" data-src="每條硬條件各排除幾台（全部排除原因）" data-tags="up:候選數量卡升級">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">怎麼從 371 台挑到 42 台</span>
+          <ul class="fun">
+            <li><span class="n">371</span><span class="b" style="width:100%">全部機型</span></li>
+            <li><span class="n">120</span><span class="b" style="width:52%">預算 4 萬以內</span></li>
+            <li><span class="n">58</span><span class="b" style="width:34%">Windows</span></li>
+            <li><span class="n">42</span><span class="b" style="width:26%">1.5 公斤以下</span></li>
+          </ul>
+          <p class="sub" style="margin-top:8px">另外有 6 台只差一點，放在「值得考慮」。</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= D ================= -->
+  <section class="grp" id="gd">
+    <h2>D　解釋與引導</h2>
+    <p>回答問題、帶用戶往下走。</p>
+
+    <article class="spec" data-n="16" data-name="名詞解釋卡" data-when="用戶問規格名詞" data-src="知識庫條目＋代理寫的「對你的影響」" data-tags="up:知識出處卡升級">
+      <div class="chat">
+        <p class="me">sRGB 100% 是什麼意思？</p>
+        <div class="c">
+          <span class="eyebrow">名詞解釋</span>
+          <p class="term">sRGB 覆蓋率</p>
+          <p style="margin-top:6px">螢幕能顯示多少「網路上常見的顏色」。100% 表示網頁、照片該有的顏色它都顯示得出來。</p>
+          <p class="foryou"><b>對你的影響：</b>你要修圖，建議 95% 以上，不然修好的照片在別人螢幕上顏色會跑掉。</p>
+          <p class="sub" style="margin-top:8px">出處：知識庫「螢幕色域怎麼看」</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="17" data-name="軟體夠不夠卡" data-when="用戶提到要用的軟體，而且已經有候選機型" data-src="軟體庫的建議配置 × 這台的規格" data-tags="up:軟體卡升級">
+      <div class="chat">
+        <div class="c">
+          <span class="eyebrow">Aero 14 Studio 跑你的軟體</span>
+          <ul class="sw">
+            <li><div class="h"><h4>Lightroom</h4><span class="sub">修圖</span></div>
+              <div class="lvl"><i>不夠</i><i>吃力</i><i class="on g">夠用</i></div></li>
+            <li><div class="h"><h4>Premiere Pro</h4><span class="sub">4K 剪輯</span></div>
+              <div class="lvl"><i>不夠</i><i class="on w">吃力</i><i>夠用</i></div>
+              <p class="sub" style="margin-top:6px">4K 長片建議 32GB 記憶體，這台是 16GB；短片沒問題。</p></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="18" data-name="選項卡" data-when="代理決定要追問時（不限次數）" data-src="代理自己寫的問題與選項，「剩幾台」由程式試算" data-tags="up:追問卡的代理 2.0 版">
+      <div class="chat">
+        <p class="ai">你常帶出門，螢幕大小會直接影響重量，想先問一下：</p>
+        <div class="c">
+          <h4>你習慣多大的螢幕？</h4>
+          <div class="pick">
+            <button type="button" aria-pressed="false"><span class="sil"><i style="width:34px;height:24px"></i></span><b>13～14 吋</b><small>剩 27 台</small></button>
+            <button type="button" aria-pressed="false"><span class="sil"><i style="width:44px;height:30px"></i></span><b>15～16 吋</b><small>剩 13 台</small></button>
+            <button type="button" aria-pressed="false"><span class="sil"><i style="width:54px;height:36px"></i></span><b>17 吋以上</b><small>剩 2 台</small></button>
+          </div>
+          <div class="acts"><button class="lnk" type="button">都可以，你幫我決定</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="19" data-name="收尾卡" data-when="用戶說「就這台」" data-src="選定的機型、對上的需求、購買提醒（知識庫）" data-tags="">
+      <div class="chat">
+        <p class="me">好，就 Aero 14 Studio</p>
+        <div class="c done">
+          <span class="eyebrow">你的選擇</span>
+          <h4>Aero 14 Studio　<span class="num">NT$38,900</span></h4>
+          <ol>
+            <li>螢幕顏色準，修圖不用另外接螢幕</li>
+            <li>1.32 公斤，符合你常帶出門</li>
+            <li>性能排前段，偶爾剪 4K 短片夠用</li>
+          </ol>
+          <div class="chk">
+            <b style="font-size:13px">下單前確認</b>
+            <label><input type="checkbox">規格是 16GB／512GB 這個版本</label>
+            <label><input type="checkbox">鍵盤是注音配置</label>
+            <label><input type="checkbox">保固幾年、有沒有到府收送</label>
+          </div>
+          <div class="acts"><button class="btn pri" type="button">存下這份結果</button><button class="btn" type="button">再比一台</button></div>
+        </div>
+      </div>
+    </article>
+  </section>
+</div>
+
+<div class="dock" role="status">
+  <p id="picked">還沒選。看到想要的卡，按「我要這張」。</p>
+  <button type="button" class="ghost" id="first">選我建議的第一批</button>
+  <button type="button" id="copy">複製編號</button>
+</div>
+
+<script>
+const specs = [...document.querySelectorAll(".spec")];
+const chosen = new Set();
+try { JSON.parse(localStorage.getItem("cards-picked") || "[]").forEach((n) => chosen.add(n)); } catch {}
+
+for (const s of specs) {
+  const n = s.dataset.n;
+  const tags = (s.dataset.tags || "").split(",").filter(Boolean).map((t) =>
+    t === "first" ? '<span class="tag first">建議第一批</span>' : `<span class="tag up">${t.slice(3)}</span>`).join("");
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `<span class="no">NO. ${n.padStart(2, "0")}</span><h3>${s.dataset.name}</h3>
+    ${tags ? `<div class="tagrow">${tags}</div>` : ""}
+    <dl><div><dt>什麼時候出現</dt><dd>${s.dataset.when}</dd></div><div><dt>內容從哪裡來</dt><dd>${s.dataset.src}</dd></div></dl>
+    <button type="button" class="want" aria-pressed="false">我要這張</button>`;
+  s.prepend(meta);
+  s.id = "c" + n;
+  meta.querySelector(".want").addEventListener("click", () => { chosen.has(n) ? chosen.delete(n) : chosen.add(n); render(); });
+}
+
+function list() { return [...chosen].map(Number).sort((a, b) => a - b); }
+function render() {
+  for (const s of specs) s.querySelector(".want").setAttribute("aria-pressed", String(chosen.has(s.dataset.n)));
+  const l = list();
+  document.getElementById("picked").innerHTML = l.length ? `已選 ${l.length} 張：<b>${l.join("、")}</b>` : "還沒選。看到想要的卡，按「我要這張」。";
+  try { localStorage.setItem("cards-picked", JSON.stringify([...chosen])); } catch {}
+}
+document.getElementById("first").addEventListener("click", () => { specs.filter((s) => s.dataset.tags.includes("first")).forEach((s) => chosen.add(s.dataset.n)); render(); });
+document.getElementById("copy").addEventListener("click", async (e) => {
+  const text = "我要這幾張卡：" + (list().join("、") || "（還沒選）");
+  try { await navigator.clipboard.writeText(text); e.target.textContent = "已複製"; }
+  catch { e.target.textContent = "請手動抄編號"; }
+  setTimeout(() => (e.target.textContent = "複製編號"), 1600);
+});
+document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+  document.documentElement.style.setProperty("--chatw", b.dataset.w);
+  document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+}));
+/* 卡片裡的選項按鈕：點了有反應（同一組單選） */
+document.querySelectorAll(".opt, .pick").forEach((g) => g.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  g.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b && b.getAttribute("aria-pressed") !== "true")));
+}));
+render();
+</script>
+</body>
+</html>
