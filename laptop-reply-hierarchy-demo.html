@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回覆主次 Demo｜每種卡片 3 個設計</title>
+<style>
+:root{
+  --ground:#C6CDDC; --panel:#EDF0F5; --chatbg:#E1E5EE; --card:#fff; --inner:#F2F4F8; --group:#EBEEF4;
+  --ink:#12151C; --ink2:#454C5D; --ink3:#5A6174; --line:#D7DCE6; --line2:#E4E8EF;
+  --accent:#2340C4; --accent-soft:#DDE4F7; --signal:#F0602A;
+  --good:#1D7349; --good-soft:#DFF1E7; --warn:#8A5208; --warn-soft:#FBEFD9; --bad:#AE3626; --bad-soft:#F8E4E0;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.6 var(--sans);color:var(--ink);background:linear-gradient(180deg,#C6CDDC,#BAC3D5) fixed;}
+button{font:inherit;color:inherit;cursor:pointer}
+h1{font-size:20px;margin:0 0 4px}
+.top{max-width:1240px;margin:0 auto;padding:22px 20px 6px}
+.top p{margin:0;color:var(--ink2);font-size:13px}
+.wrap{max-width:1240px;margin:0 auto;padding:12px 20px 60px;display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+
+/* ===== 模擬對話欄 ===== */
+.chat{background:var(--chatbg);border-radius:26px;padding:18px 14px 22px;box-shadow:0 30px 60px -30px rgba(30,40,70,.35)}
+.me{margin:0 0 14px auto;max-width:82%;width:fit-content;background:var(--accent);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px}
+.bot{background:#fff;border-radius:18px 18px 18px 4px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16)}
+.bot p{margin:0}
+[data-el]{scroll-margin-top:16px;transition:outline-color .6s;outline:2px solid transparent;outline-offset:4px;border-radius:10px}
+[data-el].flash{outline-color:var(--signal)}
+.eyebrow{font:600 10.5px/1.3 var(--mono);letter-spacing:.08em;color:var(--ink3);display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.note{color:var(--ink3);font-size:12.5px;line-height:1.5}
+.btn{border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:5px 14px;font-size:13px;font-weight:600}
+.btn.pri{background:var(--ink);color:#fff}
+.lnk{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.nm{font-weight:700}
+.fact{color:#1A2F96;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+
+/* ===== 卡片外框 frame ===== */
+.card.fr-cur{border-top:1px solid var(--line);padding:10px 0 2px;border-radius:0}
+.card.fr-cur>.eyebrow{display:none}
+.card.fr-A{background:var(--inner);border-radius:14px;padding:12px 14px}
+.card.fr-B{background:#fff;border:1.3px solid var(--line);border-radius:14px;padding:12px 14px}
+.card.fr-B>.eyebrow{margin:-12px -14px 10px;padding:7px 14px;background:var(--inner);border-bottom:1px solid var(--line);border-radius:13px 13px 0 0}
+.card.fr-C{border-left:3px solid var(--ink);padding:2px 0 2px 12px;border-radius:0}
+.card.fr-C>.eyebrow::before{display:none}
+.card.fr-C.k-choice{border-left-color:var(--signal)}
+
+/* ===== 文字段落 text ===== */
+.tx{display:flex;flex-direction:column;gap:6px}
+.tx-A p{color:var(--ink3);font-size:13.5px}
+.tx-A p b.key{color:var(--ink);font-weight:700;font-size:14.5px}
+.tx-B .eyebrow{margin-bottom:3px}
+.tx-B p{color:var(--ink2)}
+.tx-B p b.key{font-weight:600;color:var(--ink)}
+.tx-C details{border-left:2px solid var(--line);padding-left:10px}
+.tx-C summary{list-style:none;cursor:pointer;font-weight:600}
+.tx-C summary::-webkit-details-marker{display:none}
+.tx-C summary::after{content:"展開細節";margin-left:8px;font:500 11.5px var(--sans);color:var(--accent);text-decoration:underline;white-space:nowrap}
+.tx-C details[open] summary::after{content:"收起"}
+.tx-C details p{margin-top:6px;color:var(--ink2);font-size:13.5px}
+.tx-C.final details{border:0;background:var(--ink);color:#fff;border-radius:12px;padding:10px 12px}
+.tx-C.final summary::after{color:#B9C6FF}
+.tx-C.final details p{color:#D5D9E3}
+.tx-C.final .mk{color:var(--ink)}
+.tx-C.final .mk-a{color:#B9C6FF}
+.tx-cur b.key,.tx-C p b.key{font-weight:inherit}
+
+/* ===== 機型標記 chip ===== */
+.mk{white-space:nowrap;cursor:pointer}
+.mk-cur{display:inline-flex;align-items:center;gap:5px;border:1.3px solid #2A2F3A;background:#fff;border-radius:999px;padding:1px 9px 1px 6px;font-weight:600;font-size:13px;vertical-align:baseline}
+.mk-cur svg{width:16px;height:11px}
+.mk-price{font-size:12.5px;color:var(--ink3);font-family:var(--mono)}
+.mk-a{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.mk-p{font:12px var(--mono);color:var(--ink3);margin-left:4px}
+.mk-b{background:var(--group);border-radius:6px;padding:1px 6px;font-weight:600;font-size:13.5px}
+.mk-b i{font:normal 11.5px var(--mono);color:var(--ink3);margin-left:6px;padding-left:6px;border-left:1px solid #C3CADB}
+.mk-c{font-weight:700}
+.mk-c b,.no{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:var(--ink);color:#fff;font:700 10.5px var(--mono);margin-right:4px;vertical-align:1px}
+
+/* ===== 台數行 count ===== */
+.ct-cur{background:var(--inner);border-radius:14px;padding:10px 14px;font-size:12.5px;color:var(--ink2)}
+.ct-cur b{font:600 15px var(--mono);color:var(--ink);margin:0 2px}
+.ct-A{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.ct-A::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--good)}
+.ct-B{align-self:center;font-size:12px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 12px}
+.ct-C{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.ct-C b{font:700 22px/1 var(--mono)}
+.ct-C span{font-size:12.5px;color:var(--ink3);flex:1}
+
+/* ===== 推薦卡 rec ===== */
+.pc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.pc li{padding-left:18px;position:relative}
+.pc li::before{position:absolute;left:0;font-weight:700}
+.pc .pro::before{content:"＋";color:var(--good)}
+.pc .con::before{content:"－";color:var(--bad)}
+.rc-cur .row{justify-content:space-between}
+.rc-A{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}
+.rc-A .score{grid-row:span 2;display:grid;place-items:center;width:66px;height:66px;border-radius:18px;background:var(--ink);color:#fff}
+.rc-A .score b{font:700 22px/1 var(--mono)}
+.rc-A .score small{font-size:10px;opacity:.7;margin-top:-10px}
+.rc-A .nm{font-size:16px;line-height:1.3}
+.rc-A .pc,.rc-A .row{grid-column:1/-1}
+.rc-A .pc{margin-top:6px}
+.tag{display:inline-block;font:600 11px var(--mono);padding:1px 8px;border-radius:999px;background:var(--group);color:var(--ink2)}
+.tag.o{background:#FDE6DC;color:#A8401A}
+.rc-B .nm{font-size:18px;line-height:1.3;display:block}
+.rc-B .why{color:var(--ink2);margin:2px 0 10px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.tiles div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.fr-B .tiles div,.fr-cur .tiles div,.fr-C .tiles div{background:var(--inner);border:0}
+.tiles small{display:block;font-size:11px;color:var(--ink3)}
+.tiles b{font:700 15px var(--mono)}
+.rc-C .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.rc-C .hd .nm{font-size:15.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.two>div{border-radius:10px;padding:8px 10px;font-size:12.5px}
+.two h5{margin:0 0 3px;font-size:11.5px}
+.two .g{background:var(--good-soft)} .two .g h5{color:var(--good)}
+.two .b{background:var(--warn-soft)} .two .b h5{color:var(--warn)}
+.two ul{margin:0;padding-left:15px}
+
+/* ===== 需求對照卡 fit ===== */
+.ic{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;flex:none}
+.ic.ok{background:var(--good);color:#fff} .ic.mid{background:#D9A441;color:#fff} .ic.no_{background:var(--bad);color:#fff}
+.ft-cur li{display:flex;gap:8px;padding:3px 0;font-size:13.5px}
+.ft-cur .v{margin-left:auto;color:var(--ink3)}
+.ft-cur ul,.ft-A ul{list-style:none;margin:6px 0;padding:0}
+.ft-A .hd{display:flex;align-items:center;gap:12px}
+.ft-A .big{font:700 24px/1 var(--mono);color:var(--good)}
+.ft-A .big small{font-size:12px;color:var(--ink3);font-family:var(--sans);font-weight:500;margin-left:4px}
+.ft-A .seg{display:flex;gap:3px;margin-top:4px}
+.ft-A .seg i{width:26px;height:5px;border-radius:3px;background:var(--good)}
+.ft-A li{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line2);font-size:13px;color:var(--ink2)}
+.ft-A .v{margin-left:auto;font-weight:700;color:var(--ink)}
+.ft-B table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+.ft-B th{font:600 10.5px var(--mono);letter-spacing:.06em;color:var(--ink3);text-align:left;padding:0 8px 4px}
+.ft-B td{padding:6px 8px;border-top:1px solid var(--line2)}
+.ft-B td:last-child{background:var(--good-soft);color:var(--good);font-weight:700;white-space:nowrap}
+.ft-C .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.ft-C .chips span{display:inline-flex;align-items:center;gap:5px;background:var(--good-soft);color:var(--good);border-radius:999px;padding:2px 10px 2px 3px;font-size:12.5px;font-weight:600}
+.ft-C details summary{font-size:12.5px;color:var(--accent);cursor:pointer}
+
+/* ===== 對比卡 compare ===== */
+.cmp-scroll{overflow-x:auto}
+.cp{width:100%;border-collapse:collapse;font-size:12.5px}
+.cp th,.cp td{padding:5px 6px;text-align:center;border-top:1px solid var(--line2)}
+.cp th:first-child,.cp td:first-child{text-align:left;color:var(--ink3);white-space:nowrap}
+.cp thead th{border:0;font-size:12px;vertical-align:bottom}
+.cp-cur thead th{font-weight:500;font-size:11px;line-height:1.35;color:var(--ink2);min-width:110px}
+.cp-A thead th b{display:block;font-size:13px}
+.cp-A thead th small{font:500 11px var(--mono);color:var(--ink3)}
+.cp-A .grp td{text-align:left;font:600 10.5px var(--mono);letter-spacing:.08em;color:var(--ink3);background:var(--group);padding:3px 8px;border:0}
+.cp-A td.w{font-weight:700;color:var(--good);background:var(--good-soft)}
+.cp-A td:not(.w):not(:first-child){color:var(--ink3)}
+.cp-A td.t{color:var(--ink2)!important;font-size:12px}
+.bars .lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin-bottom:8px}
+.bars .lg i,.bars .b i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.c0{background:#12151C} .c1{background:#2340C4} .c2{background:#9AA5C0}
+.bars .dim{display:grid;grid-template-columns:44px 1fr;gap:2px 8px;align-items:center;padding:5px 0;border-top:1px solid var(--line2)}
+.bars .dim>span{grid-row:span 3;font-size:12.5px;font-weight:600}
+.bars .dim.top>span::after{content:"在意";display:block;font:600 9.5px var(--mono);color:#A8401A}
+.bars .b{display:flex;align-items:center;gap:6px;height:11px}
+.bars .b u{height:7px;border-radius:4px;text-decoration:none;display:block}
+.bars .b em{font:normal 11px var(--mono);color:var(--ink3)}
+.bars .b.w em{color:var(--ink);font-weight:700}
+.sum{display:flex;flex-direction:column;gap:8px}
+.sum .it{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+.sum .it .hd{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:13.5px}
+.sum .it .hd span{font:600 12.5px var(--mono)}
+.sum .it p{font-size:12.5px;margin-top:3px}
+.sum .it .g{color:var(--good)} .sum .it .l{color:var(--ink3)}
+.sum details summary{font-size:12.5px;color:var(--accent);cursor:pointer;margin-top:2px}
+
+/* ===== 權重變化卡 wchange ===== */
+.wc-rows{display:flex;flex-direction:column;gap:7px}
+.wc-row{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.wc-track{position:relative;height:8px;background:var(--group);border-radius:4px}
+.wc-track i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.wc-track .old{background:#C3CADB} .wc-track .new{background:var(--ink)}
+.wc-row.dn .new{background:#8E97AB}
+.wc-cur .val{font:12px var(--mono);color:var(--ink3)}
+.dl{font:700 11.5px var(--mono);padding:1px 7px;border-radius:999px;background:var(--good-soft);color:var(--good)}
+.dl.dn{background:var(--group);color:var(--ink3)}
+.wc-A .wc-row{grid-template-columns:44px 1fr 34px auto}
+.wc-A .pct{font:700 13px var(--mono);text-align:right}
+.wc-B .lead{font-weight:600;margin-bottom:6px}
+.wc-B .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.wc-B .chips span{font-size:12.5px;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--good-soft);color:var(--good)}
+.wc-B .chips span.dn{background:var(--group);color:var(--ink3)}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:6px}
+.stack i{display:grid;place-items:center;font:normal 600 10px var(--mono);color:#fff;background:#B4BBC9}
+.stack i.up{background:var(--ink)} .stack i.dn{background:#8E97AB}
+.wc-C .lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;margin-bottom:6px}
+
+/* ===== 差一點卡 near ===== */
+.pill{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-size:12px;font-weight:600;white-space:nowrap}
+.nr-cur .pc{margin:4px 0 8px}
+.nr-A .gap{font:700 17px/1.3 var(--sans);color:var(--warn)}
+.nr-A .gap small{display:block;font:500 12.5px var(--sans);color:var(--ink2)}
+.nr-A .gain{margin:6px 0 10px;font-size:13px;color:var(--ink2)}
+.nr-A .gain b{color:var(--good)}
+.nr-C{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px}
+.nr-C .t{flex:1 1 220px}
+
+/* ===== 名詞解釋卡 term ===== */
+.tm-cur b.t{display:block}
+.tm-cur p{font-size:13px;margin-top:3px}
+.tm-A .imp{font-weight:600;font-size:14px;line-height:1.55}
+.tm-A .def{font-size:12.5px;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.tm-B .t{font:700 18px/1.2 var(--sans)}
+.tm-B .def{font-size:13px;color:var(--ink2);margin:4px 0 8px}
+.tm-B .imp{background:var(--accent-soft);border-radius:10px;padding:8px 10px;font-size:13px}
+.tm-B .imp b{display:block;font:600 10.5px var(--mono);letter-spacing:.06em;color:var(--accent)}
+.tm-C summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.tm-C summary span{color:var(--ink3);font-weight:400;font-size:12.5px;margin-left:6px}
+.tm-C p{font-size:13px;margin-top:6px}
+
+/* ===== 軟體夠不夠卡 sw ===== */
+.lv{font:700 11.5px var(--sans);border-radius:6px;padding:1px 8px;white-space:nowrap}
+.lv.ok{background:var(--good-soft);color:var(--good)} .lv.mid{background:var(--warn-soft);color:var(--warn)} .lv.no_{background:var(--bad-soft);color:var(--bad)}
+.sw-list{display:flex;flex-direction:column}
+.sw-cur .sw-r{padding:5px 0;font-size:13px}
+.sw-cur .sw-r small{display:block;color:var(--ink3)}
+.scale{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:4px 0 2px}
+.scale i{font:normal 600 11px var(--sans);text-align:center;padding:2px 0;border-radius:5px;background:var(--group);color:#9AA2B4}
+.scale i.on.ok{background:var(--good);color:#fff} .scale i.on.mid{background:#D9A441;color:#fff} .scale i.on.no_{background:var(--bad);color:#fff}
+.sw-A .sw-r{padding:7px 0;border-top:1px solid var(--line2);font-size:13px}
+.sw-A .sw-r:first-child{border:0;padding-top:0}
+.sw-B .sw-r{display:grid;grid-template-columns:46px 1fr;gap:2px 10px;padding:6px 0;border-top:1px solid var(--line2);font-size:13px;align-items:baseline}
+.sw-B .sw-r:first-child{border:0}
+.sw-B .sw-r small{grid-column:2;color:var(--ink3)}
+.sw-C .lead{font-weight:700;font-size:14.5px}
+.sw-C .warnbox{background:var(--warn-soft);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13px}
+.sw-C .chips{display:flex;flex-wrap:wrap;gap:6px}
+.sw-C .chips span{font-size:12.5px;border-radius:999px;padding:2px 10px;background:var(--good-soft);color:var(--good);font-weight:600}
+
+/* ===== 實物比例卡 size ===== */
+.sz-fig svg{display:block;width:100%;height:auto}
+.sz-cur .sz-fig{max-width:240px;margin:6px 0}
+.sz-A{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}
+.sz-A dl{margin:0;font-size:13px}
+.sz-A dt{font:600 10.5px var(--mono);letter-spacing:.06em;color:var(--ink3)}
+.sz-A dd{margin:0 0 8px;font-weight:600}
+.sz-B .w{font:700 26px/1.1 var(--mono)}
+.sz-B .eq{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:6px 0 10px}
+.sz-B .eq .icons{font-size:22px;letter-spacing:2px}
+.sz-B .sm{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:center;font-size:12.5px;color:var(--ink2);border-top:1px solid var(--line);padding-top:8px}
+.sz-C .tiles{grid-template-columns:1fr 1fr;margin:6px 0 0}
+.sz-C .tiles b{font:700 13.5px var(--sans)}
+
+/* ===== 選項卡 choice ===== */
+.q{font-weight:700;font-size:14.5px;margin:0 0 8px;line-height:1.5}
+.ch-cur .ops{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.op{border:1.3px solid #C3CADB;background:#fff;border-radius:12px;padding:8px 12px;text-align:left;font-weight:600;font-size:13.5px}
+.op:hover{border-color:var(--ink)}
+.op small{font-weight:400;color:var(--ink3);margin-left:8px}
+.ch-A .ops{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.ch-A .op{display:flex;align-items:center;gap:10px;padding:10px 12px;border-color:var(--ink)}
+.ch-A .op span{flex:1}
+.ch-A .op::after{content:"→";display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--group);font-size:12px}
+.ch-A .op:hover::after{background:var(--ink);color:#fff}
+.ch-B .qbox{background:#FDF1EB;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.ch-B .qbox .eyebrow{margin-bottom:4px;color:#A8401A}
+.ch-B .q{margin:0}
+.ch-B .ops{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.ch-B .op{border-radius:999px;padding:6px 14px}
+.ch-C .ops{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.ch-C .op{display:flex;flex-direction:column;gap:4px;justify-content:space-between;min-height:74px}
+.ch-C .op small{margin:0;font:600 12px var(--mono);color:var(--accent)}
+.ch-C .op.wide{grid-column:1/-1;min-height:0;background:var(--inner);border-style:dashed}
+
+/* ===== 右側控制面板 ===== */
+.side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border-radius:26px;padding:16px;box-shadow:0 30px 60px -30px rgba(30,40,70,.35)}
+@media(max-width:980px){.side{position:static;max-height:none}}
+.side h2{font-size:15px;margin:0 0 2px}
+.side .hint{font-size:12.5px;color:var(--ink3);margin:0 0 10px}
+.allrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;font-size:12.5px;color:var(--ink3)}
+.allrow button{border:1px solid #B9C0CE;background:#fff;border-radius:999px;padding:2px 12px;font-size:12.5px}
+.el{background:#fff;border-radius:14px;padding:9px 12px;margin-bottom:7px;border:1.5px solid transparent}
+.el.focus{border-color:var(--signal)}
+.el-h{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.el-h button.name{border:0;background:none;padding:0;font-weight:700;text-align:left}
+.el-h button.name:hover{text-decoration:underline}
+.seg{display:inline-flex;background:var(--group);border-radius:999px;padding:2px}
+.seg button{border:0;background:none;border-radius:999px;padding:2px 11px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.el-d{font-size:12.5px;color:var(--ink2);margin-top:4px}
+.el-d b{color:var(--ink)}
+.pick{margin-top:14px;background:var(--ink);color:#fff;border-radius:18px;padding:14px}
+.pick h2{color:#fff}
+.pick pre{margin:8px 0 10px;font:12.5px/1.7 var(--mono);white-space:pre-wrap;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;user-select:all}
+.pick button{border:0;background:#fff;color:var(--ink);border-radius:999px;padding:6px 16px;font-weight:700}
+.pick small{margin-left:10px;color:#B9C6FF}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>回覆主次 Demo：每種卡片 3 個設計</h1>
+  <p>左邊是一則「所有卡片同時出現」的模擬回覆；右邊每一種卡片可切換「現況／A／B／C」，切了左邊馬上換。選完把最下面「我選的這一套」複製給 Claude。<br>權重變化、差一點、名詞解釋、實物比例與第 3 套軟體的內容是示意，其他取自真實對話。「現況」是近似重畫，不是系統截圖。</p>
+</div>
+<div class="wrap">
+  <div class="chat">
+    <div class="me">我主要用 PS 和 AI，預算 8000 以內。哪台最好？我看到一台 72 分的，跟惠普那台差在哪？</div>
+    <div class="bot" id="bot"></div>
+  </div>
+  <aside class="side">
+    <h2>逐項切換</h2>
+    <p class="hint">點名稱會捲到對話裡那一張；點對話裡的卡片也會標出這裡的那一列。</p>
+    <div class="allrow">全部換成：<button data-all="cur">現況</button><button data-all="A">A</button><button data-all="B">B</button><button data-all="C">C</button></div>
+    <div id="els"></div>
+    <div class="pick">
+      <h2>我選的這一套</h2>
+      <pre id="pick"></pre>
+      <button id="copy">複製清單</button><small id="copied"></small>
+    </div>
+  </aside>
+</div>
+
+<script>
+/* ---------- 每個項目與它的設計說明 ---------- */
+const ELS = [
+  ["frame","卡片外框",{cur:"細線分隔、沒有標題，卡片和文字連在一起",A:"淺灰底色塊＋小標題：一眼看出「這是一張卡」",B:"白底描邊＋標題列：像一張張獨立的表單",C:"左側黑色直條＋小標題：最輕，不搶文字"}],
+  ["text","文字段落",{cur:"每段一樣大、一樣黑",A:"重點句加粗變黑，其餘變淡變小",B:"每段前面加小標題，重點句半粗",C:"只留重點句，細節點了才展開；最後結論用黑底框"}],
+  ["chip","文字裡的機型",{cur:"黑框膠囊＋圖示，後面接價格",A:"藍色粗體連結＋小字價格，不打斷閱讀",B:"淺灰底標籤，價格放在標籤裡",C:"黑色編號圓點＋粗體名稱，不顯示價格"}],
+  ["count","符合台數",{cur:"灰色色塊一整行",A:"一行小灰字＋綠點，最不佔位",B:"置中小膠囊，像系統提示",C:"大數字＋說明＋「看全部」"}],
+  ["wchange","權重變化卡",{cur:"每項新舊橫條＋「18% → 24%」",A:"橫條＋新比重＋升降小標",B:"一句話＋升降標籤，細節收起",C:"一條 100% 總長條，有變的才上色"}],
+  ["rec","推薦卡",{cur:"名稱、價格、優缺點條列",A:"左邊大分數方塊，名次與價格在旁",B:"大名稱＋一句理由＋三格數字",C:"優點／要接受的 左右對開"}],
+  ["fit","需求對照卡",{cur:"勾勾＋需求＋實際值，逐條列",A:"上方大大的「3／3」＋分段條，下面逐條",B:"「你要的｜這台」兩欄表格",C:"濃縮成一排綠色標籤，其他收起"}],
+  ["sw","軟體夠不夠卡",{cur:"軟體名＋三格刻度＋說明",A:"三格刻度放大成一條、亮的那格有字",B:"左邊彩色結論標籤、右邊軟體與說明",C:"先講總結，只展開有問題的那套"}],
+  ["compare","對比卡",{cur:"完整表格，機型全名當表頭",A:"短名表頭＋分組＋贏的格子綠底",B:"每個項目三條橫條，看得出差多少",C:"每台一格「贏在／輸在」，完整表格收起"}],
+  ["term","名詞解釋卡",{cur:"名詞、解釋、對你的影響依序排",A:"「對你的影響」放最上面加粗，定義變小",B:"字典式大名詞，影響用藍底框",C:"收成一行「P3 色域是什麼？」點了才開"}],
+  ["size","實物比例卡",{cur:"A4 疊圖＋重量文字",A:"左圖右字：圖和數字並排",B:"重量優先：大數字＋日常物品，A4 圖變小",C:"不畫圖，只有兩格文字"}],
+  ["near","差一點卡",{cur:"名稱價格＋差在哪／強在哪條列",A:"把「多 499 元」放最大，強項一句帶過",B:"「差在｜強在」左右對開",C:"濃縮成一行＋兩個按鈕"}],
+  ["choice","選項卡（追問）",{cur:"問題＋直排選項＋剩幾台小字",A:"黑框整列按鈕＋箭頭，最像「請按這裡」",B:"問題放橘底框標「換你說」，選項是膠囊",C:"兩欄大方格，剩幾台用藍色數字"}],
+];
+const KEYS = ELS.map(e=>e[0]);
+const S = Object.fromEntries(KEYS.map(k=>[k,"cur"]));
+try{Object.assign(S,JSON.parse(localStorage.getItem("replyHierarchyPick")||"{}"))}catch(e){}
+const qAll = new URLSearchParams(location.search).get("all"); if(qAll) KEYS.forEach(k=>S[k]=qAll);
+
+/* ---------- 資料 ---------- */
+const L = {
+  1:{n:"華碩a豆14 Air 2026",p:"5,900"}, 2:{n:"a豆14 Air 風信子藍",p:"6,034"},
+  3:{n:"無畏Pro14",p:"5,779"}, 4:{n:"惠普星Book Pro 16 2026款",p:"7,649"},
+};
+const ICON = '<svg viewBox="0 0 24 16"><rect x="4" y="1.5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M1 13.5h22l-1 1.5H2z" fill="currentColor"/></svg>';
+function mk(i){
+  const {n,p}=L[i], v=S.chip;
+  if(v==="A") return `<a class="mk mk-a">${n}</a><span class="mk-p">${p}</span>`;
+  if(v==="B") return `<span class="mk mk-b">${n}<i>${p}</i></span>`;
+  if(v==="C") return `<span class="mk mk-c"><b>${i}</b>${n}</span>`;
+  return `<span class="mk mk-cur">${ICON}${n}</span> <span class="mk-price">NT$ ${p}</span>`;
+}
+const f = t=>`<span class="fact">${t}</span>`;
+/* 段落：[小標, [片段…]]，片段是字串或 {k:重點句} */
+const PARAS = () => ({
+  p1:["先講我確定的",["你問得對，這種事不該只聽我講。先講我確定的：",{k:"這幾台是照你的用法（PS＋AI）挑的"},"——32G 記憶體、處理器單核夠力、OLED 廣色域，修圖和向量繪圖真正吃重的就是這三項。我沒把握的是你對尺寸和重量怎麼取捨，你還沒說想多大、想多輕，所以上一輪我刻意把 14 吋和 16 吋一起放上來。"]],
+  p2:["最推薦的一台",[{k:`要挑一台最好的，主候選池第 1 名就是 ${mk(1)}，77.2 分，這四台裡最高。`},`它也是這四台裡最輕、續航最久、${f("P3 覆蓋 100%")}，亮度也最高，等你晚上在房間修圖會很有感。代價是 14 吋畫面較小，${f("擴充性是四台最弱（51 分）")}，以後想加東西比較受限；會不會被這點影響，就看你平常用不用外接螢幕。`]],
+  p3:["你問的 72 分那台",[`你看到 72 分的那台，我猜是 ${mk(2)}（72.8 分）或是 ${mk(3)}（72.1 分），這兩台規格幾乎同一組：14 吋 2.8K OLED、32G／1T、1.38 公斤、續航約 10 小時，差在無畏Pro14 再安靜一點、再便宜一些。`,{k:`跟 ${mk(4)} 最大的差別在螢幕`},`：惠普是 16 吋 IPS 2.5K、240Hz，面板大、畫面滑順，但 ${f("P3 覆蓋只有 78.5%")}、${f("最高亮度 392 nits")}，是這幾台最低的，修圖時顏色會比較淡，暗部細節也吃虧；240Hz 對畫圖沒幫助，那是玩遊戲、拉視窗用的。惠普的長處是散熱和擴充（78／67 分，這幾台最好）、16 吋看很多面板舒服、續航 12.5 小時，但價格 7,649 也是這幾台最貴的。`]],
+  p4:["我的答案",["所以我的答案很明確：",{k:"只做 PS＋AI，選 華碩a豆14 Air 2026 最沒有懸念"},"，它是第一名，也是拿出去最輕鬆的一台。如果你眼睛容易累、習慣同時開很多面板，惠普那台的大畫面值得，但要接受顏色這關它輸一截，而且貴了一千七。"]],
+});
+function text(id){
+  const [label,segs]=PARAS()[id], v=S.text;
+  const full = segs.map(s=>typeof s==="string"?s:`<b class="key">${s.k}</b>`).join("");
+  const key = segs.filter(s=>s.k).map(s=>s.k).join("");
+  let h;
+  if(v==="B") h=`<div class="eyebrow">${label}</div><p>${full}</p>`;
+  else if(v==="C") h=`<details><summary>${key.replace(/[，。：]$/,"")}</summary><p>${full}</p></details>`;
+  else h=`<p>${full}</p>`;
+  return `<div class="tx tx-${v}${id==="p4"?" final":""}" data-el="text">${h}</div>`;
+}
+function count(){
+  const v=S.count;
+  if(v==="A") return `<div class="ct-A" data-el="count">符合的機型維持 133 台，沒有變</div>`;
+  if(v==="B") return `<div class="ct-B" data-el="count">133 台符合・沒有變</div>`;
+  if(v==="C") return `<div class="ct-C" data-el="count"><b>133</b><span>台符合你的條件，和上一輪一樣</span><button class="lnk">看全部</button></div>`;
+  return `<div class="ct-cur" data-el="count">符合的機型從 <b>133</b> 台維持不變</div>`;
+}
+const card=(k,title,inner)=>`<section class="card fr-${S.frame} k-${k}" data-el="${k}"><div class="eyebrow">${title}</div>${inner}</section>`;
+
+/* 權重變化（示意） */
+const W=[["性能",20,23],["螢幕",18,24],["便攜",16,16],["續航",15,12],["性價比",14,11],["散熱",7,6],["安靜",5,4],["擴充",5,4]];
+const WHY="你說主要用 Photoshop 和 Illustrator，顏色和處理器比較重要。";
+function wchange(){
+  const v=S.wchange, ch=W.filter(x=>Math.abs(x[2]-x[1])>=2), max=26;
+  const d=x=>x[2]>x[1]?`<span class="dl">↑ ${x[2]-x[1]}</span>`:`<span class="dl dn">↓ ${x[1]-x[2]}</span>`;
+  const track=x=>`<span class="wc-track"><i class="old" style="width:${x[1]/max*100}%"></i><i class="new" style="width:${x[2]/max*100}%;opacity:.9"></i></span>`;
+  const open=`<div class="row" style="margin-top:8px"><button class="btn">自己調整比重</button></div>`;
+  let h;
+  if(v==="A") h=`<div class="wc-A"><div class="wc-rows">${ch.map(x=>`<div class="wc-row ${x[2]<x[1]?"dn":""}"><span>${x[0]}</span>${track(x)}<span class="pct">${x[2]}%</span>${d(x)}</div>`).join("")}</div><p class="note" style="margin-top:8px">${WHY}</p>${open}</div>`;
+  else if(v==="B") h=`<div class="wc-B"><p class="lead">我把螢幕和性能看得更重了。</p><div class="chips">${ch.map(x=>`<span class="${x[2]<x[1]?"dn":""}">${x[0]} ${x[2]>x[1]?"↑":"↓"} ${x[2]}%</span>`).join("")}</div><p class="note">${WHY} <button class="lnk">自己調整比重</button></p></div>`;
+  else if(v==="C") h=`<div class="wc-C"><div class="stack">${W.map(x=>`<i class="${x[2]>x[1]+1?"up":x[2]<x[1]-1?"dn":""}" style="flex:${x[2]}" title="${x[0]} ${x[2]}%">${x[2]>=11?x[0]:""}</i>`).join("")}</div><div class="lg">${ch.map(x=>`<span><b>${x[0]}</b> ${x[1]}% → ${x[2]}% ${d(x)}</span>`).join("")}</div><p class="note">${WHY} <button class="lnk">自己調整比重</button></p></div>`;
+  else h=`<div class="wc-cur"><div class="wc-rows">${ch.map(x=>`<div class="wc-row ${x[2]<x[1]?"dn":""}"><span>${x[0]}</span>${track(x)}<span class="val">${x[1]}% → <b>${x[2]}%</b></span></div>`).join("")}</div><p class="note" style="margin-top:6px">${WHY}</p>${open}</div>`;
+  return card("wchange","比重調整",h);
+}
+
+/* 推薦卡 */
+const PROS=["四台裡最輕、續航最久","P3 覆蓋 100%，亮度最高","Photoshop、Illustrator 都夠用"], CONS=["14 吋畫面較小","擴充 51 分，四台最弱"];
+function rec(){
+  const v=S.rec, pc=`<ul class="pc">${PROS.map(x=>`<li class="pro">${x}</li>`).join("")}${CONS.map(x=>`<li class="con">${x}</li>`).join("")}</ul>`;
+  const acts=`<div class="row" style="margin-top:10px"><button class="btn pri">看詳情</button><button class="btn">收藏</button><button class="lnk">不考慮</button></div>`;
+  let h;
+  if(v==="A") h=`<div class="rc-A"><div class="score"><b>77.2</b><small>權重分</small></div><div class="nm">華碩a豆14 Air 2026</div><div class="row"><b class="num">NT$ 5,900</b><span class="tag o">主候選池 第 1／133</span></div>${pc}${acts}</div>`;
+  else if(v==="B") h=`<div class="rc-B"><span class="nm">華碩a豆14 Air 2026</span><p class="why">顏色最準、最輕，照你的用法分數最高。</p><div class="tiles"><div><small>權重分</small><b>77.2</b></div><div><small>主候選池</small><b>1／133</b></div><div><small>售價</small><b>5,900</b></div></div><p class="note">要接受的：${CONS.join("；")}。</p>${acts}</div>`;
+  else if(v==="C") h=`<div class="rc-C"><div class="hd"><span class="nm">華碩a豆14 Air 2026</span><b class="num">NT$ 5,900</b></div><div class="two"><div class="g"><h5>強項</h5><ul>${PROS.map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="b"><h5>要接受的</h5><ul>${CONS.map(x=>`<li>${x}</li>`).join("")}</ul></div></div><div class="row"><span class="tag">77.2 分</span><span class="tag">第 1／133</span></div>${acts}</div>`;
+  else h=`<div class="rc-cur"><div class="row"><span class="nm">華碩a豆14 Air 2026</span><span class="note num">NT$ 5,900・77.2 分</span></div>${pc}${acts}</div>`;
+  return card("rec","最推薦",h);
+}
+
+/* 需求對照卡 */
+const FIT=[["常用軟體：Photoshop","夠用"],["常用軟體：Illustrator","夠用"],["預算 8000 以內","5,900 元"]];
+const FITNOTE="另外「用途：設計」「設計類型不是平面／UI／3D／剪輯」「主要工具：PS＋AI 影像與向量」看整體分數：這台在主候選池排第 1／133";
+function fit(){
+  const v=S.fit, ok='<span class="ic ok">✓</span>';
+  let h;
+  if(v==="A") h=`<div class="ft-A"><div class="hd"><div class="big">3／3<small>項需求都符合</small></div></div><div class="seg"><i></i><i></i><i></i></div><ul>${FIT.map(r=>`<li>${ok}<span>${r[0]}</span><span class="v">${r[1]}</span></li>`).join("")}</ul><p class="note">${FITNOTE}</p></div>`;
+  else if(v==="B") h=`<div class="ft-B"><div class="row"><span class="nm">華碩a豆14 Air 2026</span><span class="tag">符合 3／3</span></div><table><tr><th>你要的</th><th>這台</th></tr>${FIT.map(r=>`<tr><td>${r[0]}</td><td>✓ ${r[1]}</td></tr>`).join("")}</table><p class="note">${FITNOTE}</p></div>`;
+  else if(v==="C") h=`<div class="ft-C"><div class="row"><span class="nm">華碩a豆14 Air 2026</span><span class="note">你的 3 項需求都符合</span></div><div class="chips">${FIT.map(r=>`<span>${ok}${r[0].replace("常用軟體：","")}・${r[1]}</span>`).join("")}</div><details><summary>另外 3 項看整體分數</summary><p class="note">${FITNOTE}</p></details></div>`;
+  else h=`<div class="ft-cur"><div class="row"><span class="nm">華碩a豆14 Air 2026</span><span class="note">符合 3／3</span></div><ul>${FIT.map(r=>`<li><span style="color:var(--good)">✓</span><span>${r[0]}</span><span class="v">${r[1]}</span></li>`).join("")}</ul><p class="note">${FITNOTE}</p></div>`;
+  return card("fit","對照你的需求",h);
+}
+
+/* 軟體夠不夠卡 */
+const SW=[["Photoshop","修圖","ok","記憶體 32G，超過建議的 16G"],["Illustrator","向量繪圖","ok","建議配置都達到"],["Premiere Pro（示意）","4K 剪輯","mid","沒有獨顯，4K 時間軸預覽會卡"]];
+const LV={ok:"夠用",mid:"吃力",no_:"不夠"};
+function sw(){
+  const v=S.sw, head=`<div class="row" style="margin-bottom:6px"><span class="nm">華碩a豆14 Air 2026</span><span class="note">跑你的軟體</span></div>`;
+  const scale=l=>`<div class="scale">${["no_","mid","ok"].map(k=>`<i class="${k===l?"on "+k:""}">${k===l||S.sw==="A"?LV[k]:""}&nbsp;</i>`).join("")}</div>`;
+  let h;
+  if(v==="A") h=`<div class="sw-A">${head}<div class="sw-list">${SW.map(x=>`<div class="sw-r"><b>${x[0]}</b> <span class="note">${x[1]}</span>${scale(x[2])}<span class="note">${x[3]}</span></div>`).join("")}</div></div>`;
+  else if(v==="B") h=`<div class="sw-B">${head}<div class="sw-list">${SW.map(x=>`<div class="sw-r"><span class="lv ${x[2]}">${LV[x[2]]}</span><span><b>${x[0]}</b> <span class="note">${x[1]}</span></span><small>${x[3]}</small></div>`).join("")}</div></div>`;
+  else if(v==="C"){const bad=SW.filter(x=>x[2]!=="ok"), good=SW.filter(x=>x[2]==="ok");
+    h=`<div class="sw-C"><p class="lead">3 套裡 ${good.length} 套夠用、${bad.length} 套吃力</p>${bad.map(x=>`<div class="warnbox"><span class="lv mid">${LV[x[2]]}</span> <b>${x[0]}</b>：${x[3]}</div>`).join("")}<div class="chips">${good.map(x=>`<span>✓ ${x[0]} 夠用</span>`).join("")}</div></div>`;}
+  else h=`<div class="sw-cur">${head}<div class="sw-list">${SW.map(x=>`<div class="sw-r"><b>${x[0]}</b> <span class="note">${x[1]}</span>${scale(x[2])}<small>${LV[x[2]]}：${x[3]}</small></div>`).join("")}</div></div>`;
+  return card("sw","軟體跑不跑得動",h);
+}
+
+/* 對比卡 */
+const CN=["a豆14 Air 風信子藍","惠普星Book Pro 16","無畏Pro14"];
+const CFULL=["華碩a豆14 Air 2026 (adol 14 Air 2026) (2026) a豆14 Air 2026 AI9/32+1T 風信子藍","惠普星Book Pro 16 2026款 (2026) Intel Core Ultra X7 358H / Intel Arc B390 集成顯卡 / 32GB / 1TB","華碩無畏Pro14 2026 銳龍版 (Vivobook Pro 14 2026) (2026) 無畏Pro14 2026 銳龍 AI9/32+1T"];
+const CPRICE=["6,034","7,649","5,779"];
+const CTOP=[["性能",68,71,66],["螢幕",88,78,87],["便攜",82,69,82]];
+const COTH=[["續航",36,45,36],["散熱",74,78,76],["安靜",93,95,96],["擴充",60,67,60],["性價比",25,9,28],["產品力",72.8,70.7,72.1]];
+const CSPEC=[["售價","NT$ 6,034","NT$ 7,649","NT$ 5,779"],["處理器","Ryzen AI 9 H 465","Core Ultra X7 358H","Ryzen AI 9 H 465"],["尺寸","14 吋","16 吋","14 吋"],["重量","1.38 公斤","1.78 公斤","1.38 公斤"]];
+function compare(){
+  const v=S.compare, win=r=>{const m=Math.max(r[1],r[2],r[3]);return [1,2,3].map(i=>r[i]===m)};
+  let h;
+  if(v==="A"){const rows=g=>g.map(r=>{const w=win(r);return `<tr><td>${r[0]}</td>${[1,2,3].map(i=>`<td class="num ${w[i-1]?"w":""}">${r[i]}</td>`).join("")}</tr>`}).join("");
+    h=`<div class="cmp-scroll"><table class="cp cp-A"><thead><tr><th></th>${CN.map((n,i)=>`<th><b>${n}</b><small>NT$ ${CPRICE[i]}</small></th>`).join("")}</tr></thead><tbody><tr class="grp"><td colspan="4">你最在意的 3 項</td></tr>${rows(CTOP)}<tr class="grp"><td colspan="4">其他分數</td></tr>${rows(COTH)}<tr class="grp"><td colspan="4">規格</td></tr>${CSPEC.slice(1).map(r=>`<tr><td>${r[0]}</td>${[1,2,3].map(i=>`<td class="t">${r[i]}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;}
+  else if(v==="B"){const dim=(r,top)=>{const w=win(r);return `<div class="dim ${top?"top":""}"><span>${r[0]}</span>${[1,2,3].map(i=>`<div class="b ${w[i-1]?"w":""}"><u class="c${i-1}" style="width:${r[i]*0.8}%"></u><em>${r[i]}</em></div>`).join("")}</div>`};
+    h=`<div class="bars"><div class="lg">${CN.map((n,i)=>`<span><i class="c${i}"></i>${n} <span class="num note">${CPRICE[i]}</span></span>`).join("")}</div>${CTOP.map(r=>dim(r,1)).join("")}${COTH.map(r=>dim(r,0)).join("")}</div>`;}
+  else if(v==="C"){const all=[...CTOP,...COTH];
+    h=`<div class="sum">${CN.map((n,i)=>{const g=all.filter(r=>win(r)[i]&&!win(r).every(Boolean)).map(r=>`${r[0]} ${r[i+1]}`), l=all.filter(r=>r[i+1]===Math.min(r[1],r[2],r[3])&&!win(r)[i]).map(r=>`${r[0]} ${r[i+1]}`);
+      return `<div class="it"><div class="hd">${n}<span>NT$ ${CPRICE[i]}</span></div><p class="g">贏在：${g.join("、")||"—"}</p><p class="l">輸在：${l.join("、")||"—"}</p></div>`}).join("")}<details><summary>看完整表格</summary><div class="cmp-scroll"><table class="cp">${all.concat(CSPEC).map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table></div></details></div>`;}
+  else h=`<div class="cmp-scroll"><table class="cp cp-cur"><thead><tr><th></th>${CFULL.map(n=>`<th>${n}</th>`).join("")}</tr></thead><tbody>${[...CTOP,CSPEC[0],...COTH.slice(5),...COTH.slice(0,5).reverse().reverse(),...CSPEC.slice(1)].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table></div><p class="note" style="margin-top:6px">顯示相同的 1 項</p>`;
+  return card("compare","三台比一比",h);
+}
+
+/* 名詞解釋卡（示意） */
+const TERM={t:"P3 色域",def:"P3 是比 sRGB 更廣的色彩範圍。覆蓋率越高，螢幕能顯示的鮮豔顏色越多。",imp:"你用 PS 修圖：P3 只有 78.5% 的螢幕顏色會偏淡，100% 的螢幕看到的比較接近成品。",src:"來源：知識庫・螢幕色域"};
+function term(){
+  const v=S.term; let h;
+  if(v==="A") h=`<div class="tm-A"><p class="imp">${TERM.imp}</p><p class="def"><b>${TERM.t}</b>：${TERM.def} <span class="note">${TERM.src}</span></p></div>`;
+  else if(v==="B") h=`<div class="tm-B"><div class="t">${TERM.t}</div><p class="def">${TERM.def}</p><div class="imp"><b>對你的影響</b>${TERM.imp}</div><p class="note" style="margin-top:6px">${TERM.src}</p></div>`;
+  else if(v==="C") h=`<details class="tm-C"><summary>${TERM.t}是什麼？<span>點開看解釋</span></summary><p>${TERM.def}</p><p><b>對你的影響：</b>${TERM.imp}</p><p class="note">${TERM.src}</p></details>`;
+  else h=`<div class="tm-cur"><b class="t">${TERM.t}</b><p>${TERM.def}</p><p><b>對你的影響：</b>${TERM.imp}</p><p class="note">${TERM.src}</p></div>`;
+  return card("term","名詞解釋",h);
+}
+
+/* 實物比例卡（示意尺寸） */
+const A4SVG=`<svg viewBox="-6 -6 325 234"><rect x="0" y="0" width="313" height="222" rx="8" fill="#12151C"/><rect x="0" y="0" width="297" height="210" rx="2" fill="#fff" stroke="#9AA2B4" stroke-width="1.5" stroke-dasharray="6 4" opacity=".92"/><text x="10" y="198" font-size="22" font-family="monospace" fill="#5A6174">A4</text></svg>`;
+function size(){
+  const v=S.size, nm=`<div class="row"><span class="nm">華碩無畏Pro14</span><span class="note">14 吋・1.38 公斤</span></div>`;
+  let h;
+  if(v==="A") h=`<div>${nm}<div class="sz-A" style="margin-top:8px"><div class="sz-fig">${A4SVG}</div><dl><dt>大小</dt><dd>比 A4 紙寬 1.6 公分、深 1.2 公分</dd><dt>重量</dt><dd>約 1 瓶鮮奶＋2 顆蘋果</dd></dl></div></div>`;
+  else if(v==="B") h=`<div class="sz-B">${nm}<div class="w" style="margin-top:6px">1.38 公斤</div><div class="eq"><span class="icons">🥛🍎🍎</span><span>約 1 瓶鮮奶＋2 顆蘋果</span></div><div class="sm"><div class="sz-fig">${A4SVG}</div><span>放在 A4 紙上，四邊各多出約 1 公分</span></div></div>`;
+  else if(v==="C") h=`<div class="sz-C">${nm}<div class="tiles"><div><small>大小</small><b>比 A4 紙大一圈（各多約 1 公分）</b></div><div><small>重量 1.38 公斤</small><b>約 1 瓶鮮奶＋2 顆蘋果</b></div></div></div>`;
+  else h=`<div class="sz-cur">${nm}<div class="sz-fig">${A4SVG}</div><p style="font-size:13px">🥛🍎🍎 1.38 公斤，約 1 瓶鮮奶＋2 顆蘋果</p></div>`;
+  return card("size","實際多大多重",h);
+}
+
+/* 差一點卡（示意機型） */
+function near(){
+  const v=S.near, nm="聯想小新Pro 16 2026（示意）", acts=`<button class="btn">加進來比較</button><button class="lnk">不用</button>`;
+  let h;
+  if(v==="A") h=`<div class="nr-A"><div class="gap">只多 499 元<small>${nm}・NT$ 8,499，超出你的預算 8000</small></div><p class="gain">換到：<b>16 吋 OLED、P3 覆蓋 100%</b>，散熱 81 分</p><div class="row">${acts}</div></div>`;
+  else if(v==="B") h=`<div><div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="nm">${nm}</span><b class="num">NT$ 8,499</b></div><div class="two"><div class="b"><h5>差在</h5>超出預算 499 元</div><div class="g"><h5>強在</h5>16 吋 OLED、P3 100%；散熱 81 分</div></div><div class="row">${acts}</div></div>`;
+  else if(v==="C") h=`<div class="nr-C"><span class="t">還有一台只多 <b>499 元</b>：<b>${nm}</b>，16 吋 OLED、P3 100%</span>${acts}</div>`;
+  else h=`<div class="nr-cur"><div class="row"><span class="nm">${nm}</span><span class="note num">NT$ 8,499</span></div><ul class="pc"><li class="con">超出預算 8000<span class="pill">多 499 元</span></li><li class="pro">16 吋 OLED，P3 覆蓋 100%</li><li class="pro">散熱 81 分</li></ul><div class="row">${acts}</div></div>`;
+  return card("near","差一點就符合",h);
+}
+
+/* 選項卡 */
+const Q="你修圖時會外接大螢幕嗎？這會決定值不值得為 16 吋犧牲顏色。";
+const OPS=[["幾乎都外接大螢幕","剩 86 台"],["都在筆電螢幕上修","剩 47 台"],["還沒想過，想先看哪台最適合",""]];
+function choice(){
+  const v=S.choice, dec=`<button class="lnk">都可以，你幫我決定</button>`;
+  let h;
+  if(v==="A") h=`<div class="ch-A"><p class="q">${Q}</p><div class="ops">${OPS.map(o=>`<button class="op"><span>${o[0]}</span><small>${o[1]}</small></button>`).join("")}</div>${dec}</div>`;
+  else if(v==="B") h=`<div class="ch-B"><div class="qbox"><div class="eyebrow">換你說</div><p class="q">${Q}</p></div><div class="ops">${OPS.map(o=>`<button class="op">${o[0]}${o[1]?`<small>${o[1]}</small>`:""}</button>`).join("")}</div>${dec}</div>`;
+  else if(v==="C") h=`<div class="ch-C"><p class="q">${Q}</p><div class="ops">${OPS.slice(0,2).map(o=>`<button class="op"><span>${o[0]}</span><small>${o[1]}</small></button>`).join("")}<button class="op wide">${OPS[2][0]}</button></div>${dec}</div>`;
+  else h=`<div class="ch-cur"><p class="q">${Q}</p><div class="ops">${OPS.map(o=>`<button class="op">${o[0]}<small>${o[1]}</small></button>`).join("")}</div>${dec}</div>`;
+  return card("choice","想問你一件事",h);
+}
+
+/* ---------- 組裝 ---------- */
+const NAME={cur:"現況",A:"A",B:"B",C:"C"};
+function renderChat(){
+  document.getElementById("bot").innerHTML=[count(),wchange(),text("p1"),text("p2"),rec(),fit(),sw(),size(),text("p3"),compare(),term(),near(),text("p4"),choice()].join("");
+}
+function renderSide(){
+  document.getElementById("els").innerHTML=ELS.map(([k,n,d])=>`<div class="el" data-row="${k}"><div class="el-h"><button class="name" data-go="${k}">${n}</button><span class="seg">${["cur","A","B","C"].map(v=>`<button data-k="${k}" data-v="${v}" aria-pressed="${S[k]===v}">${NAME[v]}</button>`).join("")}</span></div><div class="el-d"><b>${NAME[S[k]]}</b>：${d[S[k]]}</div></div>`).join("");
+  document.getElementById("pick").textContent=ELS.map(([k,n,d])=>`${n}：${NAME[S[k]]}（${d[S[k]].split(/[，：；]/)[0]}）`).join("\n");
+  try{localStorage.setItem("replyHierarchyPick",JSON.stringify(S))}catch(e){}
+}
+function go(k,scroll){
+  const els=[...document.querySelectorAll(`#bot [data-el="${k==="frame"?"rec":k==="chip"?"text":k}"]`)];
+  if(!els.length) return;
+  if(scroll) els[0].scrollIntoView({behavior:"smooth",block:"center"});
+  els.forEach(e=>{e.classList.add("flash");setTimeout(()=>e.classList.remove("flash"),900)});
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,[data-el]"); if(!b) return;
+  if(b.dataset.all){KEYS.forEach(k=>S[k]=b.dataset.all);renderChat();renderSide();return}
+  if(b.dataset.v){S[b.dataset.k]=b.dataset.v;renderChat();renderSide();go(b.dataset.k,false);return}
+  if(b.dataset.go){go(b.dataset.go,true);return}
+  if(b.id==="copy"){const t=document.getElementById("pick").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>document.getElementById("copied").textContent="已複製",()=>document.getElementById("copied").textContent="請手動選取上面的文字複製");return}
+  const c=e.target.closest("#bot [data-el]");
+  if(c){document.querySelectorAll(".el").forEach(r=>r.classList.toggle("focus",r.dataset.row===c.dataset.el));const r=document.querySelector(`.el[data-row="${c.dataset.el}"]`);r&&r.scrollIntoView({behavior:"smooth",block:"nearest"})}
+});
+renderChat();renderSide();
+</script>
+</body>
+</html>
