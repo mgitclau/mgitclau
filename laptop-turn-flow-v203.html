@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>一句話的旅程</title>
+<meta name="description" content="AI 筆電選購助手 v2.0.3：用戶送出一句話後，每個模組怎麼執行、彼此怎麼溝通（互動流程圖）">
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1f24; --ink2:#4a535e; --ink3:#7b8590; --line:#dfe3e8; --line2:#eceff3;
+  --band1:#ffffff; --band2:#f1f3f6; --accent:#2f5bea; --accent-soft:#e6ecfd;
+  --call:#2f5bea; --ret:#8a94a0; --evt:#12805c; --self:#7a4cc2; --warn:#b5531b; --warn-soft:#fbeee6;
+  --code-bg:#f3f5f8; --chip:#eef1f5;
+  --l-web:#0f7c86; --l-api:#5a6675; --l-host:#3b4fc4; --l-agent:#7a4cc2; --l-tools:#a8620a; --l-engine:#2c8a3e; --l-llm:#c23a63; --l-kb:#1c7fb5; --l-db:#7a5a3c;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121418; --panel:#1a1d23; --ink:#e7eaee; --ink2:#b3bbc5; --ink3:#87909b; --line:#2c3139; --line2:#23272e;
+    --band1:#1a1d23; --band2:#20242b; --accent:#7d9bff; --accent-soft:#232c48;
+    --call:#7d9bff; --ret:#8a94a0; --evt:#4cc79a; --self:#b592f0; --warn:#f0a070; --warn-soft:#3a2a20;
+    --code-bg:#15181d; --chip:#262b33;
+    --l-web:#3fbcc6; --l-api:#9aa6b4; --l-host:#8696ff; --l-agent:#b592f0; --l-tools:#e0a347; --l-engine:#5cc46e; --l-llm:#f07aa0; --l-kb:#5bb6ea; --l-db:#c9a27c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121418; --panel:#1a1d23; --ink:#e7eaee; --ink2:#b3bbc5; --ink3:#87909b; --line:#2c3139; --line2:#23272e;
+  --band1:#1a1d23; --band2:#20242b; --accent:#7d9bff; --accent-soft:#232c48;
+  --call:#7d9bff; --ret:#8a94a0; --evt:#4cc79a; --self:#b592f0; --warn:#f0a070; --warn-soft:#3a2a20;
+  --code-bg:#15181d; --chip:#262b33;
+  --l-web:#3fbcc6; --l-api:#9aa6b4; --l-host:#8696ff; --l-agent:#b592f0; --l-tools:#e0a347; --l-engine:#5cc46e; --l-llm:#f07aa0; --l-kb:#5bb6ea; --l-db:#c9a27c;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:14px;line-height:1.6}
+.wrap{max-width:1480px;margin:0 auto;padding:24px 20px 80px}
+code,pre,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px}
+h2{font-size:19px;margin:44px 0 6px}
+h3{font-size:15px;margin:0 0 6px}
+.sub{color:var(--ink2);margin:0}
+.meta{color:var(--ink3);font-size:12.5px;margin-top:6px}
+.lede{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0 0;color:var(--ink2)}
+.lede b{color:var(--ink)}
+
+/* 控制列 */
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-top:18px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lbl{font-size:12.5px;color:var(--ink3);margin-right:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 11px;cursor:pointer;transition:background .15s,border-color .15s}
+.seg button:hover,.btn:hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.counter{font-size:13px;color:var(--ink2);min-width:90px}
+.scdesc{font-size:13px;color:var(--ink2);margin-top:8px}
+@media (max-width:700px){.controls{position:static}}
+.spacer{flex:1}
+
+/* 主區 */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;margin-top:14px;align-items:start}
+@media (max-width:1100px){.main{grid-template-columns:minmax(0,1fr)}}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:78vh;position:relative}
+.lanehead{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);height:58px}
+.lanehead .lh{position:absolute;top:8px;transform:translateX(-50%);width:98px;text-align:center;border-radius:8px;padding:4px 2px;cursor:pointer;border:1.5px solid transparent;background:var(--chip)}
+.lanehead .lh b{display:block;font-size:12.5px;line-height:1.3}
+.lanehead .lh span{display:block;font-size:10px;color:var(--ink3);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanehead .lh.hot{border-color:currentColor}
+.lanehead .lh:hover{filter:brightness(.97)}
+svg text{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif}
+.m-label{font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+.m{cursor:pointer}
+.m .hit{stroke:transparent;stroke-width:16;fill:none}
+.m .ln{stroke-width:1.5;fill:none}
+.m.k-call .ln{stroke:var(--call)}
+.m.k-ret .ln{stroke:var(--ret);stroke-dasharray:5 4}
+.m.k-evt .ln{stroke:var(--evt);stroke-dasharray:2 3;stroke-width:1.8}
+.m.k-self .ln{stroke:var(--self)}
+.m.k-async .ln{stroke:var(--warn);stroke-dasharray:6 3}
+.m .num{font-size:10px;fill:var(--ink3)}
+.m:hover .m-label{fill:var(--accent)}
+.m.future{opacity:.38}
+.m.on .ln{stroke-width:3}
+.m.on .m-label{font-weight:700;fill:var(--accent)}
+.m.on .num{fill:var(--accent);font-weight:700}
+.onbar{fill:var(--accent-soft)}
+.band-label{font-size:12px;font-weight:700;fill:var(--ink2)}
+.band-sub{font-size:10.5px;fill:var(--ink3)}
+.lifeline{stroke:var(--line);stroke-dasharray:3 4}
+.loopbox{fill:none;stroke:var(--self);stroke-dasharray:6 4;stroke-width:1.2;opacity:.7}
+.looptag{font-size:11px;fill:var(--self);font-weight:700}
+.dot{fill:var(--accent)}
+
+/* 詳情面板 */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 18px;position:sticky;top:120px;max-height:calc(100vh - 140px);overflow:auto}
+@media (max-width:1100px){.panel{position:static;max-height:none}}
+.panel .crumb{font-size:12px;color:var(--ink3)}
+.panel h3{font-size:17px;margin:4px 0 8px}
+.fromto{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;font-size:12.5px}
+.tag{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:600;color:#fff}
+.kindtag{display:inline-block;border-radius:6px;padding:1px 7px;font-size:11.5px;border:1px solid var(--line);color:var(--ink2)}
+.sec{margin-top:12px}
+.sec .h{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.5px;margin-bottom:4px}
+.what{font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.what p{margin:0 0 6px}
+.fn{font-size:12.5px;background:var(--code-bg);border:1px solid var(--line2);border-radius:6px;padding:4px 8px;display:block;overflow-x:auto;white-space:pre}
+pre.code{margin:0;font-size:12px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--chip);border-radius:6px;padding:2px 8px;font-size:12px}
+.chip code{font-size:11.5px}
+.note{background:var(--warn-soft);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--ink)}
+.file{font-size:12px;color:var(--ink2)}
+.hint{color:var(--ink3);font-size:13px}
+
+/* 圖例 */
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink2);margin-top:10px}
+.legend svg{vertical-align:middle;margin-right:4px}
+
+/* 下方區塊 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;margin-top:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0;overflow-wrap:anywhere}
+.card .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.card ul{margin:4px 0 0;padding-left:18px}
+.card li{margin:2px 0}
+.card .f{font-size:12px;color:var(--ink3);margin-bottom:6px}
+.rules{counter-reset:r;list-style:none;padding:0;margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:12px}
+.rules li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 46px;position:relative}
+.rules li::before{counter-increment:r;content:counter(r);position:absolute;left:14px;top:12px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.rules b{display:block;margin-bottom:2px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 10px}
+.tabbody{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.tabbody p{margin:0 0 8px;color:var(--ink2)}
+.tablewrap{overflow-x:auto;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+th{font-size:12px;color:var(--ink3);font-weight:700;background:var(--band2)}
+td code{font-size:12px}
+.loopfig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;overflow-x:auto;margin-top:12px}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:11.5px;background:var(--panel)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>一句話的旅程</h1>
+  <p class="sub">AI 筆電選購助手 · 用戶送出一句話之後，每個模組怎麼執行、彼此怎麼溝通</p>
+  <p class="meta">以 <code>laptop-assistant-v2.0.3</code> 程式碼為準（代理 2.0＋回覆卡片；2026-11-21 讀碼整理）。範例裡的數字、機型 id 是示意，型別與欄位名稱照程式。</p>
+
+  <div class="lede">
+    <b>怎麼看：</b>下面是一張「泳道順序圖」——每一直欄是一個模組，箭頭由上往下就是時間順序。
+    <b>點任何一個箭頭</b>，右邊會說明這一步在做什麼、呼叫哪個函式、傳了什麼資料（型別＋範例）、牽涉哪些開關。
+    <b>點欄位標題</b>看那個模組的職責與邊界。用上方的「情境」切換不同的路線，用 <span class="kbd">←</span> <span class="kbd">→</span> 一步一步走，<span class="kbd">空白鍵</span> 自動播放。
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="lbl">情境</span>
+      <div class="seg" id="scenarios"></div>
+      <span class="spacer"></span>
+      <button class="btn" id="prev">← 上一步</button>
+      <button class="btn primary" id="play">▶ 播放</button>
+      <button class="btn" id="next">下一步 →</button>
+      <button class="btn" id="reset">回到開頭</button>
+      <span class="counter" id="counter"></span>
+    </div>
+    <div class="scdesc" id="scdesc"></div>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="diagram" id="diagram">
+        <div class="lanehead" id="lanehead"></div>
+        <svg id="svg" role="img" aria-label="一輪對話的泳道順序圖"></svg>
+      </div>
+      <div class="legend">
+        <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--call)" stroke-width="1.6"/></svg>呼叫／送出</span>
+        <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--ret)" stroke-width="1.6" stroke-dasharray="5 4"/></svg>回傳結果</span>
+        <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--evt)" stroke-width="1.8" stroke-dasharray="2 3"/></svg>串流事件（NDJSON 一行）</span>
+        <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--warn)" stroke-width="1.6" stroke-dasharray="6 3"/></svg>並行的工作</span>
+        <span><svg width="34" height="14"><path d="M4 3 h18 v8 h-18" fill="none" stroke="var(--self)" stroke-width="1.6"/></svg>模組自己內部的步驟</span>
+      </div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <h2>代理迴圈放大看</h2>
+  <p class="sub">第 ④ 段是整輪最花時間的地方：模型一次可以叫好幾個工具，程式執行完把結果交回，再叫一次模型……直到模型交出 <code>reply</code> 而且通過三道檢查。</p>
+  <div class="loopfig" id="loopfig"></div>
+
+  <h2>模組與邊界</h2>
+  <p class="sub">點上面圖裡的欄位標題也會看到同樣的內容。每個模組只透過固定的介面和別人說話。</p>
+  <div class="cards" id="modcards"></div>
+
+  <h2>模組化的 8 條規矩（從程式裡歸納）</h2>
+  <ol class="rules">
+    <li><b>主機不看方案是誰</b>主機 <code>turn.ts</code> 只負責上鎖、讀設定、還原狀態、組工具箱、存檔、算動效；理解與回覆全交給方案的 <code>run(sc)</code>。換方案不用改主機。</li>
+    <li><b>方案不碰資料庫</b>代理 2.0 要存的東西（回覆、卡片、trace、新意圖類別、用戶事件）全部放進 <code>SchemeOutcome</code> 交回，由主機在同一個交易裡寫。</li>
+    <li><b>AI 呼叫一律經過 <code>sc.model</code></b>方案拿不到供應商設定，只能跟主機要；主機順便檢查時間預算、每日上限、解密金鑰，並把每次呼叫記進 <code>llm_calls</code>。</li>
+    <li><b>程式算數字，模型只做判斷</b>候選池、篩選、權重分、名次、「剩幾台」都是引擎算的；模型只說「放哪張卡、哪台、哪個欄位」，程式再查值。查不到的卡直接拿掉、記在 <code>dropped</code>。</li>
+    <li><b>工具出錯不丟例外</b>任何工具錯誤都變成 <code>{"error": "…"}</code> 交回給模型看，模型可以自己修正再試；整輪不會因為一個工具壞掉而 500。</li>
+    <li><b>狀態只有一份</b>需求、權重、排除清單、代理私有狀態（<code>state.ext.agent2</code>）都在 <code>ConversationState</code> 裡；工具直接改它，存檔時整份寫回 <code>conversations.state</code>。</li>
+    <li><b>串流只是預覽</b><code>reply_start／reply_text／reply_card</code> 讓用戶先看到草稿；最後的 <code>done</code> 才是存檔版本，畫面一律以它為準。</li>
+    <li><b>每個細節都有開關</b>工具、卡片、上文的每一段、檢查、串流、動畫都有開關（後台可切），關掉時程式走舊路，不會壞。</li>
+  </ol>
+
+  <h2>模組之間的通訊契約</h2>
+  <p class="sub">箭頭上傳的資料，全部定義在 <code>packages/contracts</code> 或各模組的介面檔裡。點分頁看完整欄位。</p>
+  <div class="tabs seg" id="ctabs"></div>
+  <div class="tabbody" id="cbody"></div>
+
+  <h2>一輪會送出的進度步驟名稱</h2>
+  <p class="sub">主機每完成一步呼叫 <code>lap(name)</code>：開關 <code>log.step_timings</code> 開時記進 <code>runs.timings</code>（後台看每步耗時），串流時同時送一行 <code>{"type":"step","name":…}</code> 給前端換狀態文字。</p>
+  <div class="tablewrap"><table id="laps"></table></div>
+
+  <h2>寫進資料庫的東西（存檔交易）</h2>
+  <p class="sub">全部在 <code>turn.ts</code> 的同一個 <code>db.transaction</code> 裡，順序如下；任何一筆失敗，整輪一起回滾。</p>
+  <div class="tablewrap"><table id="txtable"></table></div>
+</div>
+
+<script>
+/* =========================================================
+ * 資料：泳道（模組）
+ * ========================================================= */
+const LANES = [
+  { k:"web", name:"用戶端", sub:"apps/web · useAssistant", c:"--l-web",
+    role:"瀏覽器裡的 React 畫面。負責送出、收串流、畫草稿、播動畫、更新右欄機型卡。",
+    files:["apps/web/src/user/useAssistant.ts","apps/web/src/shared/api.ts（apiStream 讀 NDJSON）","apps/web/src/user/liveReply.ts（草稿）","apps/web/src/user/pacing.ts（節奏）","apps/web/src/user/ChatCards.tsx、ChatCardsV203.tsx（卡片）"],
+    talks:["→ API：HTTP POST／PUT（JSON）","← API：NDJSON 串流（一行一個 TurnStreamEvent）或一整包 TurnResponse"],
+    rule:"不自己算任何分數或名次：畫面上的數字全部來自 TurnResponse。" },
+  { k:"api", name:"路由端點", sub:"apps/api · routes-user.ts", c:"--l-api",
+    role:"Fastify 路由。把 HTTP 請求驗證、轉成 TurnInput，交給主機；串流端點把主機的進度事件一行一行寫回去。",
+    files:["apps/api/src/routes-user.ts","packages/contracts/src/api.ts（SendMessageBody 等 zod 結構）"],
+    talks:["← 用戶端：/messages/stream、/messages、/profile、/relax、/weights、/exclude、/compare","→ 主機：runTurn(ctx, row, TurnInput, { onProgress })"],
+    rule:"只做驗證與轉換；同一段對話正在處理時直接回 409。" },
+  { k:"host", name:"一輪主機", sub:"apps/api · turn.ts", c:"--l-host",
+    role:"每一輪的總管：上鎖、讀設定、還原狀態、選方案、組工具箱 SchemeContext、等方案跑完、附建議回覆、存檔、算動效、回傳 TurnResponse。",
+    files:["apps/api/src/turn.ts（runTurn）","apps/api/src/scheme.ts（SchemeContext／SchemeOutcome 介面）","apps/api/src/context.ts（loadConfig、modelDeps）","apps/api/src/turn-common.ts（hydrateState 等）"],
+    talks:["→ 方案：scheme.run(sc)","→ 資料庫：讀設定、存檔交易","→ 引擎：動效前後比對、建議回覆","→ 串流：emit(TurnProgressEvent)"],
+    rule:"不 import 任何理解／回覆邏輯；底下不看方案是誰。" },
+  { k:"agent", name:"代理 2.0", sub:"schemes/agent2.ts", c:"--l-agent",
+    role:"唯一的流程方案。組核心說明書、跑「模型 ⇄ 工具」迴圈、三道檢查、整理卡片、寫 trace 與私有狀態。",
+    files:["apps/api/src/schemes/agent2.ts（run）","apps/api/src/agent2/prompt.ts（核心說明書）","apps/api/src/agent2/run-helpers.ts（前置步驟、保底文字）","apps/api/src/agent/cards.ts、cards-v203.ts、reply-blocks.ts、reply-stream.ts"],
+    talks:["← 主機：SchemeContext","→ 模型：callModelWithTools","→ 工具箱：runTool(call)","→ 主機：SchemeOutcome"],
+    rule:"不碰資料庫；AI 呼叫只能經 sc.model 拿到的供應商。" },
+  { k:"tools", name:"工具箱", sub:"agent2/tools.ts · agent/*", c:"--l-tools",
+    role:"模型可以叫的 13 個工具：report_intent、read_manual、find_columns、update_profile、sort_pool、sql_query、search_knowledge、pool_query、pool_what_if、compare_laptops、weight_sensitivity、recall、reply。",
+    files:["apps/api/src/agent2/tools.ts（2.0 新工具＋工具清單）","apps/api/src/agent/tools.ts（update_profile、sort_pool、sql_query）","apps/api/src/agent/pool-tools.ts（pool_query、pool_what_if）","apps/api/src/knowledge/tool.ts（search_knowledge）"],
+    talks:["← 代理：工具名稱＋參數（JSON）","→ 代理：ToolOutcome { status, result, summary }"],
+    rule:"每個工具都有開關；關掉的工具不會出現在給模型的清單裡。錯誤一律回 {error}。" },
+  { k:"engine", name:"候選池引擎", sub:"packages/engine", c:"--l-engine",
+    role:"純函式：依需求分主／次候選池、算七維分數與權重分、排名、優缺點、試算、動效事件、建議回覆。",
+    files:["packages/engine/src/rank.ts（buildSnapshot）","filter.ts、pool-rules.ts（分池）","scoring.ts、weights.ts（分數與權重）","motion.ts（動效事件）、suggest.ts（建議回覆）"],
+    talks:["← 代理／工具／主機：需求、權重、開關、門檻","→ Snapshot { formal, edge, out, pool… }"],
+    rule:"不讀資料庫、不叫模型；同樣的輸入一定得到同樣的輸出。" },
+  { k:"llm", name:"模型", sub:"packages/nlu → DeepSeek", c:"--l-llm",
+    role:"把說明書、對話、工具清單送給供應商（OpenAI 相容或 Anthropic 格式），串流收回文字與工具呼叫。",
+    files:["packages/nlu/src/agent-call.ts（callModelWithTools）","packages/nlu/src/provider.ts（網址、標頭、思考強度）"],
+    talks:["← 代理：AgentCallRequest { system, messages, tools, … }","→ 代理：AgentCallResult { text, toolCalls, tokens… }＋串流 onDelta"],
+    rule:"這層不寫紀錄；呼叫端（代理）記 llm_calls。" },
+  { k:"kb", name:"知識庫", sub:"packages/knowledge", c:"--l-kb",
+    role:"Postgres＋pgvector 的知識條目（含從軟體庫匯入的 70 條）。關鍵字、向量、混合三種查法。",
+    files:["packages/knowledge/src/*","apps/api/src/knowledge/tool.ts（kbAvailability、kbSummary、runSearchKnowledge）"],
+    talks:["← 代理：這輪能不能查、摘要","← 工具：ctx.kb.search(query, { mode, topN })","→ hits：條目 id、內容、分類、出處"],
+    rule:"查不到不算錯：記進 trace.kbMisses 給 M 分析。" },
+  { k:"db", name:"資料庫", sub:"PostgreSQL · packages/db", c:"--l-db",
+    role:"設定、對話、訊息、每輪紀錄、模型呼叫、意圖類別、提示詞與手冊、機型資料（給唯讀 SQL）。",
+    files:["packages/db/src/schema.ts","packages/db/src/agent-sql.ts（唯讀查詢帳號 la_agent_sql）"],
+    talks:["← 主機：loadConfig、讀上文、存檔交易","← 工具：read_manual、sql_query（唯讀交易）"],
+    rule:"代理 2.0 本身從不直接寫資料庫。" },
+];
+const LI = Object.fromEntries(LANES.map((l,i)=>[l.k,i]));
+
+/* =========================================================
+ * 資料：情境
+ * ========================================================= */
+const SCEN = [
+  { id:"msg", name:"打一句話", desc:"最常見的路線：用戶在輸入框打「我是設計系學生，預算 4 萬，常用 Photoshop，想要輕一點的」並送出（串流開關 pace.stream 開）。" },
+  { id:"btn", name:"按卡片選項／改需求", desc:"用戶按了回覆卡片上的選項（帶 cardId＋optionId），或在「你的需求」改／刪標籤、按放寬。程式先套用這個操作（前置步驟），再替模型寫一句「用戶在畫面上的操作」。" },
+  { id:"reject", name:"被三道檢查退回", desc:"模型第一次交 reply 時漏了東西（例如沒交意圖、有新資訊卻沒記需求、出推薦卡卻沒寫推薦判斷）。程式退回一次，模型補完再交。" },
+  { id:"silent", name:"按鈕操作（靜默）", desc:"調權重、按「不考慮」、加入對比、手動篩選：走「靜默管道」，完全不叫模型，只重算候選池、存檔、播動畫。這裡用「不考慮這台」當例子。" },
+  { id:"nomodel", name:"沒有模型可用", desc:"後台沒設定模型、每日上限用完，或整輪時間預算不夠：主機給代理的 provider 是 null，代理不跑迴圈，直接回保底文字（候選池照樣更新）。" },
+];
+const T = ["msg","btn","reject","nomodel"];   // 有對話的管道
+const L = ["msg","btn","reject"];             // 會跑模型迴圈
+const A = ["msg","btn","reject","silent","nomodel"];
+const S = ["silent"];
+
+const PH = {
+  1:{ n:"① 送出", s:"用戶端→端點" },
+  2:{ n:"② 主機準備", s:"讀設定與上文" },
+  3:{ n:"③ 代理準備", s:"重算、取模型" },
+  4:{ n:"④ 代理迴圈", s:"模型⇄工具", loop:true },
+  5:{ n:"⑤ 整理回覆", s:"卡片與收尾" },
+  6:{ n:"⑥ 主機存檔", s:"一個交易" },
+  7:{ n:"⑦ 畫面更新", s:"草稿→正式" },
+};
+
+const SENT = "我是設計系學生，預算 4 萬，常用 Photoshop，想要輕一點的";
+
+/* =========================================================
+ * 資料：每一步
+ * k: call 呼叫 / ret 回傳 / evt 串流事件 / self 內部 / async 並行
+ * ========================================================= */
+const STEPS = [
+/* ---------- ① 送出 ---------- */
+{ id:"w_send", ph:1, f:"web", t:"web", k:"self", sc:T, lab:"按下送出",
+  title:"用戶按下送出",
+  what:`<p>先把用戶的泡泡放上對話欄（pushUser），再檢查有沒有正在處理的上一句（busyRef），避免連按兩次。</p><p>首頁第一次送出時還沒有對話，<code>ensureConversation()</code> 會先 <code>POST /api/conversations</code> 建一個（標題「新對話」）。</p>`,
+  fn:"useAssistant.send(text, card?)", file:"apps/web/src/user/useAssistant.ts",
+  data:`send(raw: string,
+     card?: { cardId: string; optionId: string }   // 按卡片選項
+          | { suggestionId: string })               // 按建議回覆（只用來記事件）`,
+  ex:`send("${SENT}")`,
+  flags:["pace.stream — 開：走串流端點；關：走 /messages 一次回整包","pace.reveal_text／pace.reveal_cards — 沒串流時也能逐句逐張出現"],
+  sv:{ btn:{ title:"用戶按了卡片上的選項", ex:`send("13～14 吋", { cardId: "size", optionId: "s14" })`,
+      what:`<p>選項卡、需求卡、建議回覆按下去，一樣是 <code>send()</code>，只是多帶 <code>cardId／optionId</code>（或 <code>suggestionId</code>）。</p><p>另外兩個入口：在「你的需求」改／刪標籤走 <code>/profile</code>（channel <code>profile</code>），按「放寬」走 <code>/relax</code>（channel <code>relax</code>），都是一般 JSON 請求、不串流，但一樣會叫模型。</p>` } } },
+{ id:"w_send_s", ph:1, f:"web", t:"web", k:"self", sc:S, lab:"按「不考慮這台」",
+  title:"用戶按「不考慮這台」",
+  what:`<p>這類按鈕不會在對話欄多一個泡泡，前端用 <code>withConversation("quiet", false, …)</code>：只更新結果，不算一輪對話。</p><p>同一類的還有：調權重（/weights）、恢復系統建議（/weights/reset）、加入／移出對比（/compare）、篩選抽屜（/profile 帶 quiet: true → channel filter）。</p>`,
+  fn:"useAssistant.setExcluded(laptop, true)", file:"apps/web/src/user/useAssistant.ts",
+  data:`setExcluded(laptop: { id: string; name: string }, excluded: boolean)`, ex:`setExcluded({ id: "GJS0001", name: "某品牌 14 吋" }, true)`, flags:[] },
+{ id:"w_post", ph:1, f:"web", t:"api", k:"call", sc:T, lab:"POST …/messages/stream",
+  title:"送出 HTTP 請求（串流端點）",
+  what:`<p>前端用 <code>apiStream()</code> 發 POST，然後用 <code>res.body.getReader()</code> 一段一段讀回應，每讀到一個換行就是一個事件。</p>`,
+  fn:"apiStream(path(id, \"/messages/stream\"), body, onEvent)", file:"apps/web/src/shared/api.ts",
+  data:`// packages/contracts/src/api.ts
+SendMessageBody = z.object({
+  text: z.string().trim().min(1).max(2000),
+  cardId?: string,
+  optionId?: string,
+  suggestionId?: string   // 最多 40 字
+})`,
+  ex:`POST /api/conversations/6f1c…/messages/stream
+Content-Type: application/json
+
+{ "text": "${SENT}" }`,
+  flags:["速率限制 turnPerMinute — 每分鐘最多幾句"],
+  sv:{ btn:{ ex:`POST /api/conversations/6f1c…/messages/stream
+
+{ "text": "13～14 吋", "cardId": "size", "optionId": "s14" }
+
+// 改需求標籤則是：
+POST /api/conversations/6f1c…/profile
+{ "upsert": [ { "id": "size", "field": "size", … } ], "remove": [] }` } } },
+{ id:"w_put", ph:1, f:"web", t:"api", k:"call", sc:S, lab:"PUT …/exclude/:laptopId",
+  title:"送出 HTTP 請求（一般 JSON）",
+  what:`<p>靜默操作不用串流，一次等整包 <code>TurnResponse</code> 回來。</p>`,
+  fn:"api(path(id, `/exclude/${laptopId}`), { method: \"PUT\" })", file:"apps/web/src/user/useAssistant.ts",
+  data:`PUT    /api/conversations/:id/exclude/:laptopId   → 加入不考慮
+DELETE /api/conversations/:id/exclude/:laptopId   → 移除`,
+  ex:`PUT /api/conversations/6f1c…/exclude/GJS0001`, flags:[] },
+{ id:"a_check", ph:1, f:"api", t:"api", k:"self", sc:T, lab:"驗證、檢查忙碌",
+  title:"端點驗證請求",
+  what:`<p>1. <code>SendMessageBody.parse</code>：格式不對直接回 400。<br>2. <code>conv()</code>：找對話、確認是這位用戶（或訪客 cookie）的。<br>3. <code>ctx.busy.has(id)</code>：同一段對話上一句還在跑 → 回 <b>409「上一句還在處理中」</b>。<br>4. <code>messageInput(b)</code> 把請求轉成主機看得懂的 <code>TurnInput</code>；帶 suggestionId 時順便準備一筆 <code>suggestion_click</code> 事件。</p><p>這些錯誤都發生在串流開始前，所以照一般 HTTP 錯誤回。</p>`,
+  fn:"SendMessageBody.parse → conv(req) → messageInput(b)", file:"apps/api/src/routes-user.ts",
+  data:`// apps/api/src/turn-common.ts
+interface TurnInput {
+  channel: "message" | "profile" | "filter" | "relax"
+         | "weights" | "exclude" | "compare";
+  text: string;
+  cardId?: string; optionId?: string; suggestionId?: string;
+  ops?: ProfileOp[];                       // 需求的新增／刪除
+  mutate?: (s: ConversationState) => void; // 按鈕直接改狀態
+  manualDims?: string[];
+  userEvents?: (runId, state) => EventSpec[];
+}`,
+  ex:`{ "channel": "message", "text": "${SENT}" }`, flags:["log.event_suggestion_click — 點建議回覆時記事件"] },
+{ id:"a_run", ph:1, f:"api", t:"host", k:"call", sc:T, lab:"runTurn(input, onProgress)",
+  title:"把這一句交給主機",
+  what:`<p>串流端點先建一條 <code>PassThrough</code> 管子，<code>onProgress</code> 每收到一個事件就寫一行 JSON 進去。<code>runTurn</code> 不等它跑完（<code>void runTurn(...)</code>），端點立刻把管子當回應送出。</p><p>用戶中途關頁面，這一輪照樣跑完、存檔，只是沒人收。</p>`,
+  fn:"runTurn(ctx, row, messageInput(b), { onProgress: write })", file:"apps/api/src/routes-user.ts → turn.ts",
+  data:`interface RunTurnOptions {
+  schemeId?: string;          // 只給批次重跑腳本
+  flagOverrides?: FlagMap;    // 只給重跑腳本 --flags
+  onProgress?: (ev: TurnProgressEvent) => void;
+}
+type TurnProgressEvent = Exclude<TurnStreamEvent, { type: "done" | "error" }>`,
+  ex:`const write = (ev) => out.write(JSON.stringify(ev) + "\\n");
+void runTurn(ctx, row, input, { onProgress: write })
+  .then((response) => write({ type: "done", response }))
+  .catch(() => write({ type: "error", status: 500, message: "系統暫時無法回應，請稍後再試" }))
+  .finally(() => out.end());`, flags:[] },
+{ id:"a_run_s", ph:1, f:"api", t:"host", k:"call", sc:S, lab:"runTurn(channel: exclude)",
+  title:"把按鈕操作交給主機",
+  what:`<p>端點先把要做的改動包成 <code>mutate</code> 函式（排除這台＋同款、並移出比較盤），再連同要記的 <code>exclude_on</code> 事件一起交給主機。沒有 <code>onProgress</code>：不串流。</p>`,
+  fn:"runTurn(ctx, row, { channel: \"exclude\", text, mutate, userEvents })", file:"apps/api/src/routes-user.ts",
+  data:`TurnInput（channel 是 SILENT_CHANNELS 之一：
+  "weights" | "exclude" | "compare" | "filter"）`,
+  ex:`{
+  "channel": "exclude",
+  "text": "加入 GJS0001",
+  "mutate": (s) => toggleExcluded(s, "GJS0001", true, …),
+  "userEvents": (runId) => [{ "kind": "exclude_on", "laptopId": "GJS0001", "data": { runId } }]
+}`, flags:[] },
+{ id:"a_hdr", ph:1, f:"api", t:"web", k:"ret", sc:["msg","btn","reject","nomodel"], lab:"200 + NDJSON 標頭",
+  title:"先回應標頭，開始串流",
+  what:`<p>HTTP 200 立刻回去，內容型別是 <b>NDJSON</b>（每行一個 JSON）。之後主機每做完一步，前端就多收到一行。最後一行一定是 <code>done</code> 或 <code>error</code>。</p><p>（改需求的 /profile、放寬的 /relax 不走串流，沒有這一步。）</p>`,
+  fn:"reply.header(...).send(out)", file:"apps/api/src/routes-user.ts",
+  data:`Content-Type: application/x-ndjson; charset=utf-8
+Cache-Control: no-cache
+X-Accel-Buffering: no      // 之後放 nginx 後面時不要整包緩衝`,
+  ex:`HTTP/1.1 200 OK
+Content-Type: application/x-ndjson; charset=utf-8`, flags:[] },
+
+/* ---------- ② 主機準備 ---------- */
+{ id:"h_lock", ph:2, f:"host", t:"host", k:"self", sc:A, lab:"上鎖、產生 runId",
+  title:"上鎖並開始計時",
+  what:`<p><code>ctx.busy.add(conversationId)</code>：這段對話上鎖，跑完（不管成功失敗）在 finally 解鎖。</p><p>產生這一輪的 <code>runId</code>（UUID），之後的訊息、模型呼叫、事件都用它串起來。開始計時 t0。</p>`,
+  fn:"runTurn → turn(ctx, row, input, o)", file:"apps/api/src/turn.ts",
+  data:`ctx.busy: Set<string>   // 正在處理的對話 id
+runId = randomUUID()`, ex:`runId = "c0a8e3d2-…"`, flags:[] },
+{ id:"h_cfg", ph:2, f:"host", t:"db", k:"call", sc:A, lab:"loadConfig()",
+  title:"讀設定",
+  what:`<p>一次把這輪需要的設定讀出來：所有功能開關（flags）、門檻（thresholds）、預設權重、需求卡題庫、軟體庫、權重計算方案、目前生效的方案…</p><p>讀完記第一個步驟「讀設定」。重跑腳本可以用 <code>flagOverrides</code> 只覆蓋這一輪的開關、不寫資料庫。</p>`,
+  fn:"loadConfig(ctx.db)", file:"apps/api/src/context.ts",
+  data:`Config {
+  flags: FlagMap;            // 約 328 個開關（v2.0.3）
+  thresholds: Thresholds;    // 門檻值
+  defaultWeights: Weights;   // 七維：performance display portability battery thermal noise expandability
+  cards; library; rules; home; weightScheme; …
+}`,
+  ex:`{ "flags": { "pace.live_reply": true, "agent2.gate_hard": true, … },
+  "thresholds": { "agentMaxRounds": 30, "agentTurnBudgetMs": 0, … } }`,
+  flags:["log.step_timings — 記每一步耗時"] },
+{ id:"h_step", ph:2, f:"host", t:"web", k:"evt", sc:T, lab:"{type:\"step\"} 進度",
+  title:"進度事件：每完成一步就送一行",
+  what:`<p>主機的 <code>lap(name)</code> 同時做兩件事：記耗時、送一行 <code>step</code>。前端拿步驟名換狀態文字（例如「正在理解你的需求…」）。</p><p>這一步在圖上只畫一次，實際上整輪每個 lap 都會送（完整清單見頁面下方「進度步驟名稱」）。</p>`,
+  fn:"lap(name) → emit({ type: \"step\", name })", file:"apps/api/src/turn.ts",
+  data:`{ type: "step"; name: string }`,
+  ex:`{"type":"step","name":"讀設定"}
+{"type":"step","name":"讀對話紀錄"}
+{"type":"step","name":"讀用戶操作"}
+{"type":"step","name":"前置步驟"}
+{"type":"step","name":"代理第 1 回合"}`,
+  flags:["pace.keep_steps — 回覆出現後保留進度行"] },
+{ id:"h_state", ph:2, f:"host", t:"host", k:"self", sc:A, lab:"還原狀態、選方案",
+  title:"還原對話狀態，選出方案",
+  what:`<p><code>hydrateState(withoutDelisted(structuredClone(row.state)))</code>：從資料庫那份複製一份、補上新欄位的預設值、拿掉已下架的機型。之後方案直接改這一份。</p><p><code>schemeById(activeSchemeId(cfg))</code>：v2.0.0 起只剩一個方案 <b>agent2</b>。</p>`,
+  fn:"hydrateState(...) ; schemeById(...)", file:"apps/api/src/turn.ts、turn-common.ts、schemes/index.ts",
+  data:`ConversationState {
+  profile: Requirement[];       // 你的需求
+  weights: Weights; manualWeights: Weights | null; perfSubs;
+  excludedIds: string[]; compareIds: string[];
+  lastOrder: string[]; lastFormal: number; holdOrder: boolean;
+  turnNo: number; consecutiveAsk: number;
+  ext?: { agent2?: Agent2Ext; card_specs?: … };   // 各方案私有狀態
+  …
+}`,
+  ex:`{ "turnNo": 1,
+  "profile": [ { "id": "purpose", "field": "purpose", "value": "修圖", "label": "主要拿來修圖", "hard": false, … } ],
+  "excludedIds": [], "ext": { "agent2": { … } } }`, flags:[] },
+{ id:"h_before", ph:2, f:"host", t:"engine", k:"call", sc:A, lab:"viewSnapshot（動效的「之前」）",
+  title:"算出這輪開始前畫面上的樣子",
+  what:`<p>動畫要比較「之前」和「之後」。開關 <code>anim.enabled</code> 開時，用代理的 <code>viewSnapshot</code> 算一次候選池（照上次顯示的順序），記成 <code>before</code>。最後存檔完再算一次「之後」，兩者比對出要播的動畫。</p>`,
+  fn:"scheme.viewSnapshot(ctx, cfg, clone(state)) → motionSideOf(...)", file:"apps/api/src/turn.ts、schemes/agent2.ts",
+  data:`viewSnapshot(app, cfg, state): Snapshot
+motionSide(snapshot, state): { ids, formalCount, … }`, ex:`before = { "formal": ["GJS0001","ABC0123", …], "count": 42 }`,
+  flags:["anim.enabled — 關：不算 before、不播動畫"] },
+{ id:"h_ctx", ph:2, f:"host", t:"db", k:"call", sc:T, lab:"讀收藏、意圖類別、對話紀錄、操作",
+  title:"讀這輪的上文",
+  what:`<p>並行讀：<br>• <b>收藏</b>（兩池模式才讀，代理的 pool_query 會回報收藏在哪個池）<br>• <b>候選池方案是不是圖片方案</b>（是的話要另外挑卡片規格）<br>• <b>意圖類別</b> <code>agent2_intents</code>（9 個參考類別＋代理自己新增的）<br>• <b>對話紀錄</b> <code>messages</code>（開關 agent2.ctx_history，依輪數／字數上限截）<br>• <b>最近的畫面操作</b> <code>user_events</code>（開關 agent2.ctx_events）</p>`,
+  fn:"historyTurnsOf(...) → clipHistory(all, turns, chars) ; listUserEvents(db, id, n)", file:"apps/api/src/turn.ts、history.ts、events.ts",
+  data:`sc.history?: HistoryTurn[]   // 舊到新，不含這一句
+sc.historyTotal?: number      // 截斷前共有幾輪
+sc.recentEvents?: UserEvent[]
+sc.intentCategories?: IntentCategory[]
+sc.favorites: string[]`,
+  ex:`history: [
+  { "user": "想買筆電", "assistant": "好啊！你平常主要拿來做什麼？", "cards": ["suggest"] }
+]
+intentCategories: [ { "name": "表達需求", "origin": "seed" }, …（9 筆） ]`,
+  flags:["agent2.ctx_history — 帶對話紀錄","agent2.ctx_events — 帶畫面操作","agentHistoryTurns = 0（不限）、agentHistoryMaxChars = 50,000","agentEventsMax = 20","pool.two_pools — 兩池模式才讀收藏"] },
+{ id:"h_ctx_s", ph:2, f:"host", t:"db", k:"call", sc:S, lab:"只讀收藏、圖片方案",
+  title:"靜默管道只讀最少的東西",
+  what:`<p>靜默管道（權重、不考慮、對比、篩選）<b>不讀</b>對話紀錄、意圖類別、畫面操作，因為不會叫模型。只讀收藏與「是不是圖片方案」。</p>`,
+  fn:"isSilentChannel(input.channel) → 跳過", file:"apps/api/src/turn.ts",
+  data:`SILENT_CHANNELS = ["weights", "exclude", "compare", "filter"]`, ex:`isSilentChannel("exclude") === true`, flags:[] },
+{ id:"h_sc", ph:2, f:"host", t:"host", k:"self", sc:A, lab:"組工具箱 SchemeContext",
+  title:"組出交給方案的工具箱",
+  what:`<p>方案只能透過 <code>sc</code> 拿東西。重點：</p><p>• <b>時間預算</b>：代理 2.0 的 <code>budgetMs</code> 讀門檻 agentTurnBudgetMs，0＝不限（Infinity）。<br>• <b>model(step)</b>：要模型時跟主機拿；剩餘時間不足 1 秒（MIN_CALL_MS）就給 null。<br>• <b>progress</b>：方案排好名次時回報，主機算「這句改了哪些需求、剩幾台」送前端。<br>• <b>stream</b>：只有串流端點而且 <code>pace.live_reply</code> 開時才給，代理用它邊寫邊送回覆。<br>• <b>promptText(step)</b>：讀說明書或手冊目前啟用的版本。</p><p>圖片方案生效時，主機在這裡另外建立「挑卡片規格」工作（cardJob），和代理<b>並行</b>。</p>`,
+  fn:"const sc: SchemeContext = { app, cfg, runId, conversation, state, input, log, lap, model, deadlineAt, remainingMs, favorites, progress, elapsedMs }", file:"apps/api/src/turn.ts、scheme.ts",
+  data:`interface SchemeContext {
+  app: AppContext; cfg: Config; runId: string;
+  conversation: { id: string; title: string };
+  state: ConversationState;      // 方案直接改它
+  input: TurnInput;
+  log(c: LlmCallLog): void;      // 記一次 AI 呼叫
+  lap(name: string): void;       // 記一步耗時＋送 step
+  model(step, enabled): Promise<ModelDeps>;
+  deadlineAt: number; remainingMs(): number; elapsedMs?(): number;
+  favorites: string[];
+  progress?(p: { kind: "ranked"; snapshot }): void;
+  stream?(ev: reply_start | reply_text | reply_card | reply_reset): void;
+  history?; historyTotal?; recentEvents?;
+  promptText?(step): Promise<{ body, id, version } | null>;
+  intentCategories?: IntentCategory[];
+}`,
+  ex:`deadlineAt = Infinity        // agentTurnBudgetMs = 0
+sc.stream = (ev) => emit(ev)  // pace.live_reply 開`,
+  flags:["pace.live_reply — 回覆邊寫邊出現","agentTurnBudgetMs = 0（不限）","cardspec.early_start — 排好名次就開始挑卡片規格"] },
+{ id:"h_run", ph:2, f:"host", t:"agent", k:"call", sc:A, lab:"scheme.run(sc)",
+  title:"把工具箱交給代理 2.0",
+  what:`<p>主機在這裡把控制權交出去，<b>不中斷</b>方案，只在它回來後檢查有沒有超時（<code>timedOut</code> 記進 runs）。</p>`,
+  fn:"const out = await scheme.run(sc)", file:"apps/api/src/turn.ts → schemes/agent2.ts",
+  data:`TurnScheme.run(sc: SchemeContext): Promise<SchemeOutcome>`, ex:`agent2Scheme.run(sc)`, flags:[] },
+
+/* ---------- ③ 代理準備 ---------- */
+{ id:"g_ext", ph:3, f:"agent", t:"agent", k:"self", sc:A, lab:"讀私有狀態、判斷管道",
+  title:"讀代理自己的私有狀態",
+  what:`<p><code>ext2Of(state)</code> 從 <code>state.ext.agent2</code> 讀出代理上一輪留下的東西（形狀不對的欄位當預設）：代理設的權重與理由、自由排序、<b>交接便條</b>、每條需求在第幾輪記的、上一次推薦／追問判斷、<b>工具結果目錄</b>（recall 用）。</p><p>接著判斷管道：靜默 → 走快速路線；其他 → 算一輪。</p>`,
+  fn:"ext2Of(state) ; isSilentChannel(input.channel)", file:"apps/api/src/schemes/agent2.ts、agent2/common.ts",
+  data:`interface Agent2Ext {
+  weights: Weights | null; weightReason: string | null;
+  perfSubs: PerfSubs | null; sort: ColumnSort | null;
+  note: string | null;                    // 交接便條
+  reqTurns: Record<string, number>;       // 需求 id → 第幾輪記的
+  lastDecision: { turn, kind, reason } | null;
+  toolLog: ToolLogEntry[];                // 前幾輪查過的資料
+  turns: number; toolCalls: number; modelCalls: number;
+}`,
+  ex:`{ "note": "問過用途，還沒問預算和尺寸",
+  "lastDecision": { "turn": 1, "kind": "ask", "reason": "只知道要修圖，預算和攜帶需求不明" },
+  "toolLog": [ { "id": "t1-1", "turn": 1, "tool": "pool_query", "summary": "主候選池前 5 名…" } ] }`, flags:[] },
+{ id:"g_silent", ph:3, f:"agent", t:"agent", k:"self", sc:S, lab:"套用 mutate／ops",
+  title:"靜默管道：直接套用操作",
+  what:`<p><code>input.mutate(state)</code> 把「不考慮 GJS0001（連同款）」寫進 <code>excludedIds</code>；有 ops 就套用需求的增刪。</p>`,
+  fn:"input.mutate?.(state); applyProfileOps(state, input.ops, cfg)", file:"apps/api/src/schemes/agent2.ts",
+  data:`ProfileOp = { op: "upsert"; req: Requirement } | { op: "delete"; id: string }`, ex:`state.excludedIds = ["GJS0001", "GJS0002"]   // 同款連帶排除`, flags:["logic.auto_resort — 關：維持原本順序"] },
+{ id:"g_silent_rank", ph:3, f:"agent", t:"engine", k:"call", sc:S, lab:"agentRecompute → 排序",
+  title:"重算候選池",
+  what:`<p>和對話管道用的是同一個 <code>agentRecompute</code>。重算後若不自動重排（logic.auto_resort 關，或用戶要求維持順序），就照上次的順序 <code>holdOrder</code>。記步驟「排序」。</p>`,
+  fn:"agentRecompute(ctx, cfg, state, ext) ; holdOrder(snapshot, state.lastOrder)", file:"apps/api/src/agent/common.ts → packages/engine",
+  data:`Recomputed { snapshot: Snapshot; weights: AgentWeights; hits: SoftwareHit[] }`, ex:`{ "snapshot": { "formal": 41, "out": 259 } }`, flags:[] },
+{ id:"g_silent_ret", ph:3, f:"agent", t:"host", k:"ret", sc:S, lab:"SchemeOutcome（reply 空白）",
+  title:"靜默管道回傳",
+  what:`<p>沒有回覆文字、沒有卡片，trace 的 <code>stop</code> 是 <code>"silent"</code>。<code>echoUserMessage: false</code>：主機不會存訊息。</p>`,
+  fn:"return { action, reply: \"\", cards: [], snapshot, weightTrace, … }", file:"apps/api/src/schemes/agent2.ts",
+  data:`SchemeOutcome（見頁面下方「通訊契約」）`,
+  ex:`{ "action": "recommend", "reply": "", "replySource": "template", "cards": [],
+  "echoUserMessage": false, "trace": { "version": 2, "stop": "silent", "rounds": [] } }`, flags:[] },
+{ id:"g_turn", ph:3, f:"agent", t:"agent", k:"self", sc:T, lab:"turnNo + 1",
+  title:"開始新的一輪",
+  what:`<p><code>state.turnNo += 1</code>；用戶自己打字（不是按卡片）時把「連續追問次數」歸零；有 mutate 先套用。</p>`,
+  fn:"state.turnNo += 1", file:"apps/api/src/schemes/agent2.ts", data:`state.turnNo: number`, ex:`turnNo: 1 → 2`, flags:[] },
+{ id:"g_pre", ph:3, f:"agent", t:"agent", k:"self", sc:["btn"], lab:"前置步驟：先套用按鈕",
+  title:"前置步驟：程式先套用按鈕操作",
+  what:`<p>模型還沒動，程式先把按鈕的效果做掉：</p><p>• 卡片選項：<code>cardOps(cardId, optionId)</code> 算出要加的需求，<code>applyProfileOps</code> 套上。<br>• 改需求（profile）、放寬（relax）：直接套 <code>input.ops</code>。</p><p>然後替模型寫一句說明，當作這輪的用戶訊息：<b>「（用戶在畫面上的操作）…」</b>。意圖會由程式記成「畫面操作」。</p>`,
+  fn:"cardOps(...) → cardPreStep(...) → applyProfileOps(...)", file:"apps/api/src/schemes/agent2.ts、agent2/run-helpers.ts",
+  data:`userMessage = preStep ? "（用戶在畫面上的操作）" + preStep : input.text`,
+  ex:`userMessage = "（用戶在畫面上的操作）在「螢幕尺寸」選了「13～14 吋」"`, flags:[] },
+{ id:"g_recompute", ph:3, f:"agent", t:"engine", k:"call", sc:T, lab:"agentRecompute()",
+  title:"重算權重與候選池",
+  what:`<p>代理拿到一份「目前的候選池」，之後每個會改需求的工具也都呼叫同一個函式。順序：</p><p>1. <code>softwareHits</code>：需求裡的軟體對到軟體庫<br>2. 權重：<b>用戶手動 ＞ 代理設定 ＞ 預設</b><br>3. 性能細項<br>4. <code>buildSnapshot</code>：每台機型分池（主／次）、算七維分數與權重分、排名、優缺點<br>5. 代理用 sort_pool 設了自由排序就照那一欄排</p><p>結果放在 <code>env.current</code>，工具共用。記步驟「前置步驟」。</p>`,
+  fn:"agentRecompute(ctx, cfg, state, ext) → buildSnapshot(laptops, profile, input)", file:"apps/api/src/agent/common.ts → packages/engine/src/rank.ts",
+  data:`interface Snapshot {
+  total: number;
+  funnel: FunnelStep[];
+  formal: ScoredLaptop[];   // 主候選池（兩池模式）
+  edge: ScoredLaptop[];     // 兩池模式一定是空陣列
+  out: ScoredLaptop[];      // 次候選池
+  reasonCounts; specIgnored?; sortBy?; pool?: PoolMeta; cardSpecs?;
+}
+interface ScoredLaptop {
+  laptop; status: 1 | 0.5 | 0; reasons; dims: Record<DimKey, number|null>;
+  power: number | null;      // 權重分
+  rank; pros; cons; contrib; exclusions?; …
+}`,
+  ex:`{ "total": 300, "formal": [ { "laptop": { "id": "GJS0001", … }, "power": 78.4, "rank": 1 }, … ],
+  "out": [ …259 台 ], "pool": { … } }`,
+  flags:["pool.two_pools — 主／次兩池模式","logic.weight_schemes — 權重計算方案","reason.secondary_pros — 次候選池也算優勢"] },
+{ id:"g_pre_prog", ph:3, f:"agent", t:"web", k:"evt", sc:["btn"], lab:"understood／ranked（提早送）",
+  title:"按鈕效果提早送到畫面",
+  what:`<p>有前置步驟時，代理在叫模型之前就呼叫 <code>env.progress(snapshot)</code>。主機比對這輪開始時的需求，送出「我聽懂了」和台數，用戶不用等模型就看到變化。</p><p>路徑：代理 → <code>sc.progress</code> → 主機 <code>profileDiff</code> → <code>emit</code> → 端點寫一行。</p>`,
+  fn:"env.progress → sc.progress({ kind: \"ranked\", snapshot }) → emit(...)", file:"apps/api/src/schemes/agent2.ts → turn.ts",
+  data:`{ type: "understood"; added: string[]; removed: string[] }
+{ type: "ranked"; formal: number; edge: number }`,
+  ex:`{"type":"understood","added":["13～14 吋"],"removed":[]}
+{"type":"ranked","formal":23,"edge":0}`, flags:[] },
+{ id:"g_model", ph:3, f:"agent", t:"host", k:"call", sc:T, lab:"sc.model(\"agent2\")",
+  title:"向主機要模型",
+  what:`<p>代理不知道供應商、金鑰，只能說「我是 agent2 這個步驟，要模型」。主機檢查剩餘時間：不足 1 秒就不給（開關 log.budget_skip 開時記一列「整輪時間預算不足，未呼叫模型」）。</p>`,
+  fn:"sc.model(AGENT2_STEP_ID, true)", file:"apps/api/src/turn.ts（model 工廠）",
+  data:`model(step: string, enabled: boolean): Promise<ModelDeps>`, ex:`await sc.model("agent2", true)`, flags:["log.budget_skip"] },
+{ id:"h_modeldb", ph:3, f:"host", t:"db", k:"call", sc:T, lab:"prompts、model_providers、每日上限",
+  title:"主機查說明書與供應商",
+  what:`<p><code>modelDeps()</code>：</p><p>1. 讀 <code>prompts</code> 裡 (agent2, agent2) 啟用中的版本 → 核心說明書模板＋版本號<br>2. 讀 <code>model_providers</code>：第一個啟用、角色含 <code>reply</code> 的供應商<br>3. 數 24 小時內有供應商的 <code>llm_calls</code> 筆數，超過 modelCallsPerDay → 不給模型<br>4. 解密 API 金鑰（失敗也記一列）</p>`,
+  fn:"modelDeps(ctx, { schemeId, step, role }, allowed, log, thinkingOff, keepText)", file:"apps/api/src/context.ts",
+  data:`SELECT … FROM prompts WHERE scheme_id='agent2' AND slot='agent2' AND active
+SELECT … FROM model_providers ORDER BY name
+SELECT count(*) FROM llm_calls WHERE created_at > now()-1d AND provider_id IS NOT NULL`,
+  ex:`prompt v7（後台「代理 2.0 → 說明書與手冊」可改）
+provider: DeepSeek（slots: ["nlu","reply"]）`, flags:["logic.model_thinking_off — 關掉模型思考","log.llm_text — 記完整提示詞與輸出"] },
+{ id:"h_modelret", ph:3, f:"host", t:"agent", k:"ret", sc:T, lab:"ModelDeps",
+  title:"主機把模型交給代理",
+  what:`<p>回傳 provider（或 null）、說明書模板、提示詞 id 與版本、逾時。</p>`,
+  fn:"return { ...deps, timeoutMs }", file:"apps/api/src/turn.ts",
+  data:`interface ModelDeps {
+  provider: ProviderConfig | null;   // null＝不能叫模型
+  promptTemplate: string;
+  promptId: string | null; promptVersion: number | null;
+  timeoutMs: number; keepText: boolean;
+  log: (c: LlmCallLog) => void; fetchImpl?;
+}`,
+  ex:`{ "provider": { "id": "p1", "protocol": "openai", "model": "deepseek-…", "apiKey": "（已解密）" },
+  "promptVersion": 7, "timeoutMs": 60000 }`,
+  sv:{ nomodel:{ ex:`{ "provider": null, "promptTemplate": "…", "promptVersion": 7 }`, title:"主機回報：沒有模型可用" } }, flags:[] },
+{ id:"g_nomodel", ph:3, f:"agent", t:"agent", k:"self", sc:["nomodel"], lab:"stop = no_model／budget",
+  title:"沒有模型：直接用保底文字",
+  what:`<p>provider 是 null，代理不組說明書、不跑迴圈。剩餘時間不足 → <code>stop = "budget"</code>，否則 <code>"no_model"</code>。<code>replyOf()</code> 選出保底文字：</p><p>「代理方案需要可用的 AI 模型，目前沒有可用的模型（請到後台「AI 模型」設定一個模型）。」</p><p>候選池照樣重算、需求卡與台數卡照樣附。</p>`,
+  fn:"replyOf(stop, null, \"\")", file:"apps/api/src/agent2/run-helpers.ts",
+  data:`type AgentStop = "reply_tool" | "text" | "max_tokens" | "max_rounds" | "budget" | "error" | "no_model" | "silent"`,
+  ex:`{ "text": "代理方案需要可用的 AI 模型…", "source": "fallback" }`, flags:[] },
+{ id:"g_kb", ph:3, f:"agent", t:"kb", k:"call", sc:L, lab:"kbAvailability＋摘要",
+  title:"問知識庫這輪能不能查",
+  what:`<p>知識庫有啟用中的條目才把 <code>search_knowledge</code> 給模型；向量模型能用就用 hybrid／vector，不能用退回 keyword。開關 agent2.ctx_kb 開時再附一段知識庫摘要進說明書。</p>`,
+  fn:"kbAvailability(ctx, cfg) ; kbSummary(ctx, enabledCount)", file:"apps/api/src/knowledge/tool.ts",
+  data:`interface KbAvailability { offered: boolean; mode: "hybrid" | "vector" | "keyword" | null; reason: string | null; enabledCount: number }`,
+  ex:`{ "offered": true, "mode": "hybrid", "reason": null, "enabledCount": 86 }`, flags:["agent2.ctx_kb — 說明書附知識庫摘要","kb.keyword — 向量失敗時退回關鍵字"] },
+{ id:"g_prompt", ph:3, f:"agent", t:"agent", k:"self", sc:L, lab:"組說明書＋工具清單",
+  title:"組核心說明書與工具清單",
+  what:`<p><code>buildAgent2Prompt</code> 把模板裡 11 個變數填好（開關關或沒資料填「（關閉）」）：</p><p><code>{{manuals}}</code> 手冊目錄 · <code>{{intents}}</code> 意圖類別 · <code>{{count}}</code> 台數 · <code>{{kb}}</code> 知識庫 · <code>{{card_types}}</code> 可用卡片 · <code>{{state}}</code> 目前狀態（需求含第幾輪記的、權重、上一輪判斷） · <code>{{top}}</code> 主候選池前幾名 · <code>{{note}}</code> 交接便條 · <code>{{events}}</code> 畫面操作 · <code>{{history}}</code> 先前對話 · <code>{{tool_log}}</code> 查過的資料目錄</p><p><code>agent2Tools(cfg)</code> 依開關組工具清單；用戶這句話<b>不在</b>說明書裡，另外當 user 訊息送。</p>`,
+  fn:"buildAgent2Prompt(template, {...}) ; agent2Tools(cfg, ctx, { kb })", file:"apps/api/src/agent2/prompt.ts、agent2/tools.ts",
+  data:`buildAgent2Prompt(...) → {
+  text: string;                               // 完整 system
+  parts: { name: string; chars: number }[];   // 每段字數（trace.budget 用）
+  chars: number; vars: Record<string, number>; template: number;
+}
+AgentToolSpec { name; description; parameters: JSONSchema }`,
+  ex:`system（約 1,300 字＋上文）：
+你是「AI 筆電選購助手」，在台灣幫用戶挑筆電。最重要的事：讓用戶覺得被理解…
+## 這段對話目前的狀態
+- 需求：主要拿來修圖（第 1 輪）…
+## 上一輪你留給自己的交接便條
+問過用途，還沒問預算和尺寸
+
+tools: report_intent, read_manual, find_columns, update_profile, sort_pool,
+       sql_query, search_knowledge, pool_query, pool_what_if,
+       compare_laptops, weight_sensitivity, recall, reply`,
+  flags:["agent2.tool_manual／tool_find_columns／tool_compare／tool_sensitivity／tool_recall","agent.tool_profile／tool_sort／tool_sql／tool_pool_query／tool_pool_what_if","agent.reply_blocks — 分段回覆（文字與卡片交錯）"] },
+
+/* ---------- ④ 代理迴圈 ---------- */
+{ id:"m1", ph:4, f:"agent", t:"llm", k:"call", sc:L, lab:"第 1 回合 callModelWithTools",
+  title:"第 1 回合：呼叫模型",
+  what:`<p>每回合開始先檢查：超過 agentMaxRounds（30）→ 停；剩餘時間 ≤ 0 → 停。逾時取「單次上限」與「剩餘時間」較小者。</p><p>用串流（<code>stream: true</code>）送出，<code>onDelta</code> 邊收邊看模型是不是在寫 reply。</p>`,
+  fn:"callModelWithTools(p, { system, messages, tools, maxTokens, timeoutMs, onDelta })", file:"packages/nlu/src/agent-call.ts",
+  data:`interface AgentCallRequest {
+  system: string;
+  messages: AgentMessage[];
+  tools: AgentToolSpec[];
+  maxTokens: number | null;    // null＝不送 max_tokens
+  timeoutMs: number | null;
+  onDelta?: (d: AgentStreamDelta) => void;
+  fetchImpl?;
+}
+type AgentMessage =
+  | { role: "user"; text: string }
+  | { role: "assistant"; text; toolCalls; raw }   // raw 原樣送回，思考內容才不會掉
+  | { role: "tool"; callId; name; content: string }`,
+  ex:`{
+  "system": "你是「AI 筆電選購助手」…",
+  "messages": [ { "role": "user", "text": "${SENT}" } ],
+  "tools": [ …13 個 ],
+  "maxTokens": null, "timeoutMs": null
+}`, flags:["agentMaxRounds = 30（0＝不限）","agentCallTimeoutMs = 0（不限）","agentMaxTokens = 0（不限）"] },
+{ id:"m1r", ph:4, f:"llm", t:"agent", k:"ret", sc:L, lab:"report_intent + update_profile + read_manual",
+  title:"模型回第 1 回合：一次叫三個工具",
+  what:`<p>說明書要求模型第 1 回合通常<b>同時</b>叫：<code>report_intent</code>（交出意圖）、<code>update_profile</code>（記需求）、需要時 <code>read_manual</code>。</p><p>代理把這次回應（含原生 raw）記進 <code>llm_calls</code>（透過 sc.log），並放進 messages，下一回合原樣送回。</p>`,
+  fn:"r = await callModelWithTools(...)", file:"packages/nlu/src/agent-call.ts → schemes/agent2.ts",
+  data:`interface AgentCallResult {
+  text: string;
+  toolCalls: AgentToolCall[];   // { id, name, args, argsText, argsError }
+  assistant: AgentMessage;      // 下一回合原樣送回
+  inputTokens; outputTokens; reasoningTokens?; cachedInputTokens?;
+  reasoning?: string;           // 模型思考
+  ms: number; truncated: boolean;
+}`,
+  ex:`"toolCalls": [
+ { "name": "report_intent", "args": {
+     "intents": [ { "category": "表達需求", "label": "說明身分、預算、常用軟體、重量偏好",
+                    "confidence": 0.95, "evidence": "我是設計系學生，預算 4 萬" } ],
+     "new_info": true, "refers_previous": false, "unmapped_needs": [] } },
+ { "name": "update_profile", "args": { "ops": [
+     { "op": "upsert", "req": { "id": "budget", "field": "budget", "value": { "max": 40000 },
+       "label": "預算 4 萬以內", "hard": true, "confidence": 0.9, "evidence": "預算 4 萬" } },
+     { "op": "upsert", "req": { "id": "sw_ps", "field": "software", "value": { "name": "Photoshop" }, … } },
+     { "op": "upsert", "req": { "id": "who", "field": "other", "value": "設計系學生", … } },
+     { "op": "upsert", "req": { "id": "light", "field": "priority", "value": "portability", "hard": false, … } } ],
+   "weights": { "portability": 22, … }, "weight_reason": "想要輕一點" } },
+ { "name": "read_manual", "args": { "names": ["needs", "ask"] } }
+]`, flags:["agent.trace_thinking — 記模型思考","agent.json_repair — 參數結尾多括號時自動修"] },
+{ id:"t_intent", ph:4, f:"agent", t:"tools", k:"call", sc:L, lab:"report_intent",
+  title:"工具：交出意圖",
+  what:`<p>只記錄、<b>不改任何東西</b>。檢查類別是不是在清單裡；模型可以自己新增類別（寫一句說明），存檔時主機寫進 <code>agent2_intents</code>（origin: agent）。這輪「有沒有成功交意圖」「有沒有新資訊」是三道檢查要用的。</p>`,
+  fn:"runReportIntent(args, categories)", file:"apps/api/src/agent2/tools.ts",
+  data:`→ IntentOutcome { status, result, summary, record: {
+     items: { category, label, confidence, evidence }[];
+     newCategories; newInfo: boolean; refersPrevious: boolean;
+     unmapped: { text, why }[] } }`,
+  ex:`result:  { "ok": true, "categories_added": [] }
+summary: "意圖：表達需求"`, flags:["agent2.intent_required — 沒交意圖就退回"] },
+{ id:"t_profile", ph:4, f:"agent", t:"tools", k:"call", sc:L, lab:"update_profile",
+  title:"工具：記需求、調權重",
+  what:`<p>每條 op 先過 <code>checkOp</code>（欄位、值的格式、id），不合格的放進 <code>rejected</code> 告訴模型為什麼。合格的套進 <code>state.profile</code>；有 weights 就寫進代理私有狀態（權重順序：用戶手動 ＞ 代理 ＞ 預設）。</p><p>需求真的變了 → <code>profileChanged = true</code>（三道檢查用）。</p>`,
+  fn:"runUpdateProfile(env, args)", file:"apps/api/src/agent/tools.ts",
+  data:`args: { ops?: ProfileOp[]; weights?: Weights; weight_reason?: string;
+        perf_subs?; reset_weights?; exclude?; include? }
+→ ToolOutcome { status: "ok" | "error" | "off" | "unknown"; result; summary }`,
+  ex:`result: {
+  "applied": ["新增 預算 4 萬以內", …], "rejected": [],
+  "formal": 38, "edge": 0, "out": 262, "primary": 38, "secondary": 262,
+  "weights": { "performance": 24, "portability": 22, … },
+  "top": [ { "id": "GJS0001", "name": "…", "power": 81.2 }, … ]
+}
+summary: "新增 4 條、設定權重，主候選池 38 台"`, flags:["agent.tool_profile"] },
+{ id:"t_profile_eng", ph:4, f:"tools", t:"engine", k:"call", sc:L, lab:"agentRecompute（重算）",
+  title:"需求一變就重算候選池",
+  what:`<p>和 ③ 的同一個函式。結果寫回 <code>env.current</code>，之後的工具（pool_query、compare…）看到的都是新的候選池。</p>`,
+  fn:"env.current = agentRecompute(ctx, cfg, state, ext)", file:"apps/api/src/agent/tools.ts → packages/engine",
+  data:`Recomputed { snapshot; weights; hits }`, ex:`formal: 300 → 38`, flags:[] },
+{ id:"t_prog", ph:4, f:"tools", t:"web", k:"evt", sc:L, lab:"understood／ranked",
+  title:"「我聽懂了」與台數送到畫面",
+  what:`<p>工具呼叫 <code>env.progress(snapshot)</code> → 主機比對這輪開始時的需求（<code>profileDiff</code>），內容和上一次送的一樣就不再送（避免兩行一樣的「我聽懂了」）。</p><p>同一時間，圖片方案的「挑卡片規格」用當下的需求與權重<b>提早開始</b>（cardJob.early）。</p>`,
+  fn:"sc.progress({ kind: \"ranked\", snapshot }) → profileDiff → emit", file:"apps/api/src/turn.ts",
+  data:`{ type: "understood"; added: string[]; removed: string[] }
+{ type: "ranked"; formal: number; edge: number }`,
+  ex:`{"type":"understood","added":["預算 4 萬以內","Photoshop","設計系學生","重視便攜"],"removed":[]}
+{"type":"ranked","formal":38,"edge":0}`, flags:["cardspec.early_start"] },
+{ id:"t_cardjob", ph:4, f:"host", t:"llm", k:"async", sc:L, lab:"並行：挑卡片規格（圖片方案）",
+  title:"並行工作：挑卡片規格",
+  what:`<p>只有候選池方案是<b>圖片方案</b>時才有。主機用另一個 AI 呼叫，依需求與權重挑出機型卡要顯示哪幾個規格（例如重量、sRGB）。和代理迴圈同時跑，不擋住回覆；最後存檔前最多等 cardSpecTimeoutMs，等不到就用上一次或預設清單。</p><p>只在用戶送出訊息時才叫 AI（cardspec.message_only），按鈕操作沿用上一次。</p>`,
+  fn:"cardSpecJob(ctx, cfg, {...}).early() / .finish(snapshot)", file:"apps/api/src/card-specs.ts",
+  data:`CardSpecsStored { columns: StoredColumn[]; source; key }`, ex:`{ "columns": ["body_weight_kg","p3_coverage","battery_life_hours"], "source": "ai" }`,
+  flags:["cardspec.early_start","cardspec.message_only","cardSpecTimeoutMs = 8,000"] },
+{ id:"t_manual", ph:4, f:"tools", t:"db", k:"call", sc:L, lab:"read_manual → prompts",
+  title:"工具：讀手冊",
+  what:`<p>7 本手冊（需求與權重、候選池、追問與推薦判斷、比較、知識庫、回覆與卡片、資料庫），每本在 <code>prompts</code> 表是一個步驟 <code>manual_&lt;key&gt;</code>，後台可改版本。讀過的記進 trace.manualsRead。</p>`,
+  fn:"runReadManual(args, key => sc.promptText(manualStepId(key)))", file:"apps/api/src/agent2/tools.ts",
+  data:`args: { names: ("needs"|"pool"|"ask"|"compare"|"knowledge"|"reply"|"data")[] }`,
+  ex:`result: { "needs": "# 需求與權重\\n## 記需求（update_profile 的 ops）…", "ask": "…" }`, flags:["agent2.tool_manual"] },
+{ id:"m2", ph:4, f:"agent", t:"llm", k:"call", sc:L, lab:"第 2 回合（附工具結果）",
+  title:"第 2 回合：把工具結果交回模型",
+  what:`<p>messages 加上：模型上一回合的 assistant 訊息（原樣）＋每個工具的結果（<code>role: "tool"</code>，每個最多 agentToolResultMaxChars 字）。說明書和工具清單不變。</p><p>工具結果裡 <code>status: ok</code> 而且是可回顧的（sql_query、search_knowledge、compare_laptops…）會另外存進 toolLog，下一輪用 recall 取。</p>`,
+  fn:"messages.push(...results) ; callModelWithTools(...)", file:"apps/api/src/schemes/agent2.ts",
+  data:`{ role: "tool"; callId: string; name: string; content: string /* JSON，可能截斷 */ }`,
+  ex:`[ …,
+  { "role": "assistant", "toolCalls": [ …3 個 ], "raw": { … } },
+  { "role": "tool", "callId": "call_1", "name": "report_intent", "content": "{\\"ok\\":true,…}" },
+  { "role": "tool", "callId": "call_2", "name": "update_profile", "content": "{\\"applied\\":[…],…}" },
+  { "role": "tool", "callId": "call_3", "name": "read_manual", "content": "{…}" } ]`, flags:["agentToolResultMaxChars = 60,000"] },
+{ id:"m2r", ph:4, f:"llm", t:"agent", k:"ret", sc:L, lab:"要查資料：search_knowledge、pool_query…",
+  title:"模型回第 2 回合：要查資料",
+  what:`<p>模型判斷還需要資料：例如 Photoshop 要多少記憶體（知識庫）、主候選池前幾名的重量（資料庫）、某台為什麼在次候選池（候選池工具）。</p>`,
+  fn:"r.toolCalls", file:"packages/nlu/src/agent-call.ts",
+  data:`AgentToolCall[]`,
+  ex:`[ { "name": "search_knowledge", "args": { "query": "Photoshop 記憶體 建議" } },
+  { "name": "sql_query", "args": { "sql": "SELECT id, name, body_weight_kg FROM laptops WHERE id IN (…)" } },
+  { "name": "pool_query", "args": { "ids": ["XYZ0456"] } } ]`, flags:[] },
+{ id:"t_kb", ph:4, f:"tools", t:"kb", k:"call", sc:L, lab:"search_knowledge",
+  title:"工具：查知識庫",
+  what:`<p>照這輪算出的 mode 查（hybrid＝關鍵字＋向量）。查到的條目記進 <code>kbSeen</code>：之後回覆裡的知識出處卡、名詞解釋卡<b>只能引用這輪真的查到的條目</b>。查不到記進 kbMisses。</p>`,
+  fn:"runSearchKnowledge(ctx, cfg, mode, args) → ctx.kb.search(query, cfg, { mode, topN })", file:"apps/api/src/knowledge/tool.ts → packages/knowledge",
+  data:`args: { query: string; limit?: number }
+→ hits: { id; content; category; source; score }[]`,
+  ex:`{ "hits": [ { "id": "kb_ps_01", "category": "軟體需求",
+    "content": "Photoshop 建議 16GB 記憶體，處理大檔建議 32GB…", "source": "Adobe 官方系統需求" } ] }`, flags:["kb.keyword"] },
+{ id:"t_sql", ph:4, f:"tools", t:"db", k:"call", sc:L, lab:"sql_query（唯讀交易）",
+  title:"工具：唯讀 SQL",
+  what:`<p>用專門的唯讀帳號 <code>la_agent_sql</code> 連線：每次查詢都是 <code>begin read only</code> ＋ <code>set local statement_timeout</code>，伺服器一次只收一句；程式另有「時限＋1 秒」的硬時限，時間到直接切斷。</p><p>欄名打錯時會提醒「欄名請用 find_columns 查，不要猜」。</p>`,
+  fn:"runSqlQuery(env, args) → ctx.agentSql.query(sql)", file:"apps/api/src/agent/tools.ts → packages/db/src/agent-sql.ts",
+  data:`args: { sql: string }   // 一句 SELECT
+→ { ok: true; columns; rows; rowCount; truncated } | { ok: false; error }`,
+  ex:`summary: "查到 5 列"
+result: { "rows": [ { "id": "GJS0001", "body_weight_kg": 1.32 }, … ] }`, flags:["agent.tool_sql"] },
+{ id:"t_pool", ph:4, f:"tools", t:"engine", k:"call", sc:L, lab:"pool_query／compare／sensitivity",
+  title:"工具：問候選池（只算不改）",
+  what:`<p>• <code>pool_query</code>：某幾台在哪個池、為什麼被排除（全部原因＋全庫百分位）、收藏在哪<br>• <code>pool_what_if</code>：「如果加這條需求，剩幾台」——只試算，需求沒有改<br>• <code>compare_laptops</code>：2～4 台逐維比較<br>• <code>weight_sensitivity</code>：每維權重上下調，前 N 名會不會變（只當參考）<br>• <code>find_columns</code>：用關鍵字找 382 欄裡的欄位名<br>• <code>sort_pool</code>：依某欄自由排序（會改畫面）<br>• <code>recall</code>：取前幾輪查過的完整結果</p>`,
+  fn:"runPoolQuery / runPoolWhatIf / runCompareLaptops / runWeightSensitivity", file:"apps/api/src/agent/pool-tools.ts、agent2/tools.ts → packages/engine",
+  data:`pool_query args: { ids?: string[]; limit?: number }
+pool_what_if args: { ops: ProfileOp[] }
+compare_laptops args: { ids: string[] }      // 2～4 個
+weight_sensitivity args: { top_n?: number }  // 1～20`,
+  ex:`pool_query → { "XYZ0456": { "pool": "secondary",
+  "exclusions": [ { "req": "預算 4 萬以內", "actual": 42900 } ] } }`, flags:["agent.tool_pool_query","agent.tool_pool_what_if","agent2.tool_compare","agent2.tool_sensitivity","agent2.tool_recall"] },
+{ id:"m3", ph:4, f:"agent", t:"llm", k:"call", sc:L, lab:"第 N 回合",
+  title:"第 N 回合：資料查夠了",
+  what:`<p>一樣把工具結果交回。真實模型實測一句話通常 2～5 回合。</p>`,
+  fn:"callModelWithTools(...)", file:"apps/api/src/schemes/agent2.ts", data:`同第 2 回合`, ex:`messages：user → assistant → tool×3 → assistant → tool×3 → …`, flags:[] },
+{ id:"m3d", ph:4, f:"llm", t:"agent", k:"evt", sc:L, lab:"onDelta：reply 參數邊寫邊到",
+  title:"模型開始寫 reply（串流中）",
+  what:`<p>模型決定交回覆，開始寫 <code>reply</code> 工具的參數。<code>onDelta</code> 每收到一段就回報「到目前為止的參數原文」。代理看到工具名是 <code>reply</code> 就開一份草稿。</p><p>如果同一回合 reply 前面還有 update_profile／sort_pool，自動卡先不放（候選池還會變）。</p>`,
+  fn:"onDelta({ kind: \"tool\", index, name: \"reply\", argsText })", file:"apps/api/src/schemes/agent2.ts",
+  data:`type AgentStreamDelta =
+  | { kind: "tool"; index: number; id: string | null; name: string; argsText: string }
+  | { kind: "text"; text: string }`,
+  ex:`argsText（累積中）:
+{"blocks":[{"type":"text","text":"設計系又常開 Photoshop，記憶體我會建議至少 16GB。這台`, flags:[] },
+{ id:"g_draft", ph:4, f:"agent", t:"web", k:"evt", sc:L, lab:"reply_start／reply_text／reply_card",
+  title:"草稿邊寫邊送到對話欄",
+  what:`<p><code>createReplyStreamer</code> 每次拿到參數原文就用 <code>parsePartialJson</code> 重新解析：</p><p>• 第一次 → <code>reply_start</code>（附程式自動卡：需求卡、台數卡、權重變化卡）<br>• 文字段長出新字 → <code>reply_text</code>（只送多出來的部分）<br>• 一張卡的物件寫完 → 先經卡片處理器檢查，再送 <code>reply_card</code><br>• v2.0.3：文字段寫完時處理標記（可點的句子、行內機型、一鍵反駁），有標記就用同一個 i 再送一次帶 marks 的文字段</p><p>前端 <code>applyLiveEvent</code> 依 i 接上或取代。</p>`,
+  fn:"createReplyStreamer({ blocks, preview, previewText, emit: sc.stream })", file:"apps/api/src/agent/reply-stream.ts、agent/cards.ts",
+  data:`| { type: "reply_start"; runId; cards: ChatCard[]; blocks?: boolean }
+| { type: "reply_text"; i: number; delta: string }
+| { type: "reply_card"; i: number; card: ChatCard }
+| { type: "reply_reset" }`,
+  ex:`{"type":"reply_start","runId":"c0a8…","cards":[{"type":"requirements",…},{"type":"count","from":300,"to":38,…}],"blocks":true}
+{"type":"reply_text","i":0,"delta":"設計系又常開 Photoshop，"}
+{"type":"reply_text","i":0,"delta":"記憶體我會建議至少 16GB。"}
+{"type":"reply_card","i":0,"card":{"type":"text","text":"…","marks":[{"kind":"fact","start":12,"end":20,…}]}}
+{"type":"reply_card","i":1,"card":{"type":"recommend","items":[…]}}`,
+  flags:["pace.live_reply","agent.reply_blocks","card.mark_fact／card.mark_laptop／card.mark_user（v2.0.3）"] },
+{ id:"g_fail", ph:4, f:"agent", t:"agent", k:"self", sc:["reject"], lab:"三道檢查不過 → 退回",
+  title:"三道檢查：第一次不過，退回",
+  what:`<p>回合結束才檢查 reply（照順序收集問題）：</p><p>1. <b>意圖</b>（agent2.intent_required）：這輪沒有成功的 report_intent<br>2. <b>需求</b>（agent2.need_check）：最後一次意圖說 new_info，卻沒有成功改到需求<br>3. <b>推薦閘門</b>（agent2.gate_hard）：有推薦卡，但 decision 不是 recommend 或 reason 空白</p><p>有問題而且這輪還沒退回過 → 這次 reply <b>不接受</b>：它的工具結果換成錯誤訊息，trace.reminders 記一筆，迴圈繼續。</p>`,
+  fn:"replyProblems({ cfg, reply, intentDone, newInfo, profileChanged })", file:"apps/api/src/schemes/agent2.ts",
+  data:`replyProblems(i): ("intent" | "need" | "gate")[]
+reminders.push({ round: n, kinds: ps })`,
+  ex:`{ role: "tool", name: "reply",
+  content: '{"error":"回覆前還要補：要出推薦卡，decision 要寫 kind \\"recommend\\"、known、unsure、reason"}' }`,
+  flags:["agent2.intent_required","agent2.need_check","agent2.gate_hard — 關＝只提示，不退回"] },
+{ id:"g_reset", ph:4, f:"agent", t:"web", k:"evt", sc:["reject"], lab:"reply_reset",
+  title:"作廢剛剛的草稿",
+  what:`<p>這回合有送草稿、但 reply 沒被接受 → 送 <code>reply_reset</code>。前端清掉第 0 項以後的內容（自動卡保留），等下一份 <code>reply_start</code>。</p>`,
+  fn:"send({ type: \"reply_reset\" })", file:"apps/api/src/schemes/agent2.ts",
+  data:`{ type: "reply_reset" }`, ex:`{"type":"reply_reset"}`, flags:[] },
+{ id:"m4", ph:4, f:"agent", t:"llm", k:"call", sc:["reject"], lab:"再一回合（帶錯誤訊息）",
+  title:"再叫一次模型",
+  what:`<p>模型會在工具結果裡看到「回覆前還要補：…」，通常這回合會補交缺的東西再交一次 reply。</p>`,
+  fn:"callModelWithTools(...)", file:"apps/api/src/schemes/agent2.ts", data:`同前`, ex:`messages 最後一筆：{ role: "tool", name: "reply", content: "{\\"error\\":\\"回覆前還要補：…\\"}" }`, flags:[] },
+{ id:"m4r", ph:4, f:"llm", t:"agent", k:"ret", sc:["reject"], lab:"補 decision，第二次 reply",
+  title:"模型補好，再交一次",
+  what:`<p><b>同一輪只退回一次</b>：第二次 reply 一律接受。若還是有問題：意圖沒交 → 程式記「未分類」；需求沒記 → 記 reminders；推薦閘門仍不合格 → <b>拿掉推薦卡</b>，dropped 記「推薦閘門：沒有推薦判斷，推薦卡拿掉」。</p>`,
+  fn:"r.toolCalls → reply", file:"apps/api/src/schemes/agent2.ts",
+  data:`decision: { kind: "recommend" | "ask" | "other"; known: string[]; unsure: string[]; reason: string }`,
+  ex:`{ "name": "reply", "args": { "blocks": [ … ],
+  "decision": { "kind": "recommend",
+    "known": ["設計系學生","預算 4 萬以內","常用 Photoshop","想要輕"],
+    "unsure": ["螢幕尺寸偏好"],
+    "reason": "用途、預算、軟體、攜帶都清楚了，尺寸可以從推薦裡讓他挑" },
+  "note": "推了 3 台 14 吋；他還沒說尺寸偏好" } }`, flags:[] },
+{ id:"g_draft2", ph:4, f:"agent", t:"web", k:"evt", sc:["reject"], lab:"新的 reply_start…",
+  title:"新的草稿", what:`<p>第二份草稿從 <code>reply_start</code> 重新開始送。</p>`, fn:"startDraft(...)", file:"apps/api/src/schemes/agent2.ts", data:`同上`, ex:`{"type":"reply_start","runId":"c0a8…","cards":[…],"blocks":true}`, flags:[] },
+{ id:"g_check", ph:4, f:"agent", t:"agent", k:"self", sc:L, lab:"三道檢查通過 → 接受 reply",
+  title:"三道檢查通過，接受回覆",
+  what:`<p>沒有問題（或已經退回過一次），reply 被接受，<code>stop = "reply_tool"</code>，迴圈結束。被接受的 reply 的工具結果不會交給模型，也不算進字數帳。</p><p>其他結束方式：模型沒叫任何工具直接講話（<code>text</code>）、輸出被截斷（<code>max_tokens</code>）、超過回合上限（<code>max_rounds</code>）、模型出錯（<code>error</code>）、時間用完（<code>budget</code>）。</p>`,
+  fn:"reply = accepted ; stop = \"reply_tool\"", file:"apps/api/src/schemes/agent2.ts",
+  data:`interface Reply2Args {
+  blocks?: unknown[];          // 分段：文字段與卡片交錯
+  text?: string; cards?: unknown[];   // 舊格式
+  knowledgeIds?: string[];
+  note?: string;               // 交接便條，最多 agent2NoteMaxChars 字
+  decision: Agent2Decision | null;
+}`,
+  ex:`{ "blocks": [
+    { "type": "text", "text": "設計系又常開 Photoshop，記憶體我會建議至少 16GB。",
+      "marks": [ { "text": "16GB", "user": false } ] },
+    { "type": "recommend", "laptops": [ { "id": "GJS0001", "note": "1.3 公斤，16GB，sRGB 100%" }, … ] },
+    { "type": "fit", "id": "GJS0001" },
+    { "type": "text", "text": "你比較常帶著跑教室，還是放宿舍為主？" },
+    { "type": "suggest", "items": [ "常帶著跑", "大多放宿舍" ] } ],
+  "knowledge_ids": ["kb_ps_01"],
+  "note": "推了 3 台；還沒問尺寸", "decision": { "kind": "recommend", … } }`, flags:["agent2NoteMaxChars = 200"] },
+
+/* ---------- ⑤ 整理回覆 ---------- */
+{ id:"c_text", ph:5, f:"agent", t:"agent", k:"self", sc:T, lab:"replyOf：決定回覆文字",
+  title:"決定回覆文字",
+  what:`<p><code>replyOf(stop, reply, lastText)</code>：交了 reply 用它的文字；模型直接講話用講的；出錯、截斷、沒模型用保底文字（「抱歉，我這次沒有順利想好回答…」等）。</p><p><code>settlePending</code>：處理「不確定時先假設」等待中的狀態。</p>`,
+  fn:"replyOf(stop, reply, lastText) ; settlePending(state, input, cfg, n)", file:"apps/api/src/agent2/run-helpers.ts",
+  data:`→ { text: string; source: "reply_tool" | "text" | "fallback" }`, ex:`{ "text": "設計系又常開 Photoshop…", "source": "reply_tool" }`, flags:[] },
+{ id:"c_cards", ph:5, f:"agent", t:"engine", k:"call", sc:L, lab:"卡片處理（程式查值）",
+  title:"整理卡片：模型說放哪張，程式查數字",
+  what:`<p><code>processReplyBlocks</code> → <code>createCardProcessor</code> 逐張檢查：</p><p>• 機型 id 不存在／已下架／重複 → 拿掉<br>• 卡片種類開關關 → 整張拿掉<br>• <b>v2.0.3 新卡</b>（cards-v203.ts）：需求對照卡 fit 用引擎 classify 判每條需求 ok／near／no；差一點卡 near_miss 算差多少與次池優勢；選項卡 choice 用 pool_what_if 同一套規則算「選了剩幾台」；軟體夠不夠卡比對軟體庫門檻；實物比例卡挑鮮奶、蘋果；名詞解釋卡只能用這輪查到的條目<br>• 文字段標記：可點的句子查欄位值與名次</p><p>每拿掉一樣就在 <code>dropped</code> 記一句中文，後台看得到。</p>`,
+  fn:"processReplyBlocks(blocks, cardEnv) → createCardProcessor(...)", file:"apps/api/src/agent/reply-blocks.ts、cards.ts、cards-v203.ts → packages/engine",
+  data:`CardOutcome { cards: ChatCard[]; dropped: string[]; text?: string }
+ChatCard（v2.0.3 新增）:
+ | { type: "fit"; id; name; rank; total; rows: FitRow[]; overall }
+ | { type: "near_miss"; id; name; price; misses; gains }
+ | { type: "term"; term; kbId; content; category; source; impact }
+ | { type: "software_fit"; id; name; items: SoftwareFitItem[] }
+ | { type: "choice"; question; options: { id; label; count }[] }
+ | { type: "size_ref"; id; name; widthMm; depthMm; weightKg; items; itemsKg }
+ | { type: "text"; text; marks?: TextMark[] }`,
+  ex:`{ "type": "fit", "id": "GJS0001", "name": "…", "rank": 1, "total": 38,
+  "rows": [ { "label": "預算 4 萬以內", "hard": true, "status": "ok", "value": "38,900 元" },
+            { "label": "Photoshop", "hard": false, "status": "ok", "value": "夠用" } ],
+  "overall": ["設計系學生", "重視便攜"] }
+dropped: [ "推薦卡拿掉 ZZZ9999：沒有這台機型或已下架" ]`,
+  flags:["card.fit／card.near_miss／card.term／card.software_fit／card.choice／card.size_ref","card.choice_counts — 選項顯示剩幾台","show.card_inline — 卡片放進泡泡的樣子"] },
+{ id:"c_auto", ph:5, f:"agent", t:"agent", k:"self", sc:T, lab:"自動卡＋知識出處卡",
+  title:"程式自動附的卡",
+  what:`<p>放在模型的卡片<b>前面</b>，順序固定：</p><p>1. <b>需求卡</b>：這輪新增或改了哪些需求（card.requirements）<br>2. <b>候選數量卡</b>：從幾台變幾台（card.count）<br>3. <b>權重變化卡</b>（v2.0.3）：哪一維權重變了、為什麼（card.weight_change）</p><p>最後附<b>知識出處卡</b>：只收這輪 search_knowledge 真的查到的條目，名詞解釋卡用過的不重複列。</p>`,
+  fn:"autoCards(cfg, ctx, state, changed, snapshot, weightTrace) ; withKnowledgeCard(...)", file:"apps/api/src/agent/cards.ts、knowledge/tool.ts",
+  data:`{ type: "requirements"; items: Requirement[] }
+{ type: "count"; from; to; edge; out }
+{ type: "weight_change"; items: { dim; label; from; to; because }[] }
+{ type: "knowledge"; items: KnowledgeCardItem[] }`,
+  ex:`[ { "type": "requirements", "items": [ …4 條 ] },
+  { "type": "count", "from": 300, "to": 38, "edge": 0, "out": 262 },
+  { "type": "weight_change", "items": [ { "label": "便攜", "from": 14, "to": 22, "because": "想要輕一點" } ] },
+  …模型的卡片…,
+  { "type": "knowledge", "items": [ { "id": "kb_ps_01", … } ] } ]`, flags:["card.requirements","card.count","card.weight_change","card.knowledge"] },
+{ id:"c_finish", ph:5, f:"agent", t:"agent", k:"self", sc:T, lab:"收尾：便條、判斷、toolLog、trace",
+  title:"收尾：寫私有狀態與 trace",
+  what:`<p>• <b>意圖</b>：模型交的 → source model；按鈕 → 程式記「畫面操作」；都沒有 → 「未分類」<br>• <b>交接便條</b> → <code>ext.note</code>（下一輪說明書的 {{note}}）<br>• <b>推薦／追問判斷</b> → <code>ext.lastDecision</code><br>• <b>可回顧的工具結果</b> → <code>ext.toolLog</code>（id 像 t2-1，保留最近 40 筆，每筆最多 6,000 字）<br>• 需求第幾輪記的 → <code>ext.reqTurns</code><br>• <code>saveExt2(state, ext)</code>，<code>fitTrace2</code> 組 trace（太大會裁）</p>`,
+  fn:"saveExt2(state, ext) ; fitTrace2({...})", file:"apps/api/src/schemes/agent2.ts",
+  data:`Agent2Trace {
+  version: 2; stop; replySource; preStep; userMessage;
+  context: { chars; parts }; rounds: AgentRound[];
+  totals: { rounds; toolCalls; inputTokens; outputTokens; ms };
+  dropped: string[]; error;
+  intents; decision; note; reminders; gateDropped;
+  manualsRead; kbMisses; sensitivity; needs: { added; changed; deleted };
+  budget: { template; vars; manuals; toolResults; total };
+}`,
+  ex:`{ "stop": "reply_tool", "totals": { "rounds": 3, "toolCalls": 8, "ms": 14200 },
+  "manualsRead": ["needs","ask"], "reminders": [], "gateDropped": false }`,
+  flags:["agent.trace_detail — 記每步開始時間與改動前後","agent.trace_full — 記工具完整結果","agent2RecallKeep = 40、agent2RecallMaxChars = 6,000"] },
+{ id:"c_ret", ph:5, f:"agent", t:"host", k:"ret", sc:T, lab:"SchemeOutcome",
+  title:"代理把結果交回主機",
+  what:`<p>代理的工作到這裡結束。它<b>沒有寫過任何一筆資料庫</b>：要存的全部在這個物件裡。</p>`,
+  fn:"return { action, reply, replySource, cards, snapshot, weightTrace, … }", file:"apps/api/src/schemes/agent2.ts",
+  data:`interface SchemeOutcome {
+  action: "recommend" | "ask" | "compare" | "aside" | "guide";
+  reply: string; replySource: "model" | "template";
+  cards: ChatCard[]; snapshot: Snapshot; weightTrace: WeightTrace;
+  nlu: null; askTrace: null; followup: boolean;
+  echoUserMessage: boolean;          // message／relax 管道要存用戶訊息
+  trace?: Record<string, unknown>;
+  userEvents?: EventSpec[];          // 工具產生的事件
+  newIntents?: { name; description }[];
+}`,
+  ex:`{ "action": "recommend", "reply": "設計系又常開 Photoshop…", "replySource": "model",
+  "cards": [ …8 張 ], "echoUserMessage": true, "newIntents": [] }`, flags:[] },
+
+/* ---------- ⑥ 主機存檔 ---------- */
+{ id:"h_suggest", ph:6, f:"host", t:"engine", k:"call", sc:T, lab:"建議回覆、safeTrace",
+  title:"主機附上建議回覆",
+  what:`<p><code>safeTrace</code>：trace 不能序列化、含 NUL 字元、或超過 500,000 字時換成說明物件，整輪不會因此 500。</p><p><code>suggestCards</code>：開關 card.suggest 開時，引擎依卡片、候選池、需求、首頁範例算出「建議回覆」按鈕（用戶口吻的完整句子），附在卡片最後。算壞了只警告、不附。</p>`,
+  fn:"safeTrace(out.trace) ; suggestCards(out.cards, {...}) → buildSuggestions(...)", file:"apps/api/src/turn.ts → packages/engine/src/suggest.ts",
+  data:`{ type: "suggest"; items: SuggestItem[] }`, ex:`{ "type": "suggest", "items": [ { "id": "s1", "text": "幫我比較前兩台" } ] }`, flags:["card.suggest","suggestMax"] },
+{ id:"h_cardspec", ph:6, f:"host", t:"host", k:"self", sc:A, lab:"等卡片規格、組每輪快照",
+  title:"收齊並行工作，組每輪快照",
+  what:`<p>• 圖片方案：<code>cardJob.finish(snapshot)</code> 最多等 cardSpecTimeoutMs，結果存進 <code>state.ext.card_specs</code>。<br>• 開關 logic.run_snapshot 開：把這輪結束時的候選池決定＋當時的開關、門檻、候選池方案、權重計算方案存成 <code>runSnapshot</code>，後台「重播」用。</p>`,
+  fn:"cardJob.finish(snapshot) ; toRunSnapshot(snapshot, state, {...})", file:"apps/api/src/turn.ts",
+  data:`RunSnapshot { …候選池決定, flags, thresholds, displayId, poolId, poolParams?, weightScheme?, cardSpecs? }`, ex:`{ "poolId": "gallery", "flags": { … }, "cardSpecs": { … } }`, flags:["logic.run_snapshot","log.pool_snapshot"] },
+{ id:"h_tx", ph:6, f:"host", t:"db", k:"call", sc:T, lab:"存檔交易（6 張表）",
+  title:"存檔：一個交易寫完",
+  what:`<p>順序：<br>1. <code>conversations</code>：整份 state、標題（新對話用這句前 24 字當標題）<br>2. <code>messages</code>：用戶訊息（echoUserMessage）＋助手訊息（文字＋卡片）<br>3. <code>llm_calls</code>：這輪每次模型呼叫<br>4. <code>runs</code>：這輪的紀錄（輸入、動作、台數、耗時、需求、權重、前 5 名、trace、timings、是否超時）——放最後，「存檔」這一步才算得到前面的寫入<br>5. <code>agent2_intents</code>：代理新增的意圖類別（名稱重複略過）<br>6. <code>user_events</code>：按鈕事件＋工具產生的事件，補上 runId</p>`,
+  fn:"ctx.db.transaction(async (tx) => { … })", file:"apps/api/src/turn.ts",
+  data:`見頁面下方「寫進資料庫的東西」`, ex:`runs: { id: runId, channel: "message", action: "recommend", formal: 38,
+  ms: 15840, schemeId: "agent2", trace: { … }, timedOut: false }`, flags:["log.llm_text","log.step_timings"] },
+{ id:"h_tx_s", ph:6, f:"host", t:"db", k:"call", sc:S, lab:"存檔交易（不寫訊息）",
+  title:"靜默管道的存檔",
+  what:`<p>一樣更新 <code>conversations.state</code>、寫 <code>runs</code>（channel exclude）與 <code>user_events</code>（exclude_on），但<b>不寫 messages</b>（對話欄不會多一則）。</p>`,
+  fn:"ctx.db.transaction(...)", file:"apps/api/src/turn.ts", data:`if (!silent) { insert messages }`, ex:`user_events: { kind: "exclude_on", laptopId: "GJS0001", data: { runId, sameGroup: ["GJS0002"] } }`, flags:[] },
+{ id:"h_motion", ph:6, f:"host", t:"engine", k:"call", sc:A, lab:"buildMotionEvents(before, after)",
+  title:"比對前後，算出要播的動畫",
+  what:`<p>用 ② 記下的 <code>before</code> 和現在的候選池比，產生一串動畫事件：需求標籤飛進需求區、台數跳動、不符合的卡片變灰、換位…</p><p>動畫是<b>程式比對出來</b>的，動畫層不自己編造。</p>`,
+  fn:"buildMotionEvents(before, motionSide(snapshot, state), { flags, manualWeights, followup })", file:"packages/engine/src/motion.ts",
+  data:`type MotionEvent =
+ | { type: "req_fly"; ids } | { type: "count"; from; to }
+ | { type: "cards_dim"; ids } | { type: "weights_auto"; before; after }
+ | { type: "panel_open" | "panel_close"; animate } | …`,
+  ex:`[ { "type": "req_fly", "ids": ["budget","sw_ps","who","light"] },
+  { "type": "count", "from": 300, "to": 38 },
+  { "type": "cards_dim", "ids": ["XYZ0456", …] } ]`, flags:["anim.enabled"] },
+{ id:"h_ret", ph:6, f:"host", t:"api", k:"ret", sc:A, lab:"TurnResponse；解鎖",
+  title:"主機回傳結果，解鎖",
+  what:`<p>回傳給端點；<code>finally</code> 裡 <code>ctx.busy.delete(id)</code> 解鎖，下一句才能送。快照的機型拿掉 parts 等大欄位（<code>slimSnapshot</code>），照片依開關。</p>`,
+  fn:"return { runId, action, reply, cards, conversation, snapshot, weightTrace, events, userEvents }", file:"apps/api/src/turn.ts",
+  data:`interface TurnResponse {
+  runId: string; action: ActionType;
+  reply: string; cards: ChatCard[];
+  conversation: ConversationView;   // 需求、權重、排除…畫面要的
+  snapshot: Snapshot;               // 已瘦身
+  weightTrace: WeightTrace;
+  events: MotionEvent[];
+  userEvents: UserEvent[];
+}`, ex:`{ "runId": "c0a8…", "action": "recommend", "reply": "…", "cards": [ … ], "events": [ … ] }`, flags:[] },
+
+/* ---------- ⑦ 畫面更新 ---------- */
+{ id:"a_done", ph:7, f:"api", t:"web", k:"evt", sc:T, lab:"{type:\"done\", response}",
+  title:"最後一行：done",
+  what:`<p>端點把 TurnResponse 包成最後一行送出，然後關閉串流。這一份才是<b>存檔的版本</b>。</p><p>出錯時最後一行改成 <code>{"type":"error","status":500,"message":"系統暫時無法回應，請稍後再試"}</code>，前端先跑完排好的畫面變化，再拿掉還沒存檔的草稿、顯示錯誤。</p>`,
+  fn:"write({ type: \"done\", response }) ; out.end()", file:"apps/api/src/routes-user.ts",
+  data:`{ type: "done"; response: TurnResponse }
+{ type: "error"; status: number; message: string }`, ex:`{"type":"done","response":{"runId":"c0a8…","action":"recommend",…}}`, flags:[] },
+{ id:"a_json", ph:7, f:"api", t:"web", k:"ret", sc:S, lab:"JSON TurnResponse",
+  title:"一般回應", what:`<p>靜默操作直接回整包 JSON。</p>`, fn:"return runTurn(...)", file:"apps/api/src/routes-user.ts", data:`TurnResponse`, ex:`{ "runId": "…", "reply": "", "cards": [], "snapshot": { … }, "events": [ { "type": "cards_dim", … } ] }`, flags:[] },
+{ id:"w_apply", ph:7, f:"web", t:"web", k:"self", sc:T, lab:"草稿 → 正式、播動畫、更新右欄",
+  title:"畫面換成存檔版本",
+  what:`<p>1. 草稿那則訊息（id <code>run-&lt;runId&gt;</code>）換成 done 裡的文字與卡片，拿掉 draft 標記<br>2. 停 <code>paceBeforeResultsMs</code>（300 毫秒）<br>3. <code>applyTurn</code>：更新「你的需求」標籤、權重 → <code>motion.plan(events).play()</code> 播動畫，走到換位時才 <code>setSnapshot</code> 換右欄機型卡</p><p>篩選或權重抽屜開著時（v1.0.57），結果區先不換，關上抽屜才合併播一次。</p><p>沒開「回覆邊寫邊出現」時，改由 <code>revealTurn</code> 逐句逐張播放。</p>`,
+  fn:"applyTurn(t, false) → m.play(plan, () => setSnapshot(t.snapshot))", file:"apps/web/src/user/useAssistant.ts",
+  data:`TurnResponse → setMessages / setConversation / setSnapshot / setUserEvents`, ex:`畫面：泡泡（文字＋推薦卡＋需求對照卡）→ 需求區 4 個新標籤 → 台數 300 → 38 → 右欄換成 38 台`,
+  flags:["pace.keep_steps","paceBeforeResultsMs = 300","anim.deferInDrawer（動效方案）","show.req_compact／show.req_sticky（需求區樣式）"] },
+{ id:"w_apply_s", ph:7, f:"web", t:"web", k:"self", sc:S, lab:"只更新結果區＋動畫",
+  title:"靜默操作的畫面更新",
+  what:`<p><code>applyTurn(t, showInChat = false)</code>：對話欄不加訊息，只更新需求區、權重、右欄結果並播動畫（被排除的卡片變灰、移走）。底部出現「已不考慮 ○○，復原」提示。</p>`,
+  fn:"applyTurn(t, false)", file:"apps/web/src/user/useAssistant.ts", data:`TurnResponse`, ex:`setLastExcluded({ id: "GJS0001", name: "…" })`, flags:[] },
+];
+
+/* =========================================================
+ * 通訊契約分頁
+ * ========================================================= */
+const CONTRACTS = [
+  { k:"TurnInput", who:"端點 → 主機 → 代理", file:"apps/api/src/turn-common.ts", desc:"一句話（或一個按鈕）進到系統後的統一形狀。7 種 channel，其中 weights、exclude、compare、filter 是靜默管道。",
+    code:STEPS.find(s=>s.id==="a_check").data },
+  { k:"SchemeContext", who:"主機 → 代理", file:"apps/api/src/scheme.ts", desc:"主機交給方案的工具箱。方案只能透過它拿設定、狀態、模型、時間、上文，並回報進度與串流。", code:STEPS.find(s=>s.id==="h_sc").data },
+  { k:"SchemeOutcome", who:"代理 → 主機", file:"apps/api/src/scheme.ts", desc:"方案跑完交回的全部結果；主機只看這個物件存檔，不看方案內部。", code:STEPS.find(s=>s.id==="c_ret").data },
+  { k:"TurnStreamEvent", who:"主機／代理 → 端點 → 用戶端", file:"packages/contracts/src/api.ts", desc:"NDJSON 每一行的型別。順序：step* → understood／ranked → reply_*（邊寫邊出現）→ 最後一定是 done 或 error。",
+    code:`type TurnStreamEvent =
+  | { type: "step"; name: string }
+  | { type: "understood"; added: string[]; removed: string[] }
+  | { type: "ranked"; formal: number; edge: number }
+  | { type: "reply_start"; runId: string; cards: ChatCard[]; blocks?: boolean }
+  | { type: "reply_text"; i: number; delta: string }
+  | { type: "reply_card"; i: number; card: ChatCard }
+  | { type: "reply_reset" }
+  | { type: "done"; response: TurnResponse }
+  | { type: "error"; status: number; message: string };` },
+  { k:"AgentCall", who:"代理 ⇄ 模型", file:"packages/nlu/src/agent-call.ts", desc:"代理和模型之間的多回合訊息。assistant 訊息的 raw 原樣送回，供應商的思考內容才不會掉。",
+    code:STEPS.find(s=>s.id==="m1").data + "\n\n" + STEPS.find(s=>s.id==="m1r").data },
+  { k:"ToolOutcome", who:"工具 → 代理 → 模型", file:"apps/api/src/agent/tools.ts", desc:"每個工具回傳的統一形狀。result 會 JSON 化（太長截斷）後當 tool 訊息交回模型；summary 是給後台看的一句話。",
+    code:`interface ToolOutcome {
+  status: "ok" | "error" | "off" | "unknown";
+  result: unknown;     // 交給模型看的（錯誤也是：{ error: "…" }）
+  summary: string;     // 給後台 trace 看的一句話
+}
+// 代理 2.0 另外收集：
+//  report_intent → record（意圖紀錄）
+//  read_manual   → read、chars
+//  weight_sensitivity → sens
+//  search_knowledge   → hits（記進 kbSeen）、kb（查詢紀錄）
+//  reply              → reply（交回覆，回合結束才檢查）` },
+  { k:"Agent2Ext", who:"代理（跨輪記憶）", file:"packages/contracts/src/agent2.ts", desc:"代理 2.0 的私有狀態，存在 state.ext.agent2，跟著 conversations.state 一起存。下一輪的說明書從這裡讀便條、判斷、工具結果目錄。", code:STEPS.find(s=>s.id==="g_ext").data },
+  { k:"TurnResponse", who:"主機 → 端點 → 用戶端", file:"packages/contracts/src/api.ts", desc:"一輪的最終結果，也是串流最後 done 行的內容。畫面一律以它為準。", code:STEPS.find(s=>s.id==="h_ret").data },
+];
+
+const LAPS = [
+  ["讀設定","主機","loadConfig 完成",A],
+  ["讀對話紀錄","主機","agent2.ctx_history 開",T],
+  ["讀用戶操作","主機","agent2.ctx_events 開",T],
+  ["排序","代理（靜默）","靜默管道重算完",S],
+  ["前置步驟","代理","③ 重算完（含按鈕前置步驟）",T],
+  ["代理第 n 回合","代理","每回合模型＋工具跑完一次",L],
+  ["整理卡片","代理","⑤ 卡片處理完",T],
+  ["建議回覆","主機","card.suggest 開、有附建議回覆",T],
+  ["卡片規格","主機","圖片方案生效",A],
+  ["存檔","主機","交易裡 runs 寫入前",A],
+];
+const TX = [
+  ["1","conversations","UPDATE","state（整份 ConversationState，含 ext.agent2）、title、updatedAt","每輪都寫"],
+  ["2","messages","INSERT","用戶訊息（echoUserMessage 時）、助手訊息（text＋cards＋runId）","靜默管道不寫"],
+  ["3","llm_calls","INSERT","每次模型呼叫：角色、供應商、模型、ok、ms、tokens、錯誤、提示詞與輸出（log.llm_text）","有呼叫才寫"],
+  ["4","runs","INSERT","input、channel、action、reply、formal／edge／out、ms、profile、weights、topIds、snapshot（重播用）、schemeId、timings、trace、timedOut","每輪都寫；放最後"],
+  ["5","agent2_intents","INSERT … ON CONFLICT DO NOTHING","代理新增的意圖類別（origin agent）","有新類別才寫"],
+  ["6","user_events","INSERT","按鈕事件（TurnInput.userEvents）＋工具事件（SchemeOutcome.userEvents），補上 runId","有事件才寫"],
+];
+
+/* =========================================================
+ * 繪圖
+ * ========================================================= */
+const W = 104, X0 = 34, ROW = 40, PAD_TOP = 6, PHASE_GAP = 10, PH_HEAD = 26;
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const laneX = (k) => X0 + LI[k] * W + W / 2;
+const SVGW = X0 + LANES.length * W + 8;
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const [a, v] of Object.entries(attrs)) n.setAttribute(a, v); if (parent) parent.appendChild(n); return n; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+let scen = "msg", vis = [], cur = -1, playing = null, layout = [];
+const svg = document.getElementById("svg");
+const diagram = document.getElementById("diagram");
+
+function stepView(s) {
+  const v = s.sv && s.sv[scen];
+  return v ? { ...s, ...v } : s;
+}
+
+function buildHead() {
+  const h = document.getElementById("lanehead");
+  h.style.width = SVGW + "px";
+  h.innerHTML = "";
+  LANES.forEach((l) => {
+    const d = document.createElement("div");
+    d.className = "lh"; d.dataset.lane = l.k;
+    d.style.left = laneX(l.k) + "px";
+    d.style.color = css(l.c);
+    d.innerHTML = `<b style="color:var(${l.c})">${esc(l.name)}</b><span>${esc(l.sub)}</span>`;
+    d.title = "看這個模組的職責與邊界";
+    d.onclick = () => showLane(l.k);
+    h.appendChild(d);
+  });
+}
+
+function draw() {
+  vis = STEPS.filter((s) => s.sc.includes(scen));
+  svg.innerHTML = "";
+  // 先算位置
+  layout = []; let y = PAD_TOP, lastPh = null; const bands = [];
+  vis.forEach((s, i) => {
+    if (s.ph !== lastPh) { if (lastPh !== null) { bands[bands.length - 1].y2 = y + 4; y += PHASE_GAP; } bands.push({ ph: s.ph, y1: y - 6 }); y += PH_HEAD; lastPh = s.ph; }
+    const yy = y + ROW / 2; layout.push(yy); y += ROW;
+  });
+  if (bands.length) bands[bands.length - 1].y2 = y + 4;
+  const H = y + 24;
+  svg.setAttribute("width", SVGW); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${SVGW} ${H}`);
+  // 箭頭
+  const defs = el("defs", {}, svg);
+  [["call", "--call"], ["ret", "--ret"], ["evt", "--evt"], ["self", "--self"], ["async", "--warn"], ["on", "--accent"]].forEach(([k, v]) => {
+    const m = el("marker", { id: "ah-" + k, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", fill: `var(${v})` }, m);
+  });
+  // 段落底色
+  bands.forEach((b, i) => {
+    el("rect", { x: 0, y: b.y1, width: SVGW, height: b.y2 - b.y1, fill: i % 2 ? "var(--band2)" : "var(--band1)" }, svg);
+    const p = PH[b.ph];
+    const t = el("text", { x: 10, y: b.y1 + 19, class: "band-label" }, svg); t.textContent = p.n;
+    const t2 = el("text", { x: 92, y: b.y1 + 19, class: "band-sub" }, svg); t2.textContent = p.s;
+    if (p.loop) {
+      el("rect", { x: 4, y: b.y1 + 3, width: SVGW - 8, height: b.y2 - b.y1 - 6, rx: 8, class: "loopbox" }, svg);
+      const lt = el("text", { x: 170, y: b.y1 + 19, class: "looptag" }, svg); lt.textContent = "↻ 一直重複，直到模型交出 reply 並通過三道檢查（最多 agentMaxRounds 回合）";
+    }
+  });
+  // 生命線
+  LANES.forEach((l) => el("line", { x1: laneX(l.k), y1: 0, x2: laneX(l.k), y2: H, class: "lifeline" }, svg));
+  // 目前那一列的底色
+  el("rect", { id: "onbar", x: 6, y: -100, width: SVGW - 12, height: ROW - 4, rx: 6, class: "onbar" }, svg);
+  // 訊息
+  vis.forEach((s0, i) => {
+    const s = stepView(s0);
+    const yy = layout[i];
+    const g = el("g", { class: `m k-${s.k}`, "data-i": i, tabindex: 0, role: "button", "aria-label": s.title }, svg);
+    if (s.f === s.t) {
+      const x = laneX(s.f);
+      const d = `M${x} ${yy - 9} h28 v18 h-26`;
+      el("path", { d, class: "hit" }, g);
+      el("path", { d, class: "ln", "marker-end": `url(#ah-${s.k})` }, g);
+      const tx = el("text", { x: x + 34, y: yy + 4, class: "m-label" }, g); tx.textContent = s.lab;
+    } else {
+      const x1 = laneX(s.f), x2 = laneX(s.t), dir = x2 > x1 ? 1 : -1;
+      el("line", { x1, y1: yy + 4, x2: x2 - dir * 4, y2: yy + 4, class: "hit" }, g);
+      el("line", { x1, y1: yy + 4, x2: x2 - dir * 4, y2: yy + 4, class: "ln", "marker-end": `url(#ah-${s.k})` }, g);
+      el("circle", { cx: x1, cy: yy + 4, r: 2.6, fill: "var(--ink3)" }, g);
+      const tx = el("text", { x: (x1 + x2) / 2, y: yy - 3, "text-anchor": "middle", class: "m-label" }, g); tx.textContent = s.lab;
+    }
+    const n = el("text", { x: X0 - 8, y: yy + 8, "text-anchor": "end", class: "num" }, g); n.textContent = i + 1;
+    g.addEventListener("click", () => { stop(); go(i, true); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter") { stop(); go(i, true); } });
+  });
+  el("circle", { id: "dot", r: 5, cx: -20, cy: -20, class: "dot" }, svg);
+}
+
+function mark() {
+  svg.querySelectorAll(".m").forEach((g) => {
+    const i = +g.dataset.i;
+    g.classList.toggle("on", i === cur);
+    g.classList.toggle("future", cur >= 0 && playing !== null && i > cur);
+  });
+  const bar = document.getElementById("onbar");
+  if (bar) bar.setAttribute("y", cur >= 0 ? layout[cur] - ROW / 2 + 4 : -100);
+  document.getElementById("counter").textContent = cur >= 0 ? `第 ${cur + 1}／${vis.length} 步` : `共 ${vis.length} 步`;
+  document.getElementById("prev").disabled = cur <= 0;
+  document.getElementById("next").disabled = cur >= vis.length - 1;
+  // 欄位標題高亮
+  const s = cur >= 0 ? vis[cur] : null;
+  document.querySelectorAll(".lh").forEach((d) => d.classList.toggle("hot", !!s && (d.dataset.lane === s.f || d.dataset.lane === s.t)));
+}
+
+let anim = null;
+function fly(i) {
+  const s = vis[i], dot = document.getElementById("dot");
+  if (anim) cancelAnimationFrame(anim);
+  const y = layout[i] + 4;
+  if (s.f === s.t) { dot.setAttribute("cx", laneX(s.f) + 28); dot.setAttribute("cy", layout[i]); return; }
+  const x1 = laneX(s.f), x2 = laneX(s.t), t0 = performance.now(), D = 520;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const step = (now) => {
+    const p = reduce ? 1 : Math.min(1, (now - t0) / D);
+    const e = 1 - Math.pow(1 - p, 3);
+    dot.setAttribute("cx", x1 + (x2 - x1) * e); dot.setAttribute("cy", y);
+    if (p < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+
+function scrollToStep(i) {
+  const y = layout[i] + 58; // 加上欄位標題高度（58px）
+  const top = diagram.scrollTop, h = diagram.clientHeight;
+  if (y < top + 90 || y > top + h - 60) diagram.scrollTo({ top: Math.max(0, y - h / 2), behavior: "smooth" });
+  const s = vis[i], xs = [laneX(s.f), laneX(s.t)], left = diagram.scrollLeft, w = diagram.clientWidth;
+  const lo = Math.min(...xs) - 60, hi = Math.max(...xs) + 220;
+  if (lo < left || hi > left + w) diagram.scrollTo({ left: Math.max(0, lo - 20), behavior: "smooth" });
+}
+
+function go(i, animate) {
+  if (i < 0 || i >= vis.length) return;
+  cur = i; mark(); showStep(i); scrollToStep(i);
+  if (animate) fly(i);
+}
+
+const KIND = { call:"呼叫／送出", ret:"回傳結果", evt:"串流事件", self:"內部步驟", async:"並行工作" };
+function laneTag(k) { const l = LANES[LI[k]]; return `<span class="tag" style="background:var(${l.c})">${esc(l.name)}</span>`; }
+
+function showStep(i) {
+  const s = stepView(vis[i]);
+  const p = document.getElementById("panel");
+  const flags = (s.flags || []).map((f) => {
+    const [k, ...rest] = f.split(" — ");
+    return `<span class="chip"><code>${esc(k)}</code>${rest.length ? " " + esc(rest.join(" — ")) : ""}</span>`;
+  }).join("");
+  p.innerHTML = `
+    <div class="crumb">第 ${i + 1}／${vis.length} 步 · ${esc(PH[s.ph].n)} · ${esc(SCEN.find((x) => x.id === scen).name)}</div>
+    <h3>${esc(s.title)}</h3>
+    <div class="fromto">${laneTag(s.f)}${s.f !== s.t ? ` <span>→</span> ${laneTag(s.t)}` : ""} <span class="kindtag">${KIND[s.k]}</span></div>
+    <div class="sec what">${s.what}</div>
+    <div class="sec"><div class="h">呼叫</div><code class="fn">${esc(s.fn)}</code><div class="file" style="margin-top:4px">📄 ${esc(s.file)}</div></div>
+    <div class="sec"><div class="h">傳的資料（型別）</div><pre class="code">${esc(s.data)}</pre></div>
+    <div class="sec"><div class="h">範例</div><pre class="code">${esc(s.ex)}</pre></div>
+    ${flags ? `<div class="sec"><div class="h">相關開關／門檻</div><div class="chips">${flags}</div></div>` : ""}
+  `;
+  if (window.matchMedia("(max-width:1100px)").matches && playing === null) { /* 窄螢幕不自動捲到面板，避免跳動 */ }
+}
+
+function showLane(k) {
+  const l = LANES[LI[k]];
+  const p = document.getElementById("panel");
+  const n = vis.filter((s) => s.f === k || s.t === k).length;
+  p.innerHTML = `
+    <div class="crumb">模組 · 這個情境有 ${n} 步經過它</div>
+    <h3><span class="tag" style="background:var(${l.c})">${esc(l.name)}</span> <span style="font-weight:400;font-size:13px;color:var(--ink3)">${esc(l.sub)}</span></h3>
+    <div class="sec what"><p>${esc(l.role)}</p></div>
+    <div class="sec"><div class="h">主要檔案</div><pre class="code">${esc(l.files.join("\n"))}</pre></div>
+    <div class="sec"><div class="h">對外溝通</div><pre class="code">${esc(l.talks.join("\n"))}</pre></div>
+    <div class="sec"><div class="h">邊界</div><div class="note">${esc(l.rule)}</div></div>`;
+  document.querySelectorAll(".lh").forEach((d) => d.classList.toggle("hot", d.dataset.lane === k));
+}
+
+function intro() {
+  const sc = SCEN.find((x) => x.id === scen);
+  document.getElementById("panel").innerHTML = `
+    <div class="crumb">情境 · ${esc(sc.name)}</div>
+    <h3>從第 1 步開始</h3>
+    <div class="what"><p>${esc(sc.desc)}</p><p class="hint">這個情境共 ${vis.length} 步。按「下一步」或 <span class="kbd">→</span> 一步一步走，按「▶ 播放」自動走完；也可以直接點圖上任何一個箭頭。</p></div>`;
+}
+
+function stop() { if (playing) { clearInterval(playing); playing = null; } document.getElementById("play").textContent = "▶ 播放"; mark(); }
+function play() {
+  if (playing) { stop(); return; }
+  if (cur >= vis.length - 1) cur = -1;
+  document.getElementById("play").textContent = "❚❚ 暫停";
+  playing = setInterval(() => { if (cur >= vis.length - 1) { stop(); return; } go(cur + 1, true); }, 1700);
+  go(cur + 1, true);
+}
+
+function setScen(id) {
+  stop(); scen = id; cur = -1;
+  document.querySelectorAll("#scenarios button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.id === id));
+  document.getElementById("scdesc").textContent = SCEN.find((x) => x.id === id).desc;
+  draw(); mark(); intro(); diagram.scrollTo({ top: 0, left: 0 });
+  try { localStorage.setItem("turnflow.scen", id); } catch (e) {}
+}
+
+/* ---------- 迴圈放大圖 ---------- */
+function loopFig() {
+  const box = document.getElementById("loopfig");
+  const Wd = 980, Hd = 330;
+  const s = el("svg", { width: Wd, height: Hd, viewBox: `0 0 ${Wd} ${Hd}`, role: "img", "aria-label": "代理迴圈" });
+  box.appendChild(s);
+  const defs = el("defs", {}, s);
+  const m = el("marker", { id: "lp-ah", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: "var(--ink2)" }, m);
+  const node = (x, y, w, h, title, sub, color) => {
+    el("rect", { x, y, width: w, height: h, rx: 10, fill: "var(--panel)", stroke: `var(${color})`, "stroke-width": 1.6 }, s);
+    const t = el("text", { x: x + w / 2, y: y + 24, "text-anchor": "middle", "font-size": 13.5, "font-weight": 700, fill: `var(${color})` }, s); t.textContent = title;
+    sub.forEach((line, i) => { const tt = el("text", { x: x + w / 2, y: y + 44 + i * 16, "text-anchor": "middle", "font-size": 11.5, fill: "var(--ink2)" }, s); tt.textContent = line; });
+  };
+  const arrow = (d, label, lx, ly, anchor = "middle") => {
+    el("path", { d, fill: "none", stroke: "var(--ink2)", "stroke-width": 1.4, "marker-end": "url(#lp-ah)" }, s);
+    if (label) { const t = el("text", { x: lx, y: ly, "text-anchor": anchor, "font-size": 11.5, fill: "var(--ink)", class: "m-label" }, s); t.textContent = label; }
+  };
+  node(20, 110, 170, 86, "開始一回合", ["回合數 ≤ agentMaxRounds？", "剩餘時間 > 0？"], "--l-agent");
+  node(270, 20, 190, 86, "模型", ["callModelWithTools", "（串流，onDelta 看 reply）"], "--l-llm");
+  node(560, 20, 200, 86, "程式執行每個工具", ["runTool(call) → ToolOutcome", "錯誤也變成 {error}"], "--l-tools");
+  node(560, 190, 200, 96, "這回合有 reply？", ["有 → 三道檢查", "沒有、也沒叫工具 → 結束", "沒有 → 結果交回、下一回合"], "--l-agent");
+  node(810, 110, 160, 86, "接受回覆", ["stop = reply_tool", "→ ⑤ 整理卡片"], "--l-engine");
+  node(270, 212, 190, 80, "退回一次", ["reply 結果換成錯誤", "送 reply_reset"], "--warn");
+  arrow("M190 140 C 230 140, 230 70, 268 66", "送 system＋messages＋tools", 105, 98, "middle");
+  arrow("M460 62 L 558 62", "toolCalls[]", 509, 54);
+  arrow("M660 106 L 660 188", "", 0, 0);
+  arrow("M760 232 C 790 232, 800 170, 808 160", "通過（或已退回過）", 800, 215, "start");
+  arrow("M560 250 L 462 250", "有問題、還沒退回過", 511, 242);
+  arrow("M270 252 C 120 252, 105 230, 105 198", "", 0, 0);
+  arrow("M560 210 C 400 160, 260 170, 190 165", "沒有 reply → messages += 結果", 380, 160);
+  const t = el("text", { x: 20, y: Hd - 8, "font-size": 11.5, fill: "var(--ink3)" }, s);
+  t.textContent = "其他結束：模型直接講話（text）、輸出被截斷（max_tokens）、超過回合數（max_rounds）、模型錯誤（error）、時間到（budget）→ 用 replyOf 選文字或保底文字。";
+}
+
+/* ---------- 下方區塊 ---------- */
+function modCards() {
+  const box = document.getElementById("modcards");
+  box.innerHTML = LANES.map((l) => `
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(${l.c})"></span><h3 style="margin:0">${esc(l.name)}</h3></div>
+      <div class="f mono">${esc(l.sub)}</div>
+      <div>${esc(l.role)}</div>
+      <ul>${l.talks.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      <div class="note" style="margin-top:8px">${esc(l.rule)}</div>
+    </div>`).join("");
+}
+function contracts() {
+  const tabs = document.getElementById("ctabs"), body = document.getElementById("cbody");
+  const show = (k) => {
+    const c = CONTRACTS.find((x) => x.k === k);
+    tabs.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === k));
+    body.innerHTML = `<p><b style="color:var(--ink)">${esc(c.k)}</b> · ${esc(c.who)} · <span class="mono" style="font-size:12px">${esc(c.file)}</span></p><p>${esc(c.desc)}</p><pre class="code">${esc(c.code)}</pre>`;
+  };
+  tabs.innerHTML = CONTRACTS.map((c) => `<button data-k="${c.k}">${esc(c.k)}</button>`).join("");
+  tabs.querySelectorAll("button").forEach((b) => (b.onclick = () => show(b.dataset.k)));
+  show(CONTRACTS[0].k);
+}
+function tables() {
+  const scName = (ids) => ids.length === A.length ? "全部情境" : ids.map((i) => SCEN.find((x) => x.id === i).name).join("、");
+  document.getElementById("laps").innerHTML = `<tr><th>步驟名稱</th><th>誰記的</th><th>什麼時候</th><th>出現在哪些情境</th></tr>` +
+    LAPS.map(([n, w, when, sc]) => `<tr><td><code>${esc(n)}</code></td><td>${esc(w)}</td><td>${esc(when)}</td><td>${esc(scName(sc))}</td></tr>`).join("");
+  document.getElementById("txtable").innerHTML = `<tr><th>#</th><th>資料表</th><th>動作</th><th>寫什麼</th><th>條件</th></tr>` +
+    TX.map((r) => `<tr><td>${r[0]}</td><td><code>${esc(r[1])}</code></td><td><code>${esc(r[2])}</code></td><td>${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join("");
+}
+
+/* ---------- 啟動 ---------- */
+document.getElementById("scenarios").innerHTML = SCEN.map((s) => `<button data-id="${s.id}" aria-pressed="false">${esc(s.name)}</button>`).join("");
+document.querySelectorAll("#scenarios button").forEach((b) => (b.onclick = () => setScen(b.dataset.id)));
+document.getElementById("prev").onclick = () => { stop(); go(cur - 1, true); };
+document.getElementById("next").onclick = () => { stop(); go(cur + 1, true); };
+document.getElementById("play").onclick = play;
+document.getElementById("reset").onclick = () => { stop(); cur = -1; mark(); intro(); diagram.scrollTo({ top: 0, left: 0, behavior: "smooth" }); document.getElementById("dot").setAttribute("cx", -20); };
+document.addEventListener("keydown", (e) => {
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); stop(); go(cur + 1, true); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); stop(); go(cur - 1, true); }
+  else if (e.key === " ") { e.preventDefault(); play(); }
+});
+buildHead(); loopFig(); modCards(); contracts(); tables();
+let saved = "msg"; try { saved = localStorage.getItem("turnflow.scen") || "msg"; } catch (e) {}
+setScen(SCEN.some((s) => s.id === saved) ? saved : "msg");
+</script>
+</body>
+</html>

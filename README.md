@@ -51,3 +51,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 需求區 9 種方案 Demo（現狀對照＋折疊一行／標籤浮層／吸頂／抽屜／對話欄／一句話／漏斗／分主次／推薦組合，即時量需求區高度） | https://mgitclau.github.io/mgitclau/laptop-requirements-area-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆卡片 19 種 Demo（White A：被理解 5 張／推薦 6 張／比較 4 張／解釋與引導 4 張，可勾選想要的卡並複製編號） | https://mgitclau.github.io/mgitclau/laptop-reply-cards-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆卡片 21 個點子（第二版：同一個泡泡內文字與卡片交錯；可點的句子／腳註／右欄聯動／有感換算／真機二選一／泡泡內滑桿等，可互動、可勾選） | https://mgitclau.github.io/mgitclau/laptop-reply-cards-ideas.html | 2026-11-21 |
+| AI 筆電選購助手 · 一句話的旅程（v2.0.3 互動流程圖：用戶送出一句話後 9 個模組怎麼執行與溝通，5 種情境可切換、逐步播放、每步附型別與範例資料） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-v203.html | 2026-11-21 |
