@@ -54,3 +54,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 一句話的旅程（v2.0.3 互動流程圖：用戶送出一句話後 9 個模組怎麼執行與溝通，5 種情境可切換、逐步播放、每步附型別與範例資料） | https://mgitclau.github.io/mgitclau/laptop-turn-flow-v203.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆主次 Demo（一則所有卡片同時出現的模擬回覆；卡片外框、文字段落、機型標記與 10 種卡片各有現況／A／B／C 可逐項切換，底部「我選的這一套」可複製） | https://mgitclau.github.io/mgitclau/laptop-reply-hierarchy-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆視覺方向（同一段回覆 3 個視覺方向並排：大小說話／深淺說話／顏色說話＋上一版對照；瞇眼看、黑白看、標出閱讀順序三個檢查開關；可選方向、寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-visual-demo.html | 2026-11-21 |
+| AI 筆電選購助手 · 回覆區塊分隔（區塊之間對比強、區塊裡面安靜：做法 A 灰底＋白卡、做法 B 卡片變附件、上一版對照；瞇眼看／黑白看／閱讀順序檢查；可選做法、寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-blocks-demo.html | 2026-11-21 |

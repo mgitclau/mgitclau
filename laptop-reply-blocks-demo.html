@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回覆區塊分隔</title>
+<style>
+/* 版面：同一段回覆畫成 3 欄並排（做法 A、做法 B、上一版）。
+   原則：區塊「之間」對比要強，區塊「裡面」要安靜。
+   A、B 的卡片內部完全一樣（一句粗體結論＋普通字明細，不放大數字、不用色塊），差別只在區塊怎麼分開：
+   A＝沒有泡泡，我說的話直接寫在灰底上，卡片是浮起來的白卡（White A 的「灰底板 → 白卡＋陰影」分層）。
+   B＝我說的話放在白色泡泡裡，卡片拆出泡泡，像附件一樣一張張排在下面（有標題列的白卡）。
+   兩個做法都只讓追問卡用黑框。字型只用電腦內建字。 */
+:root{
+  --ground:#C6CDDC; --ground2:#BAC3D5; --panel:#EDF0F5; --floor:#E1E5EE; --white:#fff; --inner:#F2F4F8; --band:#F4F6F9;
+  --ink:#12151C; --ink2:#454C5D; --ink3:#5E6578; --line:#D7DCE6; --hair:rgba(18,21,28,.08); --edge:#D3D9E4;
+  --accent:#2340C4; --signal:#F0602A; --good:#1D7349; --warn:#9A5B0B;
+  --sh-card:0 1px 2px rgba(22,30,52,.06),0 10px 28px -10px rgba(22,30,52,.22);
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
+  --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.6 var(--sans);color:var(--ink);background:linear-gradient(180deg,var(--ground),var(--ground2)) fixed;-webkit-font-smoothing:antialiased}
+button,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ============ 頁面外框 ============ */
+.intro{padding:22px max(20px,env(safe-area-inset-right,0px)) 12px max(20px,env(safe-area-inset-left,0px));max-width:960px}
+.intro h1{font-size:22px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--ink2);font-size:13.5px;line-height:1.7}
+.intro p+p{margin-top:4px}
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  padding:10px max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));background:rgba(237,240,245,.94);backdrop-filter:blur(12px);border-bottom:1px solid #C3CADB}
+.tgroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tgroup>span{font-size:12.5px;color:var(--ink3);margin-right:2px}
+.tg{display:inline-flex;align-items:center;gap:7px;border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:4px 13px 4px 9px;font-size:13px;font-weight:600}
+.tg i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--ink);display:grid;place-items:center}
+.tg[aria-pressed=true]{background:var(--ink);color:#fff}
+.tg[aria-pressed=true] i{border-color:#fff;background:#fff}
+.tg[aria-pressed=true] i::after{content:"";width:6px;height:6px;border-radius:1px;background:var(--ink)}
+.tools .sp{flex:1}
+.tools output{font-size:13.5px;font-weight:700}
+.copy{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:6px 16px;font-weight:600;font-size:13px}
+.copy:disabled{background:#B4BBC9;cursor:default}
+.hint{flex-basis:100%;font-size:12px;color:var(--ink3);margin:0}
+.scroller{overflow-x:auto}
+.cols{display:flex;gap:18px;padding:18px max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));width:max-content;align-items:flex-start}
+.col{width:min(540px,max(430px,calc((100vw - 80px) / 3)),calc(100vw - 40px));flex:none}
+.colhead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--panel);border-radius:20px 20px 0 0;border:2px solid transparent;border-bottom:0}
+.colhead div{flex:1;min-width:0}
+.colhead b{display:block;font-size:16px;line-height:1.35}
+.colhead small{display:block;font-size:12.5px;color:var(--ink2);line-height:1.5;margin-top:2px}
+.choose{border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:5px 15px;font-size:13px;font-weight:600;white-space:nowrap}
+.colbody{position:relative;background:var(--floor);padding:18px 12px 22px;border:2px solid transparent;border-top:0;border-bottom:0}
+.colfoot{background:var(--panel);border-radius:0 0 20px 20px;padding:12px 14px 14px;border:2px solid transparent;border-top:0}
+.colfoot label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:5px}
+.colfoot textarea{width:100%;min-height:62px;resize:vertical;border:1.3px solid #B4BBC9;border-radius:12px;padding:8px 10px;font-size:13.5px;background:#fff}
+.colfoot textarea:focus{border-color:var(--ink);outline:none}
+.col.on .colhead,.col.on .colbody,.col.on .colfoot{border-color:var(--signal)}
+.col.on .choose{background:var(--signal);border-color:var(--signal);color:#fff}
+.order-layer{position:absolute;inset:0;pointer-events:none;z-index:5}
+.order-layer b{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--signal);color:#fff;font:700 13px/24px var(--sans);text-align:center;box-shadow:0 0 0 3px #fff,0 4px 10px rgba(0,0,0,.25)}
+.cols{--f-blur:blur(0);--f-gray:grayscale(0)}
+.cols.blur{--f-blur:blur(4px)}
+.cols.gray{--f-gray:grayscale(1)}
+.reply{filter:var(--f-blur) var(--f-gray);transition:filter .25s}
+
+/* ============ 對話共用 ============ */
+.me{margin:0 2px 16px auto;max-width:84%;width:fit-content;background:var(--accent);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px;font-size:14.5px;line-height:1.6}
+.reply p,.reply h3,.reply h4,.reply ul{margin:0}
+.reply ul{list-style:none;padding:0}
+.n{font-variant-numeric:tabular-nums}
+.reply table{width:100%;border-collapse:collapse}
+.reply th,.reply td{text-align:left;font-weight:400}
+.lb{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lb em{font-style:normal;text-align:right}
+.lap{display:flex;align-items:center;gap:12px}
+.lap-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.price{white-space:nowrap;text-align:right}
+.th{flex:none;display:grid;place-items:center;overflow:hidden}
+.th svg{width:100%;height:100%;display:block}
+.th .body{fill:#8E97AB}
+.th .scr{fill:#1E2433}
+.th .glare{fill:#fff;opacity:.14}
+.pc{display:grid;grid-template-columns:1fr 1fr}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:999px;font-weight:600;white-space:nowrap;transition:background .15s,transform .12s}
+.btn.pri{background:var(--ink);color:#fff;border:0;height:38px;padding:0 6px 0 17px;font-size:14px;box-shadow:0 6px 16px -6px rgba(18,21,28,.55)}
+.btn.pri::after{content:"";width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.16) var(--arrow) no-repeat center/14px}
+.btn.pri:hover{background:#2C3343}
+.btn.sec{background:#fff;color:var(--ink);border:1.3px solid #2A2F3A;height:34px;padding:0 15px;font-size:13.5px}
+.btn.sec:hover{background:var(--inner)}
+.btn:active{transform:scale(.97)}
+.lnk{border:0;background:none;padding:2px 0;color:var(--accent);font-size:13.5px;font-weight:500;text-decoration:underline;text-decoration-color:rgba(35,64,196,.5);text-underline-offset:3px}
+.fact{color:var(--accent);text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:4px;cursor:pointer}
+.mk{cursor:pointer;white-space:nowrap}
+details>summary{cursor:pointer;list-style:none;width:fit-content}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";display:inline-block;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:translateY(-3px) rotate(45deg);margin-left:8px}
+details[open]>summary::after{transform:translateY(1px) rotate(-135deg)}
+.op{display:flex;text-align:left;cursor:pointer}
+.op-c{white-space:nowrap}
+.bars{display:flex;flex-direction:column}
+.bar{display:flex;align-items:center}
+.bar u{display:block;text-decoration:none;width:calc(var(--v) * 1%)}
+.lg{display:flex;flex-wrap:wrap}
+.lg-i{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;flex:none}
+.scroll{overflow-x:auto}
+
+/* =====================================================================
+   A、B 共用：安靜的卡片內部
+   只有三種字：結論（16.5 粗黑）／內容（14 一般）／細節（12.5 灰）。
+   數字跟著文字，不放大；顏色只留三種意思：藍＝可以點、綠＝符合、琥珀＝要接受。
+   ===================================================================== */
+.k .card{font-size:14px;line-height:1.6;color:var(--ink2)}
+.k .lb{font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:6px}
+.k .lb em{font-weight:500}
+.k .hl{font-size:16.5px;line-height:1.45;font-weight:700;color:var(--ink);text-wrap:balance;margin-bottom:12px}
+.k .rec .lap{margin-bottom:12px}
+.k .th{width:50px;height:36px;background:var(--inner);border-radius:9px}
+.k .lap-n{font-size:15px;color:var(--ink)}
+.k .lap-s{font-size:12.5px;color:var(--ink3)}
+.k .price{font-size:16px;font-weight:700;color:var(--ink)}
+.k .price small{font-size:12px;font-weight:500;color:var(--ink3);margin-right:3px}
+.k .pc{gap:18px;padding-top:12px;border-top:1px solid var(--hair)}
+.k .pc h4{font-size:12px;font-weight:600;margin-bottom:5px}
+.k .pros h4{color:var(--good)} .k .cons h4{color:var(--warn)}
+.k .pc ul{display:flex;flex-direction:column;gap:3px}
+.k .pros li{color:var(--ink)}
+.k .acts{margin-top:16px}
+.k .fit th,.k .fit td{padding:8px 0;border-top:1px solid var(--hair)}
+.k .fit thead th{border:0;padding:0 0 4px;font-size:12px;font-weight:600;color:var(--ink3)}
+.k .fit thead th:last-child{text-align:right}
+.k .got{text-align:right!important;white-space:nowrap;font-weight:600;color:var(--good)}
+.k .ok{margin-right:4px}
+.k .got .n{color:var(--ink);margin-left:4px}
+.k .meta{font-size:12.5px;color:var(--ink3);line-height:1.6;margin-top:10px}
+.k .cmp .lg{gap:4px 14px;font-size:12.5px;color:var(--ink2);margin-bottom:6px}
+.k .lg-p{color:var(--ink3)}
+.k .sw{width:10px;height:10px;border-radius:3px}
+.k [data-m="2"]{--c:#12151C} .k [data-m="4"]{--c:#6B7386} .k [data-m="3"]{--c:#B9C0CE}
+.k .sw,.k .bar u{background:var(--c)}
+.k .dim{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--hair);align-items:center}
+.k .dim-n{font-weight:600;color:var(--ink)}
+.k .bars{gap:3px}
+.k .bar{gap:8px;height:14px}
+.k .bar u{height:8px;border-radius:4px;max-width:calc(100% - 40px)}
+.k .bar .n{font-size:12.5px;color:var(--ink3)}
+.k .bar.w .n{color:var(--ink);font-weight:700}
+.k .more{margin-top:8px}
+.k .more summary{color:var(--accent);font-size:13.5px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.k .more table{margin-top:8px;font-size:13px}
+.k .more th,.k .more td{padding:6px 4px;border-top:1px solid var(--hair);text-align:center}
+.k .more thead th{border:0;font-size:12px;font-weight:600;color:var(--ink2)}
+.k .more th:first-child,.k .more td:first-child{text-align:left;color:var(--ink3)}
+.k .choice .lb{color:var(--ink)}
+.k .choice .lb span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--signal);margin-right:7px;vertical-align:1px}
+.k .q{font-size:16.5px;font-weight:700;line-height:1.45;color:var(--ink);margin-bottom:12px}
+.k .q small{display:block;font-size:14px;font-weight:400;color:var(--ink2);margin-top:2px}
+.k .ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.k .op{flex-direction:column;justify-content:space-between;gap:6px;min-height:76px;border:1.3px solid #B4BBC9;background:#fff;border-radius:14px;padding:11px 13px;font-size:14.5px;font-weight:600;color:var(--ink);transition:border-color .15s,background .15s}
+.k .op:hover{border-color:var(--ink);background:var(--inner)}
+.k .op.wide{grid-column:1/-1;min-height:0}
+.k .op-c{font-size:12.5px;font-weight:400;color:var(--ink3)}
+.k .op-c .n{color:var(--ink);font-weight:600;margin:0 2px}
+.k .tx{font-size:15px;line-height:1.8;color:var(--ink2)}
+.k .key{color:var(--ink);font-weight:700}
+.k .mk{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:#AEB5C4;text-decoration-thickness:1.5px;text-underline-offset:4px}
+.k .count{align-self:center;font-size:12px;color:var(--ink3);border:1px solid #C3CADB;border-radius:999px;padding:1px 14px}
+.ava{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 17px/1 Arial,sans-serif}
+.ava::before{content:"*";transform:translateY(3px)}
+
+/* =====================================================================
+   做法 A　灰底＋白卡：沒有泡泡，我說的話直接寫在灰底上，卡片浮起來
+   ===================================================================== */
+.dA .reply{display:flex;flex-direction:column;gap:18px;padding:0 4px}
+.dA .head{display:flex;align-items:center;gap:8px;margin-bottom:-6px}
+.dA .head span{font-size:12px;color:var(--ink3)}
+.dA .tx{padding:0 4px;color:#3A4050}
+.dA .card{background:var(--white);border-radius:18px;padding:16px 18px 18px;box-shadow:var(--sh-card)}
+.dA .card.choice{box-shadow:none;border:2px solid var(--ink);margin-top:4px}
+
+/* =====================================================================
+   做法 B　卡片變附件：我說的話在白泡泡，卡片拆出來排在泡泡下面
+   ===================================================================== */
+.dB .reply{display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:10px;row-gap:10px;align-items:start}
+.dB .reply>*{grid-column:2}
+.dB .reply>.ava{grid-column:1;margin-top:4px}
+.dB .count{grid-column:1/-1;justify-self:center;margin-bottom:4px}
+.dB .bub{background:var(--white);border-radius:18px 18px 18px 4px;padding:12px 16px;width:fit-content;max-width:100%}
+.dB .bub+.att,.dB .att+.bub{margin-top:6px}
+.dB .att .card{background:var(--white);border:1px solid var(--edge);border-radius:16px;overflow:hidden;padding:0 16px 16px;box-shadow:0 1px 2px rgba(22,30,52,.06),0 6px 16px -8px rgba(22,30,52,.18)}
+.dB .att .card>.lb{margin:0 -16px 14px;padding:9px 16px;background:#EBEEF4;border-bottom:1px solid var(--edge);color:var(--ink2)}
+.dB .att .card.choice{border:2px solid var(--ink);box-shadow:none;padding:16px}
+.dB .att .card.choice>.lb{margin:0 0 6px;padding:0;background:none;border:0;color:var(--ink)}
+
+/* =====================================================================
+   上一版（對照）
+   ===================================================================== */
+.d0 .reply{background:var(--white);border-radius:20px 20px 20px 4px;display:flex;flex-direction:column;gap:14px;padding:16px 18px 18px;box-shadow:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16)}
+.d0 .count{align-self:center;font-size:12px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 14px}
+.d0 .tx{font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.d0 .key{color:var(--ink);font-weight:700}
+.d0 .mk{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:#B4BBC9;text-underline-offset:3px}
+.d0 .fact{text-decoration-thickness:1px;text-underline-offset:3px}
+.d0 .card{background:var(--inner);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.d0 .lb{font-size:11px;font-weight:600;letter-spacing:.06em;color:#626A7D;margin-bottom:8px}
+.d0 .hl{font-size:15px;font-weight:700;line-height:1.45;color:var(--ink);margin-bottom:10px}
+.d0 .lap{margin-bottom:10px}
+.d0 .th{width:44px;height:32px;background:#fff;border:1px solid var(--line);border-radius:8px}
+.d0 .lap-n{font-size:14px;color:var(--ink)}
+.d0 .lap-s{font-size:12px;color:#626A7D}
+.d0 .price{font-weight:700;color:var(--ink)}
+.d0 .price small{font-size:inherit;margin-right:3px}
+.d0 .pc{gap:14px}
+.d0 .pc h4{font-size:11px;letter-spacing:.06em;font-weight:600;margin-bottom:4px}
+.d0 .pros h4{color:var(--good)} .d0 .cons h4{color:var(--warn)}
+.d0 .pc li{color:var(--ink);line-height:1.6}
+.d0 .acts{margin-top:12px}
+.d0 .btn.pri{height:auto;padding:5px 15px;font-size:13px;box-shadow:none}
+.d0 .btn.pri::after{display:none}
+.d0 .btn.sec{height:auto;padding:4px 15px;font-size:13px}
+.d0 .fit th,.d0 .fit td{padding:6px;border-top:1px solid var(--hair)}
+.d0 .fit thead th{border:0;font-size:11px;letter-spacing:.06em;font-weight:600;color:#626A7D;padding-top:0}
+.d0 .got{font-weight:600;color:var(--ink);white-space:nowrap}
+.d0 .ok{color:var(--good);font-weight:700;margin-right:4px}
+.d0 .ok b{color:var(--ink);font-weight:600}
+.d0 .meta{font-size:12px;color:#626A7D;line-height:1.5;margin-top:8px}
+.d0 .cmp .lg{gap:4px 14px;font-size:12px;color:var(--ink2);margin-bottom:6px}
+.d0 .cmp .lg-p{display:none}
+.d0 .sw{width:10px;height:10px;border-radius:3px}
+.d0 [data-m="2"]{--c:#12151C} .d0 [data-m="4"]{--c:#2340C4} .d0 [data-m="3"]{--c:#9AA5C0}
+.d0 .sw,.d0 .bar u{background:var(--c)}
+.d0 .dim{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--hair);align-items:center}
+.d0 .dim-n{font-weight:700;color:var(--ink)}
+.d0 .bar{gap:7px;height:13px}
+.d0 .bar u{height:7px;border-radius:3px;max-width:calc(100% - 36px)}
+.d0 .bar .n{font-size:12px;color:#626A7D}
+.d0 .bar.w .n{color:var(--ink);font-weight:700}
+.d0 .more{margin-top:8px}
+.d0 .more summary{color:var(--accent);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.d0 .more table{margin-top:8px;font-size:12.5px}
+.d0 .more th,.d0 .more td{padding:5px;border-top:1px solid var(--hair);text-align:center}
+.d0 .more th:first-child,.d0 .more td:first-child{text-align:left;color:#626A7D}
+.d0 .choice{background:#fff;border:1.5px solid var(--ink)}
+.d0 .choice .lb span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal);margin-right:6px;vertical-align:1px}
+.d0 .q{font-size:16px;font-weight:700;line-height:1.5;color:var(--ink);margin-bottom:12px}
+.d0 .q small{display:block;font-size:13.5px;font-weight:400;color:var(--ink2);margin-top:2px}
+.d0 .ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.d0 .op{flex-direction:column;justify-content:space-between;gap:4px;min-height:76px;border:1.3px solid #B4BBC9;background:#fff;border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px;color:var(--ink)}
+.d0 .op.wide{grid-column:1/-1;min-height:0}
+.d0 .op-c{font-size:12px;font-weight:400;color:var(--ink3)}
+
+@media (max-width:520px){
+  .pc{grid-template-columns:1fr!important}
+  .dA .card{padding:14px 14px 16px}
+}
+</style>
+</head>
+<body>
+<header class="intro">
+  <h1>回覆區塊分隔</h1>
+  <p>這次只解決一件事：<b>一眼看出這段回覆有幾塊、每塊的邊界在哪</b>。做法 A 和做法 B 的卡片裡面完全一樣，而且刻意做得很安靜（一句粗體結論＋普通字明細）；兩者只差在區塊之間怎麼分開。最右邊是上一版，當對照。</p>
+  <p>看中哪個按「選這個」，覺得哪裡還不對可以寫在每欄下面，最後按「複製」貼給 Claude。「剩 86 台」「剩 47 台」是示意數字，其他取自真實對話。</p>
+</header>
+<div class="tools">
+  <div class="tgroup"><span>檢查：</span>
+    <button class="tg" id="t-blur" aria-pressed="false"><i></i>瞇眼看</button>
+    <button class="tg" id="t-gray" aria-pressed="false"><i></i>黑白看</button>
+    <button class="tg" id="t-order" aria-pressed="false"><i></i>標出閱讀順序</button>
+  </div>
+  <span class="sp"></span>
+  <output id="out">還沒選</output>
+  <button class="copy" id="copy" disabled>複製</button>
+  <p class="hint">瞇眼看：整段模糊後，還數得出有幾塊、看得出每塊在哪裡嗎？黑白看：拿掉顏色，區塊還分得開嗎？標出閱讀順序：① 結論句 → ② 推薦卡結論 → ③ 對比數字 → ④ 追問。</p>
+</div>
+<div class="scroller"><div class="cols" id="cols"></div></div>
+
+<script>
+const DIRS=[
+  ["dA","做法 A　灰底＋白卡","我說的話直接寫在灰底上，每張卡片是一張浮起來的白卡；只有追問卡是黑框。"],
+  ["dB","做法 B　卡片變附件","我說的話放在白色泡泡裡，卡片拆出泡泡，一張張排在下面；只有追問卡是黑框。"],
+  ["d0","上一版（對照）","所有東西都在同一個白泡泡裡，卡片是淺灰底。"],
+];
+
+/* ---------- 內容（取自真實對話與你選的結構） ---------- */
+const M={1:"華碩a豆14 Air 2026",2:"a豆14 Air 風信子藍",3:"無畏Pro14",4:"惠普星Book Pro 16"};
+const P={2:"6,034",3:"5,779",4:"7,649"};
+const th=()=>`<span class="th"><svg viewBox="0 0 56 40" aria-hidden="true"><rect class="body" x="10" y="5" width="36" height="24" rx="2.6"/><rect class="scr" x="12.4" y="7.4" width="31.2" height="19.2" rx="1"/><path class="glare" d="M12.4 7.4h14l-9 19.2h-5z"/><path class="body" d="M4 30.2h48l-3.2 3.8H7.2z"/></svg></span>`;
+const mk=i=>`<span class="mk">${M[i]}</span>`;
+const fact=t=>`<span class="fact">${t}</span>`;
+const CMP=[2,4,3];
+const TOP=[["性能",68,71,66],["螢幕",88,78,87],["便攜",82,69,82]];
+const REST=[["續航",36,45,36],["散熱",74,78,76],["安靜",93,95,96],["擴充",60,67,60],["性價比",25,9,28],["權重分",72.8,70.7,72.1],["尺寸","14 吋","16 吋","14 吋"],["重量","1.38 公斤","1.78 公斤","1.38 公斤"]];
+const win=r=>{const m=Math.max(r[1],r[2],r[3]);return [1,2,3].map(k=>r[k]===m)};
+
+const B={
+count:()=>`<div class="count">133 台符合・和上一輪一樣</div>`,
+p2:()=>`<div class="tx"><p><span class="key" data-order="1">要挑一台最好的，主候選池第 1 名就是 ${mk(1)}，77.2 分，這四台裡最高。</span>它也是這四台裡最輕、續航最久、${fact("P3 覆蓋 100%")}，亮度也最高，等你晚上在房間修圖會很有感。代價是 14 吋畫面較小，${fact("擴充性是四台最弱（51 分）")}，以後想加東西比較受限；會不會被這點影響，就看你平常用不用外接螢幕。</p></div>`,
+rec:()=>`<section class="card rec">
+    <header class="lb"><span>最推薦</span><em>主候選池 第 1／133</em></header>
+    <div class="lap">${th()}<div class="lap-t"><b class="lap-n">華碩a豆14 Air 2026</b><span class="lap-s"><span class="n">77.2</span> 分</span></div><div class="price"><small>NT$</small><span class="n">5,900</span></div></div>
+    <h3 class="hl" data-order="2">顏色最準、最輕，照你的用法分數最高</h3>
+    <div class="pc">
+      <div class="pros"><h4>強項</h4><ul><li>四台裡最輕、續航最久</li><li>P3 覆蓋 100%，亮度最高</li><li>Photoshop、Illustrator 都夠用</li></ul></div>
+      <div class="cons"><h4>要接受的</h4><ul><li>14 吋畫面較小</li><li>擴充 51 分，四台最弱</li></ul></div>
+    </div>
+    <div class="acts"><button class="btn pri">看詳情</button><button class="btn sec">收藏</button><button class="lnk">不考慮</button></div>
+  </section>`,
+fit:()=>`<section class="card fit">
+    <header class="lb"><span>對照你的需求</span><em>華碩a豆14 Air 2026</em></header>
+    <h3 class="hl">你的 3 項需求，這台全部符合</h3>
+    <table><thead><tr><th>你要的</th><th>這台</th></tr></thead><tbody>
+      <tr><td>常用軟體：Photoshop</td><td class="got"><span class="ok">✓</span><b>夠用</b></td></tr>
+      <tr><td>常用軟體：Illustrator</td><td class="got"><span class="ok">✓</span><b>夠用</b></td></tr>
+      <tr><td>預算 8000 以內</td><td class="got"><span class="ok">✓</span><b>符合</b><span class="n">5,900</span> 元</td></tr>
+    </tbody></table>
+    <p class="meta">用途、設計類型、主要工具這 3 項沒辦法用單一數字比，改看整體分數：這台排第 1／133。</p>
+  </section>`,
+p3:()=>`<div class="tx"><p>你看到 72 分的那台，我猜是 ${mk(2)}（72.8 分）或是 ${mk(3)}（72.1 分），這兩台規格幾乎同一組：14 吋 2.8K OLED、32G／1T、1.38 公斤、續航約 10 小時，差在無畏Pro14 再安靜一點、再便宜一些。<span class="key">跟 ${mk(4)} 最大的差別在螢幕</span>：惠普是 16 吋 IPS 2.5K、240Hz，面板大、畫面滑順，但 ${fact("P3 覆蓋只有 78.5%")}、${fact("最高亮度 392 nits")}，是這幾台最低的，修圖時顏色會比較淡，暗部細節也吃虧；240Hz 對畫圖沒幫助，那是玩遊戲、拉視窗用的。惠普的長處是散熱和擴充（78／67 分，這幾台最好）、16 吋看很多面板舒服、續航 12.5 小時，但價格 7,649 也是這幾台最貴的。</p></div>`,
+cmp:()=>`<section class="card cmp">
+    <header class="lb"><span>三台比一比</span></header>
+    <h3 class="hl">兩台 14 吋贏在螢幕和便攜；惠普贏在性能、續航、散熱，但最貴</h3>
+    <div class="lg">${CMP.map(i=>`<span class="lg-i" data-m="${i}"><i class="sw"></i>${M[i]}<span class="lg-p n">${P[i]}</span></span>`).join("")}</div>
+    <div class="dims" data-order="3">${TOP.map(r=>{const w=win(r);return `<div class="dim"><span class="dim-n">${r[0]}</span><div class="bars">${CMP.map((i,k)=>`<div class="bar${w[k]?" w":""}" data-m="${i}"><u style="--v:${r[k+1]}"></u><span class="n">${r[k+1]}</span></div>`).join("")}</div></div>`}).join("")}</div>
+    <details class="more"><summary>看其他 8 項</summary><div class="scroll"><table><thead><tr><th></th>${CMP.map(i=>`<th>${M[i]}</th>`).join("")}</tr></thead><tbody>${REST.map(r=>`<tr><td>${r[0]}</td>${[1,2,3].map(k=>`<td class="n">${r[k]}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>
+  </section>`,
+choice:()=>`<section class="card choice">
+    <header class="lb"><span>想問你一件事</span></header>
+    <p class="q" data-order="4">你修圖時會外接大螢幕嗎？<small>這會決定值不值得為 16 吋犧牲顏色。</small></p>
+    <div class="ops">
+      <button class="op"><span class="op-t">幾乎都外接大螢幕</span><span class="op-c">剩<span class="n">86</span>台</span></button>
+      <button class="op"><span class="op-t">都在筆電螢幕上修</span><span class="op-c">剩<span class="n">47</span>台</span></button>
+      <button class="op wide"><span class="op-t">還沒想過，先看哪台最適合</span></button>
+    </div>
+    <button class="lnk">都可以，你幫我決定</button>
+  </section>`,
+};
+const ORDER=["count","p2","rec","fit","p3","cmp","choice"];
+const isText=id=>id==="p2"||id==="p3";
+
+function render(id){
+  if(id==="dA") return `<div class="reply"><div class="head"><span class="ava"></span></div>${ORDER.map(x=>B[x]()).join("")}</div>`;
+  if(id==="dB"){let first=true;return `<div class="reply">${ORDER.map(x=>{
+      if(x==="count") return B.count();
+      if(isText(x)){const a=first?`<span class="ava"></span>`:"";first=false;return `${a}<div class="bub">${B[x]()}</div>`}
+      return `<div class="att">${B[x]()}</div>`;}).join("")}</div>`;}
+  return `<div class="reply">${ORDER.map(x=>B[x]()).join("")}</div>`;
+}
+
+/* ---------- 畫面 ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let pick=store.get("replyBlocksPick");
+const cols=document.getElementById("cols");
+cols.innerHTML=DIRS.map(([id,name,desc])=>`
+  <section class="col ${id}${id==="d0"?"":" k"}" id="col-${id}">
+    <div class="colhead"><div><b>${name}</b><small>${desc}</small></div>${id==="d0"?"":`<button class="choose" data-choose="${id}">選這個</button>`}</div>
+    <div class="colbody"><div class="me">我主要用 PS 和 AI，預算 8000 以內。哪台最好？我看到一台 72 分的，跟惠普那台差在哪？</div>${render(id)}<div class="order-layer"></div></div>
+    <div class="colfoot"><label for="note-${id}">${id==="d0"?"上一版哪裡最不清楚？（可不填）":"這個做法哪裡還不對？（可不填）"}</label><textarea id="note-${id}" data-note="${id}"></textarea></div>
+  </section>`).join("");
+document.querySelectorAll("[data-note]").forEach(t=>{t.value=store.get("replyBlocksNote-"+t.dataset.note)||""});
+
+function summary(){
+  const d=DIRS.find(x=>x[0]===pick);
+  const lines=[d?`區塊分隔：${d[1].replace("　"," ")}`:"區塊分隔：還沒選"];
+  DIRS.forEach(x=>{const v=document.getElementById("note-"+x[0]).value.trim();if(v) lines.push(`${x[1].split("　")[0]} 備註：${v}`)});
+  return lines.join("\n");
+}
+function show(){
+  document.querySelectorAll(".col").forEach(c=>c.classList.toggle("on",c.id==="col-"+pick));
+  document.querySelectorAll("[data-choose]").forEach(b=>b.textContent=b.dataset.choose===pick?"已選":"選這個");
+  const d=DIRS.find(x=>x[0]===pick);
+  document.getElementById("out").textContent=d?`已選：${d[1].replace("　"," ")}`:"還沒選";
+  const anyNote=[...document.querySelectorAll("[data-note]")].some(t=>t.value.trim());
+  document.getElementById("copy").disabled=!d&&!anyNote;
+}
+
+/* 閱讀順序：編號畫在模糊層上方，瞇眼看時仍清楚 */
+let orderOn=false;
+function drawOrder(){
+  document.querySelectorAll(".colbody").forEach(body=>{
+    const layer=body.querySelector(".order-layer");
+    if(!orderOn){layer.innerHTML="";return}
+    const base=body.getBoundingClientRect();
+    layer.innerHTML=[...body.querySelectorAll("[data-order]")].map(el=>{
+      const r=el.getClientRects()[0]||el.getBoundingClientRect();
+      return `<b style="left:${Math.max(2,r.left-base.left-14)}px;top:${r.top-base.top-12}px">${el.dataset.order}</b>`;
+    }).join("");
+  });
+}
+function toggle(btn,fn){const on=btn.getAttribute("aria-pressed")!=="true";btn.setAttribute("aria-pressed",on);fn(on)}
+document.getElementById("t-blur").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("blur",on));
+document.getElementById("t-gray").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("gray",on));
+document.getElementById("t-order").onclick=e=>toggle(e.currentTarget,on=>{orderOn=on;drawOrder()});
+window.addEventListener("resize",drawOrder);
+document.addEventListener("toggle",drawOrder,true);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(drawOrder);
+
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-choose]");
+  if(c){pick=c.dataset.choose;store.set("replyBlocksPick",pick);show();return}
+  if(e.target.id==="copy"){const b=e.target;(navigator.clipboard?navigator.clipboard.writeText(summary()):Promise.reject()).then(()=>{b.textContent="已複製";setTimeout(()=>b.textContent="複製",1600)},()=>{b.textContent="無法複製，請截圖";})}
+});
+document.addEventListener("input",e=>{const t=e.target.closest("[data-note]");if(t){store.set("replyBlocksNote-"+t.dataset.note,t.value);show()}});
+
+/* 網址參數（截圖檢查用）：?blur=1&gray=1&order=1 */
+const q=new URLSearchParams(location.search);
+if(q.get("blur")) document.getElementById("t-blur").click();
+if(q.get("gray")) document.getElementById("t-gray").click();
+if(q.get("order")) document.getElementById("t-order").click();
+show();
+</script>
+</body>
+</html>
