@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 筆電選購助手 · 回覆卡片 21 個點子</title>
+<style>
+:root {
+  --ground: #C6CDDC; --ground-2: #BAC3D5; --panel: #EDF0F5; --chatbg: #E1E5EE; --group: #EBEEF4; --group-2: #E2E7F0;
+  --edge: #2A2F3A; --ink: #12151C; --ink-2: #454C5D; --ink-3: #5A6174; --line: #D7DCE6; --line-2: #E4E8EF;
+  --accent: #2340C4; --accent-soft: #DDE4F7; --accent-ink: #1A2F96; --signal: #F0602A; --signal-ink: #A8401A;
+  --good: #1D7349; --good-soft: #DFF1E7; --warn: #8A5208; --warn-soft: #FBEFD9; --bad: #AE3626;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang TC", "Noto Sans TC", monospace;
+  --chatw: 460px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; font: 14px/1.55 var(--sans); color: var(--ink); color-scheme: light;
+  background: radial-gradient(1200px 700px at 80% -10%, #D3D9E6 0%, transparent 60%), linear-gradient(180deg, var(--ground), var(--ground-2)) fixed; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; } ul, ol { list-style: none; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px 140px; }
+.top { padding: 40px 0 22px; }
+.top h1 { font-size: 30px; line-height: 1.2; letter-spacing: -.02em; }
+.top p { margin-top: 10px; max-width: 64ch; color: var(--ink-2); font-size: 15px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 7px; font: 500 11px/1.3 var(--mono); letter-spacing: .08em; color: var(--ink-3); }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
+.rule { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; max-width: 680px; }
+.rule div { padding: 12px 14px; border-radius: 16px; background: var(--panel); }
+.rule b { display: block; font-size: 14.5px; } .rule span { color: var(--ink-2); font-size: 13px; }
+.bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; margin: 0 -14px;
+  background: rgba(237, 240, 245, .9); backdrop-filter: blur(14px); border-radius: 0 0 18px 18px; box-shadow: 0 10px 24px -18px rgba(30, 40, 70, .5); }
+.bar nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.bar a { padding: 5px 12px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 500; }
+.bar a:hover { background: var(--group); }
+.seg { margin-left: auto; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--group-2); }
+.seg button { border: 0; background: none; padding: 5px 13px; border-radius: 999px; font-size: 13px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; font-weight: 600; }
+
+.grp { margin-top: 44px; }
+.grp > h2 { font-size: 21px; letter-spacing: -.01em; }
+.grp > p { color: var(--ink-2); margin-top: 4px; }
+.spec { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; margin-top: 18px; padding: 20px; border-radius: 30px; background: var(--panel); box-shadow: 0 30px 60px -40px rgba(30, 40, 70, .45); }
+.meta .no { font: 600 12px/1 var(--mono); letter-spacing: .08em; color: var(--signal-ink); }
+.meta h3 { margin-top: 8px; font-size: 18px; line-height: 1.3; }
+.meta .d { margin-top: 8px; color: var(--ink-2); font-size: 13.5px; }
+.meta .try { margin-top: 8px; font-size: 12.5px; color: var(--accent-ink); }
+.tag { display: inline-block; margin-top: 10px; padding: 2px 9px; border-radius: 999px; font-size: 12px; background: var(--ink); color: #fff; font-weight: 600; }
+.want { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; min-height: 38px; padding: 0 15px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; font-weight: 500; font-size: 13.5px; }
+.want::before { content: ""; width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--edge); flex: none; }
+.want[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
+.want[aria-pressed="true"]::before { border-color: #fff; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / 11px no-repeat; }
+
+/* 對話欄與泡泡：一則回覆＝一個泡泡，文字和卡片在裡面交錯 */
+.chat { justify-self: start; width: min(100%, var(--chatw)); padding: 16px 14px; border-radius: 24px; background: var(--chatbg); display: grid; gap: 10px; align-content: start; transition: width .25s cubic-bezier(.2, .7, .2, 1); }
+.me { justify-self: end; max-width: 86%; padding: 9px 14px; border-radius: 18px 18px 4px 18px; background: var(--accent); color: #fff; transition: box-shadow .3s; }
+.me.flash { box-shadow: 0 0 0 4px var(--signal); }
+.bub { padding: 13px 15px; border-radius: 18px 18px 18px 4px; background: #fff; border: 1px solid #C3CADB; font-size: 14.5px; line-height: 1.7; display: grid; gap: 9px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--ink-3); font-size: 12.5px; }
+
+/* 共用小零件：事實列、機型列、小橫條 */
+.blk { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 2px 0; font-size: 13px; line-height: 1.45; }
+.f { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding: 7px 0; }
+.f + .f { border-top: 1px solid var(--line-2); }
+.f .k { flex: 1 1 96px; color: var(--ink-2); } .f .k q { quotes: "「" "」"; color: var(--accent-ink); font-weight: 600; }
+.f .v { font: 600 13px var(--mono); }
+.f .r { font: 11.5px var(--mono); color: var(--ink-3); min-width: 54px; text-align: right; }
+.mb { width: 44px; height: 6px; border-radius: 999px; background: var(--group-2); position: relative; flex: none; }
+.mb::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--p); border-radius: 999px; background: var(--ink); }
+.vid { border: 0; background: none; padding: 0; font: 11.5px var(--mono); color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.m { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 12px; background: var(--group); font-size: 13.5px; border: 0; width: 100%; text-align: left; line-height: 1.35; }
+button.m:hover { background: var(--group-2); }
+.m svg { width: 46px; height: 32px; }
+.m b { display: block; } .m .p { font: 12px var(--mono); color: var(--ink-2); }
+.sc { min-width: 30px; padding: 2px 7px; border-radius: 999px; background: var(--ink); color: #fff; font: 600 12px var(--mono); text-align: center; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.o { min-height: 34px; padding: 4px 13px; border-radius: 999px; border: 1.3px solid var(--edge); background: #fff; font-size: 13px; font-weight: 500; }
+.o:hover { background: var(--group); } .o[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+[hidden] { display: none !important; }
+
+/* 1 可點的句子 */
+.claim { border: 0; background: none; padding: 0 1px; font: inherit; border-bottom: 1.5px dashed var(--accent); color: var(--accent-ink); }
+.claim:hover, .claim[aria-expanded="true"] { background: var(--accent-soft); border-bottom-style: solid; border-radius: 4px 4px 0 0; }
+.unfold { margin-top: -3px; padding: 0 10px; border-radius: 10px; background: var(--accent-soft); font-size: 13px; }
+/* 2 腳註 */
+.fn { border: 0; background: var(--group-2); width: 17px; height: 17px; padding: 0; border-radius: 50%; font: 600 10.5px/17px var(--mono); vertical-align: 3px; margin-left: 2px; }
+.fn:hover, .fn.on { background: var(--signal); color: #fff; }
+.notes { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 4px; font-size: 12.5px; color: var(--ink-2); }
+.notes li { display: flex; flex-wrap: wrap; gap: 3px 8px; align-items: baseline; padding: 2px 6px; border-radius: 6px; transition: background .2s; }
+.notes li.on { background: var(--warn-soft); }
+.notes i { font: normal 600 11px var(--mono); color: var(--signal-ink); }
+/* 3 行內機型標 */
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 0 9px 0 4px; height: 24px; border-radius: 999px; border: 1.2px solid var(--edge); background: #fff; font-size: 13px; font-weight: 600; vertical-align: -5px; white-space: nowrap; }
+.chip:hover { background: var(--group); }
+.chip svg { width: 24px; height: 17px; } .chip small { font: 500 11.5px var(--mono); color: var(--ink-3); }
+/* 4 聯動 */
+.hl { border-radius: 4px; padding: 0 1px; border: 0; background: none; font: inherit; border-bottom: 1.5px solid var(--signal); cursor: default; }
+.hl:hover, .hl:focus { background: #FDE3D7; }
+.pane { justify-self: end; width: min(100%, 250px); padding: 12px; border-radius: 20px; background: #fff; box-shadow: 0 12px 32px -10px rgba(22, 30, 52, .2); font-size: 13px; }
+.pane svg { width: 100%; height: auto; border-radius: 12px; background: linear-gradient(160deg, #F2F4F8, #DDE2EC); }
+.pane li { display: flex; justify-content: space-between; padding: 4px 7px; border-radius: 8px; transition: background .2s, box-shadow .2s; }
+.pane li.on { background: #FDE3D7; box-shadow: 0 0 0 1.5px var(--signal); }
+.pane li span:last-child { font-family: var(--mono); }
+.panelbl { justify-self: end; font: 500 10.5px var(--mono); letter-spacing: .08em; color: var(--ink-3); }
+/* 5 6 7 圖 */
+.fig { border-radius: 12px; background: var(--group); padding: 10px 12px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.fig svg { display: block; width: 100%; height: auto; }
+.fig .cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 6px; }
+.day { display: flex; gap: 3px; height: 26px; }
+.day i { flex: 1; border-radius: 6px; background: var(--ink); color: #fff; font: normal 11px/26px var(--sans); text-align: center; }
+.day i.left { flex: 1.7; background: var(--good-soft); color: var(--good); font-weight: 600; border: 1.2px dashed var(--good); line-height: 24px; }
+.scale { position: relative; height: 46px; margin: 2px 6px 0; }
+.scale::before { content: ""; position: absolute; left: 0; right: 0; top: 20px; height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--good-soft), #F3D9A8, #F1B9AE); }
+.scale span { position: absolute; top: 30px; translate: -50% 0; font-size: 11px; white-space: nowrap; }
+.scale span::before { content: ""; position: absolute; left: 50%; top: -11px; width: 1px; height: 8px; background: var(--ink-3); }
+.scale b { position: absolute; top: 0; translate: -50% 0; font: 600 11.5px var(--mono); color: var(--ink); white-space: nowrap; }
+.scale b::after { content: ""; position: absolute; left: 50%; top: 16px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+/* 8 階梯 */
+.ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; align-items: end; }
+.ladder div { padding: 8px 9px; border-radius: 10px; background: var(--group); font-size: 12px; line-height: 1.4; color: var(--ink-2); }
+.ladder div:nth-child(2) { background: var(--ink); color: rgba(255, 255, 255, .8); padding-bottom: 20px; }
+.ladder div:nth-child(3) { padding-bottom: 32px; }
+.ladder b { display: block; font: 600 13px var(--mono); color: var(--ink); } .ladder div:nth-child(2) b { color: #fff; }
+/* 11 沒提到的 */
+.mini { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mini th, .mini td { padding: 6px 4px; border-top: 1px solid var(--line-2); text-align: center; }
+.mini tr:first-child > * { border-top: 0; }
+.mini th:first-child { text-align: left; font-weight: 500; color: var(--ink-2); }
+.mini thead th { font-weight: 600; font-size: 12px; }
+.yes { color: var(--good); font-weight: 700; } .nope { color: var(--ink-3); }
+/* 13 因為你 */
+.cuz { display: inline-block; margin-top: 2px; padding: 0 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: 11.5px; font-weight: 500; }
+/* 14 猜的 */
+.guess { border: 0; padding: 0 2px; font: inherit; background: var(--warn-soft); border-radius: 4px; }
+.guess::after { content: "?"; display: inline-block; width: 15px; height: 15px; margin-left: 3px; border-radius: 50%; background: var(--warn); color: #fff; font: 600 10.5px/15px var(--mono); text-align: center; vertical-align: 1px; }
+/* 15 記得 */
+.recall { justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 0; padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--group); font-size: 12.5px; color: var(--ink-2); }
+.recall:hover { background: var(--group-2); } .recall::before { content: "↑"; font-family: var(--mono); color: var(--signal-ink); font-weight: 700; }
+/* 16 二選一 */
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.duel button { display: grid; gap: 2px; padding: 10px; border-radius: 14px; border: 1.3px solid var(--edge); background: #fff; text-align: left; font-size: 12.5px; line-height: 1.45; }
+.duel button:hover { background: var(--group); }
+.duel button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.duel svg { width: 62px; height: 43px; } .duel b { font-size: 13.5px; } .duel span { font-family: var(--mono); color: var(--ink-2); }
+/* 17 滑桿 */
+.sl { border-radius: 12px; background: var(--group); padding: 10px 12px; }
+.sl label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-2); }
+.sl input { width: 100%; margin: 6px 0 8px; accent-color: var(--accent); }
+.sl ol { display: grid; gap: 4px; }
+.sl li { display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 10px; background: #fff; font-size: 13px; }
+.sl li i { font: normal 600 12px var(--mono); color: var(--signal-ink); } .sl li span { font: 12px var(--mono); color: var(--ink-3); }
+/* 18 反駁 */
+.rb { border: 0; background: none; padding: 0 5px; margin-left: 3px; border-radius: 999px; font-size: 11.5px; color: var(--ink-3); box-shadow: inset 0 0 0 1px #B9C0CE; vertical-align: 1px; }
+.rb:hover, .rb[aria-expanded="true"] { background: var(--bad); color: #fff; box-shadow: none; }
+/* 19 20 */
+.f.notfor .k { color: var(--ink); } .f.notfor::before { content: "不適合"; padding: 0 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-size: 11.5px; font-weight: 600; }
+.f.unk { color: var(--ink-3); } .f.unk .v { font-weight: 500; font-family: var(--sans); font-size: 12.5px; padding: 0 8px; border-radius: 999px; border: 1.2px dashed #B9C0CE; }
+/* 21 所有人和你 */
+.two { display: grid; grid-template-columns: auto 1fr auto; gap: 5px 10px; align-items: center; padding: 8px 0; }
+.two .t { height: 8px; border-radius: 999px; background: var(--group-2); position: relative; }
+.two .t i { position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+.two .t.you { background: var(--accent-soft); } .two .t.you i { background: var(--accent); }
+
+.dock { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 30; width: min(calc(100% - 32px), 720px); display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 10px 10px 10px 18px; border-radius: 22px; background: var(--ink); color: #fff; box-shadow: 0 20px 40px -14px rgba(18, 21, 28, .6); }
+.dock p { flex: 1 1 220px; font-size: 13.5px; } .dock p b { font-family: var(--mono); }
+.dock button { min-height: 38px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: var(--ink); font-weight: 600; font-size: 13.5px; }
+.dock button.ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+
+@media (max-width: 820px) {
+  .spec { grid-template-columns: 1fr; padding: 16px; border-radius: 24px; }
+  .chat { width: 100%; } .seg { display: none; } .top h1 { font-size: 24px; }
+}
+@media (max-width: 440px) { .wrap { padding-inline: 16px; } .rule { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lap" viewBox="0 0 160 110">
+    <rect x="34" y="20" width="92" height="58" rx="5" fill="#fff" stroke="#12151C" stroke-width="3"/>
+    <rect x="41" y="27" width="78" height="44" rx="2" fill="currentColor"/>
+    <path d="M22 80h116l-6 9a4 4 0 0 1-3 2H31a4 4 0 0 1-3-2z" fill="#12151C"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">回覆卡片 第二版 · 示意資料</span>
+    <h1>回覆卡片 21 個點子</h1>
+    <p>這一版從頭想：一則回覆是一個泡泡，文字和卡片在裡面交錯。卡片沒有標題、沒有結論、沒有外框陰影，因為前後的文字已經做了這些事。很多點子可以點、可以拉，左邊「試試看」有寫。</p>
+    <div class="rule">
+      <div><b>文字（模型寫）</b><span>理解、判斷、建議，用用戶的說法。不列數字。</span></div>
+      <div><b>卡片（程式給）</b><span>可以查證的事實：數字、名次、差異、選項。不寫評語。</span></div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <nav aria-label="分組">
+      <a href="#g0">組合示範</a><a href="#g1">一 形狀</a><a href="#g2">二 有感</a><a href="#g3">三 心裡的問題</a><a href="#g4">四 被理解</a><a href="#g5">五 讓用戶表達</a><a href="#g6">六 信任</a>
+    </nav>
+    <div class="seg" role="group" aria-label="對話欄寬度">
+      <button type="button" data-w="460px" aria-pressed="true">桌機對話欄</button>
+      <button type="button" data-w="340px" aria-pressed="false">手機寬度</button>
+    </div>
+  </div>
+
+  <!-- ============ 組合 ============ -->
+  <section class="grp" id="g0">
+    <h2>先看組合起來的樣子</h2>
+    <p>一則完整的推薦回覆，用了 3、1、12、6、16 五個點子。</p>
+    <article class="spec" data-n="0" data-name="組合示範" data-d="機型嵌在句子裡；判斷可以點開看事實；事實列用用戶的原話當標籤；續航換算成他的一天；最後用兩台真機讓他選。" data-try="點句子裡有虛線的字、點最下面兩台機型">
+      <div class="chat">
+        <p class="me">預算 4 萬，主要修圖，常帶出門上課</p>
+        <div class="bub">
+          <p>修圖又要常帶出門，我最推薦 <button class="chip" type="button"><svg style="color:#9DB2F2"><use href="#lap"/></svg>Aero 14 Studio<small>38,900</small></button>。它的<button class="claim" type="button" data-open="x1" aria-expanded="true">螢幕顏色很準</button>，背著走也<button class="claim" type="button" data-open="x2" aria-expanded="false">不會累</button>。</p>
+          <div class="unfold" id="x1"><div class="f"><span class="k"><q>修圖</q>　螢幕色域</span><span class="v">sRGB 100%</span><i class="mb" style="--p:100%"></i><span class="r">第 1／42</span><button class="vid" type="button">實測 12:34</button></div></div>
+          <div class="unfold" id="x2" hidden><div class="f"><span class="k"><q>常帶出門</q>　重量</span><span class="v">1.32 公斤</span><i class="mb" style="--p:82%"></i><span class="r">第 8／42</span></div></div>
+          <p>要接受的是<button class="claim" type="button" data-open="x3" aria-expanded="true">續航普通</button>，上課日晚上還要用就得帶充電器。</p>
+          <div class="unfold" id="x3" style="padding:8px 10px"><div class="day"><i>第 1 節</i><i>第 2 節</i><i>第 3 節</i><i>第 4 節</i><i class="left">還剩 30%</i></div><div class="f" style="padding-bottom:0"><span class="k"><q>上課</q>　實測續航</span><span class="v">7.5 小時</span><span class="r">第 26／42</span><button class="vid" type="button">實測 08:10</button></div></div>
+          <p>如果只能挑一台，你會拿哪一台？</p>
+          <div class="duel" data-duel="x4">
+            <button type="button" aria-pressed="false"><svg style="color:#9DB2F2"><use href="#lap"/></svg><b>Aero 14 Studio</b><span>sRGB 100%・1.32 公斤</span><span>7.5 小時・38,900</span></button>
+            <button type="button" aria-pressed="false"><svg style="color:#F2B79D"><use href="#lap"/></svg><b>Lite 14</b><span>sRGB 97%・1.45 公斤</span><span>10.5 小時・32,900</span></button>
+          </div>
+          <p id="x4" hidden class="sub">（用戶點了之後，系統從他的選擇調整比重，下一則回覆接著說。）</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ 一 ============ -->
+  <section class="grp" id="g1">
+    <h2>起點一　卡片一定要是「一個框」嗎？</h2>
+    <p>四種不用框的做法。</p>
+
+    <article class="spec" data-n="1" data-name="可點的句子" data-d="判斷帶虛線底線，點一下才在原地展開事實。不點，就是一段乾淨的話。" data-try="點「螢幕顏色很準」「續航普通」" data-pick="1">
+      <div class="chat"><div class="bub">
+        <p>這台最適合你修圖，<button class="claim" type="button" data-open="a1" aria-expanded="false">螢幕顏色很準</button>，重量也在你要的範圍內。</p>
+        <div class="unfold" id="a1" hidden><div class="f"><span class="k">螢幕色域</span><span class="v">sRGB 100%</span><i class="mb" style="--p:100%"></i><span class="r">第 1／42</span><button class="vid" type="button">實測 12:34</button></div><div class="f"><span class="k">色準</span><span class="v">ΔE 1.1</span><i class="mb" style="--p:90%"></i><span class="r">第 4／42</span></div></div>
+        <p>要接受的是<button class="claim" type="button" data-open="a2" aria-expanded="false">續航普通</button>。</p>
+        <div class="unfold" id="a2" hidden><div class="f"><span class="k">實測續航</span><span class="v">7.5 小時</span><i class="mb" style="--p:38%"></i><span class="r">第 26／42</span><button class="vid" type="button">實測 08:10</button></div></div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="2" data-name="腳註式證據" data-d="判斷後面一個小數字，泡泡最下面一排對應的實測數字和影片時間點。文字完全不被打斷。" data-try="點句子裡的 1、2、3">
+      <div class="chat"><div class="bub">
+        <p>這台最適合你修圖，螢幕顏色很準<button class="fn" type="button" data-fn="n1">1</button>，背著走也不會累<button class="fn" type="button" data-fn="n2">2</button>。要接受的是續航普通<button class="fn" type="button" data-fn="n3">3</button>。</p>
+        <ol class="notes">
+          <li id="n1"><i>1</i><span>螢幕色域 <b class="num">sRGB 100%</b></span><span class="sub">42 台裡第 1</span><button class="vid" type="button">實測 12:34</button></li>
+          <li id="n2"><i>2</i><span>重量 <b class="num">1.32 公斤</b></span><span class="sub">42 台裡第 8</span></li>
+          <li id="n3"><i>3</i><span>續航 <b class="num">7.5 小時</b></span><span class="sub">42 台裡第 26</span><button class="vid" type="button">實測 08:10</button></li>
+        </ol>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="3" data-name="行內機型標" data-d="機型名字本身是一個小膠囊（小圖＋名稱＋價格），嵌在句子中間。點了右欄跳到那一台。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>照你的需求我會先看 <button class="chip" type="button"><svg style="color:#9DB2F2"><use href="#lap"/></svg>Aero 14 Studio<small>38,900</small></button>；想省一點的話 <button class="chip" type="button"><svg style="color:#F2B79D"><use href="#lap"/></svg>Lite 14<small>32,900</small></button> 也可以，只是螢幕顏色差一點。</p>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="4" data-name="對話和右欄聯動" data-d="對話裡不畫資料。滑過（或點）一句判斷，右欄那台機型卡上對應的規格亮起來。" data-try="滑過或點有橘色底線的字" data-pick="1">
+      <div class="chat">
+        <div class="bub"><p>Aero 14 Studio 的<button class="hl" type="button" data-hl="p1">螢幕顏色很準</button>，<button class="hl" type="button" data-hl="p2">重量也輕</button>；要接受的是<button class="hl" type="button" data-hl="p3">續航普通</button>。</p></div>
+        <span class="panelbl">↓ 右欄的機型卡</span>
+        <div class="pane">
+          <svg viewBox="0 8 160 92" style="color:#9DB2F2"><use href="#lap"/></svg>
+          <b style="display:block;margin:8px 7px 4px">Aero 14 Studio</b>
+          <ul><li id="p1"><span>螢幕色域</span><span>sRGB 100%</span></li><li id="p2"><span>重量</span><span>1.32 公斤</span></li><li id="p3"><span>續航</span><span>7.5 小時</span></li><li><span>記憶體</span><span>16GB</span></li></ul>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ 二 ============ -->
+  <section class="grp" id="g2">
+    <h2>起點二　數字怎樣才讓人有感？</h2>
+    <p>數字還是實測的，換算表由程式依用戶的用途挑。</p>
+
+    <article class="spec" data-n="5" data-name="實物比例" data-d="重量畫成日常物品，尺寸疊在 A4 紙上。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>它比一般 14 吋的輕，放進背包不太有感覺。</p>
+        <div class="fig">
+          <svg viewBox="0 0 320 96" role="img" aria-label="A4 紙與機身大小對照；重量約等於一瓶水加一本課本">
+            <rect x="10" y="8" width="118" height="84" rx="2" fill="#fff" stroke="#5A6174" stroke-dasharray="4 3"/>
+            <text x="16" y="22" font-size="10" fill="#5A6174">A4 紙</text>
+            <rect x="14" y="24" width="124" height="66" rx="5" fill="#12151C" opacity=".88"/>
+            <text x="76" y="62" font-size="11" fill="#fff" text-anchor="middle">31.2 × 22.1 公分</text>
+            <text x="166" y="54" font-size="16" fill="#12151C">=</text>
+            <path d="M200 30h14v8l5 8v40a4 4 0 0 1-4 4h-16a4 4 0 0 1-4-4V46l5-8z" fill="#9DB2F2" stroke="#12151C" stroke-width="2"/>
+            <text x="236" y="64" font-size="16" fill="#12151C">+</text>
+            <rect x="258" y="40" width="46" height="50" rx="3" fill="#F2B79D" stroke="#12151C" stroke-width="2"/><path d="M266 40v50" stroke="#12151C" stroke-width="2"/>
+          </svg>
+          <div class="cap"><span>比 A4 寬 1.5 公分</span><span><b class="num" style="color:var(--ink)">1.32 公斤</b>＝一瓶 600ml 的水＋一本課本</span></div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="6" data-name="換算成他的一天" data-d="續航不寫 7.5 小時，寫成用戶自己的行程。" data-try="" data-pick="1">
+      <div class="chat"><div class="bub">
+        <p>上課日白天夠用，晚上還要用的話就要帶充電器。</p>
+        <div class="fig">
+          <div class="day"><i>第 1 節</i><i>第 2 節</i><i>第 3 節</i><i>第 4 節</i><i class="left">還剩 30%</i></div>
+          <div class="cap"><span>實測續航 <b class="num" style="color:var(--ink)">7.5 小時</b></span><button class="vid" type="button">實測 08:10</button></div>
+        </div>
+        <p>剪片的速度不用擔心。</p>
+        <div class="blk"><div class="f"><span class="k">輸出 10 分鐘的 4K 影片</span><span class="v">6 分 20 秒</span><span class="r">第 5／42</span><button class="vid" type="button">實測 15:02</button></div></div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="7" data-name="聲音對照" data-d="風扇分貝標在一條日常聲音的尺上。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>輸出影片時風扇聽得到，在安靜的教室會有點明顯。</p>
+        <div class="fig">
+          <div class="scale"><span style="left:10%">圖書館 35</span><span style="left:50%">冷氣 45</span><span style="left:90%">咖啡店 55</span><b style="left:54%">這台高負載 46 分貝</b></div>
+        </div>
+      </div></div>
+    </article>
+  </section>
+
+  <!-- ============ 三 ============ -->
+  <section class="grp" id="g3">
+    <h2>起點三　買東西的人心裡在問什麼？</h2>
+    <p>每個點子回答一個沒說出口的問題。</p>
+
+    <article class="spec" data-n="8" data-name="價格階梯" data-d="回答「買貴了嗎？」：少花一點會失去什麼、多花一點能換到什麼。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>這個價位是合理的落點，往下省會動到你在意的螢幕。</p>
+        <div class="ladder">
+          <div><b>32,900</b>Lite 14<br>sRGB 97%<br>性能第 14</div>
+          <div><b>38,900</b>Aero 14 Studio<br>sRGB 100%<br>性能第 5</div>
+          <div><b>40,800</b>Nova 16 Pro<br>記憶體 32GB<br>重 1.62 公斤</div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="9" data-name="為什麼不是那台" data-d="回答「更有名的那台呢？」：用戶提過或很熱門、卻沒被推薦的機型，一行原因。" data-try="">
+      <div class="chat">
+        <p class="me">那 Zen 14 OLED 呢？很多人推</p>
+        <div class="bub">
+          <p>它螢幕確實漂亮，沒排進來是卡在你說的重量。</p>
+          <div class="blk"><div class="f"><span class="k">Zen 14 OLED　重量</span><span class="v">1.62 公斤</span><span class="r">你要 1.5 以下</span></div></div>
+          <p>如果重量可以放寬一點，它會排到第 2 名。</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="10" data-name="後悔檢查" data-d="回答「買了會後悔嗎？」：這台在他的用法下最弱的一項，只講一項。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>買了之後最可能讓你不滿意的只有一點：電池。</p>
+        <div class="blk"><div class="f"><span class="k">實測續航</span><span class="v">7.5 小時</span><i class="mb" style="--p:38%"></i><span class="r">第 26／42</span><button class="vid" type="button">實測 08:10</button></div></div>
+        <p>其他你提過的幾點，它都在前段。</p>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="11" data-name="你沒提到的" data-d="回答「我漏了什麼？」：前三名之間差最多、而他還沒說過的那一項。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>有一件事你沒提，但這三台差很多：接口。修圖常要讀記憶卡。</p>
+        <div class="blk">
+          <table class="mini">
+            <thead><tr><th></th><th>Aero</th><th>Lite</th><th>Nova</th></tr></thead>
+            <tbody><tr><th>SD 讀卡機</th><td class="yes">有</td><td class="nope">沒有</td><td class="yes">有</td></tr>
+            <tr><th>HDMI</th><td class="yes">有</td><td class="yes">有</td><td class="nope">沒有</td></tr></tbody>
+          </table>
+        </div>
+        <p>你會直接插記憶卡嗎？</p>
+        <div class="opts" data-single><button class="o" type="button" aria-pressed="false">會，很常</button><button class="o" type="button" aria-pressed="false">不會，用線傳</button></div>
+      </div></div>
+    </article>
+  </section>
+
+  <!-- ============ 四 ============ -->
+  <section class="grp" id="g4">
+    <h2>起點四　什麼讓人覺得被理解？</h2>
+    <p>被準確引用、被記得、被老實對待。</p>
+
+    <article class="spec" data-n="12" data-name="用他的原話當標籤" data-d="事實列左邊不寫「重量」，寫用戶自己說過的話；右邊才是數字。" data-try="" data-pick="1">
+      <div class="chat">
+        <p class="me">常帶出門、主要修圖、偶爾剪片</p>
+        <div class="bub">
+          <p>你說的三件事，這台都接得住。</p>
+          <div class="blk">
+            <div class="f"><span class="k"><q>常帶出門</q></span><span class="v">1.32 公斤</span><i class="mb" style="--p:82%"></i><span class="r">第 8／42</span></div>
+            <div class="f"><span class="k"><q>主要修圖</q></span><span class="v">sRGB 100%</span><i class="mb" style="--p:100%"></i><span class="r">第 1／42</span></div>
+            <div class="f"><span class="k"><q>偶爾剪片</q></span><span class="v">4K 輸出 6 分 20 秒</span><i class="mb" style="--p:90%"></i><span class="r">第 5／42</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="13" data-name="「因為你」小標" data-d="每台機型旁一個小標，寫是他的哪句話讓這台排上來。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>前兩名會是這兩台，排上來的原因不一樣。</p>
+        <button class="m" type="button"><svg style="color:#9DB2F2"><use href="#lap"/></svg><span><b>Aero 14 Studio</b><span class="cuz">因為你說「主要修圖」</span></span><span class="sc">87</span></button>
+        <button class="m" type="button"><svg style="color:#F2B79D"><use href="#lap"/></svg><span><b>Lite 14</b><span class="cuz">因為你說「預算 4 萬」</span></span><span class="sc">81</span></button>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="14" data-name="我是猜的" data-d="模型自己推斷的地方標一個小問號，點了可以直接改。" data-try="點黃底的字">
+      <div class="chat"><div class="bub">
+        <p>你說常帶出門，所以我先當作<button class="guess" type="button" data-open="g14" aria-expanded="false">螢幕 14 吋左右就好</button>，照這個範圍挑。</p>
+        <div class="opts" id="g14" hidden data-single><button class="o" type="button" aria-pressed="false">對</button><button class="o" type="button" aria-pressed="false">想要大一點</button><button class="o" type="button" aria-pressed="false">越小越好</button></div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="15" data-name="記得之前說過" data-d="用到用戶前面說過的話時，掛一個小標；點了捲回那一句。" data-try="點「你前面說過」">
+      <div class="chat">
+        <p class="me" id="r15">我不想要風扇太吵的</p>
+        <p class="me">有沒有性能更好的？</p>
+        <div class="bub">
+          <p>有，Nova 16 Pro 性能高一截，但我沒有把它排第一。</p>
+          <button class="recall" type="button" data-recall="r15">你前面說過「不想要風扇太吵」</button>
+          <div class="blk"><div class="f"><span class="k">Nova 16 Pro　高負載風扇</span><span class="v">51 分貝</span><i class="mb" style="--p:12%"></i><span class="r">第 38／42</span></div></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ 五 ============ -->
+  <section class="grp" id="g5">
+    <h2>起點五　卡片能不能反過來，讓用戶用它表達？</h2>
+    <p>卡片不只是顯示，也可以是用戶回答的方式。</p>
+
+    <article class="spec" data-n="16" data-name="真機二選一" data-d="不問「你重視性能還是便攜」，直接擺兩台真的機型讓他選，從選擇反推偏好。" data-try="點其中一台" data-pick="1">
+      <div class="chat"><div class="bub">
+        <p>這兩台各有長處。如果只能挑一台，你會拿哪一台？</p>
+        <div class="duel" data-duel="d16">
+          <button type="button" aria-pressed="false"><svg style="color:#9DB2F2"><use href="#lap"/></svg><b>Feather 13</b><span>1.09 公斤</span><span>性能第 21</span></button>
+          <button type="button" aria-pressed="false"><svg style="color:#F2B79D"><use href="#lap"/></svg><b>Nova 14 Pro</b><span>1.48 公斤</span><span>性能第 2</span></button>
+        </div>
+        <p id="d16" hidden class="sub">（下一則回覆：「懂了，你寧可重一點也要跑得快」，並調整比重。）</p>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="17" data-name="泡泡裡的小滑桿" data-d="一條滑桿嵌在回覆裡，拉動時下面的前三名即時換位。沿用現成的權重滑桿。" data-try="拉滑桿">
+      <div class="chat"><div class="bub">
+        <p>續航對你有多重要？拉拉看，名次會跟著變。</p>
+        <div class="sl">
+          <label for="s17"><span>續航的比重</span><b class="num" id="s17v">11%</b></label>
+          <input id="s17" type="range" min="5" max="45" value="11">
+          <ol id="s17l"></ol>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="18" data-name="一鍵反駁" data-d="每個判斷旁一個小小的「不對」，點了系統就問哪裡不對。" data-try="點「不對」">
+      <div class="chat"><div class="bub">
+        <p>你最在意的應該是螢幕顏色<button class="rb" type="button" data-open="b18" aria-expanded="false">不對</button>，其次是重量<button class="rb" type="button" data-open="b18" aria-expanded="false">不對</button>。</p>
+        <div class="opts" id="b18" hidden data-single><button class="o" type="button" aria-pressed="false">沒那麼重要</button><button class="o" type="button" aria-pressed="false">比你想的更重要</button><button class="o" type="button" aria-pressed="false">我不是這個意思</button></div>
+      </div></div>
+    </article>
+  </section>
+
+  <!-- ============ 六 ============ -->
+  <section class="grp" id="g6">
+    <h2>起點六　怎樣讓人相信？</h2>
+    <p>說出反面、承認不知道、把比較的範圍講清楚。</p>
+
+    <article class="spec" data-n="19" data-name="誰不適合買" data-d="推薦後附一行：什麼情況下這台不適合。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>以你的用法它是最適合的。但如果你之後想打比較吃顯卡的遊戲，它會撐不住。</p>
+        <div class="blk"><div class="f notfor"><span class="k">常打遊戲</span><span class="v">3DMark 3,120</span><span class="r">第 30／42</span></div></div>
+      </div></div>
+    </article>
+
+    <article class="spec" data-n="20" data-name="我沒查到的" data-d="老實標出沒有實測資料的項目，不裝作知道。" data-try="">
+      <div class="chat">
+        <p class="me">鍵盤好打嗎？會不會很吵？</p>
+        <div class="bub">
+          <p>風扇聲有量過，算中間。鍵盤手感我沒有實測資料，建議到店裡摸一下。</p>
+          <div class="blk">
+            <div class="f"><span class="k">高負載風扇</span><span class="v">46 分貝</span><i class="mb" style="--p:27%"></i><span class="r">第 31／42</span></div>
+            <div class="f unk"><span class="k">鍵盤手感</span><span class="v">沒有實測資料</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="spec" data-n="21" data-name="所有人和你" data-d="同一個數字兩種看法：在全部機型裡的位置，和在你的候選裡的位置。" data-try="">
+      <div class="chat"><div class="bub">
+        <p>它的性能放在所有筆電裡只算中上，但在符合你條件的這批裡是前段。</p>
+        <div class="blk">
+          <div class="two"><span class="sub">全部 371 台</span><span class="t"><i style="left:62%"></i></span><span class="num sub">第 141</span>
+          <span style="color:var(--accent-ink);font-size:12.5px;font-weight:600">你的 42 台</span><span class="t you"><i style="left:90%"></i></span><span class="num" style="font-weight:600;font-size:12.5px">第 5</span></div>
+        </div>
+      </div></div>
+    </article>
+  </section>
+</div>
+
+<div class="dock" role="status">
+  <p id="picked">還沒選。看到想要的，按「我要這個」。</p>
+  <button type="button" class="ghost" id="first">選我看好的 5 個</button>
+  <button type="button" id="copy">複製編號</button>
+</div>
+
+<script>
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const specs = $$(".spec");
+const chosen = new Set();
+try { JSON.parse(localStorage.getItem("ideas-picked") || "[]").forEach((n) => chosen.add(n)); } catch {}
+
+for (const s of specs) {
+  const n = s.dataset.n, demo = n === "0";
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `${demo ? "" : `<span class="no">NO. ${n.padStart(2, "0")}</span>`}<h3>${s.dataset.name}</h3>
+    ${s.dataset.pick ? '<span class="tag">我看好</span>' : ""}<p class="d">${s.dataset.d}</p>
+    ${s.dataset.try ? `<p class="try">試試看：${s.dataset.try}</p>` : ""}
+    ${demo ? "" : '<button type="button" class="want" aria-pressed="false">我要這個</button>'}`;
+  s.prepend(meta);
+  meta.querySelector(".want")?.addEventListener("click", () => { chosen.has(n) ? chosen.delete(n) : chosen.add(n); render(); });
+}
+const list = () => [...chosen].map(Number).sort((a, b) => a - b);
+function render() {
+  for (const s of specs) s.querySelector(".want")?.setAttribute("aria-pressed", String(chosen.has(s.dataset.n)));
+  const l = list();
+  document.getElementById("picked").innerHTML = l.length ? `已選 ${l.length} 個：<b>${l.join("、")}</b>` : "還沒選。看到想要的，按「我要這個」。";
+  try { localStorage.setItem("ideas-picked", JSON.stringify([...chosen])); } catch {}
+}
+document.getElementById("first").addEventListener("click", () => { specs.filter((s) => s.dataset.pick).forEach((s) => chosen.add(s.dataset.n)); render(); });
+document.getElementById("copy").addEventListener("click", async (e) => {
+  try { await navigator.clipboard.writeText("我要這幾個點子：" + (list().join("、") || "（還沒選）")); e.target.textContent = "已複製"; }
+  catch { e.target.textContent = "請手動抄編號"; }
+  setTimeout(() => (e.target.textContent = "複製編號"), 1600);
+});
+$$(".seg button").forEach((b) => b.addEventListener("click", () => {
+  document.documentElement.style.setProperty("--chatw", b.dataset.w);
+  $$(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+}));
+
+/* 展開／收起：可點的句子、我是猜的、不對 */
+$$("[data-open]").forEach((b) => b.addEventListener("click", () => {
+  const t = document.getElementById(b.dataset.open), same = $$(`[data-open="${b.dataset.open}"]`);
+  const open = b.getAttribute("aria-expanded") !== "true";
+  same.forEach((x) => x.setAttribute("aria-expanded", "false"));
+  b.setAttribute("aria-expanded", String(open)); t.hidden = !open;
+}));
+/* 腳註 */
+$$("[data-fn]").forEach((b) => b.addEventListener("click", () => {
+  const on = !b.classList.contains("on");
+  $$(".fn, .notes li").forEach((x) => x.classList.remove("on"));
+  if (on) { b.classList.add("on"); document.getElementById(b.dataset.fn).classList.add("on"); }
+}));
+/* 對話和右欄聯動 */
+$$("[data-hl]").forEach((b) => {
+  const t = document.getElementById(b.dataset.hl);
+  const set = (v) => { $$(".pane li").forEach((x) => x.classList.remove("on")); if (v) t.classList.add("on"); };
+  b.addEventListener("mouseenter", () => set(true)); b.addEventListener("focus", () => set(true)); b.addEventListener("click", () => set(true));
+  b.addEventListener("mouseleave", () => set(false)); b.addEventListener("blur", () => set(false));
+});
+/* 單選的選項 */
+$$("[data-single]").forEach((g) => g.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (b) $$("button", g).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+}));
+/* 真機二選一 */
+$$("[data-duel]").forEach((g) => g.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("button", g).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  document.getElementById(g.dataset.duel).hidden = false;
+}));
+/* 記得之前說過 */
+$$("[data-recall]").forEach((b) => b.addEventListener("click", () => {
+  const t = document.getElementById(b.dataset.recall);
+  t.scrollIntoView({ block: "center", behavior: "smooth" }); t.classList.add("flash"); setTimeout(() => t.classList.remove("flash"), 1400);
+}));
+/* 小滑桿：分數＝其他項 ×(1−比重)＋續航 × 比重 */
+const LAPS = [{ n: "Aero 14 Studio", o: 70, b: 52, h: "7.5 小時" }, { n: "Lite 14", o: 62, b: 80, h: "10.5 小時" }, { n: "Marathon 13", o: 55, b: 95, h: "13 小時" }];
+const sl = document.getElementById("s17");
+function rank() {
+  const w = sl.value / 100;
+  document.getElementById("s17v").textContent = sl.value + "%";
+  document.getElementById("s17l").innerHTML = LAPS.map((l) => ({ ...l, s: l.o * (1 - w) + l.b * w })).sort((a, b) => b.s - a.s)
+    .map((l, i) => `<li><i>${i + 1}</i><b>${l.n}</b><span>續航 ${l.h}</span></li>`).join("");
+}
+sl.addEventListener("input", rank); rank(); render();
+</script>
+</body>
+</html>
