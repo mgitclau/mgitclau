@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回覆視覺方向</title>
+<style>
+/* 版面：同一段回覆畫成 4 欄（3 個視覺方向＋上一版），每欄寬同對話欄 540px，並排比較。
+   三個方向共用 White A 框架（灰藍底、白泡泡、黑色膠囊主按鈕、白底黑框次要按鈕、藍色底線連結），
+   只差「用什麼拉開主次」：方向 1 大小、方向 2 深淺、方向 3 顏色。
+   字型只用電腦內建字（M 在 v1.0.60 選過不載入外部字型）。 */
+:root{
+  --ground:#C6CDDC; --ground2:#BAC3D5; --panel:#EDF0F5; --chatbg:#E1E5EE; --white:#fff; --inner:#F2F4F8;
+  --ink:#12151C; --ink2:#454C5D; --ink3:#5E6578; --line:#D7DCE6; --hair:rgba(18,21,28,.09);
+  --accent:#2340C4; --accent-soft:#DDE4F7; --signal:#F0602A; --good:#1D7349; --warn:#9A5B0B;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
+  --num:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"PingFang TC",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC","Noto Sans TC",monospace;
+  --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
+  --arrow-ink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2312151C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:120px}
+body{margin:0;font:14px/1.6 var(--sans);color:var(--ink);background:linear-gradient(180deg,var(--ground),var(--ground2)) fixed;-webkit-font-smoothing:antialiased}
+button,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ============ 頁面外框 ============ */
+.intro{padding:22px max(20px,env(safe-area-inset-right,0px)) 12px max(20px,env(safe-area-inset-left,0px));max-width:980px}
+.intro h1{font-size:22px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--ink2);font-size:13.5px;line-height:1.7}
+.intro p+p{margin-top:4px}
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  padding:10px max(20px,env(safe-area-inset-right,0px)) 10px max(20px,env(safe-area-inset-left,0px));background:rgba(237,240,245,.94);backdrop-filter:blur(12px);border-bottom:1px solid #C3CADB}
+.tgroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tgroup>span{font-size:12.5px;color:var(--ink3);margin-right:2px}
+.tg{display:inline-flex;align-items:center;gap:7px;border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:4px 13px 4px 9px;font-size:13px;font-weight:600}
+.tg i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--ink);display:grid;place-items:center}
+.tg[aria-pressed=true]{background:var(--ink);color:#fff}
+.tg[aria-pressed=true] i{border-color:#fff;background:#fff}
+.tg[aria-pressed=true] i::after{content:"";width:6px;height:6px;border-radius:1px;background:var(--ink)}
+.jp{border:0;background:none;padding:2px 4px;font-size:13px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.tools .sp{flex:1}
+.tools output{font-size:13.5px;font-weight:700}
+.copy{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:6px 16px;font-weight:600;font-size:13px}
+.copy:disabled{background:#B4BBC9;cursor:default}
+.hint{flex-basis:100%;font-size:12px;color:var(--ink3);margin:0}
+.scroller{overflow-x:auto;scroll-behavior:smooth}
+.cols{display:flex;gap:18px;padding:18px max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));width:max-content;align-items:flex-start}
+.col{width:min(560px,calc(100vw - 40px));flex:none;scroll-margin-left:20px}
+.colhead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--panel);border-radius:20px 20px 0 0;border:2px solid transparent;border-bottom:0}
+.colhead div{flex:1;min-width:0}
+.colhead b{display:block;font-size:16px;line-height:1.35}
+.colhead small{display:block;font-size:12.5px;color:var(--ink2);line-height:1.5;margin-top:2px}
+.choose{border:1.3px solid var(--ink);background:#fff;border-radius:999px;padding:5px 15px;font-size:13px;font-weight:600;white-space:nowrap}
+.colbody{position:relative;background:var(--chatbg);padding:18px 10px 20px;border:2px solid transparent;border-top:0;border-bottom:0}
+.colfoot{background:var(--panel);border-radius:0 0 20px 20px;padding:12px 14px 14px;border:2px solid transparent;border-top:0}
+.colfoot label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:5px}
+.colfoot textarea{width:100%;min-height:62px;resize:vertical;border:1.3px solid #B4BBC9;border-radius:12px;padding:8px 10px;font-size:13.5px;background:#fff}
+.colfoot textarea:focus{border-color:var(--ink);outline:none}
+.col.on .colhead,.col.on .colbody,.col.on .colfoot{border-color:var(--signal)}
+.col.on .choose{background:var(--signal);border-color:var(--signal);color:#fff}
+.order-layer{position:absolute;inset:0;pointer-events:none;z-index:5}
+.order-layer b{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--signal);color:#fff;font:700 13px/24px var(--num);text-align:center;box-shadow:0 0 0 3px #fff,0 4px 10px rgba(0,0,0,.25)}
+.cols{--f-blur:blur(0);--f-gray:grayscale(0)}
+.cols.blur{--f-blur:blur(4px)}
+.cols.gray{--f-gray:grayscale(1)}
+.cols .bot{filter:var(--f-blur) var(--f-gray);transition:filter .25s}
+
+/* ============ 對話共用（四欄都一樣） ============ */
+.me{margin:0 6px 14px auto;max-width:84%;width:fit-content;background:var(--accent);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px;font-size:14.5px;line-height:1.6}
+.bot{background:var(--white);border-radius:20px 20px 20px 4px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16)}
+.bot p,.bot h3,.bot h4,.bot ul{margin:0}
+.bot ul{list-style:none;padding:0}
+.n{font-family:var(--num);font-variant-numeric:tabular-nums}
+.bot table{width:100%;border-collapse:collapse}
+.bot th,.bot td{text-align:left;font-weight:400}
+.lb{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lb em{font-style:normal;display:inline-flex;align-items:center;gap:6px;text-align:right}
+.lap{display:flex;align-items:center;gap:12px}
+.lap-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.price{white-space:nowrap;text-align:right}
+.th{flex:none;display:grid;place-items:center;overflow:hidden}
+.th svg{width:100%;height:100%;display:block}
+.th .body{fill:var(--mc,#8E97AB)}
+.th .scr{fill:#1E2433}
+.th .scr.ips{fill:#55607A}
+.th .glare{fill:#fff;opacity:.14}
+.pc{display:grid;grid-template-columns:1fr 1fr}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:999px;font-weight:600;white-space:nowrap;transition:background .15s,transform .12s}
+.btn.pri{background:var(--ink);color:#fff;border:0;height:40px;padding:0 7px 0 18px;font-size:14px;box-shadow:0 6px 16px -6px rgba(18,21,28,.55)}
+.btn.pri::after{content:"";width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.16) var(--arrow) no-repeat center/14px}
+.btn.pri:hover{background:#2C3343}
+.btn.sec{background:#fff;color:var(--ink);border:1.3px solid #2A2F3A;height:36px;padding:0 15px;font-size:13.5px}
+.btn.sec:hover{background:var(--inner)}
+.btn:active{transform:scale(.97)}
+.lnk{border:0;background:none;padding:2px 0;color:var(--accent);font-size:13.5px;font-weight:500;text-decoration:underline;text-decoration-color:rgba(35,64,196,.5);text-underline-offset:3px}
+.fact{color:var(--accent);text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:4px;cursor:pointer}
+.mk{cursor:pointer;white-space:nowrap}
+details>summary{cursor:pointer;list-style:none;width:fit-content}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";display:inline-block;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:translateY(-3px) rotate(45deg);margin-left:8px}
+details[open]>summary::after{transform:translateY(1px) rotate(-135deg)}
+.op{display:flex;text-align:left;cursor:pointer}
+.op-c{white-space:nowrap}
+.bars{display:flex;flex-direction:column}
+.bar{display:flex;align-items:center}
+.bar u{display:block;text-decoration:none;width:calc(var(--v) * 1%)}
+.lg{display:flex;flex-wrap:wrap}
+.lg-i{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;flex:none}
+.scroll{overflow-x:auto}
+
+/* =====================================================================
+   上一版（對照）：照上一版的樣子重畫
+   ===================================================================== */
+.d0 .bot{gap:14px;padding:16px 18px 18px}
+.d0 .count{align-self:center;font-size:12px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 14px}
+.d0 .tx{font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.d0 .key{color:var(--ink);font-weight:700}
+.d0 .mk{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:#B4BBC9;text-underline-offset:3px}
+.d0 .fact{text-decoration-thickness:1px;text-underline-offset:3px}
+.d0 .card{background:var(--inner);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.d0 .lb{font-size:11px;font-weight:600;letter-spacing:.06em;color:#626A7D;margin-bottom:8px}
+.d0 .hl{font-size:15px;font-weight:700;line-height:1.45;color:var(--ink);margin-bottom:10px}
+.d0 .lap{margin-bottom:10px}
+.d0 .th{width:44px;height:32px;background:#fff;border:1px solid var(--line);border-radius:8px}
+.d0 .lap-n{font-size:14px;color:var(--ink)}
+.d0 .lap-s{font-size:12px;color:#626A7D}
+.d0 .price{font-weight:700;color:var(--ink)}
+.d0 .price small{font-size:inherit;margin-right:3px}
+.d0 .pc{gap:14px}
+.d0 .pc h4{font-size:11px;letter-spacing:.06em;font-weight:600;margin-bottom:4px}
+.d0 .pros h4{color:var(--good)} .d0 .cons h4{color:var(--warn)}
+.d0 .pc li{color:var(--ink);line-height:1.6}
+.d0 .acts{margin-top:12px}
+.d0 .btn.pri{height:auto;padding:5px 15px;font-size:13px;box-shadow:none}
+.d0 .btn.pri::after{display:none}
+.d0 .btn.sec{height:auto;padding:4px 15px;font-size:13px}
+.d0 .fit th,.d0 .fit td{padding:6px;border-top:1px solid var(--hair)}
+.d0 .fit thead th{border:0;font-size:11px;letter-spacing:.06em;font-weight:600;color:#626A7D;padding-top:0}
+.d0 .got{font-weight:600;color:var(--ink);white-space:nowrap}
+.d0 .ok{color:var(--good);font-weight:700;margin-right:4px}
+.d0 .ok b{color:var(--ink);font-weight:600}
+.d0 .meta{font-size:12px;color:#626A7D;line-height:1.5;margin-top:8px}
+.d0 .cmp .lg{gap:4px 14px;font-size:12px;color:var(--ink2);margin-bottom:6px}
+.d0 .cmp .lg-p{display:none}
+.d0 .sw{width:10px;height:10px;border-radius:3px}
+.d0 [data-m="2"]{--c:#12151C} .d0 [data-m="4"]{--c:#2340C4} .d0 [data-m="3"]{--c:#9AA5C0}
+.d0 .sw,.d0 .bar u{background:var(--c)}
+.d0 .dim{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--hair);align-items:center}
+.d0 .dim-n{font-weight:700;color:var(--ink)}
+.d0 .bar{gap:7px;height:13px}
+.d0 .bar u{height:7px;border-radius:3px}
+.d0 .bar .n{font-size:12px;color:#626A7D}
+.d0 .bar.w .n{color:var(--ink);font-weight:700}
+.d0 .more{margin-top:8px}
+.d0 .more summary{color:var(--accent);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.d0 .more table{margin-top:8px;font-size:12.5px}
+.d0 .more th,.d0 .more td{padding:5px;border-top:1px solid var(--hair);text-align:center}
+.d0 .more th:first-child,.d0 .more td:first-child{text-align:left;color:#626A7D}
+.d0 .choice{background:#fff;border:1.5px solid var(--ink)}
+.d0 .choice .lb span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal);margin-right:6px;vertical-align:1px}
+.d0 .q{font-size:16px;font-weight:700;line-height:1.5;color:var(--ink);margin-bottom:12px}
+.d0 .q small{display:block;font-size:13.5px;font-weight:400;color:var(--ink2);margin-top:2px}
+.d0 .ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.d0 .op{flex-direction:column;justify-content:space-between;gap:4px;min-height:76px;border:1.3px solid #B4BBC9;background:#fff;border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px;color:var(--ink)}
+.d0 .op.wide{grid-column:1/-1;min-height:0}
+.d0 .op-c{font-size:12px;font-weight:400;color:var(--ink3)}
+.d0 .op-c .n{font-size:inherit}
+
+/* =====================================================================
+   方向 1　大小說話
+   字級跳很大：結論 21 → 內文 15.5 → 細節 12.5；關鍵數字 28～30。
+   卡片不用底色，上緣一條 2px 黑線＋大量留白來分區；只有追問卡是框起來的。
+   顏色只有兩種意思：藍＝可以點，綠／琥珀＝符合／要接受。
+   ===================================================================== */
+.d1 .bot{gap:34px;padding:22px 22px 24px}
+.d1 .count{align-self:center;font-size:12px;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:1px 14px;margin-bottom:-14px}
+.d1 .tx{font-size:15.5px;line-height:1.85;color:#5A6174}
+.d1 .key{color:var(--ink);font-weight:600}
+.d1 .mk{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:#B4BBC9;text-decoration-thickness:1.5px;text-underline-offset:4px}
+.d1 .card{border-top:2px solid var(--ink);padding-top:12px;font-size:14.5px;line-height:1.6;color:var(--ink2)}
+.d1 .lb{font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--ink3);margin-bottom:14px}
+.d1 .lb em{font:500 12px/1.3 var(--sans);letter-spacing:0;color:var(--ink2)}
+.d1 .hl{font-size:21px;line-height:1.38;font-weight:700;letter-spacing:-.012em;color:var(--ink);text-wrap:balance;margin-bottom:18px}
+.d1 .rec .lap{margin-bottom:16px}
+.d1 .th{width:60px;height:42px;background:var(--inner);border-radius:10px}
+.d1 .lap-n{font-size:16px;color:var(--ink);line-height:1.35}
+.d1 .lap-s{font-size:13px;color:var(--ink3)}
+.d1 .lap-s .n{font-size:15px;font-weight:600;color:var(--ink)}
+.d1 .price{font:600 30px/1 var(--num);letter-spacing:-.02em;color:var(--ink)}
+.d1 .price small{font:500 12px var(--sans);letter-spacing:0;color:var(--ink3);margin-right:4px;vertical-align:4px}
+.d1 .pc{gap:22px;padding-top:14px;border-top:1px solid var(--hair)}
+.d1 .pc h4{font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;margin-bottom:8px}
+.d1 .pros h4{color:var(--good)} .d1 .cons h4{color:var(--warn)}
+.d1 .pc ul{display:flex;flex-direction:column;gap:6px}
+.d1 .pros li{color:var(--ink);font-weight:500}
+.d1 .cons li{color:var(--ink2)}
+.d1 .acts{margin-top:20px}
+.d1 .fit table{font-size:15px}
+.d1 .fit th,.d1 .fit td{padding:11px 0;border-top:1px solid var(--hair);vertical-align:baseline}
+.d1 .fit thead th{border:0;padding:0 0 6px;font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--ink3)}
+.d1 .fit td:first-child{color:var(--ink2)}
+.d1 .got{text-align:right!important;white-space:nowrap;font-weight:600;color:var(--good)}
+.d1 .fit thead th:last-child{text-align:right}
+.d1 .ok{margin-right:6px}
+.d1 .ok b{font-weight:600}
+.d1 .got .n{font-size:19px;color:var(--ink);letter-spacing:-.01em}
+.d1 .meta{font-size:12.5px;color:var(--ink3);line-height:1.6;margin-top:12px}
+.d1 .cmp .lg{gap:6px 16px;font-size:13px;color:var(--ink2);margin-bottom:10px}
+.d1 .lg-p{font-size:12px;color:var(--ink3)}
+.d1 .sw{width:12px;height:12px;border-radius:3px}
+.d1 [data-m="2"]{--c:#12151C} .d1 [data-m="4"]{--c:#6B7386} .d1 [data-m="3"]{--c:#B9C0CE}
+.d1 .sw,.d1 .bar u{background:var(--c)}
+.d1 .dim{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--hair);align-items:center}
+.d1 .dim-n{font-size:16px;font-weight:700;color:var(--ink)}
+.d1 .bars{gap:5px}
+.d1 .bar{gap:10px;height:18px}
+.d1 .bar u{height:12px;border-radius:2px;max-width:calc(100% - 48px)}
+.d1 .bar .n{font-size:13px;color:#8E97AB}
+.d1 .bar.w .n{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.d1 .more{margin-top:12px}
+.d1 .more summary{color:var(--accent);font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.d1 .more table{margin-top:10px;font-size:13.5px}
+.d1 .more th,.d1 .more td{padding:7px 4px;border-top:1px solid var(--hair);text-align:center}
+.d1 .more thead th{border:0;font-size:12px;font-weight:600;color:var(--ink2)}
+.d1 .more th:first-child,.d1 .more td:first-child{text-align:left;color:var(--ink3)}
+.d1 .choice{border:2px solid var(--ink);border-radius:20px;padding:18px}
+.d1 .choice .lb{color:var(--signal)}
+.d1 .choice .lb span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--signal);margin-right:7px;vertical-align:1px}
+.d1 .q{font-size:21px;font-weight:700;line-height:1.38;letter-spacing:-.012em;color:var(--ink);margin-bottom:16px;text-wrap:balance}
+.d1 .q small{display:block;font-size:14.5px;font-weight:400;letter-spacing:0;color:var(--ink2);margin-top:4px}
+.d1 .ops{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.d1 .op{flex-direction:column;justify-content:space-between;gap:10px;min-height:96px;border:1.5px solid #B4BBC9;background:#fff;border-radius:16px;padding:14px;font-size:15.5px;font-weight:600;color:var(--ink);transition:border-color .15s,background .15s}
+.d1 .op:hover{border-color:var(--ink);background:var(--inner)}
+.d1 .op.wide{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center}
+.d1 .op-c{font-size:12.5px;font-weight:500;color:var(--ink3)}
+.d1 .op-c .n{font-size:26px;font-weight:600;letter-spacing:-.02em;color:var(--ink);margin:0 3px;vertical-align:-3px}
+.d1 .choice .lnk{font-size:14px}
+
+/* =====================================================================
+   方向 2　深淺說話
+   助手說的話在白泡泡上（黑字）；佐證卡片全部是深色面板（白字、數字發亮）。
+   追問卡反過來：淡暖色底＋2px 黑框，在一串深色面板後面最顯眼。
+   ===================================================================== */
+.d2{--dk:#161A24; --dk2:#222836; --dk-line:rgba(255,255,255,.1); --dk-ink:#F4F6FA; --dk-ink2:#C3C9D6; --dk-ink3:#949DB0; --dk-good:#62D69C; --dk-warn:#F4B860; --dk-link:#AEBBFF}
+.d2 .bot{gap:20px;padding:20px 20px 22px}
+.d2 .count{align-self:center;font-size:12px;color:var(--ink3);background:var(--inner);border-radius:999px;padding:2px 14px;margin-bottom:-6px}
+.d2 .tx{font-size:15px;line-height:1.85;color:#4A5163;padding:0 2px}
+.d2 .key{color:var(--ink);font-weight:700}
+.d2 .mk{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:#B4BBC9;text-decoration-thickness:1.5px;text-underline-offset:4px}
+.d2 .card:not(.choice){background:var(--dk);color:var(--dk-ink2);border-radius:20px;padding:18px 18px 20px;font-size:14px;line-height:1.6;box-shadow:0 14px 30px -18px rgba(10,14,25,.7)}
+.d2 .lb{font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--dk-ink3);margin-bottom:12px}
+.d2 .lb span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal);margin-right:7px;vertical-align:1px}
+.d2 .lb em{font:500 12px/1.3 var(--sans);letter-spacing:0;color:var(--dk-ink2)}
+.d2 .hl{font-size:18.5px;line-height:1.42;font-weight:700;color:var(--dk-ink);text-wrap:balance;margin-bottom:16px}
+.d2 .rec .lap{margin-bottom:16px;padding:12px;background:var(--dk2);border-radius:14px}
+.d2 .th{width:56px;height:40px;background:#2C3344;border-radius:9px}
+.d2 .th .body{fill:#C3C9D6}
+.d2 .lap-n{font-size:15.5px;color:var(--dk-ink)}
+.d2 .lap-s{font-size:13px;color:var(--dk-ink3)}
+.d2 .lap-s .n{color:var(--dk-ink);font-weight:600}
+.d2 .price{font:600 26px/1 var(--num);letter-spacing:-.02em;color:var(--dk-ink)}
+.d2 .price small{font:500 12px var(--sans);letter-spacing:0;color:var(--dk-ink3);margin-right:4px;vertical-align:4px}
+.d2 .pc{gap:0}
+.d2 .pc>div{padding:0 14px}
+.d2 .pc>div:first-child{padding-left:0}
+.d2 .pc>div+div{border-left:1px solid var(--dk-line)}
+.d2 .pc h4{font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;margin-bottom:8px}
+.d2 .pros h4{color:var(--dk-good)} .d2 .cons h4{color:var(--dk-warn)}
+.d2 .pc ul{display:flex;flex-direction:column;gap:5px}
+.d2 .pros li{color:var(--dk-ink)}
+.d2 .cons li{color:var(--dk-ink2)}
+.d2 .acts{margin-top:18px}
+.d2 .card .btn.pri{background:#fff;color:var(--ink);box-shadow:none}
+.d2 .card .btn.pri::after{background:var(--ink) var(--arrow) no-repeat center/14px}
+.d2 .card .btn.pri:hover{background:#E3E7EF}
+.d2 .card .btn.sec{background:transparent;color:var(--dk-ink);border-color:rgba(255,255,255,.75)}
+.d2 .card .btn.sec:hover{background:rgba(255,255,255,.1)}
+.d2 .card:not(.choice) .lnk,.d2 .card:not(.choice) summary{color:var(--dk-link);text-decoration-color:rgba(174,187,255,.6)}
+.d2 .fit table{font-size:14.5px}
+.d2 .fit th,.d2 .fit td{padding:10px 0;border-top:1px solid var(--dk-line)}
+.d2 .fit thead th{border:0;padding:0 0 4px;font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--dk-ink3)}
+.d2 .fit thead th:last-child{text-align:right}
+.d2 .fit td:first-child{color:var(--dk-ink2)}
+.d2 .got{text-align:right!important;white-space:nowrap;font-weight:600;color:var(--dk-good)}
+.d2 .ok{margin-right:6px}
+.d2 .got .n{font-size:18px;color:var(--dk-ink)}
+.d2 .meta{font-size:12.5px;color:var(--dk-ink3);line-height:1.6;margin-top:10px}
+.d2 .cmp .lg{gap:6px 16px;font-size:13px;color:var(--dk-ink2);margin-bottom:8px}
+.d2 .lg-p{font-size:12px;color:var(--dk-ink3)}
+.d2 .sw{width:12px;height:12px;border-radius:3px}
+.d2 [data-m="2"]{--c:#F4F6FA} .d2 [data-m="4"]{--c:#7D93FF} .d2 [data-m="3"]{--c:#5C6579}
+.d2 .sw,.d2 .bar u{background:var(--c)}
+.d2 .dim{display:grid;grid-template-columns:60px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--dk-line);align-items:center}
+.d2 .dim-n{font-size:15px;font-weight:700;color:var(--dk-ink)}
+.d2 .bars{gap:5px}
+.d2 .bar{gap:10px;height:16px}
+.d2 .bar u{height:9px;border-radius:5px;max-width:calc(100% - 44px)}
+.d2 .bar .n{font-size:13px;color:var(--dk-ink3)}
+.d2 .bar.w .n{font-size:16px;font-weight:700;color:var(--dk-ink)}
+.d2 .more{margin-top:10px}
+.d2 .more summary{font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.d2 .more table{margin-top:10px;font-size:13px}
+.d2 .more th,.d2 .more td{padding:7px 4px;border-top:1px solid var(--dk-line);text-align:center;color:var(--dk-ink2)}
+.d2 .more thead th{border:0;font-size:12px;font-weight:600;color:var(--dk-ink)}
+.d2 .more th:first-child,.d2 .more td:first-child{text-align:left;color:var(--dk-ink3)}
+.d2 .choice{background:#FFF6F0;border:2px solid var(--ink);border-radius:20px;padding:18px;margin-top:4px}
+.d2 .choice .lb{color:#A8401A}
+.d2 .q{font-size:19.5px;font-weight:700;line-height:1.4;color:var(--ink);margin-bottom:14px;text-wrap:balance}
+.d2 .q small{display:block;font-size:14px;font-weight:400;color:var(--ink2);margin-top:4px}
+.d2 .ops{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.d2 .op{flex-direction:column;justify-content:space-between;gap:10px;min-height:90px;border:1.5px solid var(--ink);background:#fff;border-radius:14px;padding:13px 14px;font-size:15px;font-weight:600;color:var(--ink);transition:background .15s}
+.d2 .op:hover{background:var(--ink);color:#fff}
+.d2 .op:hover .op-c,.d2 .op:hover .op-c .n{color:#fff}
+.d2 .op.wide{grid-column:1/-1;min-height:0}
+.d2 .op-c{font-size:12.5px;font-weight:500;color:var(--ink3)}
+.d2 .op-c .n{font-size:22px;font-weight:600;color:var(--ink);margin:0 3px;vertical-align:-2px}
+
+/* =====================================================================
+   方向 3　顏色說話
+   顏色規則（全頁只有這幾種意思）：
+   ・每台機型一個固定顏色：a豆14 Air 2026＝紫、a豆14 Air 風信子藍＝青、無畏Pro14＝洋紅、惠普星Book Pro 16＝棕。
+     名字、縮圖、對比橫條、圖例都用同一個顏色。
+   ・狀態：綠色實心＝符合／強項，琥珀實心＝要接受。
+   ・黃色螢光筆＝我最想讓你看的那句話。
+   ・藍色＝可以點；追問卡是整塊藍，因為整張都是要你點的。
+   ===================================================================== */
+.d3 [data-m="1"]{--mc:#5B3FD1;--mc-soft:#EEEBFC}
+.d3 [data-m="2"]{--mc:#0B7A85;--mc-soft:#E2F2F3}
+.d3 [data-m="3"]{--mc:#B0306F;--mc-soft:#F8E6EF}
+.d3 [data-m="4"]{--mc:#7A5232;--mc-soft:#F2EBE4}
+.d3 .bot{gap:20px;padding:20px 20px 22px}
+.d3 .count{align-self:center;font-size:12px;color:var(--ink3);background:var(--inner);border-radius:999px;padding:2px 14px;margin-bottom:-6px}
+.d3 .tx{font-size:15px;line-height:1.9;color:#4A5163;padding:0 2px}
+.d3 .key{color:var(--ink);font-weight:600;background:linear-gradient(transparent 52%,#FFE07A 52%,#FFE07A 94%,transparent 94%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 1px}
+.d3 .mk{color:var(--mc);font-weight:700;text-decoration:underline;text-decoration-thickness:1.5px;text-decoration-color:color-mix(in srgb,var(--mc) 40%,transparent);text-underline-offset:4px}
+.d3 .mk::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--mc);margin:0 4px 0 1px;vertical-align:1px}
+.d3 .card:not(.choice){background:var(--inner);border-radius:18px;padding:16px 16px 18px;font-size:14px;line-height:1.6;color:var(--ink2)}
+.d3 .lb{font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--ink3);margin-bottom:12px}
+.d3 .lb em{font:500 12px/1.3 var(--sans);letter-spacing:0;color:var(--ink2)}
+.d3 .lb em.who{font-weight:600;color:var(--mc)}
+.d3 .lb em.who::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--mc)}
+.d3 .hl{font-size:18px;line-height:1.42;font-weight:700;color:var(--ink);text-wrap:balance;margin-bottom:14px}
+.d3 .rec .lap{margin-bottom:14px;padding:12px;background:#fff;border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--mc-soft)}
+.d3 .th{width:56px;height:40px;background:var(--mc-soft);border-radius:9px}
+.d3 .lap-n{font-size:16px;color:var(--mc)}
+.d3 .lap-s{font-size:13px;color:var(--ink3)}
+.d3 .lap-s .n{color:var(--ink);font-weight:600}
+.d3 .price{font:600 26px/1 var(--num);letter-spacing:-.02em;color:var(--ink)}
+.d3 .price small{font:500 12px var(--sans);letter-spacing:0;color:var(--ink3);margin-right:4px;vertical-align:4px}
+.d3 .pc{gap:10px}
+.d3 .pc>div{background:#fff;border-radius:12px;padding:10px 12px}
+.d3 .pc h4{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 9px;margin-bottom:8px}
+.d3 .pros h4{background:var(--good);color:#fff}
+.d3 .cons h4{background:#F2B23C;color:#3A2600}
+.d3 .pc ul{display:flex;flex-direction:column;gap:4px}
+.d3 .pc li{color:var(--ink)}
+.d3 .acts{margin-top:16px}
+.d3 .fit table{font-size:14.5px}
+.d3 .fit th,.d3 .fit td{padding:9px 0;border-top:1px solid var(--hair)}
+.d3 .fit thead th{border:0;padding:0 0 4px;font:600 10.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--ink3)}
+.d3 .fit thead th:last-child{text-align:right}
+.d3 .got{text-align:right!important;white-space:nowrap}
+.d3 .ok{display:inline-flex;align-items:center;gap:4px;background:var(--good);color:#fff;font-size:12.5px;font-weight:700;border-radius:6px;padding:1px 9px}
+.d3 .ok b{font-weight:700}
+.d3 .got .n{font-size:17px;font-weight:600;color:var(--ink);margin-left:6px}
+.d3 .meta{font-size:12.5px;color:var(--ink3);line-height:1.6;margin-top:10px}
+.d3 .cmp .lg{gap:6px 10px;font-size:13px;margin-bottom:8px}
+.d3 .cmp .lg-i{background:#fff;border-radius:999px;padding:2px 10px 2px 8px;color:var(--mc);font-weight:700}
+.d3 .lg-p{font-size:12px;font-weight:500;color:var(--ink3)}
+.d3 .sw{width:10px;height:10px;border-radius:2px;background:var(--mc)}
+.d3 .bar u{background:var(--mc)}
+.d3 .dim{display:grid;grid-template-columns:56px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--hair);align-items:center}
+.d3 .dim-n{font-size:15px;font-weight:700;color:var(--ink)}
+.d3 .bars{gap:5px}
+.d3 .bar{gap:10px;height:16px}
+.d3 .bar u{height:10px;border-radius:5px;max-width:calc(100% - 44px)}
+.d3 .bar .n{font-size:13px;color:#8E97AB}
+.d3 .bar.w .n{font-size:16px;font-weight:700;color:var(--mc)}
+.d3 .more{margin-top:10px}
+.d3 .more summary{color:var(--accent);font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.d3 .more table{margin-top:10px;font-size:13px}
+.d3 .more th,.d3 .more td{padding:7px 4px;border-top:1px solid var(--hair);text-align:center}
+.d3 .more thead th{border:0;font-size:12px;font-weight:700;color:var(--mc)}
+.d3 .more th:first-child,.d3 .more td:first-child{text-align:left;color:var(--ink3)}
+.d3 .choice{background:var(--accent);color:#fff;border-radius:20px;padding:18px;box-shadow:0 14px 30px -14px rgba(35,64,196,.6)}
+.d3 .choice .lb{color:rgba(255,255,255,.8)}
+.d3 .choice .lb span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:7px;vertical-align:1px}
+.d3 .q{font-size:19.5px;font-weight:700;line-height:1.4;color:#fff;margin-bottom:14px;text-wrap:balance}
+.d3 .q small{display:block;font-size:14px;font-weight:400;color:rgba(255,255,255,.85);margin-top:4px}
+.d3 .ops{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.d3 .op{flex-direction:column;justify-content:space-between;gap:10px;min-height:90px;border:0;background:#fff;border-radius:14px;padding:13px 14px;font-size:15px;font-weight:600;color:var(--ink);box-shadow:0 2px 0 rgba(10,20,80,.25);transition:transform .12s,box-shadow .12s}
+.d3 .op:hover{transform:translateY(-2px);box-shadow:0 6px 14px -4px rgba(10,20,80,.45)}
+.d3 .op.wide{grid-column:1/-1;min-height:0}
+.d3 .op-c{font-size:12.5px;font-weight:500;color:var(--ink3)}
+.d3 .op-c .n{font-size:22px;font-weight:600;color:var(--accent);margin:0 3px;vertical-align:-2px}
+.d3 .choice .lnk{color:#fff;text-decoration-color:rgba(255,255,255,.6)}
+
+@media (max-width:620px){
+  .cols{gap:12px}
+  .d1 .bot,.d2 .bot,.d3 .bot{padding:16px 14px 18px}
+  .d1 .hl,.d1 .q{font-size:19px}
+  .d1 .price{font-size:26px}
+  .pc{grid-template-columns:1fr!important}
+  .d2 .pc>div{padding:0!important;border:0!important}
+  .d2 .pc>div+div{margin-top:12px}
+  .d1 .pc{gap:14px}
+}
+</style>
+</head>
+<body>
+<header class="intro">
+  <h1>回覆視覺方向</h1>
+  <p>同一段回覆、同樣的內容和結構（從你選的 13 項裡挑 6 個代表），只換顏色、字和細節。三個方向各用一種手段拉開主次：<b>方向 1 靠大小</b>、<b>方向 2 靠深淺</b>、<b>方向 3 靠顏色</b>。最右邊是上一版，當對照。</p>
+  <p>不用說出哪裡不對，打開上面的檢查開關看就好。看中哪個按「選這個」，覺得哪裡還不對可以寫在每欄下面，最後按「複製」貼給 Claude。「剩 86 台」「剩 47 台」是示意數字，其他取自真實對話。</p>
+</header>
+<div class="tools">
+  <div class="tgroup"><span>檢查：</span>
+    <button class="tg" id="t-blur" aria-pressed="false"><i></i>瞇眼看</button>
+    <button class="tg" id="t-gray" aria-pressed="false"><i></i>黑白看</button>
+    <button class="tg" id="t-order" aria-pressed="false"><i></i>標出閱讀順序</button>
+  </div>
+  <div class="tgroup"><span>跳到：</span><span id="jumps"></span></div>
+  <span class="sp"></span>
+  <output id="out">還沒選</output>
+  <button class="copy" id="copy" disabled>複製</button>
+  <p class="hint" id="hint">瞇眼看：整段模糊，主次清楚的話仍看得出先看哪裡。黑白看：拿掉顏色，看只靠深淺時主次還在不在。標出閱讀順序：① 結論句 → ② 推薦卡結論 → ③ 關鍵數字 → ④ 追問，看眼睛有沒有被帶到這個順序。</p>
+</div>
+<div class="scroller" id="scroller"><div class="cols" id="cols"></div></div>
+
+<script>
+const DIRS=[
+  ["d1","方向 1　大小說話","結論和數字放很大，卡片不用底色、靠留白和一條黑線分開；只有追問卡框起來。"],
+  ["d2","方向 2　深淺說話","我說的話在白底，佐證卡片變成深色面板；追問卡反過來是亮底黑框。"],
+  ["d3","方向 3　顏色說話","每台機型一個固定顏色，狀態用實心色塊，重點句用螢光筆；追問卡整塊藍。"],
+  ["d0","上一版（對照）","你選完 13 項之後的樣子，沒有重做視覺。"],
+];
+
+/* ---------- 內容（取自真實對話與你選的結構） ---------- */
+const M={
+  1:{n:"華碩a豆14 Air 2026",p:"5,900",ips:0},
+  2:{n:"a豆14 Air 風信子藍",p:"6,034",ips:0},
+  3:{n:"無畏Pro14",p:"5,779",ips:0},
+  4:{n:"惠普星Book Pro 16",p:"7,649",ips:1},
+};
+const th=i=>`<span class="th" data-m="${i}"><svg viewBox="0 0 56 40" aria-hidden="true"><rect class="body" x="10" y="5" width="36" height="24" rx="2.6"/><rect class="scr${M[i].ips?" ips":""}" x="12.4" y="7.4" width="31.2" height="19.2" rx="1"/><path class="glare" d="M12.4 7.4h14l-9 19.2h-5z"/><path class="body" d="M4 30.2h48l-3.2 3.8H7.2z"/></svg></span>`;
+const mk=i=>`<span class="mk" data-m="${i}">${M[i].n}</span>`;
+const fact=t=>`<span class="fact">${t}</span>`;
+const CMP=[2,4,3];
+const TOP=[["性能",68,71,66],["螢幕",88,78,87],["便攜",82,69,82]];
+const REST=[["續航",36,45,36],["散熱",74,78,76],["安靜",93,95,96],["擴充",60,67,60],["性價比",25,9,28],["權重分",72.8,70.7,72.1],["尺寸","14 吋","16 吋","14 吋"],["重量","1.38 公斤","1.78 公斤","1.38 公斤"]];
+
+function reply(){
+  const win=r=>{const m=Math.max(r[1],r[2],r[3]);return [1,2,3].map(k=>r[k]===m)};
+  return `
+  <div class="count">133 台符合・和上一輪一樣</div>
+
+  <div class="tx"><p><span class="key" data-order="1">要挑一台最好的，主候選池第 1 名就是 ${mk(1)}，77.2 分，這四台裡最高。</span>它也是這四台裡最輕、續航最久、${fact("P3 覆蓋 100%")}，亮度也最高，等你晚上在房間修圖會很有感。代價是 14 吋畫面較小，${fact("擴充性是四台最弱（51 分）")}，以後想加東西比較受限；會不會被這點影響，就看你平常用不用外接螢幕。</p></div>
+
+  <section class="card rec" data-m="1">
+    <header class="lb"><span>最推薦</span><em>主候選池 第 1／133</em></header>
+    <div class="lap">${th(1)}<div class="lap-t"><b class="lap-n">華碩a豆14 Air 2026</b><span class="lap-s"><span class="n">77.2</span> 分</span></div><div class="price"><small>NT$</small><span class="n">5,900</span></div></div>
+    <h3 class="hl" data-order="2">顏色最準、最輕，照你的用法分數最高</h3>
+    <div class="pc">
+      <div class="pros"><h4>強項</h4><ul><li>四台裡最輕、續航最久</li><li>P3 覆蓋 100%，亮度最高</li><li>Photoshop、Illustrator 都夠用</li></ul></div>
+      <div class="cons"><h4>要接受的</h4><ul><li>14 吋畫面較小</li><li>擴充 51 分，四台最弱</li></ul></div>
+    </div>
+    <div class="acts"><button class="btn pri">看詳情</button><button class="btn sec">收藏</button><button class="lnk">不考慮</button></div>
+  </section>
+
+  <section class="card fit" data-m="1">
+    <header class="lb"><span>對照你的需求</span><em class="who">華碩a豆14 Air 2026</em></header>
+    <h3 class="hl">你的 3 項需求，這台全部符合</h3>
+    <table><thead><tr><th>你要的</th><th>這台</th></tr></thead><tbody>
+      <tr><td>常用軟體：Photoshop</td><td class="got"><span class="ok">✓ <b>夠用</b></span></td></tr>
+      <tr><td>常用軟體：Illustrator</td><td class="got"><span class="ok">✓ <b>夠用</b></span></td></tr>
+      <tr><td>預算 8000 以內</td><td class="got"><span class="ok">✓ <b>符合</b></span><span class="n">5,900</span> 元</td></tr>
+    </tbody></table>
+    <p class="meta">用途、設計類型、主要工具這 3 項沒辦法用單一數字比，改看整體分數：這台排第 1／133。</p>
+  </section>
+
+  <div class="tx"><p>你看到 72 分的那台，我猜是 ${mk(2)}（72.8 分）或是 ${mk(3)}（72.1 分），這兩台規格幾乎同一組：14 吋 2.8K OLED、32G／1T、1.38 公斤、續航約 10 小時，差在無畏Pro14 再安靜一點、再便宜一些。<span class="key">跟 ${mk(4)} 最大的差別在螢幕</span>：惠普是 16 吋 IPS 2.5K、240Hz，面板大、畫面滑順，但 ${fact("P3 覆蓋只有 78.5%")}、${fact("最高亮度 392 nits")}，是這幾台最低的，修圖時顏色會比較淡，暗部細節也吃虧；240Hz 對畫圖沒幫助，那是玩遊戲、拉視窗用的。惠普的長處是散熱和擴充（78／67 分，這幾台最好）、16 吋看很多面板舒服、續航 12.5 小時，但價格 7,649 也是這幾台最貴的。</p></div>
+
+  <section class="card cmp">
+    <header class="lb"><span>三台比一比</span></header>
+    <h3 class="hl">兩台 14 吋贏在螢幕和便攜；惠普贏在性能、續航、散熱，但最貴</h3>
+    <div class="lg">${CMP.map(i=>`<span class="lg-i" data-m="${i}"><i class="sw"></i>${M[i].n}<span class="lg-p n">${M[i].p}</span></span>`).join("")}</div>
+    <div class="dims" data-order="3">${TOP.map(r=>{const w=win(r);return `<div class="dim"><span class="dim-n">${r[0]}</span><div class="bars">${CMP.map((i,k)=>`<div class="bar${w[k]?" w":""}" data-m="${i}"><u style="--v:${r[k+1]}"></u><span class="n">${r[k+1]}</span></div>`).join("")}</div></div>`}).join("")}</div>
+    <details class="more"><summary>看其他 8 項</summary><div class="scroll"><table><thead><tr><th></th>${CMP.map(i=>`<th data-m="${i}">${M[i].n}</th>`).join("")}</tr></thead><tbody>${REST.map(r=>`<tr><td>${r[0]}</td>${[1,2,3].map(k=>`<td class="n">${r[k]}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>
+  </section>
+
+  <section class="card choice">
+    <header class="lb"><span>想問你一件事</span></header>
+    <p class="q" data-order="4">你修圖時會外接大螢幕嗎？<small>這會決定值不值得為 16 吋犧牲顏色。</small></p>
+    <div class="ops">
+      <button class="op"><span class="op-t">幾乎都外接大螢幕</span><span class="op-c">剩<span class="n">86</span>台</span></button>
+      <button class="op"><span class="op-t">都在筆電螢幕上修</span><span class="op-c">剩<span class="n">47</span>台</span></button>
+      <button class="op wide"><span class="op-t">還沒想過，先看哪台最適合</span></button>
+    </div>
+    <button class="lnk">都可以，你幫我決定</button>
+  </section>`;
+}
+
+/* ---------- 畫面 ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let pick=store.get("replyVisualPick3");
+const cols=document.getElementById("cols");
+cols.innerHTML=DIRS.map(([id,name,desc])=>`
+  <section class="col ${id}" id="col-${id}">
+    <div class="colhead"><div><b>${name}</b><small>${desc}</small></div>${id==="d0"?"":`<button class="choose" data-choose="${id}">選這個</button>`}</div>
+    <div class="colbody"><div class="me">我主要用 PS 和 AI，預算 8000 以內。哪台最好？我看到一台 72 分的，跟惠普那台差在哪？</div><div class="bot">${reply()}</div><div class="order-layer"></div></div>
+    <div class="colfoot"><label for="note-${id}">${id==="d0"?"上一版哪裡最不清楚？（可不填）":"這個方向哪裡還不對？（可不填）"}</label><textarea id="note-${id}" data-note="${id}"></textarea></div>
+  </section>`).join("");
+document.getElementById("jumps").innerHTML=DIRS.map(d=>`<button class="jp" data-jump="${d[0]}">${d[1].split("　")[0]}</button>`).join("");
+document.querySelectorAll("[data-note]").forEach(t=>{t.value=store.get("replyVisualNote-"+t.dataset.note)||""});
+
+function summary(){
+  const d=DIRS.find(x=>x[0]===pick);
+  const lines=[d?`視覺方向：${d[1].replace("　"," ")}`:"視覺方向：還沒選"];
+  DIRS.forEach(x=>{const v=document.getElementById("note-"+x[0]).value.trim();if(v) lines.push(`${x[1].split("　")[0]} 備註：${v}`)});
+  return lines.join("\n");
+}
+function show(){
+  document.querySelectorAll(".col").forEach(c=>c.classList.toggle("on",c.id==="col-"+pick));
+  document.querySelectorAll("[data-choose]").forEach(b=>b.textContent=b.dataset.choose===pick?"已選":"選這個");
+  const d=DIRS.find(x=>x[0]===pick);
+  document.getElementById("out").textContent=d?`已選：${d[1].replace("　"," ")}`:"還沒選";
+  const anyNote=[...document.querySelectorAll("[data-note]")].some(t=>t.value.trim());
+  document.getElementById("copy").disabled=!d&&!anyNote;
+}
+
+/* 閱讀順序：在模糊層上方另畫一層編號，所以瞇眼看時編號仍然清楚 */
+let orderOn=false;
+function drawOrder(){
+  document.querySelectorAll(".colbody").forEach(body=>{
+    const layer=body.querySelector(".order-layer");
+    if(!orderOn){layer.innerHTML="";return}
+    const base=body.getBoundingClientRect();
+    layer.innerHTML=[...body.querySelectorAll("[data-order]")].map(el=>{
+      const r=el.getClientRects()[0]||el.getBoundingClientRect();
+      return `<b style="left:${Math.max(2,r.left-base.left-14)}px;top:${r.top-base.top-12}px">${el.dataset.order}</b>`;
+    }).join("");
+  });
+}
+function toggle(btn,fn){const on=btn.getAttribute("aria-pressed")!=="true";btn.setAttribute("aria-pressed",on);fn(on)}
+document.getElementById("t-blur").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("blur",on));
+document.getElementById("t-gray").onclick=e=>toggle(e.currentTarget,on=>cols.classList.toggle("gray",on));
+document.getElementById("t-order").onclick=e=>toggle(e.currentTarget,on=>{orderOn=on;drawOrder()});
+window.addEventListener("resize",drawOrder);
+document.addEventListener("toggle",drawOrder,true);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(drawOrder);
+
+document.addEventListener("click",e=>{
+  const j=e.target.closest("[data-jump]");
+  if(j){document.getElementById("col-"+j.dataset.jump).scrollIntoView({behavior:"smooth",inline:"start",block:"nearest"});return}
+  const c=e.target.closest("[data-choose]");
+  if(c){pick=c.dataset.choose;store.set("replyVisualPick3",pick);show();return}
+  if(e.target.id==="copy"){const b=e.target;(navigator.clipboard?navigator.clipboard.writeText(summary()):Promise.reject()).then(()=>{b.textContent="已複製";setTimeout(()=>b.textContent="複製",1600)},()=>{b.textContent="無法複製，請截圖";})}
+});
+document.addEventListener("input",e=>{const t=e.target.closest("[data-note]");if(t){store.set("replyVisualNote-"+t.dataset.note,t.value);show()}});
+
+/* 網址參數（截圖檢查用）：?blur=1&gray=1&order=1 */
+const q=new URLSearchParams(location.search);
+if(q.get("blur")) document.getElementById("t-blur").click();
+if(q.get("gray")) document.getElementById("t-gray").click();
+if(q.get("order")) document.getElementById("t-order").click();
+show();
+</script>
+</body>
+</html>
