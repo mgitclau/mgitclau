@@ -56,3 +56,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 回覆視覺方向（同一段回覆 3 個視覺方向並排：大小說話／深淺說話／顏色說話＋上一版對照；瞇眼看、黑白看、標出閱讀順序三個檢查開關；可選方向、寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-visual-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆區塊分隔（區塊之間對比強、區塊裡面安靜：做法 A 灰底＋白卡、做法 B 卡片變附件、上一版對照；瞇眼看／黑白看／閱讀順序檢查；可選做法、寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-blocks-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 回覆改版階梯（以上一版為底，往右每步只多改一件事：大機身圖、白底細框、三級字、明細收起、追問一行行；學自 ChatGPT／Perplexity 購物回覆；可選停在哪一步、每步寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-steps-demo.html | 2026-11-21 |
+| AI 筆電選購助手 · 展示間（用戶端整套外觀設計稿：深色底＋亮色便條與展台，「你說過的話」螢光線連動全畫面；歡迎頁／對話與結果／更多卡片／調整比重 4 個可操作畫面，附顏色對比表與 12 項可用性檢查） | https://mgitclau.github.io/mgitclau/laptop-style-showroom.html | 2026-11-22 |
