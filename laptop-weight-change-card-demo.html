@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>權重變化卡 · 7 種畫法 Demo</title>
+<style>
+:root{
+  --bg:#E4E4E4; --card:#FFFFFF; --ink:#000; --ink2:#3A3A3A; --ink3:#575757; --line:#CFCFCF; --track:#E6E6E6;
+  --o:#FF5A1F; --om:#D9420B; --old:#9C9C9C;
+  --sans:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);padding:0 16px 80px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:26px;margin:28px 0 4px;letter-spacing:.02em}
+h2{font-size:18px;margin:0}
+.lead{color:var(--ink2);max-width:62em;margin:0 0 14px}
+.bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0;border-bottom:1.5px solid #000;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:18px}
+.bar .grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bar .t{font-weight:700;margin-right:2px}
+button,.btn{font:inherit;cursor:pointer}
+.seg button{background:#fff;border:1.5px solid #000;padding:5px 11px;border-radius:0;color:#000}
+.seg button[aria-pressed="true"]{background:#000;color:#fff}
+.seg button:focus-visible,.pick:focus-visible,.copy:focus-visible,textarea:focus-visible{outline:3px solid var(--om);outline-offset:2px}
+label.sw{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:18px;align-items:start}
+.opt{background:var(--card);border:1.5px solid #000;padding:16px;display:flex;flex-direction:column;gap:12px}
+.opt.rec{outline:3px solid var(--o);outline-offset:3px}
+.opt header{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.letter{background:#000;color:var(--o);font-weight:800;min-width:2.1em;text-align:center;padding:1px 8px;font-size:17px}
+.tag{font-size:12px;border:1.5px solid var(--om);color:var(--om);padding:0 6px;font-weight:700}
+.how{color:var(--ink2);margin:0;font-size:13px}
+.chat{background:#F4F4F4;border:1px solid var(--line);padding:12px}
+.chat .say{margin:0 0 8px;font-size:14px}
+.frame{width:100%;margin:0 auto}
+body.phone .frame{max-width:360px}
+.card{background:#fff;border:1.5px solid #000;padding:12px 14px}
+.key{margin:10px 0 0;font-size:12px;color:var(--ink3)}
+.pc{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:0}
+.pc dt{font-weight:700;color:var(--ink2)}
+.pc dd{margin:0}
+.pickrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.pick{background:#fff;border:1.5px solid #000;padding:5px 12px}
+.pick[aria-pressed="true"]{background:var(--o);font-weight:700}
+
+/* ===== 共用：列、籤、數字 ===== */
+ul.rows{list-style:none;margin:0;padding:0}
+.row{padding:9px 0}
+.row+.row{border-top:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.hd b{font-size:15px}
+.ft{margin-left:auto;font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink2);white-space:nowrap}
+.ft b{font-size:16px;color:#000}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:0 7px;line-height:20px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.up{background:var(--o);color:#000}
+.chip.dn{background:#fff;color:#000;border:1.5px dashed var(--om);line-height:17px}
+.why{display:block;color:var(--ink3);font-size:12px;margin-top:4px}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 0 0;font-size:12px;color:var(--ink2)}
+.lg span{display:inline-flex;align-items:center;gap:5px}
+.sw1{display:inline-block;width:14px;height:10px}
+.sw1.base{background:#000}.sw1.add{background:var(--o)}
+.sw1.cut{background:repeating-linear-gradient(45deg,#FFE1D4 0 3px,var(--o) 3px 4px);box-shadow:inset 0 0 0 1.5px var(--om)}
+.sw1.old{background:var(--old)}.sw1.hol{border:2px solid #000;border-radius:50%;width:11px;height:11px;background:#fff}.sw1.sol{background:#000;border-radius:50%;width:11px;height:11px}
+.sw1.same{background:#D6D6D6}
+
+/* 軌道＋刻度線（--n＝每 10 一格的格數） */
+.tr{position:relative;height:14px;background-color:var(--track);
+  background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(100%/var(--n) - 1px),rgba(0,0,0,.22) calc(100%/var(--n) - 1px),rgba(0,0,0,.22) calc(100%/var(--n)))}
+.tr i{position:absolute;top:0;bottom:0;display:block}
+.tr .base{left:0;background:#000}
+.tr .add{background:var(--o)}
+.tr .cut{background:repeating-linear-gradient(45deg,#FFE1D4 0 4px,var(--o) 4px 5px);box-shadow:inset 0 0 0 1.5px var(--om)}
+.axis{position:relative;height:16px;margin-top:2px;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;top:0;transform:translateX(-50%)}
+.axis span:first-child{transform:none}
+.axis span:last-child{transform:translateX(-100%)}
+
+/* 現況（對照用） */
+.cur .row{display:grid;grid-template-columns:3.2em minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+.cur .ctr{position:relative;height:8px;border-radius:99px;background:#E7E9EC}
+.cur .ctr i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.cur .o{background:#C5CAD1}.cur .n{background:#3B6FE0}
+.cur .row[data-dir="down"] .n{background:#6B7280;z-index:1}
+.cur .row[data-dir="up"] .o{z-index:1}
+.cur .v{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cur .why{grid-column:2/-1}
+.problems{margin:0;padding-left:1.3em;font-size:13px;color:var(--ink2)}
+.problems li{margin:2px 0}
+.problems b{color:var(--om)}
+
+/* B 啞鈴 */
+.db{position:relative;height:56px;margin:0 10px;background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(100%/var(--n) - 1px),rgba(0,0,0,.18) calc(100%/var(--n) - 1px),rgba(0,0,0,.18) calc(100%/var(--n)));background-color:#F4F4F4}
+.db .ln{position:absolute;top:50%;height:4px;margin-top:-2px;background:var(--o)}
+.db .dot{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #fff}
+.db .dot.o{background:#fff;border:2.5px solid #000}
+.db .dot.n{background:#000}
+.db .ah{position:absolute;top:50%;width:0;height:0;margin-top:-7px;border:7px solid transparent}
+.db .lb{position:absolute;font-size:12px;font-variant-numeric:tabular-nums;transform:translateX(-50%);white-space:nowrap}
+.db .lb.o{top:2px;color:var(--ink3)}
+.db .lb.n{bottom:2px;font-weight:800;color:#000}
+.axis.in{margin:2px 10px 0}
+
+/* C 前後雙欄 */
+.dc .hdr,.dc .rr{display:grid;grid-template-columns:3.6em 1fr 1fr;gap:10px;align-items:center}
+.dc .hdr{font-size:12px;font-weight:700;color:var(--ink2);padding-bottom:4px;border-bottom:1.5px solid #000}
+.dc .cell{display:flex;align-items:center;gap:6px}
+.dc .cell .t{flex:1;height:12px;background:var(--track);position:relative}
+.dc .cell .t i{position:absolute;left:0;top:0;bottom:0}
+.dc .cell .nn{width:2.6em;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.dc .cell.after .nn{font-weight:800}
+.dc .lab{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.dc .lab b{font-size:14px}
+
+/* D 100% 堆疊 */
+.sk{display:grid;grid-template-columns:2.8em 1fr;gap:8px;align-items:center;margin:8px 0}
+.sk>span{font-size:12px;font-weight:700;color:var(--ink2)}
+.stk{display:flex;gap:2px;height:52px}
+.seg1{min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11px;line-height:1.25;overflow:hidden;font-variant-numeric:tabular-nums;background:#D6D6D6;color:#000}
+.seg1 b{font-size:14px}
+.seg1.up{background:var(--o)}
+.seg1.dn{background:repeating-linear-gradient(45deg,#FFE9DF 0 5px,#FFD2BF 5px 6px);box-shadow:inset 0 0 0 1.5px var(--om)}
+.seg1.old{background:#BDBDBD}
+.sum{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px}
+
+/* E 文字為主 */
+.er{display:grid;grid-template-columns:5em 1fr;gap:12px;align-items:center}
+.big{display:flex;align-items:center;justify-content:center;height:46px;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.big.up{background:var(--o)}
+.big.dn{background:#fff;border:1.5px dashed var(--om)}
+.er .m b{font-size:15px}
+.er .m .s{display:block;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.er .m .s b{font-size:16px;color:#000}
+
+/* F 唯讀滑桿 */
+.sl{position:relative;height:66px;margin:0 12px}
+.sl .rail{position:absolute;left:0;right:0;top:26px;height:8px;background:#0B0B0B}
+.sl .rail::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(100%/var(--n) - 1px),rgba(255,255,255,.35) calc(100%/var(--n) - 1px),rgba(255,255,255,.35) calc(100%/var(--n)))}
+.sl .trail{position:absolute;top:24px;height:12px;z-index:1}
+.sl .trail.up{background:var(--o)}
+.sl .trail.dn{background:repeating-linear-gradient(45deg,#FFE1D4 0 4px,var(--o) 4px 5px);box-shadow:inset 0 0 0 1.5px var(--om)}
+.sl .ghost{position:absolute;top:16px;width:0;height:28px;border-left:2px dashed #000;z-index:2}
+.sl .ghost::before{content:"原 " attr(data-v);position:absolute;top:-16px;left:0;transform:translateX(-50%);font-size:12px;color:var(--ink3);white-space:nowrap}
+.sl .hand{position:absolute;top:19px;width:20px;height:22px;margin-left:-10px;background:#fff;border:2.5px solid #000;z-index:3}
+.sl .hand::before{content:attr(data-v);position:absolute;top:24px;left:50%;transform:translateX(-50%);font-weight:800;font-size:12px}
+.axis.sx{margin:0 12px}
+
+/* A＋E 合併 */
+.ae .row{display:grid;grid-template-columns:5em 1fr;gap:4px 12px;align-items:center}
+.ae .big{grid-row:1/3;height:100%;min-height:52px}
+.ae .hd{margin:0}
+.ae .tr{grid-column:2}
+.ae .why{grid-column:2;margin-top:0}
+.ae .axis{grid-column:2}
+
+.tip{position:fixed;z-index:50;pointer-events:none;background:#000;color:#fff;padding:5px 9px;font-size:12px;max-width:260px;display:none}
+h3.sec{font-size:17px;margin:34px 0 10px;padding-top:14px;border-top:1.5px solid #000}
+table{border-collapse:collapse;background:#fff;font-size:13px;min-width:420px}
+th,td{border:1px solid var(--line);padding:5px 12px;text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+.tw{overflow-x:auto;max-width:100%}
+textarea{width:100%;min-height:84px;font:inherit;border:1.5px solid #000;padding:8px;background:#fff}
+.copy{background:var(--o);border:1.5px solid #000;padding:7px 16px;font-weight:700}
+.out{white-space:pre-wrap;background:#fff;border:1.5px solid #000;padding:10px;margin:8px 0;min-height:44px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}.er{grid-template-columns:4.4em 1fr}.sk{grid-template-columns:2.4em 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>權重變化卡 · 7 種畫法</h1>
+<p class="lead">這張卡出現在系統「調整你的比重」之後。現況的圖看不懂：沒有圖例、灰藍兩色含義會翻轉、長條刻度不固定、沒寫差值。下面 7 種畫法用<b>同一組資料</b>並排，卡片內全部用同一套規矩：<b>橘色＝這次有變動的部分</b>，實心橘＝調高，橘斜線＝調低，再加 ▲／▼ 和 ＋／－ 文字，不靠顏色單獨表達。</p>
+
+<div class="bar" role="toolbar" aria-label="Demo 控制">
+  <div class="grp seg"><span class="t">資料</span>
+    <button data-set="s1" aria-pressed="true">2 項（便攜＋8／續航－8）</button>
+    <button data-set="s2" aria-pressed="false">4 項（有升有降）</button>
+    <button data-set="s3" aria-pressed="false">小幅 ±2</button>
+  </div>
+  <div class="grp"><label class="sw"><input type="checkbox" id="why" checked> 顯示每列原因</label>
+  <label class="sw"><input type="checkbox" id="phone"> 手機寬度（360px）</label></div>
+</div>
+
+<h3 class="sec" style="margin-top:6px;border-top:0">現況（你看到的那張）</h3>
+<div class="grid">
+  <div class="opt">
+    <header><h2>現況</h2><span class="tag">要被取代</span></header>
+    <div class="chat"><p class="say">好的，我把比重調整了。</p><div class="frame"><div class="card cur" id="cur"></div></div></div>
+    <ol class="problems">
+      <li><b>沒有圖例：</b>灰條、藍條各代表什麼，卡片上沒寫。</li>
+      <li><b>顏色會翻轉：</b>調高時灰蓋在藍上（你只看到藍色尾巴）；調低時藍蓋在灰上（灰色尾巴其實是被減掉的量）。</li>
+      <li><b>刻度不固定：</b>長度只跟「這張卡裡最大的數」比，不是 0–100%。</li>
+      <li><b>沒寫差值，也沒說 % 是什麼。</b></li>
+    </ol>
+  </div>
+</div>
+
+<h3 class="sec">7 種新畫法（由左到右、由上到下：A～F，最後是 A＋E 合併版）</h3>
+<div class="grid" id="opts"></div>
+
+<h3 class="sec">資料表（目前選的資料）</h3>
+<div class="tw"><table id="tbl"></table></div>
+<p class="key">全部畫法都只用這張表裡的數字，沒有另外的資料。D 需要「沒變動的維度」也帶進卡片，其他畫法只要「有變動的」。</p>
+
+<h3 class="sec">我選的</h3>
+<p class="lead">勾選「我喜歡這個」，下面會自動整理成一段文字，可以直接複製貼給我。</p>
+<textarea id="note" placeholder="想補充的話：例如「A＋E 但把原因放在最下面」"></textarea>
+<div class="out" id="out">（還沒選）</div>
+<button class="copy" id="copy" type="button">複製</button> <span id="copied" class="key"></span>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const SETS={
+  s1:{dims:[
+    {label:"性能",from:30,to:30},
+    {label:"便攜",from:26,to:34,why:"你說常帶著跑，所以更看重輕、好攜帶"},
+    {label:"續航",from:20,to:12,why:"你說多半在有插座的地方用，續航沒那麼重要"},
+    {label:"螢幕",from:14,to:14},
+    {label:"價格",from:10,to:10}]},
+  s2:{dims:[
+    {label:"性能",from:30,to:28,why:"文書為主，性能稍微放寬"},
+    {label:"便攜",from:26,to:34,why:"你說每天通勤背著走"},
+    {label:"續航",from:20,to:12,why:"在公司有插座"},
+    {label:"螢幕",from:14,to:14},
+    {label:"價格",from:10,to:12,why:"你提到預算不想超"}]},
+  s3:{dims:[
+    {label:"性能",from:30,to:30},
+    {label:"便攜",from:26,to:26},
+    {label:"續航",from:20,to:18,why:"稍微放寬一點點"},
+    {label:"螢幕",from:14,to:14},
+    {label:"價格",from:10,to:12,why:"稍微在意價格"}]}
+};
+const state={set:"s1",why:true,picks:new Set()};
+const $=s=>document.querySelector(s);
+const d2=d=>d.to-d.from;
+const pc=(v,m)=>v/m*100;
+function view(){
+  const dims=SETS[state.set].dims;
+  const shown=dims.filter(d=>d.from!==d.to).sort((a,b)=>Math.abs(d2(b))-Math.abs(d2(a)));
+  const top=Math.max(...shown.flatMap(d=>[d.from,d.to]));
+  const max=Math.max(20,Math.ceil((top+1)/10)*10);
+  return {dims,shown,max};
+}
+const sign=d=>d2(d)>0?"＋"+d2(d):"－"+Math.abs(d2(d));
+const chip=d=>d2(d)>0?`<span class="chip up" aria-label="調高 ${d2(d)}">▲ ${sign(d)}</span>`:`<span class="chip dn" aria-label="調低 ${Math.abs(d2(d))}">▼ ${sign(d)}</span>`;
+const tipTxt=d=>`${d.label}：原本 ${d.from}% → 調整後 ${d.to}%（${d2(d)>0?"調高":"調低"} ${Math.abs(d2(d))} 個百分點）`;
+const why=d=>state.why&&d.why?`<small class="why">${d.why}</small>`:"";
+const ft=d=>`<span class="ft">${d.from}% → <b>${d.to}%</b></span>`;
+const hd=d=>`<div class="hd"><b>${d.label}</b>${chip(d)}${ft(d)}</div>`;
+const key="<p class=\"key\">％＝這一項占你「所有考量」的比重（全部加起來是 100%）。</p>";
+function axis(max,cls){
+  let s="";for(let t=0;t<=max;t+=10)s+=`<span style="left:${pc(t,max)}%">${t}${t===max?"%":""}</span>`;
+  return `<div class="axis ${cls||""}">${s}</div>`;
+}
+const row=(d,inner,cls)=>`<li class="row ${cls||""}" data-tip="${tipTxt(d)}">${inner}</li>`;
+
+/* 增減條的軌道 */
+function aTrack(d,max){
+  const lo=Math.min(d.from,d.to),hi=Math.max(d.from,d.to),up=d2(d)>0;
+  return `<div class="tr" style="--n:${max/10}"><i class="base" style="width:${pc(lo,max)}%"></i><i class="${up?"add":"cut"}" style="left:${pc(lo,max)}%;width:${pc(hi-lo,max)}%"></i></div>`;
+}
+
+const R={};
+/* 現況 */
+R.cur=()=>{const {shown}=view();const mx=Math.max(1,...shown.flatMap(d=>[d.from,d.to]));
+  return `<ul class="rows">${shown.map(d=>`<li class="row" data-dir="${d2(d)>0?"up":"down"}"><b>${d.label}</b><span class="ctr"><i class="o" style="width:${pc(d.from,mx)}%"></i><i class="n" style="width:${pc(d.to,mx)}%"></i></span><span class="v">${d.from}% → <b>${d.to}%</b></span>${state.why&&d.why?`<small class="why">${d.why}</small>`:""}</li>`).join("")}</ul>`;};
+
+R.A=()=>{const {shown,max}=view();
+  return `<ul class="rows">${shown.map(d=>row(d,hd(d)+aTrack(d,max)+why(d))).join("")}</ul>${axis(max)}
+  <div class="lg"><span><i class="sw1 base"></i>兩邊都有的部分</span><span><i class="sw1 add"></i>多出來的</span><span><i class="sw1 cut"></i>被減掉的</span></div>${key}`;};
+
+R.B=()=>{const {shown,max}=view();
+  return `<ul class="rows">${shown.map(d=>{
+    const lo=Math.min(d.from,d.to),hi=Math.max(d.from,d.to),up=d2(d)>0,big=hi-lo>=4;
+    const ah=big?`<i class="ah" style="left:${pc(d.to,max)}%;${up?"margin-left:-20px;border-left-color:var(--o);border-right-width:0":"margin-left:13px;border-right-color:var(--o);border-left-width:0"}"></i>`:"";
+    return row(d,hd(d)+`<div class="db" style="--n:${max/10}"><i class="ln" style="left:${pc(lo,max)}%;width:${pc(hi-lo,max)}%"></i>${ah}<span class="dot o" style="left:${pc(d.from,max)}%"></span><span class="dot n" style="left:${pc(d.to,max)}%"></span><span class="lb o" style="left:${pc(d.from,max)}%">原 ${d.from}</span><span class="lb n" style="left:${pc(d.to,max)}%">現 ${d.to}</span></div>`+why(d));}).join("")}</ul>${axis(max,"in")}
+  <div class="lg"><span><i class="sw1 hol"></i>原本</span><span><i class="sw1 sol"></i>現在</span><span><i class="sw1 add" style="height:4px"></i>移動的距離</span></div>${key}`;};
+
+R.C=()=>{const {dims,shown,max}=view();const list=dims.filter(d=>d.from!==d.to||false).length?shown:shown;
+  return `<div class="dc"><div class="hdr"><span></span><span>之前</span><span>現在</span></div><ul class="rows">${list.map(d=>row(d,`<div class="rr"><div class="lab"><b>${d.label}</b>${chip(d)}</div>
+  <div class="cell"><span class="t"><i style="width:${pc(d.from,max)}%;background:var(--old)"></i></span><span class="nn">${d.from}%</span></div>
+  <div class="cell after"><span class="t"><i style="width:${pc(d.to,max)}%;background:#000"></i></span><span class="nn">${d.to}%</span></div></div>${why(d)}`)).join("")}</ul></div>
+  <div class="lg"><span><i class="sw1 old"></i>之前</span><span><i class="sw1 base"></i>現在</span><span>兩欄用同一把尺（滿格＝${max}%）</span></div>${key}`;};
+
+R.D=()=>{const {dims,shown}=view();
+  const seg=(d,v,cls)=>{const small=v<8;return `<div class="seg1 ${cls}" style="flex:${v} 1 0" title="${d.label} ${v}%">${small?"":`<span>${d.label}</span>`}<b>${v}</b></div>`;};
+  const before=dims.map(d=>seg(d,d.from,"old")).join("");
+  const after=dims.map(d=>seg(d,d.to,d2(d)>0?"up":d2(d)<0?"dn":"")).join("");
+  return `<div class="sk"><span>之前</span><div class="stk">${before}</div></div>
+  <div class="sk"><span>現在</span><div class="stk">${after}</div></div>
+  <div class="sum">${shown.map(d=>`<span data-tip="${tipTxt(d)}"><b>${d.label}</b> ${chip(d)}</span>`).join("")}</div>${shown.some(d=>d.why)&&state.why?`<ul class="rows" style="margin-top:6px">${shown.map(d=>d.why?`<li class="row" style="padding:5px 0"><b>${d.label}</b>：<small style="font-size:12px;color:var(--ink3)">${d.why}</small></li>`:"").join("")}</ul>`:""}
+  <div class="lg"><span><i class="sw1 same"></i>沒動</span><span><i class="sw1 add"></i>調高</span><span><i class="sw1 cut"></i>調低</span><span>整條＝你的全部考量 100%</span></div>${key}`;};
+
+R.E=()=>{const {shown}=view();
+  return `<ul class="rows">${shown.map(d=>row(d,`<div class="er"><div class="big ${d2(d)>0?"up":"dn"}">${d2(d)>0?"▲ ":"▼ "}${sign(d)}</div><div class="m"><b>${d.label}</b>　${d2(d)>0?"更看重了":"沒那麼看重了"}<span class="s">${d.from}% → <b>${d.to}%</b></span></div></div>${why(d)}`)).join("")}</ul>${key}`;};
+
+R.F=()=>{const {shown,max}=view();
+  return `<ul class="rows">${shown.map(d=>{
+    const lo=Math.min(d.from,d.to),hi=Math.max(d.from,d.to),up=d2(d)>0;
+    return row(d,hd(d)+`<div class="sl" style="--n:${max/10}"><div class="rail"></div><i class="trail ${up?"up":"dn"}" style="left:${pc(lo,max)}%;width:${pc(hi-lo,max)}%"></i><i class="ghost" data-v="${d.from}%" style="left:${pc(d.from,max)}%"></i><i class="hand" data-v="${d.to}%" style="left:${pc(d.to,max)}%"></i></div>`+why(d));}).join("")}</ul>${axis(max,"sx")}
+  <div class="lg"><span>方塊＝現在的位置</span><span>虛線＝原本的位置</span><span><i class="sw1 add"></i>往右移（調高）</span><span><i class="sw1 cut"></i>往左移（調低）</span></div>${key}`;};
+
+R.G=()=>{const {shown,max}=view();
+  return `<div class="ae"><ul class="rows">${shown.map(d=>row(d,`<div class="big ${d2(d)>0?"up":"dn"}">${d2(d)>0?"▲ ":"▼ "}${sign(d)}</div><div class="hd"><b>${d.label}</b>${d2(d)>0?"更看重了":"沒那麼看重了"}${ft(d)}</div>${aTrack(d,max)}${why(d)}`)).join("")}</ul></div>${axis(max,"in")}
+  <div class="lg"><span><i class="sw1 base"></i>兩邊都有的部分</span><span><i class="sw1 add"></i>多出來的</span><span><i class="sw1 cut"></i>被減掉的</span></div>${key}`;};
+
+const OPTS=[
+ {id:"A",name:"增減條",rec:0,how:"一條棒：黑色＝兩邊都有的，橘色實心＝多出來的，橘斜線＝被減掉的。棒子最右端永遠是「較大的那個數」。",pro:"一眼看出加了多少、減了多少，顏色含義固定不翻轉",con:"需要一行小圖例；「兩邊都有」這個概念要學一下",data:"不用改（現有 from／to 就夠）"},
+ {id:"B",name:"啞鈴圖",rec:0,how:"同一把 0～40% 的尺：空心圈＝原本，實心點＝現在，中間橘線加箭頭。",pro:"最直接表達「從哪移到哪」，刻度尺讓大小有意義",con:"略像統計圖；變動很小時圈和點靠得很近",data:"不用改"},
+ {id:"C",name:"之前／現在雙欄",rec:0,how:"左欄「之前」灰條、右欄「現在」黑條，欄頭寫明；行首附 ▲／▼ 差值。",pro:"最不用學，像表格，欄頭就是圖例",con:"占空間；變化量要左右比較才看得出，變動小時兩條幾乎一樣",data:"不用改"},
+ {id:"D",name:"100% 占比堆疊條",rec:0,how:"上下兩條 100% 長條（之前／現在），每個維度一段；變動的維度橘色標出。",pro:"直接解釋「％＝占全部考量的比重」，看得出誰擠掉了誰",con:"維度多時每段很窄；需要一次看 5 個維度",data:"要：卡片要多帶「沒變動的維度」（小改資料）"},
+ {id:"E",name:"文字為主＋大標籤",rec:0,how:"每列一個大的「▲ ＋8」標籤＋一句「更看重了／沒那麼看重了」，下面寫 26% → 34%，不畫條。",pro:"最簡潔、手機最穩、不會看錯",con:"沒有大小的量感（8 到底多不多？）",data:"不用改"},
+ {id:"F",name:"唯讀滑桿＋原位標記",rec:0,how:"仿「調整比重」抽屜裡的滑桿：方塊在現在位置，虛線標原本位置，中間橘色軌跡表示移動方向。",pro:"跟用戶之後會去調的滑桿長得一樣，學一次就會",con:"一張卡放多條滑桿偏重；實作時要確認能不能直接重用抽屜元件",data:"不用改"},
+ {id:"G",name:"A＋E 合併（建議）",rec:1,how:"左邊是 E 的大標籤「▲ ＋8」，右邊是 A 的增減條，右上角寫 26% → 34%，底下一行說明 ％ 的意思。",pro:"先看到「加了還是減了、多少」，再用條確認量感，最不容易看錯",con:"比 A、E 單獨用略高一點（每列約 70px）",data:"不用改"}
+];
+const frame=h=>`<div class="chat"><p class="say">好的，我調整了你的比重：</p><div class="frame"><div class="card">${h}</div></div></div>`;
+function render(){
+  $("#cur").innerHTML=R.cur();
+  $("#opts").innerHTML=OPTS.map(o=>`<section class="opt${o.rec?" rec":""}" data-id="${o.id}">
+    <header><span class="letter">${o.id==="G"?"A＋E":o.id}</span><h2>${o.name}</h2>${o.rec?'<span class="tag">我的建議</span>':""}</header>
+    <p class="how">${o.how}</p>
+    ${frame(R[o.id]())}
+    <dl class="pc"><dt>優點</dt><dd>${o.pro}</dd><dt>缺點</dt><dd>${o.con}</dd><dt>資料</dt><dd>${o.data}</dd></dl>
+    <div class="pickrow"><button type="button" class="pick" data-pick="${o.id}" aria-pressed="${state.picks.has(o.id)}">我喜歡這個</button></div>
+  </section>`).join("");
+  const {dims}=view();
+  $("#tbl").innerHTML=`<tr><th>維度</th><th>原本</th><th>調整後</th><th>差</th></tr>`+dims.map(d=>`<tr><td>${d.label}</td><td>${d.from}%</td><td>${d.to}%</td><td>${d2(d)===0?"—":sign(d)}</td></tr>`).join("");
+  summary();
+}
+function summary(){
+  const names=Object.fromEntries(OPTS.map(o=>[o.id,(o.id==="G"?"A＋E":o.id)+" "+o.name]));
+  const ids=[...state.picks];
+  $("#out").textContent=(ids.length?"我喜歡：\n"+ids.map(i=>"・"+names[i]).join("\n"):"（還沒選）")+($("#note").value?"\n補充："+$("#note").value:"");
+}
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-set]");
+  if(s){state.set=s.dataset.set;document.querySelectorAll("[data-set]").forEach(b=>b.setAttribute("aria-pressed",b===s));render();return;}
+  const p=e.target.closest("[data-pick]");
+  if(p){const id=p.dataset.pick;state.picks.has(id)?state.picks.delete(id):state.picks.add(id);p.setAttribute("aria-pressed",state.picks.has(id));summary();}
+});
+$("#why").addEventListener("change",e=>{state.why=e.target.checked;render();});
+$("#phone").addEventListener("change",e=>document.body.classList.toggle("phone",e.target.checked));
+$("#note").addEventListener("input",summary);
+$("#copy").addEventListener("click",async()=>{
+  const t=$("#out").textContent;
+  try{await navigator.clipboard.writeText(t);$("#copied").textContent="已複製";}catch(_){const r=document.createRange();r.selectNodeContents($("#out"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);$("#copied").textContent="請按 Cmd+C 複製（已選取）";}
+});
+/* 滑過提示 */
+const tip=$("#tip");
+document.addEventListener("pointermove",e=>{
+  const t=e.target.closest&&e.target.closest("[data-tip]");
+  if(!t){tip.style.display="none";return;}
+  tip.textContent=t.dataset.tip;tip.style.display="block";
+  tip.style.left=Math.min(e.clientX+12,innerWidth-tip.offsetWidth-8)+"px";tip.style.top=(e.clientY+14)+"px";
+});
+/* 網址參數：#s2／#s3 選資料、#phone 手機寬度、#nowhy 不顯示原因（方便檢查） */
+(function(){
+  const h=location.hash;
+  const m=h.match(/s[123]/);if(m)state.set=m[0];
+  if(h.includes("phone")){document.body.classList.add("phone");$("#phone").checked=true;}
+  if(h.includes("nowhy")){state.why=false;$("#why").checked=false;}
+  document.querySelectorAll("[data-set]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.set===state.set));
+})();
+render();
+</script>
+</body>
+</html>

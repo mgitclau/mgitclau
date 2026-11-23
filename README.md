@@ -58,3 +58,4 @@ GitHub Pages：https://mgitclau.github.io/mgitclau/
 | AI 筆電選購助手 · 回覆改版階梯（以上一版為底，往右每步只多改一件事：大機身圖、白底細框、三級字、明細收起、追問一行行；學自 ChatGPT／Perplexity 購物回覆；可選停在哪一步、每步寫備註並複製） | https://mgitclau.github.io/mgitclau/laptop-reply-steps-demo.html | 2026-11-21 |
 | AI 筆電選購助手 · 展示間（用戶端整套外觀設計稿：深色底＋亮色便條與展台，「你說過的話」螢光線連動全畫面；歡迎頁／對話與結果／更多卡片／調整比重 4 個可操作畫面，附顏色對比表與 12 項可用性檢查） | https://mgitclau.github.io/mgitclau/laptop-style-showroom.html | 2026-11-22 |
 | AI 筆電選購助手 · 儀器（用戶端整套外觀設計稿，風格取自 teenage engineering：細體字、一個橘、七段數字讀數、調音台式權重推桿；底色可切換深色底與淺 A 深色卡、淺 B 白卡黑邊、淺 C 灰卡；歡迎頁／對話與結果／更多卡片／調整比重 4 個可操作畫面，附對照表、顏色對比表、四種底色的自動檢查與 12 項可用性檢查） | https://mgitclau.github.io/mgitclau/laptop-style-instrument.html | 2026-11-22 |
+| AI 筆電選購助手 · 權重變化卡 7 種畫法 Demo（現況問題對照＋A 增減條／B 啞鈴圖／C 前後雙欄／D 占比堆疊條／E 文字大標籤／F 唯讀滑桿／A＋E 合併；3 組資料、可切手機寬度、可勾選並複製我選的） | https://mgitclau.github.io/mgitclau/laptop-weight-change-card-demo.html | 2026-11-23 |
