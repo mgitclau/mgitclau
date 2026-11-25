@@ -140,7 +140,7 @@ h2 small{font:400 13px var(--sans);color:var(--ink-3);margin-left:8px;letter-spa
 <h2>兩件事等你決定</h2>
 <div class="card ask">
   <div><i>1</i><p style="margin:0"><b>頻率要顯示「該處理器自己的」還是「同款核顯的代表值」？</b><span>同一個 Arc 140T，Ultra 7 255H 是 2.25GHz、Ultra 9 285H 是 2.35GHz。系統實作時可以每顆處理器各存一筆（處理器與核顯一對一），顯示就是各自的準確值。</span></p></div>
-  <div><i>2</i><p style="margin:0"><b>NVIDIA Blackwell RTX（N1X）有兩種規格</b><span>48SM（6144 核）和 40SM（5120 核），資料庫只寫處理器名 RTX Spark N1X，分不出是哪種，表中先標「待定」。</span></p></div>
+  <div><i>2</i><p style="margin:0"><b>NVIDIA Blackwell RTX（N1X）有兩種規格</b><span>48SM（6144 核）和 40SM（5120 核），命名為 N1X(6144 Blackwell)／N1X(5120 Blackwell)。資料庫兩台都是 20 核 CPU 的版本，所以都是 N1X(6144 Blackwell)。</span></p></div>
 </div>
 
 <h2>我選的</h2>
@@ -216,7 +216,7 @@ const R = [
 {v:'AMD',full:'AMD Radeon 680M 12CU 2.4GHz',n:1,cpu:'Ryzen 7 6850HS(1)',series:'Radeon 680M',core:'12CU',freq:'2.4GHz'},
 {v:'AMD',g:1,full:'AMD Radeon Graphics（Vega 6）6CU 2.0GHz',n:1,cpu:'Ryzen 5 7530U(1)；依 TechPowerUp 採 Vega 6（AMD 官方頁寫 7 核）',series:'Vega 6',core:'6CU',freq:'2.0GHz',red:1,est:1},
 /* ---- 其他 ---- */
-{v:'其他',full:'NVIDIA Blackwell RTX GPU（48SM／40SM 待定）',n:2,cpu:'RTX Spark N1X(2)；有 6144 核與 5120 核兩種，資料庫分不出',series:'Blackwell RTX',core:'',freq:'',est:1,p1:'Blackwell RTX(待定)',p2:'Blackwell RTX 待定',p3a:'Blackwell RTX',p3b:'48SM／40SM 待定'},
+{v:'其他',full:'NVIDIA Blackwell RTX GPU 6144 核（48SM）',n:2,cpu:'RTX Spark N1X(2)；兩台都是 20 核 CPU 版＝6144 核（40SM 5120 核版命名為 N1X(5120 Blackwell)）',series:'N1X',core:'6144 Blackwell',freq:'',p1:'N1X(6144 Blackwell)',p2:'N1X 6144 Blackwell',p3a:'N1X',p3b:'6144 Blackwell'},
 {v:'其他',full:'Qualcomm Adreno X1-45 1.7TFLOPS',n:1,cpu:'Snapdragon X X1-26-100(1)；高通不公布核心數，TFLOPS 各家說法 1.7–2.3',series:'Adreno X1-45',core:'',freq:'1.7TFLOPS',est:1},
 {v:'其他',full:'Qualcomm Adreno X2-90 7TFLOPS',n:1,cpu:'Snapdragon X2 Elite X2E-88-100(1)；TFLOPS 各家說法 5.2–7',series:'Adreno X2-90',core:'',freq:'7TFLOPS',est:1}
 ];
