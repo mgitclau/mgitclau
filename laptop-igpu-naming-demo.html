@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>核顯名稱整理（候選池顯示名 3 方案）</title>
+<style>
+:root{
+  --ground:#C6CDDC;--ground-2:#BAC3D5;--panel:#EDF0F5;--card:#fff;--group:#EBEEF4;--inner:#F2F4F8;
+  --ink:#12151C;--ink-2:#454C5D;--ink-3:#5A6174;--edge:#2A2F3A;--line:#D7DCE6;--line-2:#E4E8EF;
+  --accent:#2340C4;--signal:#F0602A;--signal-ink:#A8401A;--warn-soft:#FBEFD9;--warn-ink:#8A5208;--bad:#AE3626;--bad-soft:#F8E4E0;
+  --sh-card:0 1px 2px rgba(22,30,52,.05),0 12px 32px -10px rgba(22,30,52,.16);
+  --sh-panel:0 30px 60px -30px rgba(30,40,70,.35);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"PingFang TC","Noto Sans TC",monospace;
+  --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16 16 8M9 8h7v7'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;font:14px/1.55 var(--sans);color:var(--ink);background:radial-gradient(1200px 700px at 80% -10%,#D3D9E6 0%,transparent 60%),linear-gradient(180deg,var(--ground),var(--ground-2));background-attachment:fixed;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.page{max-width:1180px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border-radius:30px;box-shadow:var(--sh-panel);padding:28px 28px 32px}
+.eyebrow{display:flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--signal);flex:none}
+h1{font:600 28px/1.2 var(--display);letter-spacing:-.025em;margin:10px 0 8px}
+h2{font:600 17px/1.3 var(--display);letter-spacing:-.01em;margin:28px 0 12px}
+.lead{color:var(--ink-2);margin:0;max-width:70ch}
+.card{background:var(--card);border-radius:22px;box-shadow:var(--sh-card);padding:16px 20px}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:18px}
+.how .card{padding:14px 18px}
+.how b{display:block;font-weight:600;margin-bottom:2px}
+.how span{color:var(--ink-3);font-size:13px}
+.how code{font:500 12.5px var(--mono);background:var(--group);padding:1px 6px;border-radius:6px;color:var(--ink)}
+
+/* 工具列 */
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:22px 0 12px}
+.bar .grp{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar .lab{font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.chip{display:inline-flex;align-items:center;min-height:34px;padding:0 15px;border-radius:999px;background:var(--card);border:1.3px solid var(--edge);font-weight:500;font-size:13px;transition:background .15s,color .15s}
+.chip:hover{background:var(--group)}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.chk input{width:17px;height:17px;accent-color:var(--ink)}
+
+/* 表格 */
+.wrap{background:var(--card);border-radius:22px;box-shadow:var(--sh-card);overflow:auto;max-height:74vh}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;min-width:900px}
+thead th{position:sticky;top:0;z-index:2;background:var(--card);text-align:left;vertical-align:top;padding:14px 14px 12px;border-bottom:1.3px solid var(--edge)}
+thead th .t{font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+thead th label{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px;cursor:pointer}
+thead th input{width:17px;height:17px;accent-color:var(--ink);margin:0}
+thead th .d{font-weight:400;color:var(--ink-3);font-size:12.5px;margin-top:3px}
+thead th .avg{font:500 11.5px var(--mono);color:var(--signal-ink);margin-top:6px}
+thead th.pick{background:#F4F6FB}
+td{padding:11px 14px;border-top:1px solid var(--line-2);vertical-align:top}
+tr.g td{background:var(--group);border-top:0;padding:9px 14px;font:500 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+td.full b{font-weight:600}
+td.full .m{display:block;margin-top:3px;color:var(--ink-3);font-size:12px;line-height:1.45}
+td.full .n{font:500 11.5px var(--mono);color:var(--signal-ink)}
+.est{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--warn-soft);color:var(--warn-ink);font:600 11px/1.6 var(--mono);vertical-align:1px}
+td.p{font-family:var(--mono);font-size:13px;white-space:nowrap}
+td.p.pickcol{background:#F9FAFD}
+.pcw{max-width:var(--w,none)}
+.pc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc.sub{color:var(--ink-3);font-size:11.5px;margin-top:2px}
+.pc .len{margin-left:8px;color:#9AA2B3;font-size:10.5px}
+.pc.cut{color:var(--bad)}
+.narrow-on td.p .pcw{background:var(--inner);border-radius:10px;padding:6px 10px}
+.hide{display:none}
+
+/* 待決與備註 */
+.ask{display:grid;gap:10px}
+.ask div{display:flex;gap:12px;align-items:flex-start}
+.ask i{flex:none;margin-top:2px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font:600 12px/22px var(--mono);text-align:center;font-style:normal}
+.ask b{font-weight:600}
+.ask span{display:block;color:var(--ink-3);font-size:13px}
+.note{width:100%;min-height:76px;border:1.3px solid var(--line);border-radius:14px;background:var(--card);padding:10px 14px;resize:vertical}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.primary{display:inline-flex;align-items:center;gap:10px;min-height:42px;padding:0 8px 0 20px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;box-shadow:0 6px 16px -6px rgba(18,21,28,.55)}
+.primary::after{content:"";width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14) var(--arrow) no-repeat center/14px}
+.primary:hover{background:#2C3343}
+.small{color:var(--ink-3);font-size:12.5px}
+.src{font-size:12.5px;color:var(--ink-3);columns:2 320px;column-gap:28px;margin:0;padding-left:18px}
+.src a{color:var(--accent)}
+@media (max-width:700px){.panel{padding:20px 16px 24px;border-radius:24px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="page"><div class="panel">
+
+<div class="eyebrow">核顯名稱整理 · 候選池顯示名</div>
+<h1>核顯名稱：一欄完整規格，三種顯示做法</h1>
+<p class="lead">資料庫共 721 台、29 種核顯原名，拆開泛稱後共 <b id="total-rows">43</b> 種規格。第 1 欄是完整名稱加關鍵參數（核心數、頻率），後面三欄是候選池要顯示的三種寫法，品牌（Intel／AMD／NVIDIA／Qualcomm）一律去掉。</p>
+
+<div class="how">
+  <div class="card"><b>方案 1　型號（核心數）</b><span>最短。有型號用括號：<code>Arc B370(10Xe)</code>；泛稱直接接核心數：<code>UHD 48EU</code>。</span></div>
+  <div class="card"><b>方案 2　一行寫滿</b><span>去掉品牌的完整名稱：<code>Arc B390 12Xe3 2.5GHz</code>。資訊最全，但最長。</span></div>
+  <div class="card"><b>方案 3　兩行（主名＋小字參數）</b><span>主行只放型號，參數放第二行小灰字，單行不會變長。</span></div>
+</div>
+
+<div class="bar">
+  <div class="grp"><span class="lab">廠牌</span>
+    <button class="chip" data-v="all" aria-pressed="true">全部</button>
+    <button class="chip" data-v="Intel" aria-pressed="false">Intel</button>
+    <button class="chip" data-v="AMD" aria-pressed="false">AMD</button>
+    <button class="chip" data-v="其他" aria-pressed="false">其他</button>
+  </div>
+  <label class="chk"><input type="checkbox" id="onlyG"> 只看泛稱（原名沒有型號編號的）</label>
+  <div class="grp"><span class="lab">模擬候選池卡片寬度</span>
+    <button class="chip" data-w="0" aria-pressed="true">不限</button>
+    <button class="chip" data-w="170" aria-pressed="false">170px</button>
+    <button class="chip" data-w="130" aria-pressed="false">130px</button>
+  </div>
+</div>
+
+<div class="wrap"><table id="tbl">
+  <thead><tr>
+    <th style="width:34%"><div class="t">1 · 完整名稱＋關鍵參數</div><div class="d">台數、代表處理器寫在名稱下方</div></th>
+    <th class="pk" data-p="1"><label><input type="radio" name="pick" value="1">方案 1　型號(核心)</label><div class="d">最短</div><div class="avg" id="avg1"></div></th>
+    <th class="pk" data-p="2"><label><input type="radio" name="pick" value="2">方案 2　一行寫滿</label><div class="d">去品牌的完整名稱</div><div class="avg" id="avg2"></div></th>
+    <th class="pk" data-p="3"><label><input type="radio" name="pick" value="3">方案 3　兩行</label><div class="d">主名＋小字參數</div><div class="avg" id="avg3"></div></th>
+  </tr></thead>
+  <tbody id="body"></tbody>
+</table></div>
+<p class="small" style="margin:10px 4px 0"><span class="est">≈</span> 表示該列的核心數或頻率來源不一，或我沒有查到官方資料，需要再確認。每列的頻率取「台數最多的處理器」；同一核顯在不同處理器上頻率略有差異，範圍寫在名稱下方。紅字代表在所選寬度下會被截斷。</p>
+
+<h2>三件事等你決定</h2>
+<div class="card ask">
+  <div><i>1</i><p style="margin:0"><b>Intel Graphics 去掉品牌後只剩「Graphics」</b><span>表中暫寫成 <code style="font:500 12px var(--mono)">Graphics 4Xe</code>（方案 1）。如果你有更好的叫法，我統一改。</span></p></div>
+  <div><i>2</i><p style="margin:0"><b>頻率要顯示「該處理器自己的」還是「同款核顯的代表值」？</b><span>同一個 Arc 140T，Ultra 7 255H 是 2.25GHz、Ultra 9 285H 是 2.35GHz。系統實作時可以每顆處理器各存一筆（處理器與核顯一對一），顯示就是各自的準確值。</span></p></div>
+  <div><i>3</i><p style="margin:0"><b>NVIDIA Blackwell RTX（N1X）有兩種規格</b><span>48SM（6144 核）和 40SM（5120 核），資料庫只寫處理器名 RTX Spark N1X，分不出是哪種，表中先標「待定」。</span></p></div>
+</div>
+
+<h2>我選的</h2>
+<div class="card">
+  <textarea class="note" id="note" placeholder="想法、要改的地方（選好方案後可在這裡補充，會自動暫存在這個瀏覽器）"></textarea>
+  <div class="row"><button class="primary" id="copy">複製我選的</button><span class="small" id="copied" aria-live="polite"></span></div>
+</div>
+
+<h2>資料來源</h2>
+<ul class="src">
+  <li><a href="https://www.intel.com/content/www/us/en/products/sku/245532/intel-core-ultra-7-processor-356h-18m-cache-up-to-4-70-ghz/specifications.html">Intel 356H 規格</a></li>
+  <li><a href="https://www.intel.com/content/www/us/en/products/sku/246127/intel-core-5-processor-315-6m-cache-up-to-4-40-ghz/specifications.html">Intel Core 5 315 規格</a></li>
+  <li><a href="https://www.intel.com/content/www/us/en/products/sku/245960/intel-core-ultra-9-processor-290hx-plus-36m-cache-up-to-5-50-ghz/specifications.html">Intel 290HX Plus 規格</a></li>
+  <li><a href="https://www.intel.com/content/www/us/en/products/sku/245961/intel-core-ultra-7-processor-270hx-plus-30m-cache-up-to-5-30-ghz/specifications.html">Intel 270HX Plus 規格</a></li>
+  <li><a href="https://www.notebookcheck.net/Intel-Arc-B390-12-Xe3-Panther-Lake-iGPU-Benchmarks-and-Specs.1169503.0.html">Notebookcheck Arc B390</a></li>
+  <li><a href="https://www.notebookcheck.net/Intel-Core-7-245HX-Processor-Benchmarks-and-Specs.1273325.0.html">Notebookcheck Core 7 245HX</a></li>
+  <li><a href="https://www.notebookcheck.net/Intel-Core-i7-13620H-Processor-Benchmarks-and-Specs.677505.0.html">Notebookcheck i7-13620H</a></li>
+  <li><a href="https://videocardz.com/newz/intel-lists-core-7-230h-and-core-5-205h-with-disabled-graphics">VideoCardz 205H 核顯停用</a></li>
+  <li><a href="https://videocardz.com/newz/intel-launches-core-ultra-7-251hx-arrow-lake-mobile-sku-with-18-cpu-cores-and-3-xe-cores">VideoCardz 251HX</a></li>
+  <li><a href="https://videocardz.com/newz/intel-launches-core-ultra-100-meteor-lake-series-up-to-16-cpu-cores-arc-gpu-with-8-xe-core-and-improved-ai-performance">VideoCardz Meteor Lake</a></li>
+  <li><a href="https://videocardz.com/newz/amd-ryzen-ai-max-pro-400-launches-in-third-quarter-only-max-495-gets-updated-radeon-8065s-graphics">VideoCardz Radeon 8065S</a></li>
+  <li><a href="https://videocardz.com/newz/nvidia-confirms-rtx-spark-n1x-6144-and-5120-cuda-core-specs-launching-next-month">VideoCardz N1X</a></li>
+  <li><a href="https://specraptor.com/gpu/intel-arc-130t">Specraptor Arc 130T</a></li>
+  <li><a href="https://www.cpu-monkey.com/en/igpu-qualcomm_adreno_x2_90">CPU-Monkey Adreno X2-90</a></li>
+</ul>
+
+</div></div>
+
+<script>
+/* 每列：v 廠牌、full 完整名稱＋關鍵參數、n 台數、cpu 代表處理器、series 去品牌型號、core 核心數、freq 頻率、
+   g 泛稱（原名沒有型號編號）、red 型號已含核心數（Vega）、est 參數待確認、p1/p2/p3a/p3b 手動覆寫 */
+const R = [
+/* ---- Intel：有型號 ---- */
+{v:'Intel',full:'Intel Arc B390 12Xe3 2.5GHz',n:56,cpu:'Core Ultra X7 358H(32)、X9 388H(18)、X9 378H(5)、X7 368H(1)',series:'Arc B390',core:'12Xe3',freq:'2.5GHz'},
+{v:'Intel',full:'Intel Arc B370 10Xe3 2.4GHz',n:18,cpu:'Core Ultra 5 338H(18)',series:'Arc B370',core:'10Xe3',freq:'2.4GHz'},
+{v:'Intel',full:'Intel Arc 140T 8Xe 2.25GHz',n:38,cpu:'Core Ultra 7 255H(20)、Ultra 9 285H(17)、Ultra 7 265H(1)；頻率 2.25–2.35GHz 依處理器',series:'Arc 140T',core:'8Xe',freq:'2.25GHz'},
+{v:'Intel',full:'Intel Arc 130T 7Xe 2.2GHz',n:22,cpu:'Core Ultra 5 225H(22)',series:'Arc 130T',core:'7Xe',freq:'2.2GHz'},
+{v:'Intel',full:'Intel Arc 140V 8Xe2 2.0GHz',n:27,cpu:'Core Ultra 7 258V(12)、256V(10)、Ultra 9 288V(4)、Ultra 7 266V(1)；頻率 2.0–2.05GHz 依處理器',series:'Arc 140V',core:'8Xe2',freq:'2.0GHz',est:1},
+{v:'Intel',full:'Intel Arc 130V 7Xe2 1.85GHz',n:21,cpu:'Core Ultra 5 228V(11)、226V(10)',series:'Arc 130V',core:'7Xe2',freq:'1.85GHz'},
+{v:'Intel',full:'Intel UHD Graphics 600 12EU 0.75GHz',n:4,cpu:'Celeron J4105(3)、J4125(1)',series:'UHD 600',core:'12EU',freq:'0.75GHz',est:1},
+{v:'Intel',full:'Intel UHD Graphics 620 24EU 1.1GHz',n:1,cpu:'Core i5-8265U(1)',series:'UHD 620',core:'24EU',freq:'1.1GHz',est:1},
+{v:'Intel',full:'Intel Iris Xe Graphics 96EU 1.5GHz',n:2,cpu:'Core i9-13900H(1)、i9-13900HK(1)',series:'Iris Xe',core:'96EU',freq:'1.5GHz',est:1},
+/* ---- Intel：泛稱 ---- */
+{v:'Intel',g:1,full:'Intel Arc Graphics 8Xe 2.2GHz',n:15,cpu:'Core Ultra 5 135H(9)、Ultra 9 185H(3)、Ultra 7 155H(2)、Ultra 7 165H(1)；頻率 2.2–2.35GHz；135H 的 8Xe 各家說法不一',series:'Arc',core:'8Xe',freq:'2.2GHz',est:1},
+{v:'Intel',g:1,full:'Intel Arc Graphics 7Xe 2.2GHz',n:5,cpu:'Core Ultra 5 125H(5)',series:'Arc',core:'7Xe',freq:'2.2GHz'},
+{v:'Intel',g:1,full:'Intel UHD Graphics 32EU 1.65GHz',n:38,cpu:'Core i9-14900HX(14)、i9-13900HX(9)、i7-14650HX(9)、i7-14700HX(6)；頻率約 1.55–1.65GHz',series:'UHD',core:'32EU',freq:'1.65GHz',est:1},
+{v:'Intel',g:1,full:'Intel UHD Graphics 48EU 1.4GHz',n:17,cpu:'Core i5-13420H(15)、i5-12450H(2)',series:'UHD',core:'48EU',freq:'1.4GHz'},
+{v:'Intel',g:1,full:'Intel UHD Graphics 16EU 1.5GHz',n:12,cpu:'Core i5-14450HX(8)、i7-13650HX(2)、i7-13645HX(2)；13645HX 的 EU 數推測同 13650HX',series:'UHD',core:'16EU',freq:'1.5GHz',est:1},
+{v:'Intel',g:1,full:'Intel UHD Graphics 64EU 1.5GHz',n:2,cpu:'Core i7-13620H(2)',series:'UHD',core:'64EU',freq:'1.5GHz'},
+{v:'Intel',g:1,full:'Intel UHD Graphics 24EU 0.75GHz',n:1,cpu:'Intel N100(1)',series:'UHD',core:'24EU',freq:'0.75GHz',est:1},
+{v:'Intel',g:1,full:'Intel Graphics 4Xe3 2.45GHz',n:110,cpu:'Core Ultra 7 356H(47)、Ultra 5 336H(27)、Ultra 9 386H(22)、Ultra 5 325(10)、Ultra 7 355(3)、Ultra 5 336(1)；頻率 2.3–2.5GHz 依處理器',series:'Graphics',core:'4Xe3',freq:'2.45GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 4Xe 2.0GHz',n:63,cpu:'Core Ultra 9 290HX Plus(33)、Ultra 7 255HX(16)、Ultra 9 275HX(7)、Ultra 7 270HX Plus(7)；頻率 1.85–2.0GHz',series:'Graphics',core:'4Xe',freq:'2.0GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 3Xe 1.8GHz',n:26,cpu:'Core Ultra 7 251HX(24)、Core 7 245HX(2)',series:'Graphics',core:'3Xe',freq:'1.8GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 2Xe3 2.5GHz',n:21,cpu:'Core 5 320(13)、Core 5 315(5)、Core 7 350(3)；頻率 2.3–2.6GHz 依處理器',series:'Graphics',core:'2Xe3',freq:'2.5GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 48EU 1.4GHz',n:8,cpu:'Core 5 210H(8)',series:'Graphics',core:'48EU',freq:'1.4GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 64EU 1.5GHz',n:6,cpu:'Core 7 240H(6)',series:'Graphics',core:'64EU',freq:'1.5GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 80EU（頻率待查）',n:4,cpu:'Core 5 220H(3)、Core 5 120U(1)；120U 為 1.25GHz，220H 沒查到',series:'Graphics',core:'80EU',freq:'',est:1},
+{v:'Intel',g:1,full:'Intel Graphics 96EU 1.55GHz',n:1,cpu:'Core 9 270H(1)',series:'Graphics',core:'96EU',freq:'1.55GHz'},
+{v:'Intel',g:1,full:'Intel Graphics（核顯已停用）',n:2,cpu:'Core 5 205H(2)；Intel 官方標示 Integrated graphics disabled',series:'無核顯',core:'',freq:'',p1:'無核顯',p2:'無核顯',p3a:'無核顯',p3b:''},
+{v:'Intel',g:1,full:'Intel Graphics（核心數待查）',n:2,cpu:'Core 7 250H(2)；Raptor Lake-H 系，沒查到核心數',series:'Graphics',core:'',freq:'',est:1,p1:'Graphics（待查）',p2:'Graphics（待查）',p3a:'Graphics',p3b:'待查'},
+/* ---- AMD ---- */
+{v:'AMD',full:'AMD Radeon 610M 2CU 2.2GHz',n:64,cpu:'Ryzen 9 9955HX(22)、9 8945HX(14)、7 8745HX(7)、9 8940HX(6)、9 9955HX3D(6)、9 9850HX(5)、9 7845HX(2)、7 7745HX(2)',series:'Radeon 610M',core:'2CU',freq:'2.2GHz'},
+{v:'AMD',full:'AMD Radeon 780M 12CU 2.7GHz',n:53,cpu:'Ryzen 7 H 255(37)、9 H 270(4)、7 H 260(3)、7 H 253(2)、7 8745HS(2)、7 8845H(2)、8840HS(2)、7 8845HS(1)；各家頻率 2.7–3.0GHz',series:'Radeon 780M',core:'12CU',freq:'2.7GHz',est:1},
+{v:'AMD',full:'AMD Radeon 860M 8CU 3.0GHz',n:19,cpu:'Ryzen 7 450(6)、AI 7 350(6)、AI 7 450(4)、7 H 449(2)、AI 7 H 450(1)；各家頻率 2.9–3.1GHz',series:'Radeon 860M',core:'8CU',freq:'3.0GHz',est:1},
+{v:'AMD',full:'AMD Radeon 880M 12CU 2.9GHz',n:13,cpu:'Ryzen AI 9 H 465(10)、AI 9 H 365(3)；各家頻率 2.9–3.2GHz',series:'Radeon 880M',core:'12CU',freq:'2.9GHz',est:1},
+{v:'AMD',full:'AMD Radeon 840M 4CU 2.9GHz',n:12,cpu:'Ryzen AI 7 445(8)、AI 5 430(2)、AI 5 330(1)、AI 5 H 430(1)',series:'Radeon 840M',core:'4CU',freq:'2.9GHz',est:1},
+{v:'AMD',full:'AMD Radeon 8060S 40CU 2.9GHz',n:11,cpu:'Ryzen AI Max+ 395(7)、392(2)、388(2)',series:'Radeon 8060S',core:'40CU',freq:'2.9GHz'},
+{v:'AMD',full:'AMD Radeon 890M 16CU 2.9GHz',n:6,cpu:'Ryzen AI 9 HX 470(5)、HX 475(1)',series:'Radeon 890M',core:'16CU',freq:'2.9GHz'},
+{v:'AMD',full:'AMD Radeon 740M 4CU 2.5GHz',n:5,cpu:'Ryzen 5 220(3)、5 216(2)',series:'Radeon 740M',core:'4CU',freq:'2.5GHz'},
+{v:'AMD',full:'AMD Radeon Vega 10 10CU 1.4GHz',n:3,cpu:'Ryzen 3700U(2)、7 3700U(1)',series:'Vega 10',core:'10CU',freq:'1.4GHz',red:1},
+{v:'AMD',full:'AMD Radeon 660M 6CU 1.9GHz',n:3,cpu:'Ryzen 5 150(1)、5 7535U(1)、5 6600U(1)',series:'Radeon 660M',core:'6CU',freq:'1.9GHz'},
+{v:'AMD',full:'AMD Radeon 8065S 40CU 3.0GHz',n:2,cpu:'Ryzen AI Max+ 495(2)',series:'Radeon 8065S',core:'40CU',freq:'3.0GHz'},
+{v:'AMD',full:'AMD Radeon Vega 8 8CU 2.0GHz',n:2,cpu:'Ryzen 7 7730U(2)',series:'Vega 8',core:'8CU',freq:'2.0GHz',red:1,est:1},
+{v:'AMD',full:'AMD Radeon 680M 12CU 2.4GHz',n:1,cpu:'Ryzen 7 6850HS(1)',series:'Radeon 680M',core:'12CU',freq:'2.4GHz'},
+{v:'AMD',g:1,full:'AMD Radeon Graphics 7CU 2.0GHz',n:1,cpu:'Ryzen 5 7530U(1)',series:'Radeon',core:'7CU',freq:'2.0GHz',est:1},
+/* ---- 其他 ---- */
+{v:'其他',full:'NVIDIA Blackwell RTX GPU（48SM／40SM 待定）',n:2,cpu:'RTX Spark N1X(2)；有 6144 核與 5120 核兩種，資料庫分不出',series:'Blackwell RTX',core:'',freq:'',est:1,p1:'Blackwell RTX(待定)',p2:'Blackwell RTX 待定',p3a:'Blackwell RTX',p3b:'48SM／40SM 待定'},
+{v:'其他',full:'Qualcomm Adreno X1-45 1.7TFLOPS',n:1,cpu:'Snapdragon X X1-26-100(1)；高通不公布核心數，TFLOPS 各家說法 1.7–2.3',series:'Adreno X1-45',core:'',freq:'1.7TFLOPS',est:1},
+{v:'其他',full:'Qualcomm Adreno X2-90 7TFLOPS',n:1,cpu:'Snapdragon X2 Elite X2E-88-100(1)；TFLOPS 各家說法 5.2–7',series:'Adreno X2-90',core:'',freq:'7TFLOPS',est:1}
+];
+
+const $ = s => document.querySelector(s);
+const len = s => [...s].length;
+const short = c => c.replace(/Xe\d/,'Xe');
+function derive(r){
+  const cs = r.core ? short(r.core) : '';
+  const p1 = r.p1 ?? (r.g ? [r.series, cs].filter(Boolean).join(' ') : (cs && !r.red ? `${r.series}(${cs})` : r.series));
+  const p2 = r.p2 ?? [r.series, r.red ? '' : r.core, r.freq].filter(Boolean).join(' ');
+  const p3a = r.p3a ?? r.series;
+  const p3b = r.p3b ?? [r.red ? '' : r.core, r.freq].filter(Boolean).join(' · ');
+  return {p1,p2,p3a,p3b};
+}
+const D = R.map(r => Object.assign({}, r, derive(r)));
+$('#total-rows').textContent = D.length;
+
+let vf = 'all', onlyG = false, wpx = 0, pick = '';
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+function render(){
+  const rows = D.filter(r => (vf==='all' || r.v===vf) && (!onlyG || r.g));
+  let html = '', last = '';
+  for (const r of rows){
+    if (r.v !== last){
+      const grp = rows.filter(x=>x.v===r.v);
+      html += `<tr class="g"><td colspan="4">${r.v} · ${grp.length} 種規格 · ${grp.reduce((a,b)=>a+b.n,0)} 台</td></tr>`;
+      last = r.v;
+    }
+    const pc = (t,cls='') => `<span class="pc ${cls}">${esc(t)}${cls===''?`<span class="len">${len(t)}</span>`:''}</span>`;
+    html += `<tr>
+      <td class="full"><b>${esc(r.full)}</b>${r.est?'<span class="est" title="核心數或頻率來源不一／未查到官方資料">≈</span>':''}
+        <span class="m"><span class="n">${r.n} 台</span> · ${esc(r.cpu)}</span></td>
+      <td class="p ${pick==='1'?'pickcol':''}"><div class="pcw">${pc(r.p1)}</div></td>
+      <td class="p ${pick==='2'?'pickcol':''}"><div class="pcw">${pc(r.p2)}</div></td>
+      <td class="p ${pick==='3'?'pickcol':''}"><div class="pcw">${pc(r.p3a)}${r.p3b?pc(r.p3b,'sub'):''}</div></td>
+    </tr>`;
+  }
+  $('#body').innerHTML = html;
+  $('#tbl').style.setProperty('--w', wpx ? wpx+'px' : 'none');
+  document.body.classList.toggle('narrow-on', !!wpx);
+  stats(rows);
+}
+
+function stats(rows){
+  const avg = a => a.length ? (a.reduce((x,y)=>x+y,0)/a.length).toFixed(1) : '0';
+  const cells = [...document.querySelectorAll('#body tr:not(.g)')];
+  let cut = [0,0,0];
+  if (wpx){
+    cells.forEach(tr=>{
+      [...tr.querySelectorAll('td.p')].forEach((td,i)=>{
+        let bad=false;
+        td.querySelectorAll('.pc').forEach(el=>{ if (el.scrollWidth > el.clientWidth+1){ el.classList.add('cut'); bad=true; } });
+        if (bad) cut[i]++;
+      });
+    });
+  }
+  const tail = i => wpx ? `　·　截斷 ${cut[i]}／${rows.length}` : '';
+  $('#avg1').textContent = `平均 ${avg(rows.map(r=>len(r.p1)))} 字${tail(0)}`;
+  $('#avg2').textContent = `平均 ${avg(rows.map(r=>len(r.p2)))} 字${tail(1)}`;
+  $('#avg3').textContent = `主行平均 ${avg(rows.map(r=>len(r.p3a)))} 字${tail(2)}`;
+}
+
+document.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{
+  vf=b.dataset.v; document.querySelectorAll('[data-v]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render();
+}));
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+  wpx=+b.dataset.w; document.querySelectorAll('[data-w]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render();
+}));
+$('#onlyG').addEventListener('change',e=>{onlyG=e.target.checked;render();});
+document.querySelectorAll('input[name=pick]').forEach(i=>i.addEventListener('change',()=>{pick=i.value;save();render();markHead();}));
+function markHead(){document.querySelectorAll('th.pk').forEach(th=>th.classList.toggle('pick',th.dataset.p===pick));}
+
+function save(){ try{ localStorage.setItem('igpu-demo',JSON.stringify({pick,note:$('#note').value})); }catch(e){} }
+function load(){ try{ const s=JSON.parse(localStorage.getItem('igpu-demo')||'{}'); pick=s.pick||''; $('#note').value=s.note||''; if(pick){const el=document.querySelector(`input[name=pick][value="${pick}"]`); if(el) el.checked=true;} }catch(e){} }
+$('#note').addEventListener('input',save);
+$('#copy').addEventListener('click',async()=>{
+  const names={'1':'方案 1　型號(核心)','2':'方案 2　一行寫滿','3':'方案 3　兩行'};
+  const txt = `核顯顯示名：${pick?names[pick]:'（還沒選）'}\n備註：${$('#note').value||'（無）'}`;
+  try{ await navigator.clipboard.writeText(txt); $('#copied').textContent='已複製'; }
+  catch(e){ const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); try{document.execCommand('copy');$('#copied').textContent='已複製';}catch(_){ $('#copied').textContent='複製失敗，請手動選取'; } t.remove(); }
+  setTimeout(()=>$('#copied').textContent='',2200);
+});
+load(); render(); markHead();
+</script>
+</body>
+</html>
