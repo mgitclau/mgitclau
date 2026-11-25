@@ -35,7 +35,7 @@ h2{font:600 17px/1.3 var(--display);letter-spacing:-.01em;margin:28px 0 12px}
 .how .card{padding:14px 18px}
 .how b{display:block;font-weight:600;margin-bottom:2px}
 .how span{color:var(--ink-3);font-size:13px}
-.how code{font:500 12.5px var(--mono);background:var(--group);padding:1px 6px;border-radius:6px;color:var(--ink)}
+.how code{font:500 12.5px var(--mono);background:var(--group);padding:1px 6px;border-radius:6px;color:var(--ink);white-space:nowrap}
 
 /* 工具列 */
 .bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:22px 0 12px}
@@ -87,6 +87,11 @@ td.p.pickcol{background:#F9FAFD}
 .small{color:var(--ink-3);font-size:12.5px}
 .src{font-size:12.5px;color:var(--ink-3);columns:2 320px;column-gap:28px;margin:0;padding-left:18px}
 .src a{color:var(--accent)}
+h2 small{font:400 13px var(--sans);color:var(--ink-3);margin-left:8px;letter-spacing:0}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;background:var(--card);border-radius:14px;box-shadow:var(--sh-card);padding:10px 14px}
+.li .nm{font:500 13.5px var(--mono)}
+.li .ct{font:500 11.5px var(--mono);color:var(--signal-ink);white-space:nowrap}
 @media (max-width:700px){.panel{padding:20px 16px 24px;border-radius:24px}h1{font-size:23px}}
 </style>
 </head>
@@ -98,10 +103,13 @@ td.p.pickcol{background:#F9FAFD}
 <p class="lead">資料庫共 721 台、29 種核顯原名，拆開泛稱後共 <b id="total-rows">43</b> 種規格。第 1 欄是完整名稱加關鍵參數（核心數、頻率），後面三欄是候選池要顯示的三種寫法，品牌（Intel／AMD／NVIDIA／Qualcomm）一律去掉。</p>
 
 <div class="how">
-  <div class="card"><b>方案 1　型號（核心數）</b><span>最短。有型號用括號：<code>Arc B370(10Xe)</code>；泛稱直接接核心數：<code>UHD 48EU</code>。</span></div>
+  <div class="card"><b>方案 1　型號(核心數)・M 修訂版</b><span>Intel 一律加括號、核心數帶架構代：<code>Arc B390(12Xe3)</code>、<code>UHD(32EU)</code>、<code>Graphics(4Xe3)</code>；AMD 只寫型號：<code>Radeon 780M</code>。</span></div>
   <div class="card"><b>方案 2　一行寫滿</b><span>去掉品牌的完整名稱：<code>Arc B390 12Xe3 2.5GHz</code>。資訊最全，但最長。</span></div>
   <div class="card"><b>方案 3　兩行（主名＋小字參數）</b><span>主行只放型號，參數放第二行小灰字，單行不會變長。</span></div>
 </div>
+
+<h2>方案 1 新清單 <small>依台數排序，共 <span id="list-n"></span> 種</small></h2>
+<div class="list" id="list"></div>
 
 <div class="bar">
   <div class="grp"><span class="lab">廠牌</span>
@@ -121,7 +129,7 @@ td.p.pickcol{background:#F9FAFD}
 <div class="wrap"><table id="tbl">
   <thead><tr>
     <th style="width:34%"><div class="t">1 · 完整名稱＋關鍵參數</div><div class="d">台數、代表處理器寫在名稱下方</div></th>
-    <th class="pk" data-p="1"><label><input type="radio" name="pick" value="1">方案 1　型號(核心)</label><div class="d">最短</div><div class="avg" id="avg1"></div></th>
+    <th class="pk" data-p="1"><label><input type="radio" name="pick" value="1">方案 1　型號(核心)</label><div class="d">M 修訂版</div><div class="avg" id="avg1"></div></th>
     <th class="pk" data-p="2"><label><input type="radio" name="pick" value="2">方案 2　一行寫滿</label><div class="d">去品牌的完整名稱</div><div class="avg" id="avg2"></div></th>
     <th class="pk" data-p="3"><label><input type="radio" name="pick" value="3">方案 3　兩行</label><div class="d">主名＋小字參數</div><div class="avg" id="avg3"></div></th>
   </tr></thead>
@@ -129,11 +137,10 @@ td.p.pickcol{background:#F9FAFD}
 </table></div>
 <p class="small" style="margin:10px 4px 0"><span class="est">≈</span> 表示該列的核心數或頻率來源不一，或我沒有查到官方資料，需要再確認。每列的頻率取「台數最多的處理器」；同一核顯在不同處理器上頻率略有差異，範圍寫在名稱下方。紅字代表在所選寬度下會被截斷。</p>
 
-<h2>三件事等你決定</h2>
+<h2>兩件事等你決定</h2>
 <div class="card ask">
-  <div><i>1</i><p style="margin:0"><b>Intel Graphics 去掉品牌後只剩「Graphics」</b><span>表中暫寫成 <code style="font:500 12px var(--mono)">Graphics 4Xe</code>（方案 1）。如果你有更好的叫法，我統一改。</span></p></div>
-  <div><i>2</i><p style="margin:0"><b>頻率要顯示「該處理器自己的」還是「同款核顯的代表值」？</b><span>同一個 Arc 140T，Ultra 7 255H 是 2.25GHz、Ultra 9 285H 是 2.35GHz。系統實作時可以每顆處理器各存一筆（處理器與核顯一對一），顯示就是各自的準確值。</span></p></div>
-  <div><i>3</i><p style="margin:0"><b>NVIDIA Blackwell RTX（N1X）有兩種規格</b><span>48SM（6144 核）和 40SM（5120 核），資料庫只寫處理器名 RTX Spark N1X，分不出是哪種，表中先標「待定」。</span></p></div>
+  <div><i>1</i><p style="margin:0"><b>頻率要顯示「該處理器自己的」還是「同款核顯的代表值」？</b><span>同一個 Arc 140T，Ultra 7 255H 是 2.25GHz、Ultra 9 285H 是 2.35GHz。系統實作時可以每顆處理器各存一筆（處理器與核顯一對一），顯示就是各自的準確值。</span></p></div>
+  <div><i>2</i><p style="margin:0"><b>NVIDIA Blackwell RTX（N1X）有兩種規格</b><span>48SM（6144 核）和 40SM（5120 核），資料庫只寫處理器名 RTX Spark N1X，分不出是哪種，表中先標「待定」。</span></p></div>
 </div>
 
 <h2>我選的</h2>
@@ -191,9 +198,8 @@ const R = [
 {v:'Intel',g:1,full:'Intel Graphics 48EU 1.4GHz',n:8,cpu:'Core 5 210H(8)',series:'Graphics',core:'48EU',freq:'1.4GHz'},
 {v:'Intel',g:1,full:'Intel Graphics 64EU 1.5GHz',n:6,cpu:'Core 7 240H(6)',series:'Graphics',core:'64EU',freq:'1.5GHz'},
 {v:'Intel',g:1,full:'Intel Graphics 80EU（頻率待查）',n:4,cpu:'Core 5 220H(3)、Core 5 120U(1)；120U 為 1.25GHz，220H 沒查到',series:'Graphics',core:'80EU',freq:'',est:1},
-{v:'Intel',g:1,full:'Intel Graphics 96EU 1.55GHz',n:1,cpu:'Core 9 270H(1)',series:'Graphics',core:'96EU',freq:'1.55GHz'},
+{v:'Intel',g:1,full:'Intel Graphics 96EU 1.55GHz',n:3,cpu:'Core 7 250H(2)、Core 9 270H(1)',series:'Graphics',core:'96EU',freq:'1.55GHz'},
 {v:'Intel',g:1,full:'Intel Graphics（核顯已停用）',n:2,cpu:'Core 5 205H(2)；Intel 官方標示 Integrated graphics disabled',series:'無核顯',core:'',freq:'',p1:'無核顯',p2:'無核顯',p3a:'無核顯',p3b:''},
-{v:'Intel',g:1,full:'Intel Graphics（核心數待查）',n:2,cpu:'Core 7 250H(2)；Raptor Lake-H 系，沒查到核心數',series:'Graphics',core:'',freq:'',est:1,p1:'Graphics（待查）',p2:'Graphics（待查）',p3a:'Graphics',p3b:'待查'},
 /* ---- AMD ---- */
 {v:'AMD',full:'AMD Radeon 610M 2CU 2.2GHz',n:64,cpu:'Ryzen 9 9955HX(22)、9 8945HX(14)、7 8745HX(7)、9 8940HX(6)、9 9955HX3D(6)、9 9850HX(5)、9 7845HX(2)、7 7745HX(2)',series:'Radeon 610M',core:'2CU',freq:'2.2GHz'},
 {v:'AMD',full:'AMD Radeon 780M 12CU 2.7GHz',n:53,cpu:'Ryzen 7 H 255(37)、9 H 270(4)、7 H 260(3)、7 H 253(2)、7 8745HS(2)、7 8845H(2)、8840HS(2)、7 8845HS(1)；各家頻率 2.7–3.0GHz',series:'Radeon 780M',core:'12CU',freq:'2.7GHz',est:1},
@@ -208,7 +214,7 @@ const R = [
 {v:'AMD',full:'AMD Radeon 8065S 40CU 3.0GHz',n:2,cpu:'Ryzen AI Max+ 495(2)',series:'Radeon 8065S',core:'40CU',freq:'3.0GHz'},
 {v:'AMD',full:'AMD Radeon Vega 8 8CU 2.0GHz',n:2,cpu:'Ryzen 7 7730U(2)',series:'Vega 8',core:'8CU',freq:'2.0GHz',red:1,est:1},
 {v:'AMD',full:'AMD Radeon 680M 12CU 2.4GHz',n:1,cpu:'Ryzen 7 6850HS(1)',series:'Radeon 680M',core:'12CU',freq:'2.4GHz'},
-{v:'AMD',g:1,full:'AMD Radeon Graphics 7CU 2.0GHz',n:1,cpu:'Ryzen 5 7530U(1)',series:'Radeon',core:'7CU',freq:'2.0GHz',est:1},
+{v:'AMD',g:1,full:'AMD Radeon Graphics（Vega 6）6CU 2.0GHz',n:1,cpu:'Ryzen 5 7530U(1)；依 TechPowerUp 採 Vega 6（AMD 官方頁寫 7 核）',series:'Vega 6',core:'6CU',freq:'2.0GHz',red:1,est:1},
 /* ---- 其他 ---- */
 {v:'其他',full:'NVIDIA Blackwell RTX GPU（48SM／40SM 待定）',n:2,cpu:'RTX Spark N1X(2)；有 6144 核與 5120 核兩種，資料庫分不出',series:'Blackwell RTX',core:'',freq:'',est:1,p1:'Blackwell RTX(待定)',p2:'Blackwell RTX 待定',p3a:'Blackwell RTX',p3b:'48SM／40SM 待定'},
 {v:'其他',full:'Qualcomm Adreno X1-45 1.7TFLOPS',n:1,cpu:'Snapdragon X X1-26-100(1)；高通不公布核心數，TFLOPS 各家說法 1.7–2.3',series:'Adreno X1-45',core:'',freq:'1.7TFLOPS',est:1},
@@ -217,10 +223,9 @@ const R = [
 
 const $ = s => document.querySelector(s);
 const len = s => [...s].length;
-const short = c => c.replace(/Xe\d/,'Xe');
 function derive(r){
-  const cs = r.core ? short(r.core) : '';
-  const p1 = r.p1 ?? (r.g ? [r.series, cs].filter(Boolean).join(' ') : (cs && !r.red ? `${r.series}(${cs})` : r.series));
+  /* 方案 1（M 修訂）：AMD／型號已含核心數／沒有核心數 → 只寫型號；其餘一律「型號(核心數帶架構代)」 */
+  const p1 = r.p1 ?? ((r.v === 'AMD' || r.red || !r.core) ? r.series : `${r.series}(${r.core})`);
   const p2 = r.p2 ?? [r.series, r.red ? '' : r.core, r.freq].filter(Boolean).join(' ');
   const p3a = r.p3a ?? r.series;
   const p3b = r.p3b ?? [r.red ? '' : r.core, r.freq].filter(Boolean).join(' · ');
@@ -295,7 +300,12 @@ $('#copy').addEventListener('click',async()=>{
   catch(e){ const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); try{document.execCommand('copy');$('#copied').textContent='已複製';}catch(_){ $('#copied').textContent='複製失敗，請手動選取'; } t.remove(); }
   setTimeout(()=>$('#copied').textContent='',2200);
 });
-load(); render(); markHead();
+function renderList(){
+  const L = [...D].sort((a,b)=>b.n-a.n);
+  $('#list-n').textContent = L.length;
+  $('#list').innerHTML = L.map(r=>`<div class="li"><span class="nm">${esc(r.p1)}</span><span class="ct">${r.n} 台</span></div>`).join('');
+}
+load(); render(); markHead(); renderList();
 </script>
 </body>
 </html>
